@@ -831,7 +831,7 @@ p {
 
 /* Header Section */
 .header {
-    padding: 80px 100px 0 100px; /* Added 80px top padding to account for fixed nav */
+    padding: 120px 100px 0 100px; /* Increased top padding to account for fixed nav and visible labels */
     margin-top: 0; /* Removed margin-top since we use padding now */
     position: relative;
 }
