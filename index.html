@@ -7,9 +7,52 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Custom hover effects for navigation buttons */
+        .nav-links a[href="#download-app"]:hover {
+            background: black;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
 </head>
 <body>
+    <!-- Animated Background Circles -->
+    <div class="animated-background">
+        <div class="circle-container">
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+        </div>
+
+        <!-- Animated Solid Shapes -->
+        <div class="solid-shapes">
+            <!-- Floating Squares -->
+            <div class="solid-shape square" style="top: 15%; left: 20%; animation: float 8s ease-in-out infinite;"></div>
+            <div class="solid-shape square" style="top: 70%; right: 15%; animation: float 10s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape square" style="bottom: 20%; left: 70%; animation: float 12s ease-in-out infinite;"></div>
+
+            <!-- Pulsing Circles -->
+            <div class="solid-shape circle-shape" style="top: 25%; right: 25%; animation: pulse 6s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="bottom: 35%; left: 25%; animation: pulse 8s ease-in-out infinite reverse;"></div>
+
+            <!-- Bouncing Triangles -->
+            <div class="solid-shape triangle" style="top: 40%; left: 5%; animation: bounce 7s ease-in-out infinite;"></div>
+            <div class="solid-shape triangle" style="top: 60%; right: 70%; animation: bounce 9s ease-in-out infinite reverse;"></div>
+
+            <!-- Rotating Hexagons -->
+            <div class="solid-shape hexagon" style="top: 80%; left: 40%; animation: rotate 15s linear infinite;"></div>
+            <div class="solid-shape hexagon" style="top: 30%; right: 5%; animation: rotate 20s linear infinite reverse;"></div>
+        </div>
+    </div>
+
     <!-- Navigation Bar -->
     <nav class="navigation">
         <div class="nav-container">
@@ -20,11 +63,12 @@
                 </svg>
             </div>
             <div class="nav-links">
-                <a href="#about">About us</a>
                 <a href="#lend">Lend</a>
                 <a href="#borrow">Borrow</a>
                 <a href="#how-it-works">How It Works</a>
-                <button class="btn-secondary">Download App</button>
+                <a href="#why-choose">Why Choose Us</a>
+                <a href="#contact">Contact Us</a>
+                <a href="#download-app" class="btn-tertiary">Download App</a>
             </div>
         </div>
     </nav>
@@ -33,23 +77,112 @@
     <header class="header">
         <div class="header-container">
             <div class="header-content">
-                <h1>Finance Had Stopped Being Human.</h1>
-                <p class="header-subtitle">Tired of the complexity, hidden fees, and unfair terms, we built what was missing: a simple, transparent funding network built on mutual trust.</p>
-                <button class="btn-primary">Get Started</button>
+                <h1><span class="label label-green" style="color: #38e07b !important; -webkit-text-fill-color: #38e07b !important; -webkit-background-clip: initial !important; background-clip: initial !important;">Finance</span> Had Stopped <span class="label label-green" style="color: #38e07b !important; -webkit-text-fill-color: #38e07b !important; -webkit-background-clip: initial !important; background-clip: initial !important;">Being Human</span>.</h1>
+                <p class="header-subtitle">Tired of the complexity, hidden fees, and unfair terms, we've built what was missing: a simple, transparent crowdfunding platform built on mutual trust.</p>
+                <div class="button-group">
+                    <button class="btn-primary">Get Started</button>
+                    <button class="btn-secondary">How It Works</button>
+                </div>
             </div>
             <div class="header-image">
-                <!-- Replace this placeholder with your illustration -->
-                <div class="hero-illustration-placeholder">
-                    <div class="placeholder-content">
-                        <div class="placeholder-icon">🎨</div>
-                        <p>Your illustration here</p>
-                        <small>Replace with your custom illustration</small>
+                <!-- Hero image -->
+                <img src="images/Gemini_Generated_Image_qycesxqycesxqyce.png" alt="ZimCrowd Finance Illustration" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+
+            <!-- Animated Messages -->
+            <div class="animated-message left-message">
+                <div class="message-content">
+                    <div class="message-icon">💰</div>
+                    <div class="message-text">
+                        <span class="message-title">You are about to fund</span>
+                        <span class="message-detail">loan to sarah l. of $500</span>
                     </div>
                 </div>
-                <div class="image-overlay"></div>
+            </div>
+
+            <div class="animated-message right-message">
+                <div class="message-content">
+                    <div class="message-icon">✅</div>
+                    <div class="message-text">
+                        <span class="message-title">Your loan of $500</span>
+                        <span class="message-detail">has been approved and funded by ZimCrowd Members and its now in your wallet</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Messages -->
+            <div class="animated-message bottom-left-message">
+                <div class="message-content">
+                    <div class="message-icon">📱</div>
+                    <div class="message-text">
+                        <span class="message-title">Create your</span>
+                        <span class="message-detail">account in minutes</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="animated-message bottom-right-message">
+                <div class="message-content">
+                    <div class="message-icon">💡</div>
+                    <div class="message-text">
+                        <span class="message-title">Get Instant Loan,</span>
+                        <span class="message-detail">No Approval or Paper Work needed</span>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
+
+    <!-- Stats Section -->
+    <section class="stats-section" style="background-color: black; color: white; padding: 15px 0;">
+        <div class="container">
+            <div class="stats-row" style="display: flex; justify-content: space-around; align-items: center; max-width: 1200px; margin: 0 auto;">
+                <div class="stat-item" style="text-align: center;">
+                    <div class="stat-icon" style="margin-bottom: 8px;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M11.9985 2.50098C9.90741 2.50098 7.8747 3.19099 6.21568 4.464C4.55666 5.737 3.36406 7.52186 2.82283 9.54175C2.71563 9.94185 2.95306 10.3531 3.35316 10.4603C3.75326 10.5675 4.16451 10.3301 4.27172 9.92998C4.72749 8.22904 5.73177 6.72602 7.12882 5.65403C8.52587 4.58203 10.2376 4.00098 11.9985 4.00098C13.7595 4.00098 15.4712 4.58203 16.8683 5.65403C17.6571 6.25932 18.3207 7.00205 18.8311 7.84024L17.2784 8.27435C16.9863 8.35603 16.7721 8.60564 16.7358 8.90679C16.6994 9.20794 16.8481 9.50134 17.1124 9.65017L20.1931 11.3849C20.3664 11.4825 20.5714 11.5072 20.763 11.4537C20.9546 11.4001 21.117 11.2727 21.2146 11.0993L22.9492 8.01828C23.0981 7.75395 23.073 7.426 22.8857 7.18735C22.6985 6.9487 22.3859 6.84636 22.0938 6.92804L20.3225 7.42325C19.6932 6.27881 18.8306 5.26905 17.7814 4.464C16.1224 3.19099 14.0897 2.50098 11.9985 2.50098Z" fill="#ffffff"/>
+                            <path d="M12.7499 8.55835C12.7499 8.14414 12.4141 7.80835 11.9999 7.80835C11.5857 7.80835 11.2499 8.14414 11.2499 8.55835V8.79461C10.49 9.07225 9.94758 9.80156 9.94758 10.6576C9.94758 11.4841 10.4603 12.2239 11.2341 12.5141L12.239 12.8909C12.4274 12.9616 12.5522 13.1417 12.5522 13.343C12.5522 13.6096 12.3361 13.8258 12.0694 13.8258H11.6744C11.5491 13.8258 11.4476 13.7242 11.4476 13.599C11.4476 13.1848 11.1118 12.849 10.6976 12.849C10.2834 12.849 9.94758 13.1848 9.94758 13.599C9.94758 14.4062 10.5015 15.0841 11.2499 15.2732V15.4421C11.2499 15.8563 11.5857 16.1921 11.9999 16.1921C12.4141 16.1921 12.7499 15.8563 12.7499 15.4421V15.2059C13.5098 14.9283 14.0522 14.199 14.0522 13.343C14.0522 12.5165 13.5396 11.7767 12.7657 11.4865L11.7608 11.1096C11.5724 11.0389 11.4476 10.8588 11.4476 10.6576C11.4476 10.3909 11.6637 10.1748 11.9304 10.1748H12.3254C12.4507 10.1748 12.5522 10.2763 12.5522 10.4016C12.5522 10.8158 12.888 11.1516 13.3022 11.1516C13.7164 11.1516 14.0522 10.8158 14.0522 10.4016C14.0522 9.59436 13.4984 8.9165 12.7499 8.72733V8.55835Z" fill="#ffffff"/>
+                            <path d="M3.79695 12.6155C3.62362 12.5179 3.41862 12.4932 3.22704 12.5467C3.03547 12.6003 2.87301 12.7278 2.77542 12.9011L1.0408 15.9821C0.891979 16.2465 0.917043 16.5744 1.1043 16.8131C1.29157 17.0517 1.60414 17.1541 1.89629 17.0724L3.67618 16.5747C4.30559 17.72 5.16861 18.7305 6.21839 19.536C7.87741 20.809 9.91012 21.499 12.0013 21.499C14.0924 21.499 16.1251 20.809 17.7841 19.536C19.4431 18.263 20.6358 16.4781 21.177 14.4582C21.2842 14.0581 21.0468 13.6469 20.6467 13.5397C20.2466 13.4325 19.8353 13.6699 19.7281 14.07C19.2723 15.7709 18.268 17.274 16.871 18.346C15.4739 19.418 13.7622 19.999 12.0013 19.999C10.2403 19.999 8.52859 19.418 7.13154 18.346C6.34208 17.7402 5.67803 16.9968 5.16752 16.1578L6.71162 15.7261C7.00375 15.6444 7.21793 15.3948 7.25427 15.0936C7.29061 14.7925 7.14198 14.4991 6.87766 14.3502L3.79695 12.6155Z" fill="#ffffff"/>
+                        </svg>
+                    </div>
+                    <div class="stat-number" style="font-size: 32px; font-weight: bold; margin-bottom: 5px;">$2.5M+</div>
+                    <div class="stat-label" style="font-size: 14px;">Funds Lent</div>
+                </div>
+                <div class="stat-item" style="text-align: center;">
+                    <div class="stat-icon" style="margin-bottom: 8px;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <polyline points="14,2 14,8 20,8" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="stat-number" style="font-size: 32px; font-weight: bold; margin-bottom: 5px;">1,200+</div>
+                    <div class="stat-label" style="font-size: 14px;">Loans Funded</div>
+                </div>
+                <div class="stat-item" style="text-align: center;">
+                    <div class="stat-icon" style="margin-bottom: 8px;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" stroke="#ffffff" stroke-width="2"/>
+                            <polyline points="12,6 12,12 16,14" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="stat-number" style="font-size: 32px; font-weight: bold; margin-bottom: 5px;">98%</div>
+                    <div class="stat-label" style="font-size: 14px;">Repayment Rate</div>
+                </div>
+                <div class="stat-item" style="text-align: center;">
+                    <div class="stat-icon" style="margin-bottom: 8px;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8.80437 4.10156C6.7626 4.10156 5.10742 5.75674 5.10742 7.79851C5.10742 9.84027 6.7626 11.4955 8.80437 11.4955C10.8461 11.4955 12.5013 9.84027 12.5013 7.79851C12.5013 5.75674 10.8461 4.10156 8.80437 4.10156Z" fill="#ffffff"/>
+                            <path d="M1.85175 19.16L1.85172 19.1577L1.85165 19.1513L1.85156 19.1321C1.85156 19.1164 1.85169 19.0952 1.85215 19.0688C1.85309 19.016 1.85538 18.9421 1.86069 18.8502C1.8713 18.6666 1.89402 18.4095 1.94242 18.1031C2.03866 17.4938 2.23948 16.6698 2.66304 15.837C3.08862 15.0001 3.74414 14.1453 4.74743 13.5023C5.75344 12.8576 7.06383 12.4551 8.75032 12.4551C10.4368 12.4551 11.7472 12.8576 12.7532 13.5023C13.7565 14.1453 14.412 15.0001 14.8376 15.837C15.2612 16.6698 15.462 17.4938 15.5582 18.1031C15.6066 18.4095 15.6293 18.6666 15.6399 18.8502C15.6453 18.9421 15.6476 19.016 15.6485 19.0688C15.649 19.0952 15.6491 19.1164 15.6491 19.1321L15.649 19.1513L15.6489 19.1577L15.6489 19.161C15.6418 19.5701 15.3081 19.8988 14.899 19.8988H2.60167C2.19253 19.8988 1.85888 19.5709 1.85178 19.1618C1.85178 19.1618 1.85179 19.1625 1.85175 19.16Z" fill="#ffffff"/>
+                            <path d="M17.0209 19.8988C17.0999 19.6756 17.1446 19.4363 17.149 19.187L17.1491 19.1799L17.1493 19.1676L17.1494 19.1387L17.1494 19.1327C17.1494 19.1083 17.1492 19.078 17.1486 19.0422C17.1473 18.9708 17.1443 18.8769 17.1378 18.7637C17.1247 18.538 17.0974 18.2312 17.0402 17.8691C17.0103 17.6801 16.9717 17.472 16.9215 17.2494C16.9165 17.2261 16.9113 17.2028 16.9058 17.1794C16.6448 16.0607 16.0667 14.4931 14.7497 13.189C14.515 12.9567 14.2627 12.7384 13.9924 12.5363C14.3865 12.4831 14.8056 12.4551 15.2509 12.4551C16.9373 12.4551 18.2477 12.8576 19.2537 13.5023C20.257 14.1453 20.9126 15.0001 21.3381 15.837C21.7617 16.6698 21.9625 17.4938 22.0588 18.1031C22.1072 18.4095 22.1299 18.6666 22.1405 18.8502C22.1458 18.9421 22.1481 19.016 22.149 19.0688C22.1495 19.0952 22.1496 19.1164 22.1496 19.1321L22.1495 19.1513L22.1495 19.1577L22.1494 19.161C22.1423 19.5701 21.8086 19.8988 21.3995 19.8988H17.0209Z" fill="#ffffff"/>
+                            <path d="M14.0028 7.79851C14.0028 8.89595 13.6627 9.91394 13.082 10.7528C13.7007 11.219 14.4705 11.4955 15.3049 11.4955C17.3467 11.4955 19.0018 9.84027 19.0018 7.79851C19.0018 5.75674 17.3467 4.10156 15.3049 4.10156C14.4705 4.10156 13.7007 4.37797 13.082 4.84422C13.6627 5.68307 14.0028 6.70106 14.0028 7.79851Z" fill="#ffffff"/>
+                        </svg>
+                    </div>
+                    <div class="stat-number" style="font-size: 32px; font-weight: bold; margin-bottom: 5px;">500+</div>
+                    <div class="stat-label" style="font-size: 14px;">Active Members</div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Lend Section -->
     <section class="section lend-section" id="lend">
@@ -58,28 +191,49 @@
                 <span class="label label-green">Lend</span>
             </div>
             <p class="section-description">Earn more with your money by investing directly in your community. Feel good knowing you're funding neighbors, not banks.</p>
-            <div class="heading-wrapper">
-                <span class="label label-green">A Better Return</span>
-            </div>
         </div>
-        
+
         <div class="heading-standalone">
-            <span class="label label-white">A Deeper Impact</span>
+            <span class="label label-white">A Better Return</span>
+            <span class="label label-green">A Deeper Impact</span>
         </div>
 
         <!-- Services Cards -->
         <div class="cards-grid">
             <div class="card card-grey">
                 <div class="card-content">
-                    <span class="card-label">Your Money. Your Control. Their Gratitude.</span>
-                    <p>You should be able to earn with your money—with more control. ZimCrowd lets you lend directly to other members. They pay you back with a voluntary "thank you" on top. It's that simple.</p>
+                    <span class="label label-green">Your Money. Your Control. Their Gratitude.</span>
+                    <div class="card-with-icon">
+                        <div class="card-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M14.3125 7C14.3125 6.58579 13.9767 6.25 13.5625 6.25C13.1483 6.25 12.8125 6.58579 12.8125 7L12.8125 8.25049H7.3125C6.89829 8.25049 6.5625 8.58627 6.5625 9.00049C6.5625 9.4147 6.89829 9.75049 7.3125 9.75049H12.8125L12.8125 11C12.8125 11.4142 13.1483 11.75 13.5625 11.75C13.9767 11.75 14.3125 11.4142 14.3125 11L14.3125 7Z" fill="#38e07b"/>
+                                <path d="M17.3125 8.25049H15.8125L15.8125 9.75049H17.3125C17.7267 9.75049 18.0625 9.4147 18.0625 9.00049C18.0625 8.58627 17.7267 8.25049 17.3125 8.25049Z" fill="#38e07b"/>
+                                <path d="M9.56055 12.25C9.14633 12.25 8.81055 12.5858 8.81055 13L8.81055 14.25H7.3125C6.89829 14.25 6.5625 14.5858 6.5625 15C6.5625 15.4142 6.89829 15.75 7.3125 15.75H8.81054L8.81054 17C8.81054 17.4142 9.14633 17.75 9.56054 17.75C9.97476 17.75 10.3105 17.4142 10.3105 17L10.3105 13C10.3105 12.5858 9.97476 12.25 9.56055 12.25Z" fill="#38e07b"/>
+                                <path d="M11.8086 14.25H17.3125C17.7267 14.25 18.0625 14.5858 18.0625 15C18.0625 15.4142 17.7267 15.75 17.3125 15.75H11.8086L11.8086 14.25Z" fill="#38e07b"/>
+                                <path fill-rule="evenodd" clip-rule="evenodd" d="M3.5625 5.5C3.5625 4.25736 4.56986 3.25 5.8125 3.25H18.8125C20.0551 3.25 21.0625 4.25736 21.0625 5.5L21.0625 18.4995C21.0625 19.7422 20.0551 20.7495 18.8125 20.7495H5.8125C4.56986 20.7495 3.5625 19.7422 3.5625 18.4995V5.5ZM5.8125 4.75C5.39829 4.75 5.0625 5.08579 5.0625 5.5V18.4995C5.0625 18.9137 5.39829 19.2495 5.8125 19.2495H18.8125C19.2267 19.2495 19.5625 18.9137 19.5625 18.4995L19.5625 5.5C19.5625 5.08579 19.2267 4.75 18.8125 4.75H5.8125Z" fill="#38e07b"/>
+                            </svg>
+                            
+                        </div>
+                        <p>You should be able to earn with your money—with more control. ZimCrowd lets you lend directly to other members. They pay you back with a voluntary "Interest" on top. It's that simple.</p>
+                    </div>
                 </div>
             </div>
-            
+
             <div class="card card-green">
                 <div class="card-content">
-                    <h3>Browse Requests, Fund Your Community</h3>
-                    <p>See real requests from other members in real-time. Each loan lists the USD or ZWG amount, the reason for the request (like a car repair or a small bill), and when they will pay you back.</p>
+                    <span class="label label-white">Get comfortable before you lend</span>
+                    <div class="card-with-icon">
+                        <div class="card-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <polyline points="14,2 14,8 20,8" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <line x1="16" y1="13" x2="8" y2="13" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <line x1="16" y1="17" x2="8" y2="17" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <polyline points="10,9 9,9 8,9" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <p>Review a potential borrower's credit score and repayment track record, and understand how they plan to utilize your funds.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -88,90 +242,138 @@
         <div class="cards-grid">
             <div class="card card-dark">
                 <div class="card-content">
-                    <div>
-                        <span class="label label-white">Social Media</span>
-                        <span class="label label-white">Marketing</span>
+                    <span class="label label-green">Browse Requests, Fund Your Community</span>
+                    <div class="card-with-icon">
+                        <div class="card-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                                <path d="M21 21L16.5 16.5M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M11 8V11L13 13" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <p>See real requests from other members in real-time. Each loan lists the USD or ZWG amount, the reason for the request (like a car repair or a small bill), and when they will pay you back.</p>
                     </div>
-                    <a href="#" class="link-white">Learn more →</a>
                 </div>
             </div>
-            
+
             <div class="card card-grey">
                 <div class="card-content">
-                    <div>
-                        <span class="label label-green">Email</span>
-                        <span class="label label-green">Marketing</span>
+                    <span class="label label-green">Lend with Confidence</span>
+                    <div class="card-with-icon">
+                        <div class="card-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M11.1385 2.29633C11.6899 2.06789 12.3094 2.06789 12.8608 2.29633L19.409 5.00923C20.1849 5.33068 20.7473 6.07313 20.7701 6.95597C20.8871 11.5013 19.4296 17.7631 13.067 21.5139C12.4101 21.9012 11.5955 21.9047 10.9353 21.5237C4.43153 17.7707 3.09402 11.4935 3.22752 6.95318C3.2534 6.07287 3.81392 5.33089 4.59034 5.00922L11.1385 2.29633ZM15.507 8.71521C15.2141 8.42231 14.7393 8.42231 14.4464 8.71521L10.9648 12.1967L9.55353 10.7854C9.26063 10.4925 8.78576 10.4926 8.49287 10.7854C8.19998 11.0783 8.19998 11.5532 8.49287 11.8461L10.4345 13.7877C10.7274 14.0806 11.2023 14.0806 11.4952 13.7877L15.507 9.77587C15.7999 9.48297 15.7999 9.0081 15.507 8.71521Z" fill="#38e07b"/>
+                            </svg>
+                        </div>
+                        <p>Zimcrowd is committed to reliable, on-time loan repayment, but we know missed payments are a possibility. That's why we automatically include Zimcrowd Lender Protection. This protection acts as a safety net, ensuring you're covered if anything unexpected affects a borrower's ability to pay.</p>
                     </div>
-                    <a href="#" class="link-black">Learn more →</a>
                 </div>
             </div>
         </div>
 
-        <!-- Third Cards Row -->
-        <div class="cards-grid">
-            <div class="card card-green">
-                <div class="card-content">
-                    <div>
-                        <span class="label label-white">Content</span>
-                        <span class="label label-white">Creation</span>
-                    </div>
-                    <a href="#" class="link-black">Learn more →</a>
-                </div>
-            </div>
-            
-            <div class="card card-dark">
-                <div class="card-content">
-                    <div>
-                        <span class="label label-green">Analytics and</span>
-                        <span class="label label-green">Tracking</span>
-                    </div>
-                    <a href="#" class="link-white">Learn more →</a>
-                </div>
-            </div>
+        <!-- Download App Button for Lend Section -->
+        <div class="section-app-badges" style="text-align: center;">
+            <a href="#download-app" style="text-decoration: none;"><button class="btn-tertiary">Get the App</button></a>
         </div>
+
     </section>
 
-    <!-- CTA Block -->
-    <section class="cta-block">
-        <div class="cta-container">
-            <div class="cta-content">
-                <h3>Let's make things happen</h3>
-                <p>Contact us today to learn more about how our digital marketing services can help your business grow and succeed online.</p>
-                <button class="btn-primary">Get your free proposal</button>
-            </div>
-            <div class="cta-illustration">
-                <svg width="494" height="394" viewBox="0 0 494 394" fill="none">
-                    <rect width="494" height="394" fill="#B9FF66" opacity="0.3" rx="20"/>
-                </svg>
-            </div>
-        </div>
-    </section>
-
-    <!-- Borrow Section (Case Studies) -->
+    <!-- Borrow Section -->
     <section class="section borrow-section" id="borrow">
         <div class="section-header">
             <div class="heading-wrapper">
                 <span class="label label-green">Borrow</span>
             </div>
-            <p class="section-description">Explore Real-Life Examples of Our Proven Digital Marketing Success through Our Case Studies</p>
+            <p class="section-description">We know the available options aren't great. Turning to family can feel awkward, and seeking a loan from a payday lender, a bank or other Microfinance Institution (MFI) frequently deepens your debt instead of solving your problem.</p>
         </div>
 
-        <div class="case-studies">
-            <div class="case-study">
-                <p>For a local restaurant, we implemented a targeted PPC campaign that resulted in a 50% increase in website traffic and a 25% increase in sales.</p>
-                <a href="#" class="link-green">Learn more →</a>
+        <div class="heading-standalone">
+            <span class="label label-white">Borrow Your Way.</span>
+            <span class="label label-green">Get Real Help, No Hidden Cost.</span>
+        </div>
+
+        <!-- Borrow Benefits Cards -->
+        <div class="cards-grid">
+            <div class="card card-grey">
+                <div class="card-content">
+                    <span class="label label-green">Zimcrowd Borrowing is different</span>
+                    <div class="card-with-icon">
+                        <div class="card-icon">
+                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="10" stroke="#38e07b" stroke-width="2"/>
+                                <circle cx="12" cy="12" r="6" stroke="#38e07b" stroke-width="2"/>
+                                <circle cx="12" cy="12" r="2" stroke="#38e07b" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <p>Our goal is to support you: No judgment, no debt traps.</p>
+                    </div>
+                </div>
             </div>
-            <div class="separator"></div>
-            <div class="case-study">
-                <p>For a B2B software company, we developed an SEO strategy that resulted in a first page ranking for key keywords and a 200% increase in organic traffic.</p>
-                <a href="#" class="link-green">Learn more →</a>
-            </div>
-            <div class="separator"></div>
-            <div class="case-study">
-                <p>For a national retail chain, we created a social media marketing campaign that increased followers by 25% and generated a 20% increase in online sales.</p>
-                <a href="#" class="link-green">Learn more →</a>
+
+            <div class="card card-green">
+                <div class="card-content">
+                    <span class="label label-white">You design the terms of your loan</span>
+                    <div class="card-with-icon">
+                        <div class="card-icon">
+                            <svg width="48" height="48" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M14.3125 7C14.3125 6.58579 13.9767 6.25 13.5625 6.25C13.1483 6.25 12.8125 6.58579 12.8125 7L12.8125 8.25049H7.3125C6.89829 8.25049 6.5625 8.58627 6.5625 9.00049C6.5625 9.4147 6.89829 9.75049 7.3125 9.75049H12.8125L12.8125 11C12.8125 11.4142 13.1483 11.75 13.5625 11.75C13.9767 11.75 14.3125 11.4142 14.3125 11L14.3125 7Z" fill="#ffffff"/>
+                                <path d="M17.3125 8.25049H15.8125L15.8125 9.75049H17.3125C17.7267 9.75049 18.0625 9.4147 18.0625 9.00049C18.0625 8.58627 17.7267 8.25049 17.3125 8.25049Z" fill="#ffffff"/>
+                                <path d="M9.56055 12.25C9.14633 12.25 8.81055 12.5858 8.81055 13L8.81055 14.25H7.3125C6.89829 14.25 6.5625 14.5858 6.5625 15C6.5625 15.4142 6.89829 15.75 7.3125 15.75H8.81054L8.81054 17C8.81054 17.4142 9.14633 17.75 9.56054 17.75C9.97476 17.75 10.3105 17.4142 10.3105 17L10.3105 13C10.3105 12.5858 9.97476 12.25 9.56055 12.25Z" fill="#ffffff"/>
+                                <path d="M11.8086 14.25H17.3125C17.7267 14.25 18.0625 14.5858 18.0625 15C18.0625 15.4142 17.7267 15.75 17.3125 15.75H11.8086L11.8086 14.25Z" fill="#ffffff"/>
+                                <path fill-rule="evenodd" clip-rule="evenodd" d="M3.5625 5.5C3.5625 4.25736 4.56986 3.25 5.8125 3.25H18.8125C20.0551 3.25 21.0625 4.25736 21.0625 5.5L21.0625 18.4995C21.0625 19.7422 20.0551 20.7495 18.8125 20.7495H5.8125C4.56986 20.7495 3.5625 19.7422 3.5625 18.4995V5.5ZM5.8125 4.75C5.39829 4.75 5.0625 5.08579 5.0625 5.5V18.4995C5.0625 18.9137 5.39829 19.2495 5.8125 19.2495H18.8125C19.2267 19.2495 19.5625 18.9137 19.5625 18.4995L19.5625 5.5C19.5625 5.08579 19.2267 4.75 18.8125 4.75H5.8125Z" fill="#ffffff"/>
+                            </svg>
+                        </div>
+                        <p>Take control of your borrowing experience with flexible terms that work for you.</p>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <!-- Additional Cards -->
+        <div class="cards-grid">
+            <div class="card card-dark">
+                <div class="card-content">
+                    <span class="label label-green">Interest rates are completely optional and voluntary</span>
+                    <div class="card-with-icon">
+                        <div class="card-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M5.5 4.75C5.08579 4.75 4.75 5.08579 4.75 5.5V7.125C4.75 7.53921 4.41421 7.875 4 7.875C3.58579 7.875 3.25 7.53921 3.25 7.125V5.5C3.25 4.25736 4.25736 3.25 5.5 3.25H7.125C7.53921 3.25 7.875 3.58579 7.875 4C7.875 4.41421 7.53921 4.75 7.125 4.75H5.5Z" fill="#38e07b"/>
+                                <path d="M9.625 4C9.625 3.58579 9.96079 3.25 10.375 3.25H13.625C14.0392 3.25 14.375 3.58579 14.375 4C14.375 4.41421 14.0392 4.75 13.625 4.75H10.375C9.96079 4.75 9.625 4.41421 9.625 4Z" fill="#38e07b"/>
+                                <path d="M16.125 4C16.125 3.58579 16.4608 3.25 16.875 3.25H18.5C19.7426 3.25 20.75 4.25736 20.75 5.5V7.125C20.75 7.53921 20.4142 7.875 20 7.875C19.5858 7.875 19.25 7.53921 19.25 7.125V5.5C19.25 5.08579 18.9142 4.75 18.5 4.75H16.875C16.4608 4.75 16.125 4.41421 16.125 4Z" fill="#38e07b"/>
+                                <path d="M4 9.625C4.41421 9.625 4.75 9.96079 4.75 10.375V13.625C4.75 14.0392 4.41421 14.375 4 14.375C3.58579 14.375 3.25 14.0392 3.25 13.625V10.375C3.25 9.96079 3.58579 9.625 4 9.625Z" fill="#38e07b"/>
+                                <path d="M20 9.625C20.4142 9.625 20.75 9.96079 20.75 10.375V13.625C20.75 14.0307 20.4279 14.3612 20.0254 14.3746L19.2779 13.8285C19.2597 13.7638 19.25 13.6955 19.25 13.625V10.375C19.25 9.96079 19.5858 9.625 20 9.625Z" fill="#38e07b"/>
+                                <path d="M12.1031 20.6508L11.9522 19.25H10.375C9.96079 19.25 9.625 19.5858 9.625 20C9.625 20.4142 9.96079 20.75 10.375 20.75H12.116C12.111 20.7171 12.1067 20.684 12.1031 20.6508Z" fill="#38e07b"/>
+                                <path d="M4 16.125C4.41421 16.125 4.75 16.4608 4.75 16.875V18.5C4.75 18.9142 5.08579 19.25 5.5 19.25H7.125C7.53921 19.25 7.875 19.5858 7.875 20C7.875 20.4142 7.53921 20.75 7.125 20.75H5.5C4.25736 20.75 3.25 19.7426 3.25 18.5V16.875C3.25 16.4608 3.58579 16.125 4 16.125Z" fill="#38e07b"/>
+                                <path d="M12.9873 11.7258C13.2444 11.5774 13.565 11.5946 13.8047 11.7697L20.3298 16.5365C20.5716 16.7131 20.6851 17.0165 20.6187 17.3085C20.5523 17.6004 20.3186 17.8249 20.0243 17.8795L17.6601 18.3183L18.9193 20.4993C19.1264 20.858 19.0035 21.3167 18.6448 21.5238C18.286 21.7309 17.8273 21.608 17.6202 21.2493L16.3608 19.068L14.798 20.8969C14.6035 21.1245 14.2923 21.2146 14.0063 21.1262C13.7203 21.0377 13.5142 20.7876 13.4822 20.49L12.6166 12.4557C12.5848 12.1605 12.7302 11.8743 12.9873 11.7258Z" fill="#38e07b"/>
+                            </svg>
+                        </div>
+                        <p>Choose whether to offer interest, making borrowing more accessible and fair.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-grey">
+                <div class="card-content">
+                    <span class="label label-green">Getting started is fast</span>
+                    <div class="card-with-icon">
+                        <div class="card-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M20.6216 4.04316C20.5821 3.69619 20.3083 3.4224 19.9614 3.38283C16.2551 2.96017 12.3947 4.17038 9.55023 7.01484C8.88176 7.6833 8.30341 8.40811 7.81526 9.174L7.81222 9.17412C7.73555 9.29444 7.6611 9.41579 7.58888 9.53809C6.86872 10.7576 6.37031 12.0714 6.09345 13.4211C6.0428 13.668 6.11958 13.9239 6.29782 14.1021L9.89702 17.7013C10.0752 17.8795 10.3311 17.9563 10.578 17.9057C11.9273 17.6291 13.2409 17.1311 14.4602 16.4114C15.3628 15.8787 16.2129 15.225 16.987 14.4509L16.9887 14.4525C19.8326 11.6087 21.0435 7.74873 20.6216 4.04316ZM16.0256 7.9789C16.9258 8.87906 16.9258 10.3385 16.0256 11.2387C15.1255 12.1388 13.666 12.1388 12.7659 11.2387C11.8657 10.3385 11.8657 8.87906 12.7659 7.9789C13.666 7.07874 15.1255 7.07874 16.0256 7.9789Z" fill="#38e07b"/>
+                                <path d="M14.6579 17.4504C13.4302 18.1321 12.1206 18.6103 10.7788 18.8853C10.5634 18.9295 10.3452 18.9321 10.1346 18.8963C10.256 19.6277 10.2443 20.3772 10.0992 21.1059C10.0429 21.3884 10.1534 21.6782 10.3836 21.8515C10.6137 22.0248 10.9228 22.0509 11.1788 21.9188C11.7836 21.6065 12.3505 21.1972 12.856 20.6917C13.7817 19.766 14.3823 18.6383 14.6579 17.4504Z" fill="#38e07b"/>
+                                <path d="M5.10306 13.866C5.06703 13.6549 5.06956 13.4361 5.11385 13.2201C5.38883 11.8796 5.86653 10.5713 6.54731 9.34479C5.36096 9.62075 4.23474 10.2211 3.31006 11.1457C2.80493 11.6509 2.39581 12.2173 2.08364 12.8217C1.95144 13.0776 1.97753 13.3867 2.15076 13.6169C2.324 13.847 2.61377 13.9577 2.89631 13.9015C3.62408 13.7567 4.37256 13.7449 5.10306 13.866Z" fill="#38e07b"/>
+                                <path d="M3.03001 20.25C3.04425 20.6429 3.35947 20.9583 3.75235 20.9725L3.75361 20.9726L3.75565 20.9727L3.76203 20.9729L3.78367 20.9735C3.79965 20.9739 3.82143 20.9744 3.8484 20.9749L3.86028 20.9751C3.92523 20.9761 4.01715 20.9767 4.12879 20.9755C4.35089 20.9731 4.65671 20.9631 4.9863 20.9323C5.31222 20.9019 5.68221 20.8492 6.02513 20.7549C6.34629 20.6666 6.74723 20.5151 7.03929 20.223C7.93945 19.3229 7.93945 17.8634 7.03929 16.9633C6.13913 16.0631 4.67969 16.0631 3.77953 16.9633C3.48747 17.2553 3.33595 17.6563 3.24764 17.9774C3.15335 18.3204 3.10068 18.6903 3.07022 19.0163C3.03942 19.3459 3.02946 19.6517 3.02704 19.8738C3.02582 19.9854 3.02649 20.0773 3.0275 20.1423C3.028 20.1748 3.02859 20.2006 3.02907 20.2189L3.0297 20.2405L3.0299 20.2469L3.03001 20.25Z" fill="#38e07b"/>
+                            </svg>
+                        </div>
+                        <p>Create your account, confirm your job, and you can begin your request.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download App Button for Borrow Section -->
+        <div class="section-app-badges" style="text-align: center;">
+            <a href="#download-app" style="text-decoration: none;"><button class="btn-tertiary">Get the App</button></a>
+        </div>
+
     </section>
 
     <!-- How It Works Section -->
@@ -180,70 +382,60 @@
             <div class="heading-wrapper">
                 <span class="label label-green">How it works</span>
             </div>
-            <p class="section-description short">Step-by-Step Guide to Achieving Your Business Goals</p>
+            <p class="section-description">Zimcrowd makes fair, peer-to-peer borrowing simple and transparent. Get the money you need quickly, managing the entire process right from your mobile device.</p>
         </div>
 
         <div class="process-cards">
-            <div class="process-card process-card-expanded">
+            <div class="process-card">
                 <div class="process-header">
                     <div class="process-label">
                         <span class="process-number">01</span>
-                        <h3>Consultation</h3>
+                        <h3>Quick Mobile Setup & Terms</h3>
                     </div>
-                    <div class="process-icon minus">−</div>
+                    <div class="process-icon plus">+</div>
                 </div>
                 <div class="process-divider"></div>
-                <p>During the initial consultation, we will discuss your business goals and objectives, target audience, and current marketing efforts. This will allow us to understand your needs and tailor our services to best fit your requirements.</p>
+                <p>Forget endless forms. Create your account and verify your employment directly through the app—that's all the "approval" you need. You then set the terms of your loan, including the repayment schedule and your proposed interest rate (which is always optional and voluntary).</p>
             </div>
 
             <div class="process-card">
                 <div class="process-header">
                     <div class="process-label">
                         <span class="process-number">02</span>
-                        <h3>Research and Strategy Development</h3>
+                        <h3>Get Funded by Your Peers</h3>
                     </div>
                     <div class="process-icon plus">+</div>
                 </div>
+                <div class="process-divider"></div>
+                <p>Your request is instantly shared with our community of lenders who believe in supportive, ethical finance. Once your loan is fully funded by fellow members, the money is securely transferred to your linked bank account or mobile wallet.</p>
             </div>
 
             <div class="process-card">
                 <div class="process-header">
                     <div class="process-label">
                         <span class="process-number">03</span>
-                        <h3>Implementation</h3>
+                        <h3>Repayments & Marketplace Flexibility</h3>
                     </div>
                     <div class="process-icon plus">+</div>
                 </div>
+                <div class="process-divider"></div>
+                <p>You manage all payments easily through the app, according to the fair terms you established.
+
+For Borrowers: You are protected from debt traps and can manage your loan without judgment.
+
+For Lenders: We provide a vital safety net. If a lender needs their funds back early, they can sell their portion of the loan to another investor on the Zimcrowd Secondary Market, ensuring liquidity and flexibility for all.</p>
             </div>
 
             <div class="process-card">
                 <div class="process-header">
                     <div class="process-label">
                         <span class="process-number">04</span>
-                        <h3>Monitoring and Optimization</h3>
+                        <h3>Get Smart Guidance with AI Chat</h3>
                     </div>
                     <div class="process-icon plus">+</div>
                 </div>
-            </div>
-
-            <div class="process-card">
-                <div class="process-header">
-                    <div class="process-label">
-                        <span class="process-number">05</span>
-                        <h3>Reporting and Communication</h3>
-                    </div>
-                    <div class="process-icon plus">+</div>
-                </div>
-            </div>
-
-            <div class="process-card">
-                <div class="process-header">
-                    <div class="process-label">
-                        <span class="process-number">06</span>
-                        <h3>Continual Improvement</h3>
-                    </div>
-                    <div class="process-icon plus">+</div>
-                </div>
+                <div class="process-divider"></div>
+                <p>Every account comes with <strong>Kairo</strong>, our integrated AI chat. Use <strong>Kairo</strong> as your personal financial coach to help you budget for repayments, or as an account assistant to instantly look up your loan status or track investment performance.</p>
             </div>
         </div>
     </section>
@@ -252,7 +444,7 @@
     <section class="section why-choose-section" id="why-choose">
         <div class="section-header">
             <div class="heading-wrapper">
-                <span class="label label-green">Why Choose ZimCrowd</span>
+            <span class="label label-green">Why Choose ZimCrowd</span>
             </div>
             <p class="section-description">Experience the advantages of community-powered lending that puts people first</p>
         </div>
@@ -260,136 +452,85 @@
         <div class="benefits-grid">
             <div class="benefit-card card-grey">
                 <div class="benefit-icon">
-                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-                        <circle cx="32" cy="32" r="30" fill="#38e07b" opacity="0.1"/>
-                        <circle cx="32" cy="32" r="24" fill="#38e07b" opacity="0.2"/>
-                        <path d="M24 32L28 36L40 24" stroke="#38e07b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
-                <h3>Lower Interest Rates</h3>
+                <h3><span class="label label-green">Lower Interest Rates</span></h3>
                 <p>Community lending eliminates bank overhead, passing savings directly to borrowers through competitive rates.</p>
             </div>
 
             <div class="benefit-card card-green">
                 <div class="benefit-icon">
-                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-                        <circle cx="32" cy="32" r="30" fill="#38e07b" opacity="0.1"/>
-                        <circle cx="32" cy="32" r="24" fill="#38e07b" opacity="0.2"/>
-                        <path d="M20 44V28C20 24.686 22.686 22 26 22H38C41.314 22 44 24.686 44 28V44" stroke="#38e07b" stroke-width="3"/>
-                        <path d="M26 22V18C26 16.895 26.895 16 28 16H36C37.105 16 38 16.895 38 18V22" stroke="#38e07b" stroke-width="3"/>
-                    </svg>
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14.3125 7C14.3125 6.58579 13.9767 6.25 13.5625 6.25C13.1483 6.25 12.8125 6.58579 12.8125 7L12.8125 8.25049H7.3125C6.89829 8.25049 6.5625 8.58627 6.5625 9.00049C6.5625 9.4147 6.89829 9.75049 7.3125 9.75049H12.8125L12.8125 11C12.8125 11.4142 13.1483 11.75 13.5625 11.75C13.9767 11.75 14.3125 11.4142 14.3125 11L14.3125 7Z" fill="#FFFFFF"/>
+            <path d="M17.3125 8.25049H15.8125L15.8125 9.75049H17.3125C17.7267 9.75049 18.0625 9.4147 18.0625 9.00049C18.0625 8.58627 17.7267 8.25049 17.3125 8.25049Z" fill="#FFFFFF"/>
+            <path d="M9.56055 12.25C9.14633 12.25 8.81055 12.5858 8.81055 13L8.81055 14.25H7.3125C6.89829 14.25 6.5625 14.5858 6.5625 15C6.5625 15.4142 6.89829 15.75 7.3125 15.75H8.81054L8.81054 17C8.81054 17.4142 9.14633 17.75 9.56054 17.75C9.97476 17.75 10.3105 17.4142 10.3105 17L10.3105 13C10.3105 12.5858 9.97476 12.25 9.56055 12.25Z" fill="#FFFFFF"/>
+            <path d="M11.8086 14.25H17.3125C17.7267 14.25 18.0625 14.5858 18.0625 15C18.0625 15.4142 17.7267 15.75 17.3125 15.75H11.8086L11.8086 14.25Z" fill="#FFFFFF"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M3.5625 5.5C3.5625 4.25736 4.56986 3.25 5.8125 3.25H18.8125C20.0551 3.25 21.0625 4.25736 21.0625 5.5L21.0625 18.4995C21.0625 19.7422 20.0551 20.7495 18.8125 20.7495H5.8125C4.56986 20.7495 3.5625 19.7422 3.5625 18.4995V5.5ZM5.8125 4.75C5.39829 4.75 5.0625 5.08579 5.0625 5.5V18.4995C5.0625 18.9137 5.39829 19.2495 5.8125 19.2495H18.8125C19.2267 19.2495 19.5625 18.9137 19.5625 18.4995L19.5625 5.5C19.5625 5.08579 19.2267 4.75 18.8125 4.75H5.8125Z" fill="#FFFFFF"/>
+        </svg>
                 </div>
-                <h3>Flexible Terms</h3>
+                <h3><span class="label label-white">Flexible Terms</span></h3>
                 <p>Negotiate repayment schedules that work for your situation, not rigid bank policies.</p>
             </div>
 
             <div class="benefit-card card-dark">
                 <div class="benefit-icon">
-                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-                        <circle cx="32" cy="32" r="30" fill="#38e07b" opacity="0.1"/>
-                        <circle cx="32" cy="32" r="24" fill="#38e07b" opacity="0.2"/>
-                        <path d="M32 16C24.268 16 18 22.268 18 30C18 37.732 24.268 44 32 44C39.732 44 46 37.732 46 30C46 22.268 39.732 16 32 16Z" stroke="#38e07b" stroke-width="3"/>
-                        <path d="M32 24V30L36 34" stroke="#38e07b" stroke-width="3" stroke-linecap="round"/>
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" stroke="#38e07b" stroke-width="2"/>
+                        <polyline points="12,6 12,12 16,14" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
-                <h3>Fast Approval</h3>
+                <h3><span class="label label-green">Fast Approval</span></h3>
                 <p>Get funded quickly through our streamlined community approval process, not lengthy bank bureaucracy.</p>
             </div>
 
             <div class="benefit-card card-grey">
                 <div class="benefit-icon">
-                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-                        <circle cx="32" cy="32" r="30" fill="#38e07b" opacity="0.1"/>
-                        <circle cx="32" cy="32" r="24" fill="#38e07b" opacity="0.2"/>
-                        <path d="M24 28C24 24.686 26.686 22 30 22H34C37.314 22 40 24.686 40 28V36C40 39.314 37.314 42 34 42H30C26.686 42 24 39.314 24 36V28Z" stroke="#38e07b" stroke-width="3"/>
-                        <circle cx="32" cy="32" r="2" fill="#38e07b"/>
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M16 3.13C16.8604 3.35031 17.623 3.8507 18.1676 4.55231C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
-                <h3>Community Support</h3>
+                <h3><span class="label label-green">Community Support</span></h3>
                 <p>Borrow from and lend to people in your community who understand your needs and circumstances.</p>
             </div>
 
             <div class="benefit-card card-green">
                 <div class="benefit-icon">
-                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-                        <circle cx="32" cy="32" r="30" fill="#38e07b" opacity="0.1"/>
-                        <circle cx="32" cy="32" r="24" fill="#38e07b" opacity="0.2"/>
-                        <path d="M20 32L24 28L32 36L44 24L48 28" stroke="#38e07b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="3" stroke="#FFFFFF" stroke-width="2"/>
+        </svg>
                 </div>
-                <h3>Transparent Process</h3>
+                <h3><span class="label label-white">Transparent Process </span></h3>
                 <p>No hidden fees or confusing terms. Everything is clear, fair, and mutually agreed upon.</p>
             </div>
 
             <div class="benefit-card card-dark">
                 <div class="benefit-icon">
-                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-                        <circle cx="32" cy="32" r="30" fill="#38e07b" opacity="0.1"/>
-                        <circle cx="32" cy="32" r="24" fill="#38e07b" opacity="0.2"/>
-                        <path d="M24 40L28 44L40 32" stroke="#38e07b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M32 20C27.582 20 24 23.582 24 28C24 30.059 24.793 31.946 26.152 33.466L32 40L37.848 33.466C39.207 31.946 40 30.059 40 28C40 23.582 36.418 20 32 20Z" stroke="#38e07b" stroke-width="3"/>
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 10C20 16 12 22 12 22C12 22 4 16 4 10C4 5.58172 7.58172 2 12 2C16.4183 2 20 5.58172 20 10Z" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="12" cy="10" r="3" stroke="#38e07b" stroke-width="2"/>
                     </svg>
                 </div>
-                <h3>Local Impact</h3>
+                <h3><span class="label label-green">Local Impact</span></h3>
                 <p>Your money stays in your community, supporting local businesses and helping neighbors thrive.</p>
-            </div>
-        </div>
-
-        <div class="comparison-section">
-            <h3>Traditional Banking vs. Community Lending</h3>
-            <div class="comparison-grid">
-                <div class="comparison-card">
-                    <div class="comparison-header">
-                        <h4>Traditional Bank Loan</h4>
-                        <div class="comparison-icon bank">
-                            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                                <path d="M4 24H28V12H4V24Z" stroke="#666" stroke-width="2"/>
-                                <path d="M8 12V8H12V12" stroke="#666" stroke-width="2"/>
-                                <path d="M16 12V8H20V12" stroke="#666" stroke-width="2"/>
-                                <path d="M24 12V8H28V12" stroke="#666" stroke-width="2"/>
-                                <path d="M2 24L16 28L30 24" stroke="#666" stroke-width="2"/>
-                            </svg>
-                        </div>
-                    </div>
-                    <ul class="comparison-list">
-                        <li class="negative">High interest rates (15-25%)</li>
-                        <li class="negative">Strict qualification requirements</li>
-                        <li class="negative">Slow approval process (weeks)</li>
-                        <li class="negative">Hidden fees and penalties</li>
-                        <li class="negative">No personal connection</li>
-                    </ul>
-                </div>
-
-                <div class="comparison-card featured">
-                    <div class="comparison-header">
-                        <h4>ZimCrowd Community Loan</h4>
-                        <div class="comparison-icon community">
-                            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                                <circle cx="16" cy="12" r="4" stroke="#38e07b" stroke-width="2"/>
-                                <path d="M8 24C8 20.686 10.686 18 14 18H18C21.314 18 24 20.686 24 24" stroke="#38e07b" stroke-width="2"/>
-                                <circle cx="16" cy="16" r="8" stroke="#38e07b" stroke-width="2" opacity="0.3"/>
-                            </svg>
-                        </div>
-                    </div>
-                    <ul class="comparison-list">
-                        <li class="positive">Lower rates (8-15%)</li>
-                        <li class="positive">Flexible qualification</li>
-                        <li class="positive">Fast approval (days)</li>
-                        <li class="positive">Transparent, no hidden fees</li>
-                        <li class="positive">Community support & understanding</li>
-                    </ul>
-                </div>
             </div>
         </div>
     </section>
 
     <!-- Testimonials Section -->
-    <section class="section testimonials-section" id="testimonials">
+    <section class="section testimonials-section" id="testimonials" style="padding-bottom: 40px;">
         <div class="section-header">
             <div class="heading-wrapper">
                 <span class="label label-green">Testimonials</span>
             </div>
-            <p class="section-description">Hear from Our Satisfied Clients: Read Our Testimonials to Learn More about Our Digital Marketing Services</p>
+            <p class="section-description">Hear from Our Community: Real Stories from Borrowers and Lenders Using ZimCrowd</p>
         </div>
 
         <div class="testimonials-container">
@@ -397,14 +538,14 @@
                 <div class="testimonial-card featured">
                     <div class="testimonial-content">
                         <div class="quote-icon">"</div>
-                        <p class="testimonial-text">"We have been working with Positivus for the past year and have seen a significant increase in website traffic and leads as a result of their efforts. The team is professional, responsive, and truly cares about the success of our business."</p>
+                        <p class="testimonial-text">"ZimCrowd helped me get the loan I needed to start my small business when traditional banks turned me down. The community support was incredible, and I was able to repay on my own terms. This platform truly democratizes access to finance."</p>
                         <div class="testimonial-author">
                             <div class="author-avatar">
                                 <div class="avatar-circle"></div>
                             </div>
                             <div class="author-info">
-                                <h4>Sarah Johnson</h4>
-                                <p>CEO at TechStart</p>
+                                <h4>Tendai N.</h4>
+                                <p>Borrower & Small Business Owner</p>
                             </div>
                         </div>
                     </div>
@@ -418,11 +559,11 @@
                     <div class="testimonial-card">
                         <div class="testimonial-content">
                             <div class="quote-icon-small">"</div>
-                            <p class="testimonial-text">"Outstanding results! Our conversion rate improved by 150% within 3 months."</p>
+                            <p class="testimonial-text">"As a lender on ZimCrowd, I've been able to help 15 local entrepreneurs get started while earning a fair return on my savings. The platform's transparency and community focus make lending feel meaningful and secure."</p>
                             <div class="testimonial-author">
                                 <div class="author-info">
-                                    <h4>Mike Chen</h4>
-                                    <p>Marketing Director at InnovateCorp</p>
+                                    <h4>Tafadzwa M.</h4>
+                                    <p>Lender & Community Investor</p>
                                 </div>
                             </div>
                         </div>
@@ -431,145 +572,219 @@
                     <div class="testimonial-card">
                         <div class="testimonial-content">
                             <div class="quote-icon-small">"</div>
-                            <p class="testimonial-text">"The best digital marketing team we've worked with. Highly recommend!"</p>
+                            <p class="testimonial-text">"ZimCrowd transformed how I think about borrowing. Instead of predatory loans, I got fair terms from my community. The repayment flexibility and lack of hidden fees made all the difference for my family's future."</p>
                             <div class="testimonial-author">
                                 <div class="author-info">
-                                    <h4>Emma Davis</h4>
-                                    <p>Founder at StartupXYZ</p>
+                                <h4>Rumbidzai C.</h4>
+                                    <p>Borrower & Community Member</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="testimonials-stats">
-                <div class="stat-item">
-                    <div class="stat-number">500+</div>
-                    <div class="stat-label">Happy Clients</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">98%</div>
-                    <div class="stat-label">Satisfaction Rate</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">5 Years</div>
-                    <div class="stat-label">Experience</div>
-                </div>
-            </div>
         </div>
     </section>
 
-    <!-- Contact Section -->
-    <section class="contact-block" id="contact">
+    <!-- FAQ Section -->
+    <section class="section faq-section" id="faq" style="background-color: #f5f5f5; padding-top: 150px; padding-bottom: 100px;">
         <div class="section-header">
             <div class="heading-wrapper">
-                <span class="label label-green">Contact Us</span>
+                <span class="label label-green">Frequently Asked Questions</span>
             </div>
-            <p class="section-description">Connect with Us: Let's Discuss Your Digital Marketing Needs</p>
+            <p class="section-description">Find answers to common questions about ZimCrowd's community lending platform</p>
         </div>
 
-        <div class="contact-container">
-            <form class="contact-form">
-                <div class="radio-group">
-                    <label class="radio-option">
-                        <div class="radio-circle"></div>
-                        <span>Say Hi</span>
-                    </label>
-                    <label class="radio-option">
-                        <div class="radio-circle selected"></div>
-                        <span>Get a Quote</span>
-                    </label>
+        <div class="faq-container">
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>How does ZimCrowd work?</h3>
+                    <div class="faq-toggle">+</div>
                 </div>
-
-                <div class="form-fields">
-                    <div class="form-field">
-                        <label for="name">Name</label>
-                        <input type="text" id="name" placeholder="Name">
-                    </div>
-
-                    <div class="form-field">
-                        <label for="email">Email*</label>
-                        <input type="email" id="email" placeholder="Email" required>
-                    </div>
-
-                    <div class="form-field">
-                        <label for="message">Message*</label>
-                        <textarea id="message" placeholder="Message" required></textarea>
-                    </div>
+                <div class="faq-answer">
+                    <p>ZimCrowd is a peer-to-peer lending platform where community members can lend money directly to other members. Borrowers create loan requests with their terms, and lenders can fund portions of these loans. All transactions are transparent and community-driven.</p>
                 </div>
+            </div>
 
-                <button type="submit" class="btn-primary form-submit">Send Message</button>
-            </form>
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>Is lending safe on ZimCrowd?</h3>
+                    <div class="faq-toggle">+</div>
+                </div>
+                <div class="faq-answer">
+                    <p>Yes, ZimCrowd provides Lender Protection that acts as a safety net. If a borrower is unable to repay, the platform ensures lenders are covered. Additionally, all borrowers go through a verification process and provide credit information.</p>
+                </div>
+            </div>
 
-            <div class="contact-illustration">
-                <svg width="692" height="648" viewBox="0 0 692 648" fill="none">
-                    <rect width="692" height="648" fill="#B9FF66" opacity="0.2" rx="20"/>
-                </svg>
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>What are the interest rates?</h3>
+                    <div class="faq-toggle">+</div>
+                </div>
+                <div class="faq-answer">
+                    <p>Interest rates are completely optional and voluntary on ZimCrowd. Borrowers can choose whether to offer interest, and lenders can decide whether to charge it. This creates fair, flexible terms for everyone involved.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>How do I get started?</h3>
+                    <div class="faq-toggle">+</div>
+                </div>
+                <div class="faq-answer">
+                    <p>Getting started is simple! Download our app, create your account, and verify your employment. For borrowers, you can immediately start creating loan requests. For lenders, you can begin browsing and funding community loan requests.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>What happens if a borrower can't repay?</h3>
+                    <div class="faq-toggle">+</div>
+                </div>
+                <div class="faq-answer">
+                    <p>ZimCrowd's Lender Protection covers lenders in case of default. Additionally, our community approach means borrowers are accountable to their local community, creating strong incentives for responsible repayment.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>Are there any fees?</h3>
+                    <div class="faq-toggle">+</div>
+                </div>
+                <div class="faq-answer">
+                    <p>ZimCrowd is committed to transparency with no hidden fees. The platform operates on a community-driven model, eliminating the overhead costs of traditional financial institutions.</p>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-top">
-                <div class="footer-left">
-                    <div class="footer-logo">
-                        <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
-                            <circle cx="14.76" cy="14.5" r="14.5" fill="#FFFFFF"/>
-                            <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#FFFFFF">ZimCrowd</text>
-                        </svg>
-                    </div>
-                    <nav class="footer-nav">
-                        <a href="#about">About us</a>
-                        <a href="#services">Services</a>
-                        <a href="#cases">Use Cases</a>
-                        <a href="#pricing">Pricing</a>
-                        <a href="#blog">Blog</a>
-                    </nav>
-                    <div class="footer-social">
-                        <div class="social-icon">
-                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                                <path d="M12 1H3C1.89543 1 1 1.89543 1 3V12C1 13.1046 1.89543 14 3 14H12C13.1046 14 14 13.1046 14 12V3C14 1.89543 13.1046 1 12 1Z" fill="#000000"/>
-                            </svg>
-                        </div>
-                        <div class="social-icon">
-                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                                <path d="M12 1H3C1.89543 1 1 1.89543 1 3V12C1 13.1046 1.89543 14 3 14H12C13.1046 14 14 13.1046 14 12V3C14 1.89543 13.1046 1 12 1Z" fill="#000000"/>
-                            </svg>
-                        </div>
-                        <div class="social-icon">
-                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                                <path d="M12 1H3C1.89543 1 1 1.89543 1 3V12C1 13.1046 1.89543 14 3 14H12C13.1046 14 14 13.1046 14 12V3C14 1.89543 13.1046 1 12 1Z" fill="#000000"/>
-                            </svg>
-                        </div>
+    <!-- Zimcrowd Footer -->
+    <footer class="zimcrowd-footer">
+        <!-- CTA Block -->
+        <section class="cta-block" id="download-app">
+            <div class="cta-container">
+                <div class="cta-content">
+                    <h3 style="color: black;">Start Your Financial Journey Today</h3>
+                    <p style="color: black;">Join ZimCrowd's community-powered lending platform. Whether you need funds or want to help others, get started in minutes with fair, transparent terms.</p>
+                    <div class="app-store-buttons">
+                        <a href="#" class="app-store-btn google-play">
+                            <img src="images/GetItOnGooglePlay_Badge_Web_color_English.svg" alt="Get it on Google Play" style="height: 60px; width: auto;">
+                        </a>
+                        <a href="#" class="app-store-btn app-store">
+                            <img src="images/Download_on_the_App_Store_Badge_US-UK_RGB_blk_092917.svg" alt="Download on the App Store" style="height: 60px; width: auto;">
+                        </a>
                     </div>
                 </div>
+                <div class="cta-illustration">
+                    <img src="images/Gemini_Generated_Image_2wm05r2wm05r2wm0.png" alt="Young people Smiling on Phones" style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);">
+                </div>
+            </div>
+        </section>
 
-                <div class="footer-right">
-                    <div class="footer-contact">
-                        <span class="label label-green">Contact us:</span>
-                        <div class="contact-info">
-                            <p>Email: info@positivus.com</p>
-                            <p>Phone: 555-567-8901</p>
-                            <p>Address: 1234 Main St<br>Moonstone City, Stardust State 12345</p>
-                        </div>
-                    </div>
+        <div class="footer-container">
 
-                    <div class="footer-subscribe">
-                        <input type="email" class="subscribe-input" placeholder="Email">
-                        <button class="btn-tertiary">Subscribe to news</button>
-                    </div>
+            <div class="footer-column brand">
+                <div class="footer-logo">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#FFFFFF"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#FFFFFF">ZimCrowd</text>
+                    </svg>
+                </div>
+                <p>Fair, community-first lending. Borrow on your terms, invest with impact.</p>
+
+                <h4>Stay in the loop</h4>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="Your email address" required>
+                    <button type="submit">Subscribe</button>
+                </form>
+            </div>
+
+            <div class="footer-column">
+                <h4>Platform</h4>
+                <ul class="footer-links">
+                    <li><a href="#borrow">Borrow</a></li>
+                    <li><a href="#lend">Lend</a></li>
+                    <li><a href="#market">Primary Market</a></li>
+                    <li><a href="#secondary-market">Secondary Market</a></li>
+                    <li><a href="#kairo-ai">Kairo AI Coach</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="#about-us">About Us</a></li>
+                    <li><a href="#careers">Careers</a></li>
+                    <li><a href="#press">Press</a></li>
+                    <li><a href="#blog">Blog</a></li>
+                    <li><a href="#partners">Partners</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <div class="company-badge">
+                    <div class="badge-icon">🏢</div>
+                    <p>Building Community Finance</p>
                 </div>
             </div>
 
-            <div class="footer-bottom">
-                <div class="footer-divider"></div>
-                <div class="footer-legal">
-                    <p>© 2023 Positivus. All Rights Reserved.</p>
-                    <p>Privacy Policy</p>
+            <div class="footer-column" id="contact">
+                <h4>Contact Us</h4>
+                <div class="footer-contact-info">
+                    <p><i class="fas fa-envelope"></i> info@zimcrowd.com</p>
+                    <p><i class="fas fa-phone"></i> +263710467317</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Harare, Zimbabwe</p>
                 </div>
+                <div class="footer-contact-hours">
+                    <p><strong>Support Hours:</strong></p>
+                    <p>Mon-Fri: 8AM-6PM</p>
+                    <p>Sat: 9AM-4PM</p>
+                </div>
+            </div>
+
+            <div class="footer-column">
+                <h4>Legal</h4>
+                <ul class="footer-links">
+                    <li><a href="#general-loan-terms">General Loan Terms</a></li>
+                    <li><a href="#risk-warnings">Risk Warnings</a></li>
+                    <li><a href="#terms-conditions">Terms & Conditions</a></li>
+                    <li><a href="#privacy-policy">Privacy Policy</a></li>
+                    <li><a href="#cookie-policy">Cookie Policy</a></li>
+                    <li><a href="#terms-of-service">Terms of Service</a></li>
+                    <li><a href="#complaint-submission">Complaint Submission</a></li>
+                    <li><a href="#conflicts-interest">Conflicts of Interest Policy</a></li>
+                    <li><a href="#other-documents">Other Documents</a></li>
+                </ul>
+                <div class="footer-animation">
+                    <div class="animated-shape shape-1"></div>
+                    <div class="animated-shape shape-2"></div>
+                    <div class="animated-shape shape-3"></div>
+                </div>
+            </div>
+
+            <div class="footer-column">
+                <h4>Support</h4>
+                <ul class="footer-links">
+                    <li><a href="#help-center">Help Center</a></li>
+                    <li><a href="#contact-support">Contact Support</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                    <li><a href="#community-forum">Community Forum</a></li>
+                    <li><a href="#live-chat">Live Chat</a></li>
+                    <li><a href="#tutorials">Tutorials</a></li>
+                </ul>
+                <div class="support-badge">
+                    <div class="badge-icon">🛟</div>
+                    <p>24/7 Support Available</p>
+                </div>
+            </div>
+
+            <div class="footer-socials">
+                <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            </div>
+
+            <div class="footer-copyright">
+                &copy; 2025 ZimCrowd. All rights reserved.
             </div>
         </div>
     </footer>
@@ -584,11 +799,15 @@
 
                 if (icon) {
                     icon.addEventListener('click', function() {
-                        // Remove expanded class from all cards
-                        processCards.forEach(c => c.classList.remove('process-card-expanded'));
+                        // Toggle the expanded class on the clicked card
+                        card.classList.toggle('process-card-expanded');
 
-                        // Add expanded class to clicked card
-                        card.classList.add('process-card-expanded');
+                        // Update the icon text based on expanded state
+                        if (card.classList.contains('process-card-expanded')) {
+                            icon.textContent = '−';
+                        } else {
+                            icon.textContent = '+';
+                        }
                     });
                 }
             });
@@ -609,6 +828,177 @@
                     this.querySelector('.radio-circle').classList.add('selected');
                 });
             });
+        });
+
+        // Navigation Hide/Show on Scroll
+        let lastScrollTop = 0;
+        const navigation = document.querySelector('.navigation');
+
+        window.addEventListener('scroll', function() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            if (scrollTop > lastScrollTop && scrollTop > 100) {
+                // Scrolling down and past 100px
+                navigation.classList.add('hidden');
+            } else {
+                // Scrolling up or at top
+                navigation.classList.remove('hidden');
+            }
+
+            lastScrollTop = scrollTop;
+        });
+
+        // FAQ Accordion Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const faqQuestions = document.querySelectorAll('.faq-question');
+
+            faqQuestions.forEach(question => {
+                question.addEventListener('click', function() {
+                    const faqItem = this.parentElement;
+                    const isActive = faqItem.classList.contains('active');
+
+                    // Close all FAQ items
+                    document.querySelectorAll('.faq-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+
+                    // Open clicked item if it wasn't already active
+                    if (!isActive) {
+                        faqItem.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        // Lottie Animation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load animation from external JSON file
+            fetch('finance-guru.json')
+                .then(response => response.json())
+                .then(animationData => {
+                    const animation = lottie.loadAnimation({
+                        container: document.getElementById('lottie-container'),
+                        renderer: 'svg',
+                        loop: true,
+                        autoplay: true,
+                        animationData: animationData
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading animation:', error);
+                });
+        });
+
+        // Stats Counter Animation with Real-time Updates
+        document.addEventListener('DOMContentLoaded', function() {
+            const statsSection = document.querySelector('.stats-section');
+            const statNumbers = document.querySelectorAll('.stat-number');
+            let animationStarted = false;
+
+            // Function to fetch real-time stats from app API
+            async function fetchRealTimeStats() {
+                try {
+                    // Use the app's API endpoint for real-time stats
+                    const response = await fetch('https://api.zimcrowd.app/v1/stats/public');
+                    const data = await response.json();
+
+                    return {
+                        fundsLent: data.totalFundsLent / 1000000 || 2.5, // Convert to millions
+                        loansFunded: data.totalLoansFunded || 1200,
+                        repaymentRate: Math.round(data.averageRepaymentRate * 100) || 98,
+                        activeMembers: data.activeUsers || 500
+                    };
+                } catch (error) {
+                    console.log('Using fallback stats due to app API error:', error);
+                    // Fallback to default values if API fails
+                    return {
+                        fundsLent: 2.5,
+                        loansFunded: 1200,
+                        repaymentRate: 98,
+                        activeMembers: 500
+                    };
+                }
+            }
+
+            function animateCounter(element, target, duration = 2000) {
+                const start = 0;
+                const increment = target / (duration / 16); // 60fps
+                let current = start;
+
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(timer);
+                    }
+
+                    if (element.textContent.includes('$')) {
+                        element.textContent = '$' + current.toFixed(1) + 'M+';
+                    } else if (element.textContent.includes('+')) {
+                        element.textContent = Math.floor(current).toLocaleString() + '+';
+                    } else if (element.textContent.includes('%')) {
+                        element.textContent = Math.floor(current) + '%';
+                    }
+                }, 16);
+            }
+
+            async function startCounters() {
+                if (animationStarted) return;
+                animationStarted = true;
+
+                // Fetch real-time stats
+                const stats = await fetchRealTimeStats();
+
+                // Map stats to elements
+                const statElements = Array.from(statNumbers);
+                const targets = [
+                    stats.fundsLent,      // $2.5M+
+                    stats.loansFunded,    // 1,200+
+                    stats.repaymentRate,  // 98%
+                    stats.activeMembers   // 500+
+                ];
+
+                // Animate each counter
+                statElements.forEach((element, index) => {
+                    animateCounter(element, targets[index]);
+                });
+            }
+
+            // Start animation when stats section comes into view while scrolling down
+            let hasScrolledDown = false;
+
+            // Track if user has scrolled down from initial position
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 100) { // User has scrolled down past 100px
+                    hasScrolledDown = true;
+                }
+            });
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    // Only trigger if user has scrolled down and stats section is visible
+                    if (entry.isIntersecting && hasScrolledDown && !animationStarted) {
+                        startCounters();
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.3 }); // Trigger when 30% of stats section is visible
+
+            observer.observe(statsSection);
+
+            // Optional: Update stats periodically (every 30 seconds)
+            setInterval(async () => {
+                if (!animationStarted) return;
+
+                const newStats = await fetchRealTimeStats();
+                const statElements = Array.from(statNumbers);
+
+                // Update each stat element with new values (without animation for live updates)
+                statElements[0].textContent = '$' + newStats.fundsLent.toFixed(1) + 'M+';
+                statElements[1].textContent = newStats.loansFunded.toLocaleString() + '+';
+                statElements[2].textContent = newStats.repaymentRate + '%';
+                statElements[3].textContent = newStats.activeMembers.toLocaleString() + '+';
+            }, 30000); // Update every 30 seconds
         });
     </script>
 </body>
