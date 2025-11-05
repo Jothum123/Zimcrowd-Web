@@ -1975,7 +1975,7 @@ p {
     }
 
     .header {
-        margin-top: 180px; /* Increased to prevent navigation overlap on mobile */
+        margin-top: 120px; /* Reduced to show more hero title on mobile */
     }
 
     .nav-container {
