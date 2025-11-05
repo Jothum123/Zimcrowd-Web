@@ -2552,8 +2552,11 @@ p {
     }
 
     .nav-container {
+        flex-direction: row;
         justify-content: space-between;
         align-items: center;
+        gap: 0;
+        padding: 10px 0; /* Add some vertical padding for better touch targets */
     }
 }
 
