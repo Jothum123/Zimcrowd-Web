@@ -777,8 +777,8 @@ p {
 
 /* Header Section */
 .header {
-    padding: 0 100px;
-    margin-top: 80px;
+    padding: 80px 100px 0 100px; /* Added 80px top padding to account for fixed nav */
+    margin-top: 0; /* Removed margin-top since we use padding now */
     position: relative;
 }
 
@@ -1975,7 +1975,7 @@ p {
     }
 
     .header {
-        margin-top: 120px; /* Reduced to show more hero title on mobile */
+        padding-top: 120px; /* Account for fixed nav on mobile */
     }
 
     .nav-container {
