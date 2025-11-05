@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>Secondary Market - ZimCrowd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Custom hover effects for navigation buttons */
+        .nav-links a[href="#download-app"]:hover {
+            background: black;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navigation">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#000000"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html#lending">Lend</a>
+                <a href="index.html#borrow">Borrow</a>
+                <a href="index.html#how-it-works">How It Works</a>
+                <a href="index.html#why-choose">Why Choose Us</a>
+                <a href="index.html#contact">Contact Us</a>
+                <a href="index.html#download-app" class="btn-tertiary">Download App</a>
+            </div>
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" aria-label="Toggle menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu-drawer">
+        <div class="mobile-menu-overlay"></div>
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <div class="mobile-logo">
+                    <a href="index.html">
+                        <svg width="160" height="26" viewBox="0 0 180 29" fill="none">
+                            <circle cx="13" cy="13" r="13" fill="#38e07b"/>
+                            <text x="35" y="19" font-family="Space Grotesk" font-size="16" font-weight="600" fill="#000000">ZimCrowd</text>
+                        </svg>
+                    </a>
+                </div>
+                <button class="mobile-menu-close" aria-label="Close menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mobile-menu-links">
+                <a href="index.html#lending" class="mobile-menu-link">
+                    <span class="link-icon">💰</span>
+                    <span class="link-text">Lend</span>
+                </a>
+                <a href="index.html#borrow" class="mobile-menu-link">
+                    <span class="link-icon">🤝</span>
+                    <span class="link-text">Borrow</span>
+                </a>
+                <a href="index.html#how-it-works" class="mobile-menu-link">
+                    <span class="link-icon">⚙️</span>
+                    <span class="link-text">How It Works</span>
+                </a>
+                <a href="index.html#why-choose" class="mobile-menu-link">
+                    <span class="link-icon">⭐</span>
+                    <span class="link-text">Why Choose Us</span>
+                </a>
+                <a href="index.html#contact" class="mobile-menu-link">
+                    <span class="link-icon">📞</span>
+                    <span class="link-text">Contact Us</span>
+                </a>
+                <div class="mobile-menu-divider"></div>
+                <a href="index.html#download-app" class="mobile-menu-cta">
+                    <span class="cta-icon">📱</span>
+                    <span class="cta-text">Download App</span>
+                </a>
+            </div>
+            <div class="mobile-menu-footer">
+                <p>Building Community Finance</p>
+                <div class="mobile-social-links">
+                    <a href="#" class="mobile-social-link" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary Market Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-content">
+                <h1><span class="label label-green">Secondary Market</span> - Trade Existing Loans</h1>
+                <p class="header-subtitle">Buy and sell portions of existing loans to diversify your portfolio, manage liquidity, or exit positions early. Access real-time trading with transparent pricing.</p>
+                <div class="button-group">
+                    <button class="btn-primary">Start Trading</button>
+                    <button class="btn-secondary">View Market Data</button>
+                </div>
+            </div>
+            <div class="header-image">
+                <div class="hero-illustration-placeholder">
+                    <div class="placeholder-icon">📈</div>
+                    <div class="placeholder-content">
+                        <p>Live Trading Platform</p>
+                        <small>Real-time loan trading & liquidity</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Market Overview Section -->
+    <section class="section market-overview-section">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Market Overview</span>
+            </div>
+            <p class="section-description">Current market statistics and trading activity.</p>
+        </div>
+
+        <div class="market-stats-grid">
+            <div class="market-stat-card">
+                <div class="stat-icon">💹</div>
+                <div class="stat-content">
+                    <h3>$2.4M</h3>
+                    <p>Total Trading Volume (24h)</p>
+                </div>
+            </div>
+
+            <div class="market-stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                    <h3>156</h3>
+                    <p>Active Loan Portions</p>
+                </div>
+            </div>
+
+            <div class="market-stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-content">
+                    <h3>89</h3>
+                    <p>Active Traders</p>
+                </div>
+            </div>
+
+            <div class="market-stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-content">
+                    <h3>+12.5%</h3>
+                    <p>Avg Annual Return</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Available Loans Section -->
+    <section class="section available-loans-section">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Available for Trading</span>
+            </div>
+            <p class="section-description">Browse loan portions currently available for purchase. Each listing shows the remaining term, expected returns, and borrower details.</p>
+        </div>
+
+        <div class="trading-cards-grid">
+            <!-- Trading Card 1 -->
+            <div class="trading-card">
+                <div class="trading-card-header">
+                    <div class="loan-info">
+                        <h4>Business Expansion Loan</h4>
+                        <p class="borrower-name">Sarah M. - Small Business Owner</p>
+                        <div class="loan-rating">
+                            <span class="stars">★★★★★</span>
+                            <span class="rating">4.8</span>
+                        </div>
+                    </div>
+                    <div class="trading-price">
+                        <span class="price">$850</span>
+                        <span class="discount">15% below par</span>
+                    </div>
+                </div>
+
+                <div class="trading-card-content">
+                    <div class="trading-details">
+                        <div class="detail-item">
+                            <span class="label">Remaining Term:</span>
+                            <span class="value">8 months</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Interest Rate:</span>
+                            <span class="value">8.5% APR</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Monthly Payment:</span>
+                            <span class="value">$115</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Credit Score:</span>
+                            <span class="value">720</span>
+                        </div>
+                    </div>
+
+                    <div class="trading-performance">
+                        <div class="performance-item">
+                            <span class="label">Payments Made:</span>
+                            <span class="value">4/12</span>
+                        </div>
+                        <div class="performance-item">
+                            <span class="label">On-time Rate:</span>
+                            <span class="value">100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="trading-card-actions">
+                    <button class="btn-secondary">View Details</button>
+                    <button class="btn-primary">Buy Now - $850</button>
+                </div>
+            </div>
+
+            <!-- Trading Card 2 -->
+            <div class="trading-card">
+                <div class="trading-card-header">
+                    <div class="loan-info">
+                        <h4>Home Renovation Loan</h4>
+                        <p class="borrower-name">Tafadzwa J. - Teacher</p>
+                        <div class="loan-rating">
+                            <span class="stars">★★★★☆</span>
+                            <span class="rating">4.2</span>
+                        </div>
+                    </div>
+                    <div class="trading-price">
+                        <span class="price">$1,250</span>
+                        <span class="premium">5% above par</span>
+                    </div>
+                </div>
+
+                <div class="trading-card-content">
+                    <div class="trading-details">
+                        <div class="detail-item">
+                            <span class="label">Remaining Term:</span>
+                            <span class="value">14 months</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Interest Rate:</span>
+                            <span class="value">7.2% APR</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Monthly Payment:</span>
+                            <span class="value">$95</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Credit Score:</span>
+                            <span class="value">685</span>
+                        </div>
+                    </div>
+
+                    <div class="trading-performance">
+                        <div class="performance-item">
+                            <span class="label">Payments Made:</span>
+                            <span class="value">4/18</span>
+                        </div>
+                        <div class="performance-item">
+                            <span class="label">On-time Rate:</span>
+                            <span class="value">100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="trading-card-actions">
+                    <button class="btn-secondary">View Details</button>
+                    <button class="btn-primary">Buy Now - $1,250</button>
+                </div>
+            </div>
+
+            <!-- Trading Card 3 -->
+            <div class="trading-card">
+                <div class="trading-card-header">
+                    <div class="loan-info">
+                        <h4>Education Investment</h4>
+                        <p class="borrower-name">Rumbidzai C. - Nurse</p>
+                        <div class="loan-rating">
+                            <span class="stars">★★★★★</span>
+                            <span class="rating">4.9</span>
+                        </div>
+                    </div>
+                    <div class="trading-price">
+                        <span class="price">$2,100</span>
+                        <span class="par">At par value</span>
+                    </div>
+                </div>
+
+                <div class="trading-card-content">
+                    <div class="trading-details">
+                        <div class="detail-item">
+                            <span class="label">Remaining Term:</span>
+                            <span class="value">20 months</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Interest Rate:</span>
+                            <span class="value">6.8% APR</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Monthly Payment:</span>
+                            <span class="value">$118</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Credit Score:</span>
+                            <span class="value">750</span>
+                        </div>
+                    </div>
+
+                    <div class="trading-performance">
+                        <div class="performance-item">
+                            <span class="label">Payments Made:</span>
+                            <span class="value">4/24</span>
+                        </div>
+                        <div class="performance-item">
+                            <span class="label">On-time Rate:</span>
+                            <span class="value">100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="trading-card-actions">
+                    <button class="btn-secondary">View Details</button>
+                    <button class="btn-primary">Buy Now - $2,100</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How Secondary Market Works -->
+    <section class="section process-section">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">How Secondary Market Works</span>
+            </div>
+            <p class="section-description">Trade loan portions with confidence in our transparent marketplace.</p>
+        </div>
+
+        <div class="process-cards">
+            <div class="process-card">
+                <div class="process-header">
+                    <div class="process-label">
+                        <span class="process-number">01</span>
+                        <h3>List Your Position</h3>
+                    </div>
+                    <div class="process-icon plus">+</div>
+                </div>
+                <div class="process-divider"></div>
+                <p>Choose which portion of your loan you'd like to sell. Set your asking price based on current market conditions and borrower performance.</p>
+            </div>
+
+            <div class="process-card">
+                <div class="process-header">
+                    <div class="process-label">
+                        <span class="process-number">02</span>
+                        <h3>Find Opportunities</h3>
+                    </div>
+                    <div class="process-icon plus">+</div>
+                </div>
+                <div class="process-divider"></div>
+                <p>Browse available loan portions. Filter by risk level, return rate, remaining term, and borrower profile to find investments that match your strategy.</p>
+            </div>
+
+            <div class="process-card">
+                <div class="process-header">
+                    <div class="process-label">
+                        <span class="process-number">03</span>
+                        <h3>Trade Instantly</h3>
+                    </div>
+                    <div class="process-icon plus">+</div>
+                </div>
+                <div class="process-divider"></div>
+                <p>Execute trades instantly through our secure platform. Funds are transferred immediately and you start receiving payments from the new borrower.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section class="section benefits-section">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Benefits of Secondary Trading</span>
+            </div>
+            <p class="section-description">Why traders choose ZimCrowd's Secondary Market.</p>
+        </div>
+
+        <div class="benefits-grid">
+            <div class="benefit-card card-grey">
+                <div class="benefit-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3><span class="label label-green">Instant Liquidity</span></h3>
+                <p>Convert your loan investments to cash quickly when you need funds, without waiting for loan maturity.</p>
+            </div>
+
+            <div class="benefit-card card-green">
+                <div class="benefit-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 19V6L21 3V16M9 19C9 20.1046 8.10457 21 7 21C5.89543 21 5 20.1046 5 19C5 17.8954 5.89543 17 7 17C8.10457 17 9 17.8954 9 19ZM9 19L9 10M9 10V16M9 10L21 7" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3><span class="label label-white">Portfolio Diversification</span></h3>
+                <p>Buy and sell loan portions to adjust your risk exposure and optimize your investment portfolio.</p>
+            </div>
+
+            <div class="benefit-card card-dark">
+                <div class="benefit-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" stroke="#38e07b" stroke-width="2"/>
+                        <polyline points="12,6 12,12 16,14" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3><span class="label label-green">Real-time Pricing</span></h3>
+                <p>Transparent pricing based on borrower performance, market conditions, and remaining loan term.</p>
+            </div>
+
+            <div class="benefit-card card-grey">
+                <div class="benefit-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3><span class="label label-green">Risk Management</span></h3>
+                <p>Exit positions early if market conditions change or if you need to rebalance your investment strategy.</p>
+            </div>
+
+            <div class="benefit-card card-green">
+                <div class="benefit-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M16 3.13C16.8604 3.35031 17.623 3.8507 18.1676 4.55231C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3><span class="label label-white">Community Focus</span></h3>
+                <p>All trading happens within our community, ensuring loans stay local and support continues for borrowers.</p>
+            </div>
+
+            <div class="benefit-card card-dark">
+                <div class="benefit-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" stroke="#38e07b" stroke-width="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21" stroke="#38e07b" stroke-width="2"/>
+                        <line x1="12" y1="17" x2="12" y2="21" stroke="#38e07b" stroke-width="2"/>
+                    </svg>
+                </div>
+                <h3><span class="label label-green">Secure Transactions</span></h3>
+                <p>All trades are processed through our secure platform with instant fund transfers and automatic payment redirection.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-block">
+        <div class="cta-container">
+            <div class="cta-content">
+                <h3>Start Trading on the Secondary Market</h3>
+                <p>Join our active trading community and discover new opportunities to optimize your investment portfolio. Download our app to access real-time trading.</p>
+                <div class="app-store-buttons">
+                    <a href="#" class="app-store-btn google-play">
+                        <img src="images/GetItOnGooglePlay_Badge_Web_color_English.svg" alt="Get it on Google Play" style="height: 60px; width: auto;">
+                    </a>
+                    <a href="#" class="app-store-btn app-store">
+                        <img src="images/Download_on_the_App_Store_Badge_US-UK_RGB_blk_092917.svg" alt="Download on the App Store" style="height: 60px; width: auto;">
+                    </a>
+                </div>
+            </div>
+            <div class="cta-illustration">
+                <div class="hero-illustration-placeholder">
+                    <div class="placeholder-icon">💼</div>
+                    <div class="placeholder-content">
+                        <p>Trading Dashboard</p>
+                        <small>Manage your portfolio & trades</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="zimcrowd-footer">
+        <div class="footer-container">
+            <div class="footer-column brand">
+                <div class="footer-logo">
+                    <a href="index.html">
+                        <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                            <circle cx="14.76" cy="14.5" r="14.5" fill="#FFFFFF"/>
+                            <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#FFFFFF">ZimCrowd</text>
+                        </svg>
+                    </a>
+                </div>
+                <p>Fair, community-first lending. Borrow on your terms, invest with impact.</p>
+                <h4>Stay in the loop</h4>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="Your email address" required>
+                    <button type="submit">Subscribe</button>
+                </form>
+            </div>
+
+            <div class="footer-column">
+                <h4>Platform</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html#borrow">Borrow</a></li>
+                    <li><a href="index.html#lend">Lend</a></li>
+                    <li><a href="primary-market.html">Primary Market</a></li>
+                    <li><a href="secondary-market.html">Secondary Market</a></li>
+                    <li><a href="kairo-ai.html">Kairo AI Coach</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html#about-us">About Us</a></li>
+                    <li><a href="index.html#careers">Careers</a></li>
+                    <li><a href="index.html#press">Press</a></li>
+                    <li><a href="index.html#blog">Blog</a></li>
+                    <li><a href="index.html#partners">Partners</a></li>
+                    <li><a href="index.html#contact">Contact</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column" id="contact">
+                <h4>Contact Us</h4>
+                <div class="footer-contact-info">
+                    <p><i class="fas fa-envelope"></i> info@zimcrowd.com</p>
+                    <p><i class="fas fa-phone"></i> +263710467317</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Harare, Zimbabwe</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile Menu Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const mobileMenuDrawer = document.querySelector('.mobile-menu-drawer');
+            const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
+            const mobileMenuClose = document.querySelector('.mobile-menu-close');
+            const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
+
+            function toggleMobileMenu() {
+                mobileMenuDrawer.classList.toggle('active');
+                document.body.style.overflow = mobileMenuDrawer.classList.contains('active') ? 'hidden' : '';
+            }
+
+            function closeMobileMenu() {
+                mobileMenuDrawer.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            if (mobileMenuOverlay) mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+            if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeMobileMenu);
+
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && mobileMenuDrawer.classList.contains('active')) {
+                    closeMobileMenu();
+                }
+            });
+        });
+
+        // Navigation Hide/Show on Scroll
+        let lastScrollTop = 0;
+        const navigation = document.querySelector('.navigation');
+
+        window.addEventListener('scroll', function() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            if (scrollTop > lastScrollTop && scrollTop > 100) {
+                navigation.classList.add('hidden');
+            } else {
+                navigation.classList.remove('hidden');
+            }
+
+            lastScrollTop = scrollTop;
+        });
+    </script>
+</body>
+</html>
