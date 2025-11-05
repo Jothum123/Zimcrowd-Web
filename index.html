@@ -910,12 +910,12 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
                     };
                 } catch (error) {
                     console.log('Using fallback stats due to app API error:', error);
-                    // Fallback to default values if API fails
+                    // Fallback to zero values if API fails
                     return {
-                        fundsLent: 2.5,
-                        loansFunded: 1200,
-                        repaymentRate: 98,
-                        activeMembers: 500
+                        fundsLent: 0,
+                        loansFunded: 0,
+                        repaymentRate: 0,
+                        activeMembers: 0
                     };
                 }
             }
