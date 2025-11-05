@@ -252,13 +252,13 @@ body {
 }
 
 .animated-message.bottom-left-message {
-    top: 530px;
+    top: 380px;
     right: 300px;
     animation-delay: 0.5s;
 }
 
 .animated-message.bottom-right-message {
-    top: 550px;
+    top: 400px;
     right: 50px;
     animation-delay: 1s;
 }
