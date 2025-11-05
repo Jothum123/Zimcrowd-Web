@@ -1889,166 +1889,146 @@ p {
     margin: 40px auto;
 }
 
-/* [--- ZIMCROWD FOOTER STYLES ---] */
+/* [--- PROFESSIONAL ZIMCROWD FOOTER STYLES ---] */
 
-/* * Define your brand colors once at the top.
- * --zim-green is your main #38e07b color.
- * The rest define the footer's dark theme.
-*/
+/* Professional footer color scheme */
 :root {
     --zim-green: #38e07b;
-    --footer-bg: #1a1a1a;
-    --footer-text: #b3b3b3;
+    --footer-bg: #0a0a0a;
+    --footer-bg-secondary: #1a1a1a;
+    --footer-text: #e5e5e5;
+    --footer-text-muted: #a3a3a3;
     --footer-heading: #ffffff;
     --footer-link-hover: var(--zim-green);
+    --footer-border: #2a2a2a;
 }
 
-/* Main footer container */
+/* Main footer container - Clean and professional */
 .zimcrowd-footer {
-    background-color: var(--footer-bg);
+    background: linear-gradient(135deg, var(--footer-bg) 0%, var(--footer-bg-secondary) 100%);
     color: var(--footer-text);
-    padding: 30px 5% 20px 5%; /* 30px top, 20px bottom, 5% sides for centered content */
-    font-size: 14px;
+    padding: 80px 5% 40px 5%;
+    font-family: var(--font-family);
+    position: relative;
+    overflow: hidden;
 }
 
-/* Consistent font sizes for footer elements */
-.zimcrowd-footer h4 {
-    font-size: 16px;
-    font-weight: 600;
+/* Subtle background pattern */
+.zimcrowd-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        radial-gradient(circle at 25% 25%, rgba(56, 231, 123, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(56, 231, 123, 0.02) 0%, transparent 50%);
+    pointer-events: none;
 }
 
-.zimcrowd-footer p,
-.zimcrowd-footer a,
-.zimcrowd-footer li {
-    font-size: 14px;
-}
-
-.zimcrowd-footer .footer-contact-info p,
-.zimcrowd-footer .footer-contact-hours p {
-    font-size: 14px;
-}
-
-/* Main grid layout for columns */
+/* Professional grid layout */
 .footer-container {
     display: grid;
-    grid-template-columns: repeat(6, 1fr); /* All columns equal width */
-    gap: 40px; /* Space between columns */
-    margin-bottom: 40px;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+    gap: 50px;
+    margin-bottom: 60px;
+    position: relative;
+    z-index: 1;
 }
 
-/* Base style for all columns */
-.footer-column {
-    min-height: 200px; /* Ensure consistent column height */
-}
-
-/* Footer Animation */
-.footer-animation {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-.animated-shape {
-    width: 20px;
-    height: 20px;
-    background: linear-gradient(135deg, var(--zim-green), rgba(56, 231, 123, 0.8));
-    border-radius: 50%;
-    animation: footerBounce 2s ease-in-out infinite;
-}
-
-.animated-shape.shape-1 {
-    animation-delay: 0s;
-}
-
-.animated-shape.shape-2 {
-    animation-delay: 0.5s;
-}
-
-.animated-shape.shape-3 {
-    animation-delay: 1s;
-}
-
-@keyframes footerBounce {
-    0%, 20%, 50%, 80%, 100% {
-        transform: translateY(0) scale(1);
-        opacity: 0.7;
-    }
-    40% {
-        transform: translateY(-10px) scale(1.2);
-        opacity: 1;
-    }
-    60% {
-        transform: translateY(-5px) scale(1.1);
-        opacity: 0.9;
-    }
-}
-
-/* Special sizing for the brand column - positioned in first column */
+/* Brand column - Prominent and clean */
 .footer-column.brand {
-    grid-column: 1; /* Position in first column */
-    max-width: 300px; /* Limit width for the brand section */
+    grid-column: 1;
+    max-width: 320px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
 }
 
 .footer-logo {
-    width: 150px;
-    margin-bottom: 0; /* Remove bottom margin since we have gap */
+    width: 160px;
+    filter: brightness(1.1);
+    transition: filter 0.3s ease;
 }
 
-.footer-column.brand .newsletter-form {
-    margin: 0; /* Remove any default margins */
+.footer-logo:hover {
+    filter: brightness(1.2);
 }
 
-/* Headings for link sections (e.g., "Platform") */
-.footer-column h4 {
-    color: var(--footer-heading);
-    font-size: 16px;
-    margin-bottom: 20px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.footer-column.brand p {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--footer-text-muted);
+    margin: 0;
 }
 
-.footer-column p {
-    line-height: 1.7;
-    margin-bottom: 20px;
-}
-
-/* [--- Newsletter Form ---] */
+/* Professional newsletter form */
 .newsletter-form {
     display: flex;
-    margin-bottom: 20px;
+    margin-top: 8px;
 }
 
 .newsletter-form input[type="email"] {
-    flex-grow: 1; /* Input field takes available space */
-    border: 1px solid #444;
-    background-color: #333;
+    flex: 1;
+    border: 1px solid var(--footer-border);
+    background-color: rgba(255, 255, 255, 0.05);
     color: var(--footer-heading);
-    padding: 12px;
-    border-radius: 5px 0 0 5px; /* Rounded left corners */
+    padding: 14px 18px;
+    border-radius: 8px 0 0 8px;
     font-size: 14px;
     outline: none;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.newsletter-form input[type="email"]:focus {
+    border-color: var(--zim-green);
+    background-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(56, 231, 123, 0.1);
 }
 
 .newsletter-form button {
     border: none;
-    background-color: var(--zim-green);
-    color: var(--footer-bg); /* Dark text on green button */
-    padding: 12px 18px;
-    border-radius: 0 5px 5px 0; /* Rounded right corners */
-    font-weight: bold;
+    background: linear-gradient(135deg, var(--zim-green), #22c55e);
+    color: #0a0a0a;
+    padding: 14px 24px;
+    border-radius: 0 8px 8px 0;
+    font-weight: 600;
+    font-size: 14px;
     cursor: pointer;
-    transition: opacity 0.3s;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(56, 231, 123, 0.2);
 }
 
 .newsletter-form button:hover {
-    opacity: 0.85;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(56, 231, 123, 0.3);
 }
 
-/* [--- Footer Links (Columns 2, 3, 4) ---] */
+/* Professional column headers */
+.footer-column h4 {
+    color: var(--footer-heading);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    text-transform: none;
+    letter-spacing: 0.5px;
+    position: relative;
+}
+
+.footer-column h4::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--zim-green), transparent);
+    border-radius: 1px;
+}
+
+/* Clean footer links */
 .footer-links {
     list-style: none;
     padding: 0;
@@ -2056,64 +2036,148 @@ p {
 }
 
 .footer-links li {
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
 .footer-links a {
     color: var(--footer-text);
     text-decoration: none;
-    transition: color 0.3s;
+    font-size: 14px;
+    font-weight: 400;
+    transition: all 0.3s ease;
+    position: relative;
+    display: inline-block;
 }
 
 .footer-links a:hover {
     color: var(--footer-link-hover);
+    transform: translateX(4px);
 }
 
-/* App store images */
-.app-store-links img {
-    width: 135px;
-    margin-right: 10px;
-    margin-bottom: 10px;
-    cursor: pointer;
+.footer-links a::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--zim-green);
+    transition: width 0.3s ease;
 }
 
-/* [--- Bottom Bar (Copyright, Socials) ---] */
-.footer-bottom {
-    border-top: 1px solid #333; /* Separator line */
-    padding-top: 30px;
-    margin-top: 30px;
+.footer-links a:hover::before {
+    width: 100%;
+}
+
+/* Professional contact info */
+.footer-contact-info p,
+.footer-contact-hours p {
+    font-size: 14px;
+    margin-bottom: 12px;
     display: flex;
-    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.footer-contact-info i,
+.footer-contact-hours i {
+    color: var(--zim-green);
+    width: 16px;
+    opacity: 0.8;
+}
+
+/* Support and company badges */
+.company-badge,
+.support-badge {
+    margin-top: 20px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px solid var(--footer-border);
+    backdrop-filter: blur(10px);
+}
+
+.badge-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.company-badge p,
+.support-badge p {
+    font-size: 13px;
+    color: var(--footer-text-muted);
+    margin: 0;
+    font-weight: 500;
+}
+
+/* Professional bottom bar */
+.footer-bottom {
+    border-top: 1px solid var(--footer-border);
+    padding-top: 40px;
+    margin-top: 40px;
+    display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 20px;
+    position: relative;
+    z-index: 1;
 }
 
-/* Social media icons */
+/* Social media icons - Clean and modern */
+.footer-socials {
+    display: flex;
+    gap: 16px;
+}
+
 .footer-socials a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
     color: var(--footer-text);
-    font-size: 20px;
-    margin-left: 18px;
-    transition: color 0.3s;
+    font-size: 18px;
+    transition: all 0.3s ease;
+    border: 1px solid var(--footer-border);
+    backdrop-filter: blur(10px);
 }
 
 .footer-socials a:hover {
-    color: var(--footer-link-hover);
+    background: var(--zim-green);
+    color: #0a0a0a;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(56, 231, 123, 0.3);
 }
 
-/* Legal links (Terms, Privacy) */
+/* Copyright and legal */
+.footer-copyright {
+    color: var(--footer-text-muted);
+    font-size: 13px;
+    font-weight: 400;
+}
+
 .footer-legal-links {
     display: flex;
-    gap: 20px;
+    gap: 24px;
 }
 
 .footer-legal-links a {
-    color: var(--footer-text);
+    color: var(--footer-text-muted);
     text-decoration: none;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 400;
+    transition: color 0.3s ease;
 }
+
 .footer-legal-links a:hover {
     color: var(--footer-link-hover);
+}
+
+/* Remove old footer animation */
+.footer-animation {
+    display: none;
 }
 
 /* [--- Risk Disclaimer ---] */
