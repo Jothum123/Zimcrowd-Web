@@ -1,10 +1,79 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const url = require('url');
+const querystring = require('querystring');
+
+// Newsletter subscribers storage
+const SUBSCRIBERS_FILE = path.join(__dirname, 'subscribers.json');
+
+// Initialize subscribers file if it doesn't exist
+if (!fs.existsSync(SUBSCRIBERS_FILE)) {
+    fs.writeFileSync(SUBSCRIBERS_FILE, JSON.stringify([], null, 2));
+}
 
 const server = http.createServer((req, res) => {
+    const parsedUrl = url.parse(req.url, true);
+    const pathname = parsedUrl.pathname;
+
+    // Handle newsletter subscription POST request
+    if (req.method === 'POST' && pathname === '/api/newsletter/subscribe') {
+        let body = '';
+
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+
+        req.on('end', () => {
+            try {
+                const postData = querystring.parse(body);
+                const email = postData.email;
+
+                if (!email || !email.includes('@')) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: false, message: 'Invalid email address' }));
+                    return;
+                }
+
+                // Read existing subscribers
+                const subscribers = JSON.parse(fs.readFileSync(SUBSCRIBERS_FILE, 'utf8'));
+
+                // Check if email already exists
+                if (subscribers.some(sub => sub.email === email)) {
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: false, message: 'Email already subscribed' }));
+                    return;
+                }
+
+                // Add new subscriber
+                const newSubscriber = {
+                    email: email,
+                    subscribedAt: new Date().toISOString(),
+                    ip: req.connection.remoteAddress
+                };
+
+                subscribers.push(newSubscriber);
+
+                // Save to file
+                fs.writeFileSync(SUBSCRIBERS_FILE, JSON.stringify(subscribers, null, 2));
+
+                console.log(`New newsletter subscriber: ${email}`);
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true, message: 'Successfully subscribed to newsletter!' }));
+
+            } catch (error) {
+                console.error('Newsletter subscription error:', error);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, message: 'Server error occurred' }));
+            }
+        });
+
+        return;
+    }
+
     // Get the file path
-    let filePath = path.join(__dirname, req.url === '/' ? 'index.html' : req.url);
+    let filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);
 
     // Get the file extension
     const ext = path.extname(filePath);
