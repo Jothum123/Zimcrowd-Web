@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>Blog - ZimCrowd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .nav-links a[href="#download-app"]:hover {
+            background: black;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+</head>
+<body>
+    <!-- Animated Background Circles -->
+    <div class="animated-background">
+        <div class="circle-container">
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+        </div>
+        <div class="solid-shapes">
+            <div class="solid-shape square" style="top: 15%; left: 20%; animation: float 8s ease-in-out infinite;"></div>
+            <div class="solid-shape square" style="top: 70%; right: 15%; animation: float 10s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape square" style="bottom: 20%; left: 70%; animation: float 12s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="top: 25%; right: 25%; animation: pulse 6s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="bottom: 35%; left: 25%; animation: pulse 8s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape triangle" style="top: 40%; left: 5%; animation: bounce 7s ease-in-out infinite;"></div>
+            <div class="solid-shape triangle" style="top: 60%; right: 70%; animation: bounce 9s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape hexagon" style="top: 80%; left: 40%; animation: rotate 15s linear infinite;"></div>
+            <div class="solid-shape hexagon" style="top: 30%; right: 5%; animation: rotate 20s linear infinite reverse;"></div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navigation">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#000000"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html#lend">Lend</a>
+                <a href="index.html#borrow">Borrow</a>
+                <div class="dropdown">
+                    <button class="dropbtn">Market ▼</button>
+                    <div class="dropdown-content">
+                        <a href="primary-market.html">Primary Market</a>
+                        <a href="secondary-market.html">Secondary Market</a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html">Kairo AI</a>
+                <a href="index.html#download-app" class="btn-tertiary">Download App</a>
+            </div>
+            <button class="mobile-menu-btn" aria-label="Toggle menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu-drawer">
+        <div class="mobile-menu-overlay"></div>
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <div class="mobile-logo">
+                    <svg width="160" height="26" viewBox="0 0 180 29" fill="none">
+                        <circle cx="13" cy="13" r="13" fill="#38e07b"/>
+                        <text x="35" y="19" font-family="Space Grotesk" font-size="16" font-weight="600" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </div>
+                <button class="mobile-menu-close" aria-label="Close menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mobile-menu-links">
+                <a href="index.html#lend" class="mobile-menu-link">
+                    <span class="link-icon">💰</span>
+                    <span class="link-text">Lend</span>
+                </a>
+                <a href="index.html#borrow" class="mobile-menu-link">
+                    <span class="link-icon">🤝</span>
+                    <span class="link-text">Borrow</span>
+                </a>
+                <div class="mobile-menu-dropdown">
+                    <div class="mobile-menu-link dropdown-toggle">
+                        <span class="link-icon">📈</span>
+                        <span class="link-text">Market</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="mobile-dropdown-content">
+                        <a href="primary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">📊</span>
+                            <span class="link-text">Primary Market</span>
+                        </a>
+                        <a href="secondary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">🔄</span>
+                            <span class="link-text">Secondary Market</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html" class="mobile-menu-link">
+                    <span class="link-icon">🤖</span>
+                    <span class="link-text">Kairo AI</span>
+                </a>
+                <div class="mobile-menu-divider"></div>
+                <a href="index.html#download-app" class="mobile-menu-cta">
+                    <span class="cta-icon">📱</span>
+                    <span class="cta-text">Download App</span>
+                </a>
+            </div>
+            <div class="mobile-menu-footer">
+                <p>Building Community Finance</p>
+                <div class="mobile-social-links">
+                    <a href="#" class="mobile-social-link" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-content">
+                <h1><span class="label label-green">Blog</span> - Insights & Stories</h1>
+                <p class="header-subtitle">Stay informed with the latest insights on community finance, fintech innovation, and financial inclusion.</p>
+                <div class="button-group">
+                    <button class="btn-primary">Latest Posts</button>
+                    <button class="btn-secondary">Categories</button>
+                </div>
+            </div>
+            <div class="header-image">
+                <img src="images/Gemini_Generated_Image_qycesxqycesxqyce.png" alt="Blog" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+        </div>
+    </header>
+
+    <!-- Featured Post -->
+    <section class="section" id="featured-post">
+        <div class="featured-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); margin-bottom: 60px;">
+            <div class="featured-content" style="display: grid; grid-template-columns: 2fr 1fr; gap: 40px; align-items: center;">
+                <div>
+                    <div class="post-meta" style="color: var(--color-green); font-weight: 600; margin-bottom: 15px;">Featured • November 1, 2025</div>
+                    <h2 style="color: var(--color-black); font-size: 32px; margin-bottom: 20px;">The Future of Community Lending in Africa</h2>
+                    <p style="color: #666; line-height: 1.6; font-size: 18px; margin-bottom: 25px;">How peer-to-peer lending platforms are transforming financial access across the continent, with real stories from Zimbabwean entrepreneurs.</p>
+                    <button class="btn-primary">Read Full Article</button>
+                </div>
+                <div class="featured-image" style="border-radius: 15px; overflow: hidden; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);">
+                    <img src="images/Gemini_Generated_Image_2wm05r2wm05r2wm0.png" alt="Featured Post" style="width: 100%; height: 250px; object-fit: cover;">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Blog Posts Grid -->
+    <section class="section" id="blog-posts">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Latest Articles</span>
+            </div>
+            <p class="section-description">Explore our collection of insights, stories, and educational content.</p>
+        </div>
+
+        <div class="blog-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px; margin-top: 60px;">
+            <div class="blog-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; overflow: hidden; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease;">
+                <div class="blog-image" style="height: 200px; overflow: hidden;">
+                    <img src="images/Gemini_Generated_Image_qycesxqycesxqyce.png" alt="Blog Post" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div class="blog-content" style="padding: 30px;">
+                    <div class="blog-category" style="background: rgba(56, 231, 123, 0.1); color: var(--color-green); padding: 4px 12px; border-radius: 12px; display: inline-block; font-size: 12px; font-weight: 600; margin-bottom: 15px;">FINTECH</div>
+                    <h3 style="color: var(--color-black); margin-bottom: 15px;">AI in Lending: Balancing Innovation with Fairness</h3>
+                    <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">How artificial intelligence is revolutionizing lending decisions while maintaining ethical standards and transparency.</p>
+                    <div class="blog-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #999; font-size: 14px;">October 25, 2025</span>
+                        <a href="#" style="color: var(--color-green); font-weight: 600; text-decoration: none;">Read More →</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="blog-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; overflow: hidden; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease;">
+                <div class="blog-image" style="height: 200px; overflow: hidden;">
+                    <img src="images/Gemini_Generated_Image_7wy0wc7wy0wc7wy0.png" alt="Blog Post" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div class="blog-content" style="padding: 30px;">
+                    <div class="blog-category" style="background: rgba(56, 231, 123, 0.1); color: var(--color-green); padding: 4px 12px; border-radius: 12px; display: inline-block; font-size: 12px; font-weight: 600; margin-bottom: 15px;">COMMUNITY</div>
+                    <h3 style="color: var(--color-black); margin-bottom: 15px;">Success Stories: How ZimCrowd Changed Lives</h3>
+                    <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">Real stories from borrowers and lenders who found financial freedom through our community lending platform.</p>
+                    <div class="blog-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #999; font-size: 14px;">October 18, 2025</span>
+                        <a href="#" style="color: var(--color-green); font-weight: 600; text-decoration: none;">Read More →</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="blog-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; overflow: hidden; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease;">
+                <div class="blog-image" style="height: 200px; overflow: hidden;">
+                    <img src="images/Gemini_Generated_Image_2wm05r2wm05r2wm0.png" alt="Blog Post" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div class="blog-content" style="padding: 30px;">
+                    <div class="blog-category" style="background: rgba(56, 231, 123, 0.1); color: var(--color-green); padding: 4px 12px; border-radius: 12px; display: inline-block; font-size: 12px; font-weight: 600; margin-bottom: 15px;">EDUCATION</div>
+                    <h3 style="color: var(--color-black); margin-bottom: 15px;">Financial Literacy: Building a Stronger Community</h3>
+                    <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">Why financial education is crucial for economic development and how we're making it accessible to everyone.</p>
+                    <div class="blog-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #999; font-size: 14px;">October 10, 2025</span>
+                        <a href="#" style="color: var(--color-green); font-weight: 600; text-decoration: none;">Read More →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 60px;">
+            <button class="btn-secondary" style="padding: 15px 40px; font-size: 16px;">Load More Articles</button>
+        </div>
+    </section>
+
+    <!-- Newsletter Signup -->
+    <section class="section" id="newsletter" style="background-color: #f8fafc;">
+        <div class="newsletter-card" style="max-width: 600px; margin: 0 auto; background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+            <div class="newsletter-icon" style="font-size: 48px; margin-bottom: 20px;">📬</div>
+            <h3 style="color: var(--color-black); margin-bottom: 15px;">Stay Updated</h3>
+            <p style="color: #666; margin-bottom: 25px;">Get the latest insights and stories delivered to your inbox.</p>
+            <div class="newsletter-form" style="display: flex; gap: 15px;">
+                <input type="email" placeholder="Enter your email" style="flex: 1; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: white;">
+                <button class="btn-primary">Subscribe</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Zimcrowd Footer -->
+    <footer class="zimcrowd-footer">
+        <div class="footer-container">
+            <div class="footer-column brand">
+                <div class="footer-logo">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#FFFFFF"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#FFFFFF">ZimCrowd</text>
+                    </svg>
+                </div>
+                <p>Fair, community-first lending. Borrow on your terms, invest with impact.</p>
+            </div>
+            <div class="footer-column">
+                <h4>Platform</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html#borrow">Borrow</a></li>
+                    <li><a href="index.html#lend">Lend</a></li>
+                    <li><a href="primary-market.html">Primary Market</a></li>
+                    <li><a href="secondary-market.html">Secondary Market</a></li>
+                    <li><a href="kairo-ai.html">Kairo AI Coach</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="about-us.html">About Us</a></li>
+                    <li><a href="careers.html">Careers</a></li>
+                    <li><a href="press.html">Press</a></li>
+                    <li><a href="blog.html">Blog</a></li>
+                    <li><a href="partners.html">Partners</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Contact Us</h4>
+                <div class="footer-contact-info">
+                    <p><i class="fas fa-envelope"></i> info@zimcrowd.com</p>
+                    <p><i class="fas fa-phone"></i> +263710467317</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Harare, Zimbabwe</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Navigation Hide/Show on Scroll
+        let lastScrollTop = 0;
+        const navigation = document.querySelector('.navigation');
+
+        window.addEventListener('scroll', function() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            if (scrollTop > lastScrollTop && scrollTop > 100) {
+                navigation.classList.add('hidden');
+            } else {
+                navigation.classList.remove('hidden');
+            }
+
+            lastScrollTop = scrollTop;
+        });
+
+        // Mobile Menu Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const mobileMenuDrawer = document.querySelector('.mobile-menu-drawer');
+            const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
+            const mobileMenuClose = document.querySelector('.mobile-menu-close');
+            const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
+
+            function toggleMobileMenu() {
+                mobileMenuDrawer.classList.toggle('active');
+                document.body.style.overflow = mobileMenuDrawer.classList.contains('active') ? 'hidden' : '';
+            }
+
+            function closeMobileMenu() {
+                mobileMenuDrawer.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            if (mobileMenuOverlay) mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+            if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeMobileMenu);
+
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && mobileMenuDrawer.classList.contains('active')) {
+                    closeMobileMenu();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

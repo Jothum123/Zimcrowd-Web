@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>Help Center - ZimCrowd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .nav-links a[href="#download-app"]:hover {
+            background: black;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+</head>
+<body>
+    <!-- Animated Background Circles -->
+    <div class="animated-background">
+        <div class="circle-container">
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+        </div>
+        <div class="solid-shapes">
+            <div class="solid-shape square" style="top: 15%; left: 20%; animation: float 8s ease-in-out infinite;"></div>
+            <div class="solid-shape square" style="top: 70%; right: 15%; animation: float 10s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape square" style="bottom: 20%; left: 70%; animation: float 12s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="top: 25%; right: 25%; animation: pulse 6s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="bottom: 35%; left: 25%; animation: pulse 8s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape triangle" style="top: 40%; left: 5%; animation: bounce 7s ease-in-out infinite;"></div>
+            <div class="solid-shape triangle" style="top: 60%; right: 70%; animation: bounce 9s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape hexagon" style="top: 80%; left: 40%; animation: rotate 15s linear infinite;"></div>
+            <div class="solid-shape hexagon" style="top: 30%; right: 5%; animation: rotate 20s linear infinite reverse;"></div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navigation">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#000000"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html#lend">Lend</a>
+                <a href="index.html#borrow">Borrow</a>
+                <div class="dropdown">
+                    <button class="dropbtn">Market ▼</button>
+                    <div class="dropdown-content">
+                        <a href="primary-market.html">Primary Market</a>
+                        <a href="secondary-market.html">Secondary Market</a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html">Kairo AI</a>
+                <a href="index.html#download-app" class="btn-tertiary">Download App</a>
+            </div>
+            <button class="mobile-menu-btn" aria-label="Toggle menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu-drawer">
+        <div class="mobile-menu-overlay"></div>
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <div class="mobile-logo">
+                    <svg width="160" height="26" viewBox="0 0 180 29" fill="none">
+                        <circle cx="13" cy="13" r="13" fill="#38e07b"/>
+                        <text x="35" y="19" font-family="Space Grotesk" font-size="16" font-weight="600" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </div>
+                <button class="mobile-menu-close" aria-label="Close menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mobile-menu-links">
+                <a href="index.html#lend" class="mobile-menu-link">
+                    <span class="link-icon">💰</span>
+                    <span class="link-text">Lend</span>
+                </a>
+                <a href="index.html#borrow" class="mobile-menu-link">
+                    <span class="link-icon">🤝</span>
+                    <span class="link-text">Borrow</span>
+                </a>
+                <div class="mobile-menu-dropdown">
+                    <div class="mobile-menu-link dropdown-toggle">
+                        <span class="link-icon">📈</span>
+                        <span class="link-text">Market</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="mobile-dropdown-content">
+                        <a href="primary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">📊</span>
+                            <span class="link-text">Primary Market</span>
+                        </a>
+                        <a href="secondary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">🔄</span>
+                            <span class="link-text">Secondary Market</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html" class="mobile-menu-link">
+                    <span class="link-icon">🤖</span>
+                    <span class="link-text">Kairo AI</span>
+                </a>
+                <div class="mobile-menu-divider"></div>
+                <a href="index.html#download-app" class="mobile-menu-cta">
+                    <span class="cta-icon">📱</span>
+                    <span class="cta-text">Download App</span>
+                </a>
+            </div>
+            <div class="mobile-menu-footer">
+                <p>Building Community Finance</p>
+                <div class="mobile-social-links">
+                    <a href="#" class="mobile-social-link" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-content">
+                <h1><span class="label label-green">Help Center</span> - Your Support Hub</h1>
+                <p class="header-subtitle">Find answers, get help, and connect with our community. We're here to support your ZimCrowd journey every step of the way.</p>
+                <div class="button-group">
+                    <button class="btn-primary">Browse Topics</button>
+                    <button class="btn-secondary">Contact Support</button>
+                </div>
+            </div>
+            <div class="header-image">
+                <img src="images/Gemini_Generated_Image_qycesxqycesxqyce.png" alt="Help Center" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+        </div>
+    </header>
+
+    <!-- Search Section -->
+    <section class="section" id="help-search" style="background-color: #f8fafc; padding: 80px 0;">
+        <div class="container">
+            <div class="search-container" style="max-width: 600px; margin: 0 auto; text-align: center;">
+                <h2 style="color: var(--color-black); margin-bottom: 20px;">How can we help you today?</h2>
+                <div class="search-box" style="position: relative; margin-bottom: 30px;">
+                    <input type="text" placeholder="Search for help articles, guides, or FAQs..." style="width: 100%; padding: 20px 50px 20px 20px; border: 2px solid #e5e7eb; border-radius: 50px; font-size: 16px; background: white; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
+                    <button style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: var(--color-green); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer;">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <p style="color: #666;">Popular searches: getting started, account verification, loan terms, repayment</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Help Categories -->
+    <section class="section" id="help-categories">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Browse by Category</span>
+            </div>
+            <p class="section-description">Explore our comprehensive help resources organized by topic.</p>
+        </div>
+
+        <div class="help-categories-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 60px;">
+            <div class="help-category-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease;">
+                <div class="category-icon" style="font-size: 64px; margin-bottom: 20px;">🚀</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Getting Started</h3>
+                <p style="color: #666; margin-bottom: 25px;">New to ZimCrowd? Learn the basics of creating your account and navigating the platform.</p>
+                <ul style="text-align: left; color: #666; margin-bottom: 25px;">
+                    <li>• Account setup and verification</li>
+                    <li>• Downloading the mobile app</li>
+                    <li>• Understanding the platform</li>
+                    <li>• Security best practices</li>
+                </ul>
+                <button class="btn-secondary">Explore Getting Started</button>
+            </div>
+
+            <div class="help-category-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease;">
+                <div class="category-icon" style="font-size: 64px; margin-bottom: 20px;">💰</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Borrowing</h3>
+                <p style="color: #666; margin-bottom: 25px;">Everything you need to know about requesting and managing loans on ZimCrowd.</p>
+                <ul style="text-align: left; color: #666; margin-bottom: 25px;">
+                    <li>• Creating loan requests</li>
+                    <li>• Setting loan terms</li>
+                    <li>• Managing repayments</li>
+                    <li>• Understanding interest rates</li>
+                </ul>
+                <button class="btn-secondary">Explore Borrowing</button>
+            </div>
+
+            <div class="help-category-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease;">
+                <div class="category-icon" style="font-size: 64px; margin-bottom: 20px;">📈</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Lending</h3>
+                <p style="color: #666; margin-bottom: 25px;">Learn how to invest in your community and earn returns through peer-to-peer lending.</p>
+                <ul style="text-align: left; color: #666; margin-bottom: 25px;">
+                    <li>• Finding loan opportunities</li>
+                    <li>• Risk assessment</li>
+                    <li>• Managing your portfolio</li>
+                    <li>• Understanding returns</li>
+                </ul>
+                <button class="btn-secondary">Explore Lending</button>
+            </div>
+
+            <div class="help-category-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease;">
+                <div class="category-icon" style="font-size: 64px; margin-bottom: 20px;">🛡️</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Account & Security</h3>
+                <p style="color: #666; margin-bottom: 25px;">Keep your account safe and manage your personal information securely.</p>
+                <ul style="text-align: left; color: #666; margin-bottom: 25px;">
+                    <li>• Password management</li>
+                    <li>• Two-factor authentication</li>
+                    <li>• Privacy settings</li>
+                    <li>• Account recovery</li>
+                </ul>
+                <button class="btn-secondary">Explore Security</button>
+            </div>
+
+            <div class="help-category-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease;">
+                <div class="category-icon" style="font-size: 64px; margin-bottom: 20px;">📱</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Mobile App</h3>
+                <p style="color: #666; margin-bottom: 25px;">Get the most out of the ZimCrowd mobile experience with our app guides.</p>
+                <ul style="text-align: left; color: #666; margin-bottom: 25px;">
+                    <li>• App installation</li>
+                    <li>• Navigation tips</li>
+                    <li>• Push notifications</li>
+                    <li>• Troubleshooting</li>
+                </ul>
+                <button class="btn-secondary">Explore App Help</button>
+            </div>
+
+            <div class="help-category-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease;">
+                <div class="category-icon" style="font-size: 64px; margin-bottom: 20px;">🤖</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Kairo AI Assistant</h3>
+                <p style="color: #666; margin-bottom: 25px;">Learn how to use our AI financial coach for personalized guidance.</p>
+                <ul style="text-align: left; color: #666; margin-bottom: 25px;">
+                    <li>• Getting started with Kairo</li>
+                    <li>• Budget planning</li>
+                    <li>• Investment advice</li>
+                    <li>• Financial goal setting</li>
+                </ul>
+                <button class="btn-secondary">Explore Kairo</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Help Section -->
+    <section class="section" id="quick-help" style="background-color: #f8fafc;">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Quick Help</span>
+            </div>
+            <p class="section-description">Common questions and instant answers to get you back on track.</p>
+        </div>
+
+        <div class="quick-help-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; margin-top: 60px;">
+            <div class="quick-help-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <h3 style="color: var(--color-black); margin-bottom: 20px;">❓ Frequently Asked Questions</h3>
+                <div class="faq-preview">
+                    <div class="faq-item-mini" style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e5e7eb;">
+                        <h4 style="color: var(--color-black); margin-bottom: 8px;">How do I reset my password?</h4>
+                        <p style="color: #666; font-size: 14px;">Go to login page → Click "Forgot Password" → Enter your email → Follow reset instructions.</p>
+                    </div>
+                    <div class="faq-item-mini" style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e5e7eb;">
+                        <h4 style="color: var(--color-black); margin-bottom: 8px;">When will my loan be funded?</h4>
+                        <p style="color: #666; font-size: 14px;">Loans are typically funded within 24-48 hours once all requirements are met.</p>
+                    </div>
+                    <div class="faq-item-mini">
+                        <h4 style="color: var(--color-black); margin-bottom: 8px;">How do I contact support?</h4>
+                        <p style="color: #666; font-size: 14px;">Use live chat, email support@zimcrowd.com, or call +263 710 467 317.</p>
+                    </div>
+                </div>
+                <button class="btn-secondary" style="margin-top: 20px;">View All FAQs</button>
+            </div>
+
+            <div class="quick-help-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <h3 style="color: var(--color-black); margin-bottom: 20px;">📚 Popular Guides</h3>
+                <div class="guides-preview">
+                    <div class="guide-item" style="display: flex; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e5e7eb;">
+                        <div class="guide-icon" style="font-size: 24px; margin-right: 15px;">📱</div>
+                        <div>
+                            <h4 style="color: var(--color-black); margin-bottom: 5px;">Mobile App Setup</h4>
+                            <p style="color: #666; font-size: 14px;">Step-by-step guide to downloading and configuring the app</p>
+                        </div>
+                    </div>
+                    <div class="guide-item" style="display: flex; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e5e7eb;">
+                        <div class="guide-icon" style="font-size: 24px; margin-right: 15px;">💳</div>
+                        <div>
+                            <h4 style="color: var(--color-black); margin-bottom: 5px;">First Loan Request</h4>
+                            <p style="color: #666; font-size: 14px;">Everything you need to know about creating your first loan</p>
+                        </div>
+                    </div>
+                    <div class="guide-item" style="display: flex; align-items: center;">
+                        <div class="guide-icon" style="font-size: 24px; margin-right: 15px;">🔒</div>
+                        <div>
+                            <h4 style="color: var(--color-black); margin-bottom: 5px;">Account Security</h4>
+                            <p style="color: #666; font-size: 14px;">Best practices for keeping your account safe</p>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-secondary" style="margin-top: 20px;">Browse All Guides</button>
+            </div>
+
+            <div class="quick-help-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <h3 style="color: var(--color-black); margin-bottom: 20px;">🎯 Contact Options</h3>
+                <div class="contact-options">
+                    <div class="contact-option" style="display: flex; align-items: center; margin-bottom: 20px;">
+                        <div class="contact-icon" style="font-size: 32px; margin-right: 15px;">💬</div>
+                        <div>
+                            <h4 style="color: var(--color-black); margin-bottom: 5px;">Live Chat</h4>
+                            <p style="color: #666; font-size: 14px;">Instant help during business hours</p>
+                            <span style="color: var(--color-green); font-size: 12px;">● Online now</span>
+                        </div>
+                    </div>
+                    <div class="contact-option" style="display: flex; align-items: center; margin-bottom: 20px;">
+                        <div class="contact-icon" style="font-size: 32px; margin-right: 15px;">📧</div>
+                        <div>
+                            <h4 style="color: var(--color-black); margin-bottom: 5px;">Email Support</h4>
+                            <p style="color: #666; font-size: 14px;">Detailed questions and issues</p>
+                            <span style="color: #666; font-size: 12px;">24-48 hour response</span>
+                        </div>
+                    </div>
+                    <div class="contact-option" style="display: flex; align-items: center;">
+                        <div class="contact-icon" style="font-size: 32px; margin-right: 15px;">📞</div>
+                        <div>
+                            <h4 style="color: var(--color-black); margin-bottom: 5px;">Phone Support</h4>
+                            <p style="color: #666; font-size: 14px;">Urgent matters and complex issues</p>
+                            <span style="color: #666; font-size: 12px;">Mon-Fri, 8AM-6PM CAT</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-primary" style="margin-top: 20px;">Get Help Now</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Community Section -->
+    <section class="section" id="community-help">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Community Support</span>
+            </div>
+            <p class="section-description">Connect with fellow ZimCrowd members for advice, tips, and shared experiences.</p>
+        </div>
+
+        <div class="community-features" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; margin-top: 60px;">
+            <div class="community-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="community-icon" style="font-size: 64px; margin-bottom: 20px;">👥</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Community Forum</h3>
+                <p style="color: #666; margin-bottom: 25px;">Join discussions with other borrowers and lenders. Share experiences and get advice from the community.</p>
+                <button class="btn-secondary">Visit Forum</button>
+            </div>
+
+            <div class="community-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="community-icon" style="font-size: 64px; margin-bottom: 20px;">🎓</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Video Tutorials</h3>
+                <p style="color: #666; margin-bottom: 25px;">Watch step-by-step video guides covering everything from account setup to advanced features.</p>
+                <button class="btn-secondary">Watch Tutorials</button>
+            </div>
+
+            <div class="community-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="community-icon" style="font-size: 64px; margin-bottom: 20px;">📖</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Knowledge Base</h3>
+                <p style="color: #666; margin-bottom: 25px;">Comprehensive articles and guides covering all aspects of the ZimCrowd platform.</p>
+                <button class="btn-secondary">Browse Articles</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Zimcrowd Footer -->
+    <footer class="zimcrowd-footer">
+        <div class="footer-container">
+            <div class="footer-column brand">
+                <div class="footer-logo">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#FFFFFF"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#FFFFFF">ZimCrowd</text>
+                    </svg>
+                </div>
+                <p>Fair, community-first lending. Borrow on your terms, invest with impact.</p>
+            </div>
+            <div class="footer-column">
+                <h4>Platform</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html#borrow">Borrow</a></li>
+                    <li><a href="index.html#lend">Lend</a></li>
+                    <li><a href="primary-market.html">Primary Market</a></li>
+                    <li><a href="secondary-market.html">Secondary Market</a></li>
+                    <li><a href="kairo-ai.html">Kairo AI Coach</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="about-us.html">About Us</a></li>
+                    <li><a href="careers.html">Careers</a></li>
+                    <li><a href="press.html">Press</a></li>
+                    <li><a href="blog.html">Blog</a></li>
+                    <li><a href="partners.html">Partners</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Support</h4>
+                <ul class="footer-links">
+                    <li><a href="help-center.html">Help Center</a></li>
+                    <li><a href="contact-support.html">Contact Support</a></li>
+                    <li><a href="index.html#faq">FAQ</a></li>
+                    <li><a href="community-forum.html">Community Forum</a></li>
+                    <li><a href="live-chat.html">Live Chat</a></li>
+                    <li><a href="tutorials.html">Tutorials</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Contact Us</h4>
+                <div class="footer-contact-info">
+                    <p><i class="fas fa-envelope"></i> info@zimcrowd.com</p>
+                    <p><i class="fas fa-phone"></i> +263710467317</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Harare, Zimbabwe</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Navigation Hide/Show on Scroll
+        let lastScrollTop = 0;
+        const navigation = document.querySelector('.navigation');
+
+        window.addEventListener('scroll', function() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            if (scrollTop > lastScrollTop && scrollTop > 100) {
+                navigation.classList.add('hidden');
+            } else {
+                navigation.classList.remove('hidden');
+            }
+
+            lastScrollTop = scrollTop;
+        });
+
+        // Mobile Menu Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const mobileMenuDrawer = document.querySelector('.mobile-menu-drawer');
+            const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
+            const mobileMenuClose = document.querySelector('.mobile-menu-close');
+            const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
+
+            function toggleMobileMenu() {
+                mobileMenuDrawer.classList.toggle('active');
+                document.body.style.overflow = mobileMenuDrawer.classList.contains('active') ? 'hidden' : '';
+            }
+
+            function closeMobileMenu() {
+                mobileMenuDrawer.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            if (mobileMenuOverlay) mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+            if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeMobileMenu);
+
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && mobileMenuDrawer.classList.contains('active')) {
+                    closeMobileMenu();
+                }
+            });
+        });
+
+        // Help Category Hover Effects
+        document.addEventListener('DOMContentLoaded', function() {
+            const categoryCards = document.querySelectorAll('.help-category-card');
+
+            categoryCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px)';
+                });
+
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

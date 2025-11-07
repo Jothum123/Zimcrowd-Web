@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>Kairo AI Coach - ZimCrowd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Custom hover effects for navigation buttons */
+        .nav-links a[href="#download-app"]:hover {
+            background: black;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+</head>
+<body>
+    <!-- Animated Background Circles -->
+    <div class="animated-background">
+        <div class="circle-container">
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+        </div>
+
+        <!-- Animated Solid Shapes -->
+        <div class="solid-shapes">
+            <!-- Floating Squares -->
+            <div class="solid-shape square" style="top: 15%; left: 20%; animation: float 8s ease-in-out infinite;"></div>
+            <div class="solid-shape square" style="top: 70%; right: 15%; animation: float 10s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape square" style="bottom: 20%; left: 70%; animation: float 12s ease-in-out infinite;"></div>
+
+            <!-- Pulsing Circles -->
+            <div class="solid-shape circle-shape" style="top: 25%; right: 25%; animation: pulse 6s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="bottom: 35%; left: 25%; animation: pulse 8s ease-in-out infinite reverse;"></div>
+
+            <!-- Bouncing Triangles -->
+            <div class="solid-shape triangle" style="top: 40%; left: 5%; animation: bounce 7s ease-in-out infinite;"></div>
+            <div class="solid-shape triangle" style="top: 60%; right: 70%; animation: bounce 9s ease-in-out infinite reverse;"></div>
+
+            <!-- Rotating Hexagons -->
+            <div class="solid-shape hexagon" style="top: 80%; left: 40%; animation: rotate 15s linear infinite;"></div>
+            <div class="solid-shape hexagon" style="top: 30%; right: 5%; animation: rotate 20s linear infinite reverse;"></div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navigation">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#000000"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html#lend">Lend</a>
+                <a href="index.html#borrow">Borrow</a>
+                <div class="dropdown">
+                    <button class="dropbtn">Market <i class="fas fa-chevron-down"></i></button>
+                    <div class="dropdown-content">
+                        <a href="primary-market.html">Primary Market</a>
+                        <a href="secondary-market.html">Secondary Market</a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html">Kairo AI</a>
+                <a href="index.html#download-app" class="btn-tertiary">Download App</a>
+            </div>
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" aria-label="Toggle menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu-drawer">
+        <div class="mobile-menu-overlay"></div>
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <div class="mobile-logo">
+                    <svg width="160" height="26" viewBox="0 0 180 29" fill="none">
+                        <circle cx="13" cy="13" r="13" fill="#38e07b"/>
+                        <text x="35" y="19" font-family="Space Grotesk" font-size="16" font-weight="600" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </div>
+                <button class="mobile-menu-close" aria-label="Close menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mobile-menu-links">
+                <a href="index.html#lend" class="mobile-menu-link">
+                    <span class="link-icon">💰</span>
+                    <span class="link-text">Lend</span>
+                </a>
+                <a href="index.html#borrow" class="mobile-menu-link">
+                    <span class="link-icon">🤝</span>
+                    <span class="link-text">Borrow</span>
+                </a>
+                <a href="primary-market.html" class="mobile-menu-link">
+                    <span class="link-icon">📊</span>
+                    <span class="link-text">Primary Market</span>
+                </a>
+                <a href="secondary-market.html" class="mobile-menu-link">
+                    <span class="link-icon">🔄</span>
+                    <span class="link-text">Secondary Market</span>
+                </a>
+                <a href="kairo-ai.html" class="mobile-menu-link">
+                    <span class="link-icon">🤖</span>
+                    <span class="link-text">Kairo AI</span>
+                </a>
+                <div class="mobile-menu-divider"></div>
+                <a href="index.html#download-app" class="mobile-menu-cta">
+                    <span class="cta-icon">📱</span>
+                    <span class="cta-text">Download App</span>
+                </a>
+            </div>
+            <div class="mobile-menu-footer">
+                <p>Building Community Finance</p>
+                <div class="mobile-social-links">
+                    <a href="#" class="mobile-social-link" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-content">
+                <h1><span class="label label-green">Kairo AI Coach</span> - Your Financial Guide</h1>
+                <p class="header-subtitle">Meet Kairo, your intelligent AI financial assistant. Get personalized advice, budgeting help, loan insights, and investment guidance - all powered by advanced AI technology.</p>
+                <div class="button-group">
+                    <button class="btn-primary">Chat with Kairo</button>
+                    <button class="btn-secondary">Learn More</button>
+                </div>
+            </div>
+            <div class="header-image">
+                <!-- Hero image -->
+                <img src="images/b1801257-1083-4899-80c0-e959ac3451af.png" alt="Kairo AI Coach Illustration" style="width: 100%; height: 100%; object-fit: cover;">
+
+                <!-- Animated Message Cards -->
+                <div class="animated-message kairo-bottom-left-message" id="message-1">
+                    <div class="message-content">
+                        <div class="message-icon">🤖</div>
+                        <div class="message-text">
+                            <div class="message-title">Kairo:</div>
+                            <div class="message-detail">Create your account in minutes and start your financial journey today!</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="animated-message kairo-right-message" id="message-2">
+                    <div class="message-content">
+                        <div class="message-icon">🤖</div>
+                        <div class="message-text">
+                            <div class="message-title">Kairo:</div>
+                            <div class="message-detail">Get instant loan approval with competitive rates starting from 2.5%!</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="animated-message kairo-left-message" id="message-3">
+                    <div class="message-content">
+                        <div class="message-icon">🤖</div>
+                        <div class="message-text">
+                            <div class="message-title">Kairo:</div>
+                            <div class="message-detail">You are about to fund Sarah L.'s loan for $1,500 at 3.2% interest rate.</div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </header>
+
+<!-- Modern Section Separator -->
+    <div class="section-separator">
+        <div class="separator-container">
+            <div class="separator-line"></div>
+            <div class="separator-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="separator-line"></div>
+        </div>
+        <div class="separator-glow"></div>
+    </div>
+
+    <!-- Features Section -->
+    <section class="section" id="features">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">AI-Powered Features</span>
+            </div>
+            <p class="section-description">Kairo combines advanced AI with deep financial knowledge to provide personalized assistance for all your lending and borrowing needs.</p>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">💬</div>
+                <h3>24/7 Chat Support</h3>
+                <p>Get instant answers to your questions about loans, investments, and financial planning anytime, anywhere.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Personalized Insights</h3>
+                <p>Receive tailored financial advice based on your unique situation, goals, and risk tolerance.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Smart Recommendations</h3>
+                <p>AI-driven suggestions for optimal loan terms, investment opportunities, and repayment strategies.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📈</div>
+                <h3>Portfolio Analysis</h3>
+                <p>Detailed analysis of your investment portfolio with performance metrics and optimization tips.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💰</div>
+                <h3>Budgeting Assistant</h3>
+                <p>Create and manage budgets, track expenses, and get tips for better financial health.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>Risk Assessment</h3>
+                <p>Advanced risk analysis for loans and investments with clear explanations and alternatives.</p>
+            </div>
+        </div>
+    </section>
+
+<!-- Modern Section Separator -->
+    <div class="section-separator">
+        <div class="separator-container">
+            <div class="separator-line"></div>
+            <div class="separator-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="separator-line"></div>
+        </div>
+        <div class="separator-glow"></div>
+    </div>
+
+
+    <!-- Conversations Section -->
+    <section class="section" id="conversations">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">See Kairo in Action</span>
+            </div>
+            <p class="section-description">Real examples of how Kairo helps users with their financial questions and decisions.</p>
+        </div>
+
+        <!-- Conversations Grid -->
+        <div class="conversations-grid">
+            <div class="conversation-card">
+                <div class="conversation-header">
+                    <h4>🤝 Loan Application Help</h4>
+                </div>
+                <div class="conversation-content">
+                    <div class="message user">
+                        <strong>You:</strong> I'm thinking about applying for a loan but I'm not sure what interest rate to offer. What do you recommend?
+                    </div>
+                    <div class="message kairo">
+                        <strong>Kairo:</strong> Based on current market conditions and your credit profile, I'd recommend offering 2.5-3.0% interest. This puts you in a competitive position while ensuring attractive returns for lenders. Would you like me to help you calculate your monthly payments?
+                    </div>
+                </div>
+            </div>
+
+            <div class="conversation-card">
+                <div class="conversation-header">
+                    <h4>📊 Investment Analysis</h4>
+                </div>
+                <div class="conversation-content">
+                    <div class="message user">
+                        <strong>You:</strong> I have $500 to invest. Should I fund one large loan or several smaller ones?
+                    </div>
+                    <div class="message kairo">
+                        <strong>Kairo:</strong> Diversification is generally wise! With $500, you could fund portions of 3-4 different loans across various risk levels. This spreads your risk while maintaining good returns. I can show you some current opportunities that match this strategy.
+                    </div>
+                </div>
+            </div>
+
+            <div class="conversation-card">
+                <div class="conversation-header">
+                    <h4>💰 Budget Planning</h4>
+                </div>
+                <div class="conversation-content">
+                    <div class="message user">
+                        <strong>You:</strong> I got approved for a $1,000 loan. How should I budget for repayments?
+                    </div>
+                    <div class="message kairo">
+                        <strong>Kairo:</strong> Great news! For a $1,000 loan at 2.8% over 12 months, your monthly payment would be about $87.50. I recommend allocating 20-25% of your income to debt repayment. Let me help you create a detailed budget plan.
+                    </div>
+                </div>
+            </div>
+
+            <div class="conversation-card">
+                <div class="conversation-header">
+                    <h4>🔄 Secondary Market Advice</h4>
+                </div>
+                <div class="conversation-content">
+                    <div class="message user">
+                        <strong>You:</strong> I need cash quickly. Should I sell my loan portion on the secondary market?
+                    </div>
+                    <div class="message kairo">
+                        <strong>Kairo:</strong> If liquidity is your priority, the secondary market could be a good option. Currently, similar loans are trading at 1.2% premium. However, you'd lose future interest payments. Let me check if there are better alternatives first.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+<!-- Modern Section Separator -->
+    <div class="section-separator">
+        <div class="separator-container">
+            <div class="separator-line"></div>
+            <div class="separator-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="separator-line"></div>
+        </div>
+        <div class="separator-glow"></div>
+    </div>
+
+
+    <!-- Tech Features Section -->
+    <section class="section" id="tech-features">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Advanced AI Technology</span>
+            </div>
+            <p class="section-description">Kairo is built with cutting-edge AI technology to provide accurate, helpful, and secure financial assistance.</p>
+        </div>
+
+        <!-- Tech Features Grid -->
+        <div class="tech-features">
+            <div class="tech-card">
+                <div class="tech-icon">🧠</div>
+                <h3>Natural Language Processing</h3>
+                <p>Understands complex financial questions and provides clear, conversational responses.</p>
+            </div>
+            <div class="tech-card">
+                <div class="tech-icon">📊</div>
+                <h3>Real-time Data Analysis</h3>
+                <p>Processes live market data, your financial information, and economic indicators instantly.</p>
+            </div>
+            <div class="tech-card">
+                <div class="tech-icon">🔒</div>
+                <h3>Bank-level Security</h3>
+                <p>Your financial data is encrypted and protected with enterprise-grade security measures.</p>
+            </div>
+            <div class="tech-card">
+                <div class="tech-icon">🎯</div>
+                <h3>Personalized Learning</h3>
+                <p>Adapts to your preferences and improves recommendations based on your interaction history.</p>
+            </div>
+            <div class="tech-card">
+                <div class="tech-icon">🌍</div>
+                <h3>Multilingual Support</h3>
+                <p>Communicates in multiple languages including English, Shona, and Ndebele.</p>
+            </div>
+            <div class="tech-card">
+                <div class="tech-icon">⚡</div>
+                <h3>Instant Responses</h3>
+                <p>Get immediate answers to questions with response times under 2 seconds.</p>
+            </div>
+        </div>
+    </section>
+
+<!-- Modern Section Separator -->
+    <div class="section-separator">
+        <div class="separator-container">
+            <div class="separator-line"></div>
+            <div class="separator-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="separator-line"></div>
+        </div>
+        <div class="separator-glow"></div>
+    </div>
+
+
+    <!-- How It Works Section -->
+    <section class="section process-section" id="how-it-works">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">How Kairo Works</span>
+            </div>
+            <p class="section-description">Simple steps to start getting personalized financial guidance from your AI coach.</p>
+        </div>
+
+        <div class="process-cards">
+            <div class="process-card">
+                <div class="process-header">
+                    <div class="process-label">
+                        <span class="process-number">01</span>
+                        <h3>Access Kairo</h3>
+                    </div>
+                    <div class="process-icon plus">+</div>
+                </div>
+                <div class="process-divider"></div>
+                <p>Kairo is available 24/7 within the ZimCrowd app. Simply open the app and tap the Kairo chat icon to start a conversation.</p>
+            </div>
+
+            <div class="process-card">
+                <div class="process-header">
+                    <div class="process-label">
+                        <span class="process-number">02</span>
+                        <h3>Ask Your Question</h3>
+                    </div>
+                    <div class="process-icon plus">+</div>
+                </div>
+                <div class="process-divider"></div>
+                <p>Ask Kairo anything about loans, investments, budgeting, or financial planning. Use natural language - no special commands needed.</p>
+            </div>
+
+            <div class="process-card">
+                <div class="process-header">
+                    <div class="process-label">
+                        <span class="process-number">03</span>
+                        <h3>Get Personalized Advice</h3>
+                    </div>
+                    <div class="process-icon plus">+</div>
+                </div>
+                <div class="process-divider"></div>
+                <p>Receive tailored recommendations based on your financial profile, goals, and current market conditions.</p>
+            </div>
+
+            <div class="process-card">
+                <div class="process-header">
+                    <div class="process-label">
+                        <span class="process-number">04</span>
+                        <h3>Take Action</h3>
+                    </div>
+                    <div class="process-icon plus">+</div>
+                </div>
+                <div class="process-divider"></div>
+                <p>Use Kairo's guidance to make informed financial decisions. Kairo can even help you complete actions within the app.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Zimcrowd Footer -->
+    <footer class="zimcrowd-footer">
+        <!-- CTA Block -->
+        <section class="cta-block" id="download-app">
+            <div class="cta-container">
+                <div class="cta-content">
+                    <h3 style="color: black;">Ready to Meet Kairo?</h3>
+                    <p style="color: black;">Download the ZimCrowd app today and start chatting with your personal AI financial coach. Get expert guidance whenever you need it.</p>
+                    <div class="app-store-buttons">
+                        <a href="#" class="app-store-btn google-play">
+                            <img src="images/GetItOnGooglePlay_Badge_Web_color_English.svg" alt="Get it on Google Play" style="height: 60px; width: auto;">
+                        </a>
+                        <a href="#" class="app-store-btn app-store">
+                            <img src="images/Download_on_the_App_Store_Badge_US-UK_RGB_blk_092917.svg" alt="Download on the App Store" style="height: 60px; width: auto;">
+                        </a>
+                    </div>
+                </div>
+                <div class="cta-illustration">
+                    <img src="images/Gemini_Generated_Image_2wm05r2wm05r2wm0.png" alt="Young people Smiling on Phones" style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);">
+                </div>
+            </div>
+        </section>
+
+        <div class="footer-container">
+
+            <div class="footer-column brand">
+                <div class="footer-logo">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#FFFFFF"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#FFFFFF">ZimCrowd</text>
+                    </svg>
+                </div>
+                <p>Fair, community-first lending. Borrow on your terms, invest with impact.</p>
+
+                <h4>Stay in the loop</h4>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="Your email address" required>
+                    <button type="submit">Subscribe</button>
+                </form>
+            </div>
+
+            <div class="footer-column">
+                <h4>Platform</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html#borrow">Borrow</a></li>
+                    <li><a href="index.html#lend">Lend</a></li>
+                    <li><a href="primary-market.html">Primary Market</a></li>
+                    <li><a href="secondary-market.html">Secondary Market</a></li>
+                    <li><a href="kairo-ai.html">Kairo AI Coach</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="#about-us">About Us</a></li>
+                    <li><a href="#careers">Careers</a></li>
+                    <li><a href="#press">Press</a></li>
+                    <li><a href="#blog">Blog</a></li>
+                    <li><a href="#partners">Partners</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <div class="company-badge">
+                    <div class="badge-icon">🏢</div>
+                    <p>Building Community Finance</p>
+                </div>
+            </div>
+
+            <div class="footer-column" id="contact">
+                <h4>Contact Us</h4>
+                <div class="footer-contact-info">
+                    <p><i class="fas fa-envelope"></i> info@zimcrowd.com</p>
+                    <p><i class="fas fa-phone"></i> +263710467317</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Harare, Zimbabwe</p>
+                </div>
+                <div class="footer-contact-hours">
+                    <p><strong>Support Hours:</strong></p>
+                    <p>Mon-Fri: 8AM-6PM</p>
+                    <p>Sat: 9AM-4PM</p>
+                </div>
+            </div>
+
+            <div class="footer-column">
+                <h4>Legal</h4>
+                <ul class="footer-links">
+                    <li><a href="#general-loan-terms">General Loan Terms</a></li>
+                    <li><a href="#risk-warnings">Risk Warnings</a></li>
+                    <li><a href="#terms-conditions">Terms & Conditions</a></li>
+                    <li><a href="#privacy-policy">Privacy Policy</a></li>
+                    <li><a href="#cookie-policy">Cookie Policy</a></li>
+                    <li><a href="#terms-of-service">Terms of Service</a></li>
+                    <li><a href="#complaint-submission">Complaint Submission</a></li>
+                    <li><a href="#conflicts-interest">Conflicts of Interest Policy</a></li>
+                    <li><a href="#other-documents">Other Documents</a></li>
+                </ul>
+                <div class="footer-animation">
+                    <div class="animated-shape shape-1"></div>
+                    <div class="animated-shape shape-2"></div>
+                    <div class="animated-shape shape-3"></div>
+                </div>
+            </div>
+
+            <div class="footer-column">
+                <h4>Support</h4>
+                <ul class="footer-links">
+                    <li><a href="#help-center">Help Center</a></li>
+                    <li><a href="#contact-support">Contact Support</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                    <li><a href="#community-forum">Community Forum</a></li>
+                    <li><a href="#live-chat">Live Chat</a></li>
+                    <li><a href="#tutorials">Tutorials</a></li>
+                </ul>
+                <div class="support-badge">
+                    <div class="badge-icon">🛟</div>
+                    <p>24/7 Support Available</p>
+                </div>
+            </div>
+
+            <div class="footer-socials">
+                <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            </div>
+
+            <div class="footer-copyright">
+                &copy; 2025 ZimCrowd. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Process Cards Expand/Collapse Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const processCards = document.querySelectorAll('.process-card');
+
+            processCards.forEach(card => {
+                const icon = card.querySelector('.process-icon');
+
+                if (icon) {
+                    icon.addEventListener('click', function() {
+                        // Toggle the expanded class on the clicked card
+                        card.classList.toggle('process-card-expanded');
+
+                        // Update the icon text based on expanded state
+                        if (card.classList.contains('process-card-expanded')) {
+                            icon.textContent = '−';
+                        } else {
+                            icon.textContent = '+';
+                        }
+                    });
+                }
+            });
+        });
+
+        // Dropdown Click Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdowns = document.querySelectorAll('.dropdown');
+
+            dropdowns.forEach(dropdown => {
+                const dropbtn = dropdown.querySelector('.dropbtn');
+
+                dropbtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    dropdown.classList.toggle('active');
+                });
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.dropdown')) {
+                    document.querySelectorAll('.dropdown').forEach(dropdown => {
+                        dropdown.classList.remove('active');
+                    });
+                }
+            });
+        });
+
+        // Mobile Menu Drawer Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const mobileMenuDrawer = document.querySelector('.mobile-menu-drawer');
+            const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
+            const mobileMenuClose = document.querySelector('.mobile-menu-close');
+            const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
+
+            // Function to toggle mobile menu
+            function toggleMobileMenu() {
+                mobileMenuDrawer.classList.toggle('active');
+                document.body.style.overflow = mobileMenuDrawer.classList.contains('active') ? 'hidden' : '';
+            }
+
+            // Function to close mobile menu
+            function closeMobileMenu() {
+                mobileMenuDrawer.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            // Event listeners
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            }
+
+            if (mobileMenuOverlay) {
+                mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+            }
+
+            if (mobileMenuClose) {
+                mobileMenuClose.addEventListener('click', closeMobileMenu);
+            }
+
+            // Close menu when clicking on menu links
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+
+            // Close menu on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && mobileMenuDrawer.classList.contains('active')) {
+                    closeMobileMenu();
+                }
+            });
+        });
+
+        // Animated Message Cards Cycling Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('.animated-message');
+            let currentMessageIndex = 0;
+            const cycleInterval = 5 * 1000; // 5 seconds in milliseconds
+
+            // Function to show a specific message
+            function showMessage(index) {
+                // Hide all messages by removing active class
+                messages.forEach(message => {
+                    message.classList.remove('active');
+                });
+
+                // Show the current message by adding active class
+                messages[index].classList.add('active');
+            }
+
+            // Function to cycle to the next message
+            function cycleMessages() {
+                currentMessageIndex = (currentMessageIndex + 1) % messages.length;
+                showMessage(currentMessageIndex);
+            }
+
+            // Start the cycling
+            showMessage(0); // Show first message immediately
+            setInterval(cycleMessages, cycleInterval);
+        });
+    </script>
+</body>
+</html>

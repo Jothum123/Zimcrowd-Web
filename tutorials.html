@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>Tutorials - ZimCrowd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .nav-links a[href="#download-app"]:hover {
+            background: black;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .tutorial-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .tutorial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .tutorial-thumbnail {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .play-button {
+            width: 60px;
+            height: 60px;
+            background: #38e07b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            box-shadow: 0 4px 20px rgba(56, 224, 123, 0.4);
+        }
+
+        .tutorial-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .tutorial-duration {
+            display: flex;
+            align-items: center;
+        }
+
+        .tutorial-duration i {
+            margin-right: 5px;
+            color: #38e07b;
+        }
+
+        .tutorial-category {
+            background: #f0f9f0;
+            color: #38e07b;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-weight: 600;
+        }
+
+        .tutorial-title {
+            color: var(--color-black);
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .tutorial-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .tutorial-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 40px;
+        }
+
+        .filter-btn {
+            background: white;
+            border: 2px solid #e5e7eb;
+            color: #666;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #38e07b;
+            border-color: #38e07b;
+            color: white;
+        }
+
+        .video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .video-player {
+            width: 100%;
+            height: 400px;
+            background: #000;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 2001;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #38e07b, #2ecc71);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+</head>
+<body>
+    <!-- Animated Background Circles -->
+    <div class="animated-background">
+        <div class="circle-container">
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+        </div>
+        <div class="solid-shapes">
+            <div class="solid-shape square" style="top: 15%; left: 20%; animation: float 8s ease-in-out infinite;"></div>
+            <div class="solid-shape square" style="top: 70%; right: 15%; animation: float 10s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape square" style="bottom: 20%; left: 70%; animation: float 12s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="top: 25%; right: 25%; animation: pulse 6s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="bottom: 35%; left: 25%; animation: pulse 8s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape triangle" style="top: 40%; left: 5%; animation: bounce 7s ease-in-out infinite;"></div>
+            <div class="solid-shape triangle" style="top: 60%; right: 70%; animation: bounce 9s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape hexagon" style="top: 80%; left: 40%; animation: rotate 15s linear infinite;"></div>
+            <div class="solid-shape hexagon" style="top: 30%; right: 5%; animation: rotate 20s linear infinite reverse;"></div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navigation">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#000000"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html#lend">Lend</a>
+                <a href="index.html#borrow">Borrow</a>
+                <div class="dropdown">
+                    <button class="dropbtn">Market ▼</button>
+                    <div class="dropdown-content">
+                        <a href="primary-market.html">Primary Market</a>
+                        <a href="secondary-market.html">Secondary Market</a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html">Kairo AI</a>
+                <a href="index.html#download-app" class="btn-tertiary">Download App</a>
+            </div>
+            <button class="mobile-menu-btn" aria-label="Toggle menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu-drawer">
+        <div class="mobile-menu-overlay"></div>
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <div class="mobile-logo">
+                    <svg width="160" height="26" viewBox="0 0 180 29" fill="none">
+                        <circle cx="13" cy="13" r="13" fill="#38e07b"/>
+                        <text x="35" y="19" font-family="Space Grotesk" font-size="16" font-weight="600" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </div>
+                <button class="mobile-menu-close" aria-label="Close menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mobile-menu-links">
+                <a href="index.html#lend" class="mobile-menu-link">
+                    <span class="link-icon">💰</span>
+                    <span class="link-text">Lend</span>
+                </a>
+                <a href="index.html#borrow" class="mobile-menu-link">
+                    <span class="link-icon">🤝</span>
+                    <span class="link-text">Borrow</span>
+                </a>
+                <div class="mobile-menu-dropdown">
+                    <div class="mobile-menu-link dropdown-toggle">
+                        <span class="link-icon">📈</span>
+                        <span class="link-text">Market</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="mobile-dropdown-content">
+                        <a href="primary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">📊</span>
+                            <span class="link-text">Primary Market</span>
+                        </a>
+                        <a href="secondary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">🔄</span>
+                            <span class="link-text">Secondary Market</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html" class="mobile-menu-link">
+                    <span class="link-icon">🤖</span>
+                    <span class="link-text">Kairo AI</span>
+                </a>
+                <div class="mobile-menu-divider"></div>
+                <a href="index.html#download-app" class="mobile-menu-cta">
+                    <span class="cta-icon">📱</span>
+                    <span class="cta-text">Download App</span>
+                </a>
+            </div>
+            <div class="mobile-menu-footer">
+                <p>Building Community Finance</p>
+                <div class="mobile-social-links">
+                    <a href="#" class="mobile-social-link" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-content">
+                <h1><span class="label label-green">Video Tutorials</span> - Learn at Your Pace</h1>
+                <p class="header-subtitle">Master ZimCrowd with our comprehensive video tutorials. From getting started to advanced features, we've got you covered with step-by-step guidance.</p>
+                <div class="button-group">
+                    <button class="btn-primary">Browse All Tutorials</button>
+                    <button class="btn-secondary">Most Popular</button>
+                </div>
+            </div>
+            <div class="header-image">
+                <img src="images/Gemini_Generated_Image_qycesxqycesxqyce.png" alt="Video Tutorials" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+        </div>
+    </header>
+
+    <!-- Progress Section -->
+    <section class="section" id="learning-progress" style="background-color: #f8fafc; padding: 60px 0;">
+        <div class="container">
+            <div class="progress-container" style="max-width: 800px; margin: 0 auto; text-align: center;">
+                <h2 style="color: var(--color-black); margin-bottom: 20px;">Your Learning Journey</h2>
+                <p style="color: #666; margin-bottom: 30px;">Track your progress through our tutorial series</p>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 35%;"></div>
+                </div>
+
+                <div class="progress-stats" style="display: flex; justify-content: space-between; margin-top: 20px;">
+                    <div class="stat">
+                        <div style="font-size: 24px; font-weight: bold; color: #38e07b;">7</div>
+                        <div style="color: #666; font-size: 14px;">Completed</div>
+                    </div>
+                    <div class="stat">
+                        <div style="font-size: 24px; font-weight: bold; color: #38e07b;">13</div>
+                        <div style="color: #666; font-size: 14px;">Remaining</div>
+                    </div>
+                    <div class="stat">
+                        <div style="font-size: 24px; font-weight: bold; color: #38e07b;">35%</div>
+                        <div style="color: #666; font-size: 14px;">Complete</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tutorial Filters -->
+    <section class="section" id="tutorial-filters">
+        <div class="container">
+            <div class="filter-buttons" style="justify-content: center;">
+                <button class="filter-btn active" data-filter="all">All Tutorials</button>
+                <button class="filter-btn" data-filter="getting-started">Getting Started</button>
+                <button class="filter-btn" data-filter="borrowing">Borrowing</button>
+                <button class="filter-btn" data-filter="lending">Lending</button>
+                <button class="filter-btn" data-filter="app">Mobile App</button>
+                <button class="filter-btn" data-filter="kairo">Kairo AI</button>
+                <button class="filter-btn" data-filter="advanced">Advanced</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tutorial Grid -->
+    <section class="section" id="tutorials-grid">
+        <div class="tutorials-container" style="max-width: 1200px; margin: 0 auto;">
+            <div class="tutorials-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px;">
+
+                <!-- Getting Started Series -->
+                <div class="tutorial-card" data-category="getting-started" onclick="openTutorial('getting-started-1')">
+                    <div class="tutorial-thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="tutorial-meta">
+                        <div class="tutorial-duration">
+                            <i class="fas fa-clock"></i>
+                            5 min
+                        </div>
+                        <div class="tutorial-category">Getting Started</div>
+                    </div>
+                    <h3 class="tutorial-title">Welcome to ZimCrowd - Platform Overview</h3>
+                    <p class="tutorial-description">Get acquainted with ZimCrowd's community lending platform. Learn about our mission and how peer-to-peer lending works.</p>
+                    <div class="tutorial-stats">
+                        <span><i class="fas fa-eye"></i> 2.3K views</span>
+                        <span><i class="fas fa-thumbs-up"></i> 98%</span>
+                    </div>
+                </div>
+
+                <div class="tutorial-card" data-category="getting-started" onclick="openTutorial('getting-started-2')">
+                    <div class="tutorial-thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="tutorial-meta">
+                        <div class="tutorial-duration">
+                            <i class="fas fa-clock"></i>
+                            8 min
+                        </div>
+                        <div class="tutorial-category">Getting Started</div>
+                    </div>
+                    <h3 class="tutorial-title">Creating Your Account - Step by Step</h3>
+                    <p class="tutorial-description">Complete guide to setting up your ZimCrowd account. Learn about verification requirements and security features.</p>
+                    <div class="tutorial-stats">
+                        <span><i class="fas fa-eye"></i> 4.1K views</span>
+                        <span><i class="fas fa-thumbs-up"></i> 95%</span>
+                    </div>
+                </div>
+
+                <div class="tutorial-card" data-category="getting-started" onclick="openTutorial('getting-started-3')">
+                    <div class="tutorial-thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="tutorial-meta">
+                        <div class="tutorial-duration">
+                            <i class="fas fa-clock"></i>
+                            6 min
+                        </div>
+                        <div class="tutorial-category">Getting Started</div>
+                    </div>
+                    <h3 class="tutorial-title">Mobile App Installation & Setup</h3>
+                    <p class="tutorial-description">Download and configure the ZimCrowd mobile app. Learn about app permissions and initial setup.</p>
+                    <div class="tutorial-stats">
+                        <span><i class="fas fa-eye"></i> 3.7K views</span>
+                        <span><i class="fas fa-thumbs-up"></i> 97%</span>
+                    </div>
+                </div>
+
+                <!-- Borrowing Tutorials -->
+                <div class="tutorial-card" data-category="borrowing" onclick="openTutorial('borrowing-1')">
+                    <div class="tutorial-thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="tutorial-meta">
+                        <div class="tutorial-duration">
+                            <i class="fas fa-clock"></i>
+                            12 min
+                        </div>
+                        <div class="tutorial-category">Borrowing</div>
+                    </div>
+                    <h3 class="tutorial-title">How to Apply for Your First Loan</h3>
+                    <p class="tutorial-description">Complete walkthrough of the loan application process. Learn about required documents and approval criteria.</p>
+                    <div class="tutorial-stats">
+                        <span><i class="fas fa-eye"></i> 5.2K views</span>
+                        <span><i class="fas fa-thumbs-up"></i> 94%</span>
+                    </div>
+                </div>
+
+                <div class="tutorial-card" data-category="borrowing" onclick="openTutorial('borrowing-2')">
+                    <div class="tutorial-thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="tutorial-meta">
+                        <div class="tutorial-duration">
+                            <i class="fas fa-clock"></i>
+                            10 min
+                        </div>
+                        <div class="tutorial-category">Borrowing</div>
+                    </div>
+                    <h3 class="tutorial-title">Understanding Loan Terms & Repayment</h3>
+                    <p class="tutorial-description">Learn about interest rates, repayment schedules, and how to manage your loan successfully.</p>
+                    <div class="tutorial-stats">
+                        <span><i class="fas fa-eye"></i> 4.8K views</span>
+                        <span><i class="fas fa-thumbs-up"></i> 96%</span>
+                    </div>
+                </div>
+
+                <div class="tutorial-card" data-category="borrowing" onclick="openTutorial('borrowing-3')">
+                    <div class="tutorial-thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="tutorial-meta">
+                        <div class="tutorial-duration">
+                            <i class="fas fa-clock"></i>
+                            7 min
+                        </div>
+                        <div class="tutorial-category">Borrowing</div>
+                    </div>
+                    <h3 class="tutorial-title">Managing Your Loan Repayments</h3>
+                    <p class="tutorial-description">Tips for staying on track with repayments. Learn about payment methods and late payment policies.</p>
+                    <div class="tutorial-stats">
+                        <span><i class="fas fa-eye"></i> 3.9K views</span>
+                        <span><i class="fas fa-thumbs-up"></i> 93%</span>
+                    </div>
+                </div>
+
+                <!-- Lending Tutorials -->
+                <div class="tutorial-card" data-category="lending" onclick="openTutorial('lending-1')">
+                    <div class="tutorial-thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="tutorial-meta">
+                        <div class="tutorial-duration">
+                            <i class="fas fa-clock"></i>
+                            9 min
+                        </div>
+                        <div class="tutorial-category">Lending</div>
+                    </div>
+                    <h3 class="tutorial-title">How to Start Lending on ZimCrowd</h3>
+                    <p class="tutorial-description">Begin your lending journey. Learn how to browse loan requests and make your first investment.</p>
+                    <div class="tutorial-stats">
+                        <span><i class="fas fa-eye"></i> 4.3K views</span>
+                        <span><i class="fas fa-thumbs-up"></i> 95%</span>
+                    </div>
+                </div>
+
+                <div class="tutorial-card" data-category="lending" onclick="openTutorial('lending-2')">
+                    <div class="tutorial-thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="tutorial-meta">
+                        <div class="tutorial-duration">
+                            <i class="fas fa-clock"></i>
+                            11 min
+                        </div>
+                        <div class="tutorial-category">Lending</div>
+                    </div>
+                    <h3 class="tutorial-title">Risk Assessment & Due Diligence</h3>
+                    <p class="tutorial-description">Learn how to evaluate loan applications. Understand credit scores, repayment history, and risk factors.</p>
+                    <div class="tutorial-stats">
+                        <span><i class="fas fa-eye"></i> 3.6K views</span>
+                        <span><i class="fas fa-thumbs-up"></i> 97%</span>
+                    </div>
+                </div>
+
+                <div class="tutorial-card" data-category="lending" onclick="openTutorial('lending-3')">
+                    <div class="tutorial-thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="tutorial-meta">
+                        <div class="tutorial-duration">
+                            <i class="fas fa-clock"></i>
+                            8 min
+                        </div>
+                        <div class="tutorial-category">Lending</div>
+                    </div>
+                    <h3 class="tutorial-title">Managing Your Investment Portfolio</h3>
+                    <p class="tutorial-description">Track your investments and returns. Learn about portfolio diversification and performance monitoring.</p>
+                    <div class="tutorial-stats">
+                        <span><i class="fas fa-eye"></i> 3.2K views</span>
+                        <span><i class="fas fa-thumbs-up"></i> 94%</span>
+                    </div>
+                </div>
+
+                <!-- Kairo AI Tutorials -->
+                <div class="tutorial-card" data-category="kairo" onclick="openTutorial('kairo-1')">
+                    <div class="tutorial-thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="tutorial-meta">
+                        <div class="tutorial-duration">
+                            <i class="fas fa-clock"></i>
+                            6 min
+                        </div>
+                        <div class="tutorial-category">Kairo AI</div>
+                    </div>
+                    <h3 class="tutorial-title">Meet Kairo - Your AI Financial Assistant</h3>
+                    <p class="tutorial-description">Introduction to Kairo AI. Learn about AI-powered financial guidance and budgeting assistance.</p>
+                    <div class="tutorial-stats">
+                        <span><i class="fas fa-eye"></i> 6.1K views</span>
+                        <span><i class="fas fa-thumbs-up"></i> 98%</span>
+                    </div>
+                </div>
+
+                <div class="tutorial-card" data-category="kairo" onclick="openTutorial('kairo-2')">
+                    <div class="tutorial-thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="tutorial-meta">
+                        <div class="tutorial-duration">
+                            <i class="fas fa-clock"></i>
+                            10 min
+                        </div>
+                        <div class="tutorial-category">Kairo AI</div>
+                    </div>
+                    <h3 class="tutorial-title">Budget Planning with Kairo AI</h3>
+                    <p class="tutorial-description">Use Kairo to create and manage budgets. Learn about expense tracking and financial goal setting.</p>
+                    <div class="tutorial-stats">
+                        <span><i class="fas fa-eye"></i> 5.7K views</span>
+                        <span><i class="fas fa-thumbs-up"></i> 96%</span>
+                    </div>
+                </div>
+
+                <div class="tutorial-card" data-category="kairo" onclick="openTutorial('kairo-3')">
+                    <div class="tutorial-thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="tutorial-meta">
+                        <div class="tutorial-duration">
+                            <i class="fas fa-clock"></i>
+                            8 min
+                        </div>
+                        <div class="tutorial-category">Kairo AI</div>
+                    </div>
+                    <h3 class="tutorial-title">Investment Recommendations & Analysis</h3>
+                    <p class="tutorial-description">Learn how Kairo analyzes market trends and provides personalized investment recommendations.</p>
+                    <div class="tutorial-stats">
+                        <span><i class="fas fa-eye"></i> 4.9K views</span>
+                        <span><i class="fas fa-thumbs-up"></i> 95%</span>
+                    </div>
+                </div>
+
+                <!-- Advanced Tutorials -->
+                <div class="tutorial-card" data-category="advanced" onclick="openTutorial('advanced-1')">
+                    <div class="tutorial-thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="tutorial-meta">
+                        <div class="tutorial-duration">
+                            <i class="fas fa-clock"></i>
+                            15 min
+                        </div>
+                        <div class="tutorial-category">Advanced</div>
+                    </div>
+                    <h3 class="tutorial-title">Secondary Market Trading Strategies</h3>
+                    <p class="tutorial-description">Advanced techniques for trading loans on the secondary market. Learn about pricing and market analysis.</p>
+                    <div class="tutorial-stats">
+                        <span><i class="fas fa-eye"></i> 2.8K views</span>
+                        <span><i class="fas fa-thumbs-up"></i> 92%</span>
+                    </div>
+                </div>
+
+                <div class="tutorial-card" data-category="advanced" onclick="openTutorial('advanced-2')">
+                    <div class="tutorial-thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="tutorial-meta">
+                        <div class="tutorial-duration">
+                            <i class="fas fa-clock"></i>
+                            12 min
+                        </div>
+                        <div class="tutorial-category">Advanced</div>
+                    </div>
+                    <h3 class="tutorial-title">Portfolio Optimization Techniques</h3>
+                    <p class="tutorial-description">Advanced portfolio management strategies. Learn about diversification, risk management, and return optimization.</p>
+                    <div class="tutorial-stats">
+                        <span><i class="fas fa-eye"></i> 2.4K views</span>
+                        <span><i class="fas fa-thumbs-up"></i> 94%</span>
+                    </div>
+                </div>
+
+                <div class="tutorial-card" data-category="advanced" onclick="openTutorial('advanced-3')">
+                    <div class="tutorial-thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="tutorial-meta">
+                        <div class="tutorial-duration">
+                            <i class="fas fa-clock"></i>
+                            14 min
+                        </div>
+                        <div class="tutorial-category">Advanced</div>
+                    </div>
+                    <h3 class="tutorial-title">Understanding Credit Risk Models</h3>
+                    <p class="tutorial-description">Deep dive into credit scoring and risk assessment. Learn how to evaluate borrower creditworthiness.</p>
+                    <div class="tutorial-stats">
+                        <span><i class="fas fa-eye"></i> 2.1K views</span>
+                        <span><i class="fas fa-thumbs-up"></i> 96%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Learning Paths -->
+    <section class="section" id="learning-paths" style="background-color: #f8fafc;">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Learning Paths</span>
+            </div>
+            <p class="section-description">Structured learning journeys to master different aspects of ZimCrowd</p>
+        </div>
+
+        <div class="paths-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; margin-top: 60px;">
+            <div class="learning-path" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="path-icon" style="font-size: 64px; margin-bottom: 20px;">🚀</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">New User Journey</h3>
+                <p style="color: #666; margin-bottom: 25px;">Complete guide for first-time users. From account creation to your first transaction.</p>
+                <div class="path-steps" style="margin-bottom: 25px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px; color: #666;">
+                        <span style="color: #38e07b; margin-right: 10px;">✓</span>
+                        <span>Account Setup</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 10px; color: #666;">
+                        <span style="color: #38e07b; margin-right: 10px;">✓</span>
+                        <span>Platform Overview</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 10px; color: #666;">
+                        <span style="color: #38e07b; margin-right: 10px;">✓</span>
+                        <span>First Transaction</span>
+                    </div>
+                </div>
+                <div class="path-duration" style="color: #666; margin-bottom: 20px;">
+                    <i class="fas fa-clock"></i> 30 minutes total
+                </div>
+                <button class="btn-secondary">Start Learning Path</button>
+            </div>
+
+            <div class="learning-path" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="path-icon" style="font-size: 64px; margin-bottom: 20px;">💰</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Borrower Mastery</h3>
+                <p style="color: #666; margin-bottom: 25px;">Everything you need to know about borrowing successfully on ZimCrowd.</p>
+                <div class="path-steps" style="margin-bottom: 25px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px; color: #666;">
+                        <span style="color: #38e07b; margin-right: 10px;">✓</span>
+                        <span>Loan Applications</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 10px; color: #666;">
+                        <span style="color: #38e07b; margin-right: 10px;">✓</span>
+                        <span>Repayment Strategies</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 10px; color: #666;">
+                        <span style="color: #38e07b; margin-right: 10px;">✓</span>
+                        <span>Credit Building</span>
+                    </div>
+                </div>
+                <div class="path-duration" style="color: #666; margin-bottom: 20px;">
+                    <i class="fas fa-clock"></i> 45 minutes total
+                </div>
+                <button class="btn-secondary">Start Learning Path</button>
+            </div>
+
+            <div class="learning-path" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="path-icon" style="font-size: 64px; margin-bottom: 20px;">📈</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Lender Excellence</h3>
+                <p style="color: #666; margin-bottom: 25px;">Advanced techniques for successful lending and portfolio management.</p>
+                <div class="path-steps" style="margin-bottom: 25px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px; color: #666;">
+                        <span style="color: #38e07b; margin-right: 10px;">✓</span>
+                        <span>Risk Assessment</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 10px; color: #666;">
+                        <span style="color: #38e07b; margin-right: 10px;">✓</span>
+                        <span>Portfolio Management</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 10px; color: #666;">
+                        <span style="color: #38e07b; margin-right: 10px;">✓</span>
+                        <span>Market Trading</span>
+                    </div>
+                </div>
+                <div class="path-duration" style="color: #666; margin-bottom: 20px;">
+                    <i class="fas fa-clock"></i> 60 minutes total
+                </div>
+                <button class="btn-secondary">Start Learning Path</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Modal -->
+    <div class="video-modal" id="videoModal">
+        <button class="close-modal" onclick="closeTutorial()">×</button>
+        <div class="video-content">
+            <div class="video-player" id="videoPlayer">
+                <div style="text-align: center;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">🎥</div>
+                    <p>Video Tutorial</p>
+                    <p style="font-size: 14px; color: #666;">This would play the actual tutorial video</p>
+                </div>
+            </div>
+            <h3 id="videoTitle" style="color: var(--color-black); margin-bottom: 15px;">Tutorial Title</h3>
+            <p id="videoDescription" style="color: #666; line-height: 1.6;">Tutorial description would appear here.</p>
+        </div>
+    </div>
+
+    <!-- Zimcrowd Footer -->
+    <footer class="zimcrowd-footer">
+        <div class="footer-container">
+            <div class="footer-column brand">
+                <div class="footer-logo">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#FFFFFF"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#FFFFFF">ZimCrowd</text>
+                    </svg>
+                </div>
+                <p>Fair, community-first lending. Borrow on your terms, invest with impact.</p>
+            </div>
+            <div class="footer-column">
+                <h4>Platform</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html#borrow">Borrow</a></li>
+                    <li><a href="index.html#lend">Lend</a></li>
+                    <li><a href="primary-market.html">Primary Market</a></li>
+                    <li><a href="secondary-market.html">Secondary Market</a></li>
+                    <li><a href="kairo-ai.html">Kairo AI Coach</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="about-us.html">About Us</a></li>
+                    <li><a href="careers.html">Careers</a></li>
+                    <li><a href="press.html">Press</a></li>
+                    <li><a href="blog.html">Blog</a></li>
+                    <li><a href="partners.html">Partners</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Support</h4>
+                <ul class="footer-links">
+                    <li><a href="help-center.html">Help Center</a></li>
+                    <li><a href="contact-support.html">Contact Support</a></li>
+                    <li><a href="index.html#faq">FAQ</a></li>
+                    <li><a href="community-forum.html">Community Forum</a></li>
+                    <li><a href="live-chat.html">Live Chat</a></li>
+                    <li><a href="tutorials.html">Tutorials</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Contact Us</h4>
+                <div class="footer-contact-info">
+                    <p><i class="fas fa-envelope"></i> info@zimcrowd.com</p>
+                    <p><i class="fas fa-phone"></i> +263710467317</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Harare, Zimbabwe</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Navigation Hide/Show on Scroll
+        let lastScrollTop = 0;
+        const navigation = document.querySelector('.navigation');
+
+        window.addEventListener('scroll', function() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            if (scrollTop > lastScrollTop && scrollTop > 100) {
+                navigation.classList.add('hidden');
+            } else {
+                navigation.classList.remove('hidden');
+            }
+
+            lastScrollTop = scrollTop;
+        });
+
+        // Mobile Menu Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const mobileMenuDrawer = document.querySelector('.mobile-menu-drawer');
+            const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
+            const mobileMenuClose = document.querySelector('.mobile-menu-close');
+            const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
+
+            function toggleMobileMenu() {
+                mobileMenuDrawer.classList.toggle('active');
+                document.body.style.overflow = mobileMenuDrawer.classList.contains('active') ? 'hidden' : '';
+            }
+
+            function closeMobileMenu() {
+                mobileMenuDrawer.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            if (mobileMenuOverlay) mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+            if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeMobileMenu);
+
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && mobileMenuDrawer.classList.contains('active')) {
+                    closeMobileMenu();
+                }
+            });
+        });
+
+        // Tutorial Filtering
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const tutorialCards = document.querySelectorAll('.tutorial-card');
+
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    // Add active class to clicked button
+                    this.classList.add('active');
+
+                    const filterValue = this.getAttribute('data-filter');
+
+                    tutorialCards.forEach(card => {
+                        if (filterValue === 'all' || card.getAttribute('data-category') === filterValue) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+            });
+        });
+
+        // Video Modal Functions
+        const videoModal = document.getElementById('videoModal');
+        const videoTitle = document.getElementById('videoTitle');
+        const videoDescription = document.getElementById('videoDescription');
+
+        function openTutorial(tutorialId) {
+            // This would typically load the actual video content
+            // For demo purposes, we'll just show placeholder content
+            videoModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+            // Set tutorial content based on ID
+            const tutorialData = getTutorialData(tutorialId);
+            videoTitle.textContent = tutorialData.title;
+            videoDescription.textContent = tutorialData.description;
+        }
+
+        function closeTutorial() {
+            videoModal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        function getTutorialData(tutorialId) {
+            const tutorials = {
+                'getting-started-1': {
+                    title: 'Welcome to ZimCrowd - Platform Overview',
+                    description: 'Get acquainted with ZimCrowd\'s community lending platform. Learn about our mission and how peer-to-peer lending works.'
+                },
+                'getting-started-2': {
+                    title: 'Creating Your Account - Step by Step',
+                    description: 'Complete guide to setting up your ZimCrowd account. Learn about verification requirements and security features.'
+                },
+                'getting-started-3': {
+                    title: 'Mobile App Installation & Setup',
+                    description: 'Download and configure the ZimCrowd mobile app. Learn about app permissions and initial setup.'
+                },
+                'borrowing-1': {
+                    title: 'How to Apply for Your First Loan',
+                    description: 'Complete walkthrough of the loan application process. Learn about required documents and approval criteria.'
+                },
+                'borrowing-2': {
+                    title: 'Understanding Loan Terms & Repayment',
+                    description: 'Learn about interest rates, repayment schedules, and how to manage your loan successfully.'
+                },
+                'borrowing-3': {
+                    title: 'Managing Your Loan Repayments',
+                    description: 'Tips for staying on track with repayments. Learn about payment methods and late payment policies.'
+                },
+                'lending-1': {
+                    title: 'How to Start Lending on ZimCrowd',
+                    description: 'Begin your lending journey. Learn how to browse loan requests and make your first investment.'
+                },
+                'lending-2': {
+                    title: 'Risk Assessment & Due Diligence',
+                    description: 'Learn how to evaluate loan applications. Understand credit scores, repayment history, and risk factors.'
+                },
+                'lending-3': {
+                    title: 'Managing Your Investment Portfolio',
+                    description: 'Track your investments and returns. Learn about portfolio diversification and performance monitoring.'
+                },
+                'kairo-1': {
+                    title: 'Meet Kairo - Your AI Financial Assistant',
+                    description: 'Introduction to Kairo AI. Learn about AI-powered financial guidance and budgeting assistance.'
+                },
+                'kairo-2': {
+                    title: 'Budget Planning with Kairo AI',
+                    description: 'Use Kairo to create and manage budgets. Learn about expense tracking and financial goal setting.'
+                },
+                'kairo-3': {
+                    title: 'Investment Recommendations & Analysis',
+                    description: 'Learn how Kairo analyzes market trends and provides personalized investment recommendations.'
+                },
+                'advanced-1': {
+                    title: 'Secondary Market Trading Strategies',
+                    description: 'Advanced techniques for trading loans on the secondary market. Learn about pricing and market analysis.'
+                },
+                'advanced-2': {
+                    title: 'Portfolio Optimization Techniques',
+                    description: 'Advanced portfolio management strategies. Learn about diversification, risk management, and return optimization.'
+                },
+                'advanced-3': {
+                    title: 'Understanding Credit Risk Models',
+                    description: 'Deep dive into credit scoring and risk assessment. Learn how to evaluate borrower creditworthiness.'
+                }
+            };
+
+            return tutorials[tutorialId] || {
+                title: 'Tutorial Not Found',
+                description: 'The requested tutorial could not be found.'
+            };
+        }
+
+        // Close modal when clicking outside
+        videoModal.addEventListener('click', function(e) {
+            if (e.target === videoModal) {
+                closeTutorial();
+            }
+        });
+    </script>
+</body>
+</html>
