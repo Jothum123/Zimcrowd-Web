@@ -64,12 +64,17 @@
                 </svg>
             </div>
             <div class="nav-links">
-                <a href="#lend">Lend</a>
-                <a href="#borrow">Borrow</a>
-                <a href="#how-it-works">How It Works</a>
-                <a href="#why-choose">Why Choose Us</a>
-                <a href="#contact">Contact Us</a>
-                <a href="#download-app" class="btn-tertiary">Download App</a>
+                <a href="index.html#lend">Lend</a>
+                <a href="index.html#borrow">Borrow</a>
+                <div class="dropdown">
+                    <button class="dropbtn">Market <i class="fas fa-chevron-down"></i></button>
+                    <div class="dropdown-content">
+                        <a href="primary-market.html">Primary Market</a>
+                        <a href="secondary-market.html">Secondary Market</a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html">Kairo AI</a>
+                <a href="index.html#download-app" class="btn-tertiary">Download App</a>
             </div>
             <!-- Mobile Menu Button -->
             <button class="mobile-menu-btn" aria-label="Toggle menu">
@@ -98,28 +103,37 @@
                 </button>
             </div>
             <div class="mobile-menu-links">
-                <a href="#lend" class="mobile-menu-link">
+                <a href="index.html#lend" class="mobile-menu-link">
                     <span class="link-icon">💰</span>
                     <span class="link-text">Lend</span>
                 </a>
-                <a href="#borrow" class="mobile-menu-link">
+                <a href="index.html#borrow" class="mobile-menu-link">
                     <span class="link-icon">🤝</span>
                     <span class="link-text">Borrow</span>
                 </a>
-                <a href="#how-it-works" class="mobile-menu-link">
-                    <span class="link-icon">⚙️</span>
-                    <span class="link-text">How It Works</span>
-                </a>
-                <a href="#why-choose" class="mobile-menu-link">
-                    <span class="link-icon">⭐</span>
-                    <span class="link-text">Why Choose Us</span>
-                </a>
-                <a href="#contact" class="mobile-menu-link">
-                    <span class="link-icon">📞</span>
-                    <span class="link-text">Contact Us</span>
+                <div class="mobile-menu-dropdown">
+                    <div class="mobile-menu-link dropdown-toggle">
+                        <span class="link-icon">📈</span>
+                        <span class="link-text">Market</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="mobile-dropdown-content">
+                        <a href="primary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">📊</span>
+                            <span class="link-text">Primary Market</span>
+                        </a>
+                        <a href="secondary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">🔄</span>
+                            <span class="link-text">Secondary Market</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html" class="mobile-menu-link">
+                    <span class="link-icon">🤖</span>
+                    <span class="link-text">Kairo AI</span>
                 </a>
                 <div class="mobile-menu-divider"></div>
-                <a href="#download-app" class="mobile-menu-cta">
+                <a href="index.html#download-app" class="mobile-menu-cta">
                     <span class="cta-icon">📱</span>
                     <span class="cta-text">Download App</span>
                 </a>
@@ -201,11 +215,28 @@
                     </div>
                 </div>
             </div>
+
+
         </div>
     </header>
 
+    <!-- Success Message Section -->
+    <section class="section success-message-section" style="padding: 80px 100px; background: linear-gradient(135deg, #38e07b 0%, #22c55e 100%); border: 3px solid #38e07b; box-shadow: 0 10px 30px rgba(56, 231, 123, 0.3); margin: 40px 0;">
+        <div class="container" style="max-width: 800px; margin: 0 auto; text-align: center;">
+            <div class="success-message-card" style="display: inline-block; background: rgba(255, 255, 255, 0.95); padding: 40px; border-radius: 20px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border: 2px solid #38e07b;">
+                <div class="message-content">
+                    <div class="message-icon" style="font-size: 64px; margin-bottom: 20px; color: #38e07b;">✅</div>
+                    <div class="message-text">
+                        <span class="message-title" style="display: block; font-size: 28px; font-weight: 700; color: #191A23; margin-bottom: 16px;">Success!</span>
+                        <span class="message-detail" style="display: block; font-size: 18px; color: #666; line-height: 1.6; max-width: 600px; margin: 0 auto;">Your loan has been successfully Listed in the marketplace awaiting funding from members.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Stats Section -->
-    <section class="stats-section" style="background-color: black; color: white; padding: 15px 0;">
+    <section class="section stats-section" style="background-color: black; color: white;">
         <div class="container">
             <div class="stats-row" style="display: flex; justify-content: space-around; align-items: center; max-width: 1200px; margin: 0 auto;">
                 <div class="stat-item" style="text-align: center;">
@@ -348,6 +379,22 @@
 
     </section>
 
+    <!-- Modern Section Separator -->
+    <div class="section-separator">
+        <div class="separator-container">
+            <div class="separator-line"></div>
+            <div class="separator-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="separator-line"></div>
+        </div>
+        <div class="separator-glow"></div>
+    </div>
+
     <!-- Borrow Section -->
     <section class="section borrow-section" id="borrow">
         <div class="section-header">
@@ -447,6 +494,22 @@
 
     </section>
 
+    <!-- Modern Section Separator -->
+    <div class="section-separator">
+        <div class="separator-container">
+            <div class="separator-line"></div>
+            <div class="separator-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="separator-line"></div>
+        </div>
+        <div class="separator-glow"></div>
+    </div>
+
     <!-- How It Works Section -->
     <section class="section process-section" id="how-it-works">
         <div class="section-header">
@@ -511,6 +574,21 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
         </div>
     </section>
 
+    <!-- Modern Section Separator -->
+    <div class="section-separator">
+        <div class="separator-container">
+            <div class="separator-line"></div>
+            <div class="separator-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="separator-line"></div>
+        </div>
+        <div class="separator-glow"></div>
+    </div>
     <!-- Why Choose ZimCrowd Section -->
     <section class="section why-choose-section" id="why-choose">
         <div class="section-header">
@@ -595,6 +673,22 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
         </div>
     </section>
 
+    <!-- Modern Section Separator -->
+    <div class="section-separator">
+        <div class="separator-container">
+            <div class="separator-line"></div>
+            <div class="separator-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="separator-line"></div>
+        </div>
+        <div class="separator-glow"></div>
+    </div>
+
     <!-- Testimonials Section -->
     <section class="section testimonials-section" id="testimonials" style="padding-bottom: 40px;">
         <div class="section-header">
@@ -658,7 +752,7 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
     </section>
 
     <!-- FAQ Section -->
-    <section class="section faq-section" id="faq" style="background-color: #f5f5f5; padding-top: 150px; padding-bottom: 100px;">
+    <section class="section faq-section" id="faq" style="background-color: #f5f5f5; padding-bottom: 100px;">
         <div class="section-header">
             <div class="heading-wrapper">
                 <span class="label label-green">Frequently Asked Questions</span>
@@ -814,14 +908,14 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
             <div class="footer-column">
                 <h4>Legal</h4>
                 <ul class="footer-links">
-                    <li><a href="#general-loan-terms">General Loan Terms</a></li>
-                    <li><a href="#risk-warnings">Risk Warnings</a></li>
-                    <li><a href="#terms-conditions">Terms & Conditions</a></li>
-                    <li><a href="#privacy-policy">Privacy Policy</a></li>
-                    <li><a href="#cookie-policy">Cookie Policy</a></li>
-                    <li><a href="#terms-of-service">Terms of Service</a></li>
-                    <li><a href="#complaint-submission">Complaint Submission</a></li>
-                    <li><a href="#conflicts-interest">Conflicts of Interest Policy</a></li>
+                    <li><a href="general-loan-terms.html">General Loan Terms</a></li>
+                    <li><a href="risk-warnings.html">Risk Warnings</a></li>
+                    <li><a href="terms-conditions.html">Terms & Conditions</a></li>
+                    <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                    <li><a href="cookie-policy.html">Cookie Policy</a></li>
+                    <li><a href="terms-of-service.html">Terms of Service</a></li>
+                    <li><a href="complaint-submission.html">Complaint Submission</a></li>
+                    <li><a href="conflicts-interest.html">Conflicts of Interest Policy</a></li>
                     <li><a href="#other-documents">Other Documents</a></li>
                 </ul>
                 <div class="footer-animation">
@@ -834,12 +928,12 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
             <div class="footer-column">
                 <h4>Support</h4>
                 <ul class="footer-links">
-                    <li><a href="#help-center">Help Center</a></li>
-                    <li><a href="#contact-support">Contact Support</a></li>
+                    <li><a href="help-center.html">Help Center</a></li>
+                    <li><a href="contact-support.html">Contact Support</a></li>
                     <li><a href="#faq">FAQ</a></li>
-                    <li><a href="#community-forum">Community Forum</a></li>
-                    <li><a href="#live-chat">Live Chat</a></li>
-                    <li><a href="#tutorials">Tutorials</a></li>
+                    <li><a href="community-forum.html">Community Forum</a></li>
+                    <li><a href="live-chat.html">Live Chat</a></li>
+                    <li><a href="tutorials.html">Tutorials</a></li>
                 </ul>
                 <div class="support-badge">
                     <div class="badge-icon">🛟</div>
@@ -967,6 +1061,8 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
             const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
             const mobileMenuClose = document.querySelector('.mobile-menu-close');
             const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
+            const mobileDropdownToggle = document.querySelector('.mobile-menu-dropdown .dropdown-toggle');
+            const mobileDropdown = document.querySelector('.mobile-menu-dropdown');
 
             // Function to toggle mobile menu
             function toggleMobileMenu() {
@@ -978,6 +1074,11 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
             function closeMobileMenu() {
                 mobileMenuDrawer.classList.remove('active');
                 document.body.style.overflow = '';
+            }
+
+            // Function to toggle mobile dropdown
+            function toggleMobileDropdown() {
+                mobileDropdown.classList.toggle('active');
             }
 
             // Event listeners
@@ -993,6 +1094,10 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
                 mobileMenuClose.addEventListener('click', closeMobileMenu);
             }
 
+            if (mobileDropdownToggle) {
+                mobileDropdownToggle.addEventListener('click', toggleMobileDropdown);
+            }
+
             // Close menu when clicking on menu links
             mobileMenuLinks.forEach(link => {
                 link.addEventListener('click', closeMobileMenu);
@@ -1004,6 +1109,54 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
                     closeMobileMenu();
                 }
             });
+        });
+
+        // Dropdown Click Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdowns = document.querySelectorAll('.dropdown');
+
+            dropdowns.forEach(dropdown => {
+                const dropbtn = dropdown.querySelector('.dropbtn');
+
+                dropbtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    dropdown.classList.toggle('active');
+                });
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.dropdown')) {
+                    document.querySelectorAll('.dropdown').forEach(dropdown => {
+                        dropdown.classList.remove('active');
+                    });
+                }
+            });
+        });
+
+        // Animated Messages Cycling
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('.animated-message');
+            let currentIndex = 0;
+
+            function showNextMessage() {
+                // Hide all messages
+                messages.forEach(message => {
+                    message.classList.remove('active');
+                });
+
+                // Show next message
+                messages[currentIndex].classList.add('active');
+
+                // Move to next message
+                currentIndex = (currentIndex + 1) % messages.length;
+            }
+
+            // Start cycling every 5 seconds
+            setInterval(showNextMessage, 5000);
+
+            // Show first message immediately
+            showNextMessage();
         });
 
         // Stats Counter Animation with Real-time Updates

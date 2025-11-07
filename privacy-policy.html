@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>Privacy Policy - ZimCrowd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .nav-links a[href="#download-app"]:hover {
+            background: black;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        .legal-content {
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+            color: #374151;
+        }
+        .legal-content h1 {
+            color: var(--color-black);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .legal-content h2 {
+            color: var(--color-black);
+            margin: 40px 0 20px 0;
+            font-size: 24px;
+        }
+        .legal-content h3 {
+            color: var(--color-black);
+            margin: 30px 0 15px 0;
+            font-size: 20px;
+        }
+        .legal-content p {
+            margin-bottom: 15px;
+        }
+        .legal-content ul, .legal-content ol {
+            margin-bottom: 20px;
+            padding-left: 30px;
+        }
+        .legal-content li {
+            margin-bottom: 8px;
+        }
+        .highlight-box {
+            background: rgba(56, 231, 123, 0.1);
+            border-left: 4px solid var(--color-green);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .last-updated {
+            text-align: center;
+            color: #6b7280;
+            font-style: italic;
+            margin-bottom: 40px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+</head>
+<body>
+    <!-- Animated Background Circles -->
+    <div class="animated-background">
+        <div class="circle-container">
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+        </div>
+        <div class="solid-shapes">
+            <div class="solid-shape square" style="top: 15%; left: 20%; animation: float 8s ease-in-out infinite;"></div>
+            <div class="solid-shape square" style="top: 70%; right: 15%; animation: float 10s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape square" style="bottom: 20%; left: 70%; animation: float 12s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="top: 25%; right: 25%; animation: pulse 6s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="bottom: 35%; left: 25%; animation: pulse 8s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape triangle" style="top: 40%; left: 5%; animation: bounce 7s ease-in-out infinite;"></div>
+            <div class="solid-shape triangle" style="top: 60%; right: 70%; animation: bounce 9s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape hexagon" style="top: 80%; left: 40%; animation: rotate 15s linear infinite;"></div>
+            <div class="solid-shape hexagon" style="top: 30%; right: 5%; animation: rotate 20s linear infinite reverse;"></div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navigation">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#000000"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html#lend">Lend</a>
+                <a href="index.html#borrow">Borrow</a>
+                <div class="dropdown">
+                    <button class="dropbtn">Market ▼</button>
+                    <div class="dropdown-content">
+                        <a href="primary-market.html">Primary Market</a>
+                        <a href="secondary-market.html">Secondary Market</a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html">Kairo AI</a>
+                <a href="index.html#download-app" class="btn-tertiary">Download App</a>
+            </div>
+            <button class="mobile-menu-btn" aria-label="Toggle menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu-drawer">
+        <div class="mobile-menu-overlay"></div>
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <div class="mobile-logo">
+                    <svg width="160" height="26" viewBox="0 0 180 29" fill="none">
+                        <circle cx="13" cy="13" r="13" fill="#38e07b"/>
+                        <text x="35" y="19" font-family="Space Grotesk" font-size="16" font-weight="600" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </div>
+                <button class="mobile-menu-close" aria-label="Close menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mobile-menu-links">
+                <a href="index.html#lend" class="mobile-menu-link">
+                    <span class="link-icon">💰</span>
+                    <span class="link-text">Lend</span>
+                </a>
+                <a href="index.html#borrow" class="mobile-menu-link">
+                    <span class="link-icon">🤝</span>
+                    <span class="link-text">Borrow</span>
+                </a>
+                <div class="mobile-menu-dropdown">
+                    <div class="mobile-menu-link dropdown-toggle">
+                        <span class="link-icon">📈</span>
+                        <span class="link-text">Market</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="mobile-dropdown-content">
+                        <a href="primary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">📊</span>
+                            <span class="link-text">Primary Market</span>
+                        </a>
+                        <a href="secondary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">🔄</span>
+                            <span class="link-text">Secondary Market</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html" class="mobile-menu-link">
+                    <span class="link-icon">🤖</span>
+                    <span class="link-text">Kairo AI</span>
+                </a>
+                <div class="mobile-menu-divider"></div>
+                <a href="index.html#download-app" class="mobile-menu-cta">
+                    <span class="cta-icon">📱</span>
+                    <span class="cta-text">Download App</span>
+                </a>
+            </div>
+            <div class="mobile-menu-footer">
+                <p>Building Community Finance</p>
+                <div class="mobile-social-links">
+                    <a href="#" class="mobile-social-link" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="header" style="padding: 120px 100px 60px;">
+        <div class="header-container">
+            <div class="header-content" style="text-align: center; max-width: 100%;">
+                <h1><span class="label label-green">Privacy Policy</span></h1>
+                <p class="header-subtitle" style="max-width: 600px; margin: 0 auto;">How we collect, use, and protect your personal information.</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Legal Content -->
+    <section class="section" style="padding-top: 0;">
+        <div class="legal-content">
+            <div class="last-updated">Last updated: November 5, 2025</div>
+
+            <h1>Privacy Policy</h1>
+
+            <div class="highlight-box">
+                <strong>Your Privacy Matters:</strong> At ZimCrowd, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, and safeguard your data.
+            </div>
+
+            <h2>1. Information We Collect</h2>
+            <h3>1.1 Personal Information</h3>
+            <ul>
+                <li>Name, email address, phone number</li>
+                <li>Date of birth and identification documents</li>
+                <li>Address and employment information</li>
+                <li>Financial information and transaction history</li>
+                <li>Device and usage information</li>
+            </ul>
+
+            <h3>1.2 Automatically Collected Information</h3>
+            <ul>
+                <li>IP address and location data</li>
+                <li>Browser type and version</li>
+                <li>Pages visited and time spent</li>
+                <li>Device identifiers and cookies</li>
+            </ul>
+
+            <h2>2. How We Use Your Information</h2>
+            <ul>
+                <li>To provide and maintain our lending services</li>
+                <li>To verify your identity and prevent fraud</li>
+                <li>To communicate with you about your account</li>
+                <li>To improve our platform and services</li>
+                <li>To comply with legal and regulatory requirements</li>
+                <li>To send marketing communications (with consent)</li>
+            </ul>
+
+            <h2>3. Information Sharing</h2>
+            <p>We may share your information with:</p>
+            <ul>
+                <li>Other lenders and borrowers (anonymized for matching)</li>
+                <li>Service providers and payment processors</li>
+                <li>Regulatory authorities and law enforcement</li>
+                <li>Credit bureaus and identity verification services</li>
+                <li>Legal counsel when required</li>
+            </ul>
+
+            <h2>4. Data Security</h2>
+            <p>We implement appropriate security measures including:</p>
+            <ul>
+                <li>Encryption of sensitive data</li>
+                <li>Secure server infrastructure</li>
+                <li>Regular security audits</li>
+                <li>Access controls and authentication</li>
+                <li>Employee training on data protection</li>
+            </ul>
+
+            <h2>5. Your Rights</h2>
+            <p>You have the right to:</p>
+            <ul>
+                <li>Access your personal information</li>
+                <li>Correct inaccurate data</li>
+                <li>Request deletion of your data</li>
+                <li>Object to processing</li>
+                <li>Data portability</li>
+                <li>Withdraw consent</li>
+            </ul>
+
+            <h2>6. Cookies and Tracking</h2>
+            <p>We use cookies to:</p>
+            <ul>
+                <li>Remember your preferences</li>
+                <li>Analyze website usage</li>
+                <li>Provide personalized experiences</li>
+                <li>Ensure platform security</li>
+            </ul>
+
+            <h2>7. International Data Transfers</h2>
+            <p>Your data may be transferred to and processed in countries other than Zimbabwe. We ensure appropriate safeguards are in place for such transfers.</p>
+
+            <h2>8. Data Retention</h2>
+            <p>We retain your information for as long as necessary to provide our services and comply with legal obligations.</p>
+
+            <h2>9. Children's Privacy</h2>
+            <p>Our services are not intended for children under 18. We do not knowingly collect personal information from children.</p>
+
+            <h2>10. Changes to This Policy</h2>
+            <p>We may update this Privacy Policy from time to time. We will notify you of any material changes.</p>
+
+            <h2>11. Contact Us</h2>
+            <p>For privacy-related questions, contact:</p>
+            <ul>
+                <li>Email: privacy@zimcrowd.com</li>
+                <li>Phone: +263 710 467 317</li>
+                <li>Address: 123 Samora Machel Avenue, Harare, Zimbabwe</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Zimcrowd Footer -->
+    <footer class="zimcrowd-footer">
+        <div class="footer-container">
+            <div class="footer-column brand">
+                <div class="footer-logo">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#FFFFFF"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#FFFFFF">ZimCrowd</text>
+                    </svg>
+                </div>
+                <p>Fair, community-first lending. Borrow on your terms, invest with impact.</p>
+            </div>
+            <div class="footer-column">
+                <h4>Platform</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html#borrow">Borrow</a></li>
+                    <li><a href="index.html#lend">Lend</a></li>
+                    <li><a href="primary-market.html">Primary Market</a></li>
+                    <li><a href="secondary-market.html">Secondary Market</a></li>
+                    <li><a href="kairo-ai.html">Kairo AI Coach</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="about-us.html">About Us</a></li>
+                    <li><a href="careers.html">Careers</a></li>
+                    <li><a href="press.html">Press</a></li>
+                    <li><a href="blog.html">Blog</a></li>
+                    <li><a href="partners.html">Partners</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Legal</h4>
+                <ul class="footer-links">
+                    <li><a href="general-loan-terms.html">General Loan Terms</a></li>
+                    <li><a href="risk-warnings.html">Risk Warnings</a></li>
+                    <li><a href="terms-conditions.html">Terms & Conditions</a></li>
+                    <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                    <li><a href="cookie-policy.html">Cookie Policy</a></li>
+                    <li><a href="terms-of-service.html">Terms of Service</a></li>
+                    <li><a href="complaint-submission.html">Complaint Submission</a></li>
+                    <li><a href="conflicts-interest.html">Conflicts of Interest Policy</a></li>
+                    <li><a href="#other-documents">Other Documents</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Navigation Hide/Show on Scroll
+        let lastScrollTop = 0;
+        const navigation = document.querySelector('.navigation');
+
+        window.addEventListener('scroll', function() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            if (scrollTop > lastScrollTop && scrollTop > 100) {
+                navigation.classList.add('hidden');
+            } else {
+                navigation.classList.remove('hidden');
+            }
+
+            lastScrollTop = scrollTop;
+        });
+
+        // Mobile Menu Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const mobileMenuDrawer = document.querySelector('.mobile-menu-drawer');
+            const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
+            const mobileMenuClose = document.querySelector('.mobile-menu-close');
+            const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
+
+            function toggleMobileMenu() {
+                mobileMenuDrawer.classList.toggle('active');
+                document.body.style.overflow = mobileMenuDrawer.classList.contains('active') ? 'hidden' : '';
+            }
+
+            function closeMobileMenu() {
+                mobileMenuDrawer.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            if (mobileMenuOverlay) mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+            if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeMobileMenu);
+
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && mobileMenuDrawer.classList.contains('active')) {
+                    closeMobileMenu();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

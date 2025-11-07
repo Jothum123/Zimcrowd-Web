@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>Live Chat Support - ZimCrowd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .nav-links a[href="#download-app"]:hover {
+            background: black;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .chat-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #38e07b, #2ecc71);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+
+        .chat-input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .chat-input:focus {
+            border-color: #38e07b;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message.user .message-content {
+            background: #38e07b;
+            color: white;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #38e07b, #2ecc71);
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(56, 224, 123, 0.4);
+            z-index: 1001;
+            transition: all 0.3s ease;
+        }
+
+        .chat-toggle:hover {
+            transform: scale(1.05);
+        }
+
+        .chat-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 10px 20px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .quick-action-btn {
+            background: #f0f9f0;
+            color: #38e07b;
+            border: 1px solid #38e07b;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .quick-action-btn:hover {
+            background: #38e07b;
+            color: white;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+</head>
+<body>
+    <!-- Animated Background Circles -->
+    <div class="animated-background">
+        <div class="circle-container">
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+        </div>
+        <div class="solid-shapes">
+            <div class="solid-shape square" style="top: 15%; left: 20%; animation: float 8s ease-in-out infinite;"></div>
+            <div class="solid-shape square" style="top: 70%; right: 15%; animation: float 10s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape square" style="bottom: 20%; left: 70%; animation: float 12s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="top: 25%; right: 25%; animation: pulse 6s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="bottom: 35%; left: 25%; animation: pulse 8s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape triangle" style="top: 40%; left: 5%; animation: bounce 7s ease-in-out infinite;"></div>
+            <div class="solid-shape triangle" style="top: 60%; right: 70%; animation: bounce 9s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape hexagon" style="top: 80%; left: 40%; animation: rotate 15s linear infinite;"></div>
+            <div class="solid-shape hexagon" style="top: 30%; right: 5%; animation: rotate 20s linear infinite reverse;"></div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navigation">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#000000"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html#lend">Lend</a>
+                <a href="index.html#borrow">Borrow</a>
+                <div class="dropdown">
+                    <button class="dropbtn">Market ▼</button>
+                    <div class="dropdown-content">
+                        <a href="primary-market.html">Primary Market</a>
+                        <a href="secondary-market.html">Secondary Market</a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html">Kairo AI</a>
+                <a href="index.html#download-app" class="btn-tertiary">Download App</a>
+            </div>
+            <button class="mobile-menu-btn" aria-label="Toggle menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu-drawer">
+        <div class="mobile-menu-overlay"></div>
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <div class="mobile-logo">
+                    <svg width="160" height="26" viewBox="0 0 180 29" fill="none">
+                        <circle cx="13" cy="13" r="13" fill="#38e07b"/>
+                        <text x="35" y="19" font-family="Space Grotesk" font-size="16" font-weight="600" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </div>
+                <button class="mobile-menu-close" aria-label="Close menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mobile-menu-links">
+                <a href="index.html#lend" class="mobile-menu-link">
+                    <span class="link-icon">💰</span>
+                    <span class="link-text">Lend</span>
+                </a>
+                <a href="index.html#borrow" class="mobile-menu-link">
+                    <span class="link-icon">🤝</span>
+                    <span class="link-text">Borrow</span>
+                </a>
+                <div class="mobile-menu-dropdown">
+                    <div class="mobile-menu-link dropdown-toggle">
+                        <span class="link-icon">📈</span>
+                        <span class="link-text">Market</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="mobile-dropdown-content">
+                        <a href="primary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">📊</span>
+                            <span class="link-text">Primary Market</span>
+                        </a>
+                        <a href="secondary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">🔄</span>
+                            <span class="link-text">Secondary Market</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html" class="mobile-menu-link">
+                    <span class="link-icon">🤖</span>
+                    <span class="link-text">Kairo AI</span>
+                </a>
+                <div class="mobile-menu-divider"></div>
+                <a href="index.html#download-app" class="mobile-menu-cta">
+                    <span class="cta-icon">📱</span>
+                    <span class="cta-text">Download App</span>
+                </a>
+            </div>
+            <div class="mobile-menu-footer">
+                <p>Building Community Finance</p>
+                <div class="mobile-social-links">
+                    <a href="#" class="mobile-social-link" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-content">
+                <h1><span class="label label-green">Live Chat Support</span> - Instant Help Available</h1>
+                <p class="header-subtitle">Connect with our support team instantly during business hours. Get real-time assistance for all your ZimCrowd questions and concerns.</p>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="openChat()">Start Live Chat</button>
+                    <button class="btn-secondary">View Chat Hours</button>
+                </div>
+            </div>
+            <div class="header-image">
+                <img src="images/Gemini_Generated_Image_qycesxqycesxqyce.png" alt="Live Chat Support" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+        </div>
+    </header>
+
+    <!-- Chat Features -->
+    <section class="section" id="chat-features">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Why Choose Live Chat?</span>
+            </div>
+            <p class="section-description">Experience the fastest way to get help with our live chat support system.</p>
+        </div>
+
+        <div class="features-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; margin-top: 60px;">
+            <div class="feature-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="feature-icon" style="font-size: 64px; margin-bottom: 20px;">⚡</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Instant Responses</h3>
+                <p style="color: #666; margin-bottom: 20px;">Get immediate answers to your questions without waiting for email responses.</p>
+                <div class="feature-highlight" style="background: #f0f9f0; color: #38e07b; padding: 10px; border-radius: 10px; font-weight: 600;">Average response time: < 30 seconds</div>
+            </div>
+
+            <div class="feature-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="feature-icon" style="font-size: 64px; margin-bottom: 20px;">🖥️</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Screen Sharing</h3>
+                <p style="color: #666; margin-bottom: 20px;">Share your screen to show our team exactly what you're experiencing.</p>
+                <div class="feature-highlight" style="background: #f0f9f0; color: #38e07b; padding: 10px; border-radius: 10px; font-weight: 600;">Visual troubleshooting available</div>
+            </div>
+
+            <div class="feature-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="feature-icon" style="font-size: 64px; margin-bottom: 20px;">💬</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Real-Time Conversation</h3>
+                <p style="color: #666; margin-bottom: 20px;">Have a natural conversation with our support specialists for complex issues.</p>
+                <div class="feature-highlight" style="background: #f0f9f0; color: #38e07b; padding: 10px; border-radius: 10px; font-weight: 600;">Human-powered assistance</div>
+            </div>
+
+            <div class="feature-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="feature-icon" style="font-size: 64px; margin-bottom: 20px;">🔒</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Secure & Private</h3>
+                <p style="color: #666; margin-bottom: 20px;">All conversations are encrypted and your personal information stays protected.</p>
+                <div class="feature-highlight" style="background: #f0f9f0; color: #38e07b; padding: 10px; border-radius: 10px; font-weight: 600;">Bank-level security</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chat Hours & Availability -->
+    <section class="section" id="chat-hours" style="background-color: #f8fafc;">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">When We're Available</span>
+            </div>
+            <p class="section-description">Our live chat support is available during business hours in Zimbabwe time (CAT).</p>
+        </div>
+
+        <div class="hours-container" style="max-width: 800px; margin: 0 auto;">
+            <div class="hours-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 50px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); text-align: center;">
+                <div class="status-indicator" style="display: inline-flex; align-items: center; background: #f0f9f0; color: #38e07b; padding: 10px 20px; border-radius: 25px; font-weight: 600; margin-bottom: 30px;">
+                    <span style="width: 8px; height: 8px; background: #38e07b; border-radius: 50%; margin-right: 8px;"></span>
+                    Currently Online
+                </div>
+
+                <div class="hours-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; margin-bottom: 40px;">
+                    <div class="hours-item">
+                        <h4 style="color: var(--color-black); margin-bottom: 10px;">Monday - Friday</h4>
+                        <p style="color: #666; font-size: 18px; font-weight: 600;">8:00 AM - 6:00 PM CAT</p>
+                    </div>
+                    <div class="hours-item">
+                        <h4 style="color: var(--color-black); margin-bottom: 10px;">Saturday</h4>
+                        <p style="color: #666; font-size: 18px; font-weight: 600;">9:00 AM - 4:00 PM CAT</p>
+                    </div>
+                    <div class="hours-item">
+                        <h4 style="color: var(--color-black); margin-bottom: 10px;">Sunday</h4>
+                        <p style="color: #666; font-size: 18px; font-weight: 600;">Closed</p>
+                    </div>
+                </div>
+
+                <div class="timezone-info" style="color: #666; margin-bottom: 30px;">
+                    <p><strong>Timezone:</strong> Central Africa Time (CAT) - UTC+2</p>
+                    <p><strong>Current Time:</strong> <span id="current-time">Loading...</span></p>
+                </div>
+
+                <div class="emergency-contact" style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 15px; padding: 20px;">
+                    <h4 style="color: #856404; margin-bottom: 10px;">🚨 Emergency Support</h4>
+                    <p style="color: #856404; margin-bottom: 15px;">For urgent security issues or account emergencies outside chat hours:</p>
+                    <p style="color: #856404; font-weight: 600;">Call: +263 710 467 317</p>
+                    <p style="color: #856404; font-weight: 600;">Email: security@zimcrowd.com</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- What We Can Help With -->
+    <section class="section" id="help-topics">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">What We Can Help With</span>
+            </div>
+            <p class="section-description">Our live chat team is equipped to assist with all aspects of your ZimCrowd experience.</p>
+        </div>
+
+        <div class="topics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-top: 60px;">
+            <div class="topic-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="topic-icon" style="font-size: 48px; margin-bottom: 20px;">🔐</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Account & Login</h3>
+                <ul style="color: #666; padding-left: 20px;">
+                    <li>Password reset assistance</li>
+                    <li>Account verification issues</li>
+                    <li>Login troubleshooting</li>
+                    <li>Profile updates</li>
+                </ul>
+            </div>
+
+            <div class="topic-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="topic-icon" style="font-size: 48px; margin-bottom: 20px;">💰</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Borrowing & Lending</h3>
+                <ul style="color: #666; padding-left: 20px;">
+                    <li>Loan application guidance</li>
+                    <li>Investment opportunities</li>
+                    <li>Repayment questions</li>
+                    <li>Portfolio management</li>
+                </ul>
+            </div>
+
+            <div class="topic-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="topic-icon" style="font-size: 48px; margin-bottom: 20px;">📱</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Mobile App</h3>
+                <ul style="color: #666; padding-left: 20px;">
+                    <li>App installation help</li>
+                    <li>Feature explanations</li>
+                    <li>Bug reports</li>
+                    <li>Performance issues</li>
+                </ul>
+            </div>
+
+            <div class="topic-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="topic-icon" style="font-size: 48px; margin-bottom: 20px;">🤖</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Kairo AI Assistant</h3>
+                <ul style="color: #666; padding-left: 20px;">
+                    <li>AI feature setup</li>
+                    <li>Budget planning help</li>
+                    <li>Financial guidance</li>
+                    <li>AI troubleshooting</li>
+                </ul>
+            </div>
+
+            <div class="topic-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="topic-icon" style="font-size: 48px; margin-bottom: 20px;">💳</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Payments & Transfers</h3>
+                <ul style="color: #666; padding-left: 20px;">
+                    <li>Payment processing</li>
+                    <li>Transfer issues</li>
+                    <li>Bank account linking</li>
+                    <li>Transaction history</li>
+                </ul>
+            </div>
+
+            <div class="topic-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="topic-icon" style="font-size: 48px; margin-bottom: 20px;">🛡️</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Security & Privacy</h3>
+                <ul style="color: #666; padding-left: 20px;">
+                    <li>Security concerns</li>
+                    <li>Privacy questions</li>
+                    <li>Suspicious activity</li>
+                    <li>Account protection</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chat Widget -->
+    <div class="chat-widget" id="chatWidget">
+        <div class="chat-header">
+            <div style="display: flex; align-items: center;">
+                <div style="width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                    <span style="color: #38e07b; font-weight: bold;">Z</span>
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-size: 16px;">ZimCrowd Support</h4>
+                    <p style="margin: 5px 0 0 0; font-size: 12px; opacity: 0.9;">● Online now</p>
+                </div>
+            </div>
+            <button class="chat-close" onclick="closeChat()">×</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-content">Hello! 👋 Welcome to ZimCrowd Support. How can I help you today?</div>
+            </div>
+            <div class="quick-actions">
+                <button class="quick-action-btn" onclick="sendQuickMessage('I need help with my account')">Account Help</button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('Loan application question')">Loan Question</button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('Technical issue')">Technical Issue</button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('Something else')">Other</button>
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator">
+            Support is typing...
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+        </div>
+    </div>
+
+    <!-- Chat Toggle Button -->
+    <button class="chat-toggle" id="chatToggle" onclick="toggleChat()">
+        <i class="fas fa-comments"></i>
+    </button>
+
+    <!-- Zimcrowd Footer -->
+    <footer class="zimcrowd-footer">
+        <div class="footer-container">
+            <div class="footer-column brand">
+                <div class="footer-logo">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#FFFFFF"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#FFFFFF">ZimCrowd</text>
+                    </svg>
+                </div>
+                <p>Fair, community-first lending. Borrow on your terms, invest with impact.</p>
+            </div>
+            <div class="footer-column">
+                <h4>Platform</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html#borrow">Borrow</a></li>
+                    <li><a href="index.html#lend">Lend</a></li>
+                    <li><a href="primary-market.html">Primary Market</a></li>
+                    <li><a href="secondary-market.html">Secondary Market</a></li>
+                    <li><a href="kairo-ai.html">Kairo AI Coach</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="about-us.html">About Us</a></li>
+                    <li><a href="careers.html">Careers</a></li>
+                    <li><a href="press.html">Press</a></li>
+                    <li><a href="blog.html">Blog</a></li>
+                    <li><a href="partners.html">Partners</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Support</h4>
+                <ul class="footer-links">
+                    <li><a href="help-center.html">Help Center</a></li>
+                    <li><a href="contact-support.html">Contact Support</a></li>
+                    <li><a href="index.html#faq">FAQ</a></li>
+                    <li><a href="community-forum.html">Community Forum</a></li>
+                    <li><a href="live-chat.html">Live Chat</a></li>
+                    <li><a href="tutorials.html">Tutorials</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Contact Us</h4>
+                <div class="footer-contact-info">
+                    <p><i class="fas fa-envelope"></i> info@zimcrowd.com</p>
+                    <p><i class="fas fa-phone"></i> +263710467317</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Harare, Zimbabwe</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Navigation Hide/Show on Scroll
+        let lastScrollTop = 0;
+        const navigation = document.querySelector('.navigation');
+
+        window.addEventListener('scroll', function() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            if (scrollTop > lastScrollTop && scrollTop > 100) {
+                navigation.classList.add('hidden');
+            } else {
+                navigation.classList.remove('hidden');
+            }
+
+            lastScrollTop = scrollTop;
+        });
+
+        // Mobile Menu Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const mobileMenuDrawer = document.querySelector('.mobile-menu-drawer');
+            const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
+            const mobileMenuClose = document.querySelector('.mobile-menu-close');
+            const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
+
+            function toggleMobileMenu() {
+                mobileMenuDrawer.classList.toggle('active');
+                document.body.style.overflow = mobileMenuDrawer.classList.contains('active') ? 'hidden' : '';
+            }
+
+            function closeMobileMenu() {
+                mobileMenuDrawer.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            if (mobileMenuOverlay) mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+            if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeMobileMenu);
+
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && mobileMenuDrawer.classList.contains('active')) {
+                    closeMobileMenu();
+                }
+            });
+        });
+
+        // Chat Widget Functionality
+        let chatWidget = document.getElementById('chatWidget');
+        let chatToggle = document.getElementById('chatToggle');
+        let chatMessages = document.getElementById('chatMessages');
+        let chatInput = document.getElementById('chatInput');
+        let typingIndicator = document.getElementById('typingIndicator');
+
+        function toggleChat() {
+            if (chatWidget.style.display === 'flex') {
+                closeChat();
+            } else {
+                openChat();
+            }
+        }
+
+        function openChat() {
+            chatWidget.style.display = 'flex';
+            chatToggle.style.display = 'none';
+            chatInput.focus();
+        }
+
+        function closeChat() {
+            chatWidget.style.display = 'none';
+            chatToggle.style.display = 'block';
+        }
+
+        function sendMessage(message, isUser = true) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = message;
+
+            messageDiv.appendChild(messageContent);
+            chatMessages.appendChild(messageDiv);
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function sendQuickMessage(message) {
+            sendMessage(message, true);
+            chatInput.value = '';
+
+            // Show typing indicator
+            typingIndicator.style.display = 'block';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Simulate response after delay
+            setTimeout(() => {
+                typingIndicator.style.display = 'none';
+                sendMessage(getBotResponse(message), false);
+            }, 1500);
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && chatInput.value.trim()) {
+                sendQuickMessage(chatInput.value.trim());
+            }
+        }
+
+        function getBotResponse(userMessage) {
+            const responses = {
+                'account': "I'd be happy to help with your account! Could you please tell me what specific issue you're experiencing?",
+                'loan': "For loan-related questions, I can guide you through the process. What would you like to know about borrowing on ZimCrowd?",
+                'technical': "Technical issues can be tricky! Let me help you troubleshoot. What's the problem you're encountering?",
+                'default': "Thanks for reaching out! I'm here to help. Could you please provide more details about what you need assistance with?"
+            };
+
+            const lowerMessage = userMessage.toLowerCase();
+
+            if (lowerMessage.includes('account')) return responses.account;
+            if (lowerMessage.includes('loan')) return responses.loan;
+            if (lowerMessage.includes('technical')) return responses.technical;
+
+            return responses.default;
+        }
+
+        // Update current time
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                timeZone: 'Africa/Harare',
+                hour12: true,
+                hour: 'numeric',
+                minute: '2-digit'
+            });
+            document.getElementById('current-time').textContent = timeString;
+        }
+
+        updateCurrentTime();
+        setInterval(updateCurrentTime, 60000); // Update every minute
+    </script>
+</body>
+</html>

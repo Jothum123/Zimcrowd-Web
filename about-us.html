@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>About Us - ZimCrowd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Custom hover effects for navigation buttons */
+        .nav-links a[href="#download-app"]:hover {
+            background: black;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+</head>
+<body>
+    <!-- Animated Background Circles -->
+    <div class="animated-background">
+        <div class="circle-container">
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+        </div>
+
+        <!-- Animated Solid Shapes -->
+        <div class="solid-shapes">
+            <!-- Floating Squares -->
+            <div class="solid-shape square" style="top: 15%; left: 20%; animation: float 8s ease-in-out infinite;"></div>
+            <div class="solid-shape square" style="top: 70%; right: 15%; animation: float 10s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape square" style="bottom: 20%; left: 70%; animation: float 12s ease-in-out infinite;"></div>
+
+            <!-- Pulsing Circles -->
+            <div class="solid-shape circle-shape" style="top: 25%; right: 25%; animation: pulse 6s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="bottom: 35%; left: 25%; animation: pulse 8s ease-in-out infinite reverse;"></div>
+
+            <!-- Bouncing Triangles -->
+            <div class="solid-shape triangle" style="top: 40%; left: 5%; animation: bounce 7s ease-in-out infinite;"></div>
+            <div class="solid-shape triangle" style="top: 60%; right: 70%; animation: bounce 9s ease-in-out infinite reverse;"></div>
+
+            <!-- Rotating Hexagons -->
+            <div class="solid-shape hexagon" style="top: 80%; left: 40%; animation: rotate 15s linear infinite;"></div>
+            <div class="solid-shape hexagon" style="top: 30%; right: 5%; animation: rotate 20s linear infinite reverse;"></div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navigation">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#000000"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html#lend">Lend</a>
+                <a href="index.html#borrow">Borrow</a>
+                <div class="dropdown">
+                    <button class="dropbtn">Market ▼</button>
+                    <div class="dropdown-content">
+                        <a href="primary-market.html">Primary Market</a>
+                        <a href="secondary-market.html">Secondary Market</a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html">Kairo AI</a>
+                <a href="index.html#download-app" class="btn-tertiary">Download App</a>
+            </div>
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" aria-label="Toggle menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu-drawer">
+        <div class="mobile-menu-overlay"></div>
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <div class="mobile-logo">
+                    <svg width="160" height="26" viewBox="0 0 180 29" fill="none">
+                        <circle cx="13" cy="13" r="13" fill="#38e07b"/>
+                        <text x="35" y="19" font-family="Space Grotesk" font-size="16" font-weight="600" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </div>
+                <button class="mobile-menu-close" aria-label="Close menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mobile-menu-links">
+                <a href="index.html#lend" class="mobile-menu-link">
+                    <span class="link-icon">💰</span>
+                    <span class="link-text">Lend</span>
+                </a>
+                <a href="index.html#borrow" class="mobile-menu-link">
+                    <span class="link-icon">🤝</span>
+                    <span class="link-text">Borrow</span>
+                </a>
+                <div class="mobile-menu-dropdown">
+                    <div class="mobile-menu-link dropdown-toggle">
+                        <span class="link-icon">📈</span>
+                        <span class="link-text">Market</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="mobile-dropdown-content">
+                        <a href="primary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">📊</span>
+                            <span class="link-text">Primary Market</span>
+                        </a>
+                        <a href="secondary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">🔄</span>
+                            <span class="link-text">Secondary Market</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html" class="mobile-menu-link">
+                    <span class="link-icon">🤖</span>
+                    <span class="link-text">Kairo AI</span>
+                </a>
+                <div class="mobile-menu-divider"></div>
+                <a href="index.html#download-app" class="mobile-menu-cta">
+                    <span class="cta-icon">📱</span>
+                    <span class="cta-text">Download App</span>
+                </a>
+            </div>
+            <div class="mobile-menu-footer">
+                <p>Building Community Finance</p>
+                <div class="mobile-social-links">
+                    <a href="#" class="mobile-social-link" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-content">
+                <h1><span class="label label-green">About ZimCrowd</span> - Building Community Finance</h1>
+                <p class="header-subtitle">We're on a mission to democratize access to fair, transparent financial services. Founded in Zimbabwe, we're building a global platform that puts people first, not profits.</p>
+                <div class="button-group">
+                    <button class="btn-primary">Join Our Mission</button>
+                    <button class="btn-secondary">Our Story</button>
+                </div>
+            </div>
+            <div class="header-image">
+                <!-- Hero image -->
+                <img src="images/Gemini_Generated_Image_qycesxqycesxqyce.png" alt="About ZimCrowd" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+        </div>
+    </header>
+
+    <!-- Our Story Section -->
+    <section class="section" id="our-story">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Our Story</span>
+            </div>
+            <p class="section-description">How a simple idea about fair finance became a movement for financial inclusion.</p>
+        </div>
+
+        <div class="story-content" style="max-width: 800px; margin: 0 auto; text-align: center;">
+            <div class="story-timeline" style="display: flex; flex-direction: column; gap: 40px; margin-top: 60px;">
+                <div class="timeline-item" style="display: flex; align-items: center; gap: 30px; padding: 30px; background: rgba(255, 255, 255, 0.9); border-radius: 20px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                    <div class="timeline-icon" style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--color-green), #4ade80); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; color: white; flex-shrink: 0;">
+                        🌱
+                    </div>
+                    <div class="timeline-content" style="text-align: left;">
+                        <h3 style="color: var(--color-black); margin-bottom: 15px;">The Beginning</h3>
+                        <p style="color: #666; line-height: 1.6;">Founded in 2020, ZimCrowd started as a response to the financial exclusion many Zimbabweans faced. Traditional banking systems were failing to serve everyday people, leaving communities without access to fair credit.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item" style="display: flex; align-items: center; gap: 30px; padding: 30px; background: rgba(255, 255, 255, 0.9); border-radius: 20px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                    <div class="timeline-icon" style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--color-green), #4ade80); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; color: white; flex-shrink: 0;">
+                        🤝
+                    </div>
+                    <div class="timeline-content" style="text-align: left;">
+                        <h3 style="color: var(--color-black); margin-bottom: 15px;">Community First</h3>
+                        <p style="color: #666; line-height: 1.6;">We built our platform on the principle that finance should serve people, not the other way around. By leveraging community trust and technology, we created a peer-to-peer lending system that eliminates predatory practices.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item" style="display: flex; align-items: center; gap: 30px; padding: 30px; background: rgba(255, 255, 255, 0.9); border-radius: 20px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                    <div class="timeline-icon" style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--color-green), #4ade80); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; color: white; flex-shrink: 0;">
+                        🚀
+                    </div>
+                    <div class="timeline-content" style="text-align: left;">
+                        <h3 style="color: var(--color-black); margin-bottom: 15px;">Growing Impact</h3>
+                        <p style="color: #666; line-height: 1.6;">Today, we've facilitated over $2.5M in community lending, helping thousands of Zimbabweans access fair credit. Our AI-powered platform continues to innovate, making financial inclusion a reality for more people every day.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mission & Values Section -->
+    <section class="section" id="mission-values" style="background-color: #f8fafc;">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Mission & Values</span>
+            </div>
+            <p class="section-description">The principles that guide everything we do.</p>
+        </div>
+
+        <div class="cards-grid">
+            <div class="card card-grey">
+                <div class="card-content">
+                    <span class="label label-green">Our Mission</span>
+                    <div class="card-with-icon">
+                        <div class="card-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M2 17L12 22L22 17" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M2 12L12 17L22 12" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <p>To democratize access to fair, transparent financial services by building a community-powered lending platform that puts people first, eliminates predatory practices, and fosters economic inclusion worldwide.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-green">
+                <div class="card-content">
+                    <span class="label label-white">Our Values</span>
+                    <div class="card-with-icon">
+                        <div class="card-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M2 17L12 22L22 17" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M2 12L12 17L22 12" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <p><strong>Transparency:</strong> Clear terms, no hidden fees<br>
+                        <strong>Community:</strong> Building trust through shared responsibility<br>
+                        <strong>Innovation:</strong> Using technology to solve real problems<br>
+                        <strong>Inclusion:</strong> Making finance accessible to everyone</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team Section -->
+    <section class="section" id="team">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Our Team</span>
+            </div>
+            <p class="section-description">Meet the passionate individuals driving our mission forward.</p>
+        </div>
+
+        <div class="team-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; margin-top: 60px;">
+            <div class="team-member" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="member-avatar" style="width: 120px; height: 120px; background: linear-gradient(135deg, var(--color-green), #4ade80); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 48px; color: white;">
+                    👨‍💼
+                </div>
+                <h3 style="color: var(--color-black); margin-bottom: 10px;">Founder & CEO</h3>
+                <p style="color: #666; margin-bottom: 15px;">Leading the vision for community-powered finance</p>
+                <div class="member-social" style="display: flex; justify-content: center; gap: 15px;">
+                    <a href="#" style="color: var(--color-green); font-size: 20px;"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" style="color: var(--color-green); font-size: 20px;"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+
+            <div class="team-member" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="member-avatar" style="width: 120px; height: 120px; background: linear-gradient(135deg, var(--color-green), #4ade80); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 48px; color: white;">
+                    👩‍💻
+                </div>
+                <h3 style="color: var(--color-black); margin-bottom: 10px;">Head of Technology</h3>
+                <p style="color: #666; margin-bottom: 15px;">Building the AI and platform infrastructure</p>
+                <div class="member-social" style="display: flex; justify-content: center; gap: 15px;">
+                    <a href="#" style="color: var(--color-green); font-size: 20px;"><i class="fab fa-github"></i></a>
+                    <a href="#" style="color: var(--color-green); font-size: 20px;"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+
+            <div class="team-member" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="member-avatar" style="width: 120px; height: 120px; background: linear-gradient(135deg, var(--color-green), #4ade80); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 48px; color: white;">
+                    👨‍💼
+                </div>
+                <h3 style="color: var(--color-black); margin-bottom: 10px;">Head of Operations</h3>
+                <p style="color: #666; margin-bottom: 15px;">Ensuring smooth platform operations and user experience</p>
+                <div class="member-social" style="display: flex; justify-content: center; gap: 15px;">
+                    <a href="#" style="color: var(--color-green); font-size: 20px;"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Impact Stats Section -->
+    <section class="section stats-section" style="background-color: black; color: white;">
+        <div class="container">
+            <div class="section-header" style="margin-bottom: 60px;">
+                <div class="heading-wrapper">
+                    <span class="label label-green">Our Impact</span>
+                </div>
+                <p class="section-description" style="color: #e5e7eb;">Real numbers showing how we're changing lives through community finance.</p>
+            </div>
+
+            <div class="stats-row" style="display: flex; justify-content: space-around; align-items: center; max-width: 1200px; margin: 0 auto; flex-wrap: wrap; gap: 40px;">
+                <div class="stat-item" style="text-align: center;">
+                    <div class="stat-icon" style="margin-bottom: 8px;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M11.9985 2.50098C9.90741 2.50098 7.8747 3.19099 6.21568 4.464C4.55666 5.737 3.36406 7.52186 2.82283 9.54175C2.71563 9.94185 2.95306 10.3531 3.35316 10.4603C3.75326 10.5675 4.16451 10.3301 4.27172 9.92998C4.72749 8.22904 5.73177 6.72602 7.12882 5.65403C8.52587 4.58203 10.2376 4.00098 11.9985 4.00098C13.7595 4.00098 15.4712 4.58203 16.8683 5.65403C17.6571 6.25932 18.3207 7.00205 18.8311 7.84024L17.2784 8.27435C16.9863 8.35603 16.7721 8.60564 16.7358 8.90679C16.6994 9.20794 16.8481 9.50134 17.1124 9.65017L20.1931 11.3849C20.3664 11.4825 20.5714 11.5072 20.763 11.4537C20.9546 11.4001 21.117 11.2727 21.2146 11.0993L22.9492 8.01828C23.0981 7.75395 23.073 7.426 22.8857 7.18735C22.6985 6.9487 22.3859 6.84636 22.0938 6.92804L20.3225 7.42325C19.6932 6.27881 18.8306 5.26905 17.7814 4.464C16.1224 3.19099 14.0897 2.50098 11.9985 2.50098Z" fill="#ffffff"/>
+                            <path d="M12.7499 8.55835C12.7499 8.14414 12.4141 7.80835 11.9999 7.80835C11.5857 7.80835 11.2499 8.14414 11.2499 8.55835V8.79461C10.49 9.07225 9.94758 9.80156 9.94758 10.6576C9.94758 11.4841 10.4603 12.2239 11.2341 12.5141L12.239 12.8909C12.4274 12.9616 12.5522 13.1417 12.5522 13.343C12.5522 13.6096 12.3361 13.8258 12.0694 13.8258H11.6744C11.5491 13.8258 11.4476 13.7242 11.4476 13.599C11.4476 13.1848 11.1118 12.849 10.6976 12.849C10.2834 12.849 9.94758 13.1848 9.94758 13.599C9.94758 14.4062 10.5015 15.0841 11.2499 15.2732V15.4421C11.2499 15.8563 11.5857 16.1921 11.9999 16.1921C12.4141 16.1921 12.7499 15.8563 12.7499 15.4421V15.2059C13.5098 14.9283 14.0522 14.199 14.0522 13.343C14.0522 12.5165 13.5396 11.7767 12.7657 11.4865L11.7608 11.1096C11.5724 11.0389 11.4476 10.8588 11.4476 10.6576C11.4476 10.3909 11.6637 10.1748 11.9304 10.1748H12.3254C12.4507 10.1748 12.5522 10.2763 12.5522 10.4016C12.5522 10.8158 12.888 11.1516 13.3022 11.1516C13.7164 11.1516 14.0522 10.8158 14.0522 10.4016C14.0522 9.59436 13.4984 8.9165 12.7499 8.72733V8.55835Z" fill="#ffffff"/>
+                            <path d="M3.79695 12.6155C3.62362 12.5179 3.41862 12.4932 3.22704 12.5467C3.03547 12.6003 2.87301 12.7278 2.77542 12.9011L1.0408 15.9821C0.891979 16.2465 0.917043 16.5744 1.1043 16.8131C1.29157 17.0517 1.60414 17.1541 1.89629 17.0724L3.67618 16.5747C4.30559 17.72 5.16861 18.7305 6.21839 19.536C7.87741 20.809 9.91012 21.499 12.0013 21.499C14.0924 21.499 16.1251 20.809 17.7841 19.536C19.4431 18.263 20.6358 16.4781 21.177 14.4582C21.2842 14.0581 21.0468 13.6469 20.6467 13.5397C20.2466 13.4325 19.8353 13.6699 19.7281 14.07C19.2723 15.7709 18.268 17.274 16.871 18.346C15.4739 19.418 13.7622 19.999 12.0013 19.999C10.2403 19.999 8.52859 19.418 7.13154 18.346C6.34208 17.7402 5.67803 16.9968 5.16752 16.1578L6.71162 15.7261C7.00375 15.6444 7.21793 15.3948 7.25427 15.0936C7.29061 14.7925 7.14198 14.4991 6.87766 14.3502L3.79695 12.6155Z" fill="#ffffff"/>
+                        </svg>
+                    </div>
+                    <div class="stat-number" style="font-size: 32px; font-weight: bold; margin-bottom: 5px;">$2.5M+</div>
+                    <div class="stat-label" style="font-size: 14px;">Funds Facilitated</div>
+                </div>
+                <div class="stat-item" style="text-align: center;">
+                    <div class="stat-icon" style="margin-bottom: 8px;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <polyline points="14,2 14,8 20,8" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="stat-number" style="font-size: 32px; font-weight: bold; margin-bottom: 5px;">1,200+</div>
+                    <div class="stat-label" style="font-size: 14px;">Lives Impacted</div>
+                </div>
+                <div class="stat-item" style="text-align: center;">
+                    <div class="stat-icon" style="margin-bottom: 8px;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" stroke="#ffffff" stroke-width="2"/>
+                            <polyline points="12,6 12,12 16,14" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="stat-number" style="font-size: 32px; font-weight: bold; margin-bottom: 5px;">98%</div>
+                    <div class="stat-label" style="font-size: 14px;">Repayment Rate</div>
+                </div>
+                <div class="stat-item" style="text-align: center;">
+                    <div class="stat-icon" style="margin-bottom: 8px;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8.80437 4.10156C6.7626 4.10156 5.10742 5.75674 5.10742 7.79851C5.10742 9.84027 6.7626 11.4955 8.80437 11.4955C10.8461 11.4955 12.5013 9.84027 12.5013 7.79851C12.5013 5.75674 10.8461 4.10156 8.80437 4.10156Z" fill="#ffffff"/>
+                            <path d="M1.85175 19.16L1.85172 19.1577L1.85165 19.1513L1.85156 19.1321C1.85156 19.1164 1.85169 19.0952 1.85215 19.0688C1.85309 19.016 1.85538 18.9421 1.86069 18.8502C1.8713 18.6666 1.89402 18.4095 1.94242 18.1031C2.03866 17.4938 2.23948 16.6698 2.66304 15.837C3.08862 15.0001 3.74414 14.1453 4.74743 13.5023C5.75344 12.8576 7.06383 12.4551 8.75032 12.4551C10.4368 12.4551 11.7472 12.8576 12.7532 13.5023C13.7565 14.1453 14.412 15.0001 14.8376 15.837C15.2612 16.6698 15.462 17.4938 15.5582 18.1031C15.6066 18.4095 15.6293 18.6666 15.6399 18.8502C15.6453 18.9421 15.6476 19.016 15.6485 19.0688C15.649 19.0952 15.6491 19.1164 15.6491 19.1321L15.649 19.1513L15.6489 19.1577L15.6489 19.161C15.6418 19.5701 15.3081 19.8988 14.899 19.8988H2.60167C2.19253 19.8988 1.85888 19.5709 1.85178 19.1618C1.85178 19.1618 1.85179 19.1625 1.85175 19.16Z" fill="#ffffff"/>
+                            <path d="M17.0209 19.8988C17.0999 19.6756 17.1446 19.4363 17.149 19.187L17.1491 19.1799L17.1493 19.1676L17.1494 19.1387L17.1494 19.1327C17.1494 19.1083 17.1492 19.078 17.1486 19.0422C17.1473 18.9708 17.1443 18.8769 17.1378 18.7637C17.1247 18.538 17.0974 18.2312 17.0402 17.8691C17.0103 17.6801 16.9717 17.472 16.9215 17.2494C16.9165 17.2261 16.9113 17.2028 16.9058 17.1794C16.6448 16.0607 16.0667 14.4931 14.7497 13.189C14.515 12.9567 14.2627 12.7384 13.9924 12.5363C14.3865 12.4831 14.8056 12.4551 15.2509 12.4551C16.9373 12.4551 18.2477 12.8576 19.2537 13.5023C20.257 14.1453 20.9126 15.0001 21.3381 15.837C21.7617 16.6698 21.9625 17.4938 22.0588 18.1031C22.1072 18.4095 22.1299 18.6666 22.1405 18.8502C22.1458 18.9421 22.1481 19.016 22.149 19.0688C22.1495 19.0952 22.1496 19.1164 22.1496 19.1321L22.1495 19.1513L22.1495 19.1577L22.1494 19.161C22.1423 19.5701 21.8086 19.8988 21.3995 19.8988H17.0209Z" fill="#ffffff"/>
+                            <path d="M14.0028 7.79851C14.0028 8.89595 13.6627 9.91394 13.082 10.7528C13.7007 11.219 14.4705 11.4955 15.3049 11.4955C17.3467 11.4955 19.0018 9.84027 19.0018 7.79851C19.0018 5.75674 17.3467 4.10156 15.3049 4.10156C14.4705 4.10156 13.7007 4.37797 13.082 4.84422C13.6627 5.68307 14.0028 6.70106 14.0028 7.79851Z" fill="#ffffff"/>
+                        </svg>
+                    </div>
+                    <div class="stat-number" style="font-size: 32px; font-weight: bold; margin-bottom: 5px;">500+</div>
+                    <div class="stat-label" style="font-size: 14px;">Active Members</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Zimcrowd Footer -->
+    <footer class="zimcrowd-footer">
+        <!-- CTA Block -->
+        <section class="cta-block" id="download-app">
+            <div class="cta-container">
+                <div class="cta-content">
+                    <h3 style="color: black;">Join the ZimCrowd Movement</h3>
+                    <p style="color: black;">Be part of the financial revolution. Download our app and start building a better financial future for your community.</p>
+                    <div class="app-store-buttons">
+                        <a href="#" class="app-store-btn google-play">
+                            <img src="images/GetItOnGooglePlay_Badge_Web_color_English.svg" alt="Get it on Google Play" style="height: 60px; width: auto;">
+                        </a>
+                        <a href="#" class="app-store-btn app-store">
+                            <img src="images/Download_on_the_App_Store_Badge_US-UK_RGB_blk_092917.svg" alt="Download on the App Store" style="height: 60px; width: auto;">
+                        </a>
+                    </div>
+                </div>
+                <div class="cta-illustration">
+                    <img src="images/Gemini_Generated_Image_2wm05r2wm05r2wm0.png" alt="Young people Smiling on Phones" style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);">
+                </div>
+            </div>
+        </section>
+
+        <div class="footer-container">
+
+            <div class="footer-column brand">
+                <div class="footer-logo">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#FFFFFF"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#FFFFFF">ZimCrowd</text>
+                    </svg>
+                </div>
+                <p>Fair, community-first lending. Borrow on your terms, invest with impact.</p>
+
+                <h4>Stay in the loop</h4>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="Your email address" required>
+                    <button type="submit">Subscribe</button>
+                </form>
+            </div>
+
+            <div class="footer-column">
+                <h4>Platform</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html#borrow">Borrow</a></li>
+                    <li><a href="index.html#lend">Lend</a></li>
+                    <li><a href="primary-market.html">Primary Market</a></li>
+                    <li><a href="secondary-market.html">Secondary Market</a></li>
+                    <li><a href="kairo-ai.html">Kairo AI Coach</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="about-us.html">About Us</a></li>
+                    <li><a href="careers.html">Careers</a></li>
+                    <li><a href="press.html">Press</a></li>
+                    <li><a href="blog.html">Blog</a></li>
+                    <li><a href="partners.html">Partners</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+                <div class="company-badge">
+                    <div class="badge-icon">🏢</div>
+                    <p>Building Community Finance</p>
+                </div>
+            </div>
+
+            <div class="footer-column" id="contact">
+                <h4>Contact Us</h4>
+                <div class="footer-contact-info">
+                    <p><i class="fas fa-envelope"></i> info@zimcrowd.com</p>
+                    <p><i class="fas fa-phone"></i> +263710467317</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Harare, Zimbabwe</p>
+                </div>
+                <div class="footer-contact-hours">
+                    <p><strong>Support Hours:</strong></p>
+                    <p>Mon-Fri: 8AM-6PM</p>
+                    <p>Sat: 9AM-4PM</p>
+                </div>
+            </div>
+
+            <div class="footer-column">
+                <h4>Legal</h4>
+                <ul class="footer-links">
+                    <li><a href="#general-loan-terms">General Loan Terms</a></li>
+                    <li><a href="#risk-warnings">Risk Warnings</a></li>
+                    <li><a href="#terms-conditions">Terms & Conditions</a></li>
+                    <li><a href="#privacy-policy">Privacy Policy</a></li>
+                    <li><a href="#cookie-policy">Cookie Policy</a></li>
+                    <li><a href="#terms-of-service">Terms of Service</a></li>
+                    <li><a

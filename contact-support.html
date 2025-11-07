@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>Contact Support - ZimCrowd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .nav-links a[href="#download-app"]:hover {
+            background: black;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+</head>
+<body>
+    <!-- Animated Background Circles -->
+    <div class="animated-background">
+        <div class="circle-container">
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+        </div>
+        <div class="solid-shapes">
+            <div class="solid-shape square" style="top: 15%; left: 20%; animation: float 8s ease-in-out infinite;"></div>
+            <div class="solid-shape square" style="top: 70%; right: 15%; animation: float 10s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape square" style="bottom: 20%; left: 70%; animation: float 12s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="top: 25%; right: 25%; animation: pulse 6s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="bottom: 35%; left: 25%; animation: pulse 8s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape triangle" style="top: 40%; left: 5%; animation: bounce 7s ease-in-out infinite;"></div>
+            <div class="solid-shape triangle" style="top: 60%; right: 70%; animation: bounce 9s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape hexagon" style="top: 80%; left: 40%; animation: rotate 15s linear infinite;"></div>
+            <div class="solid-shape hexagon" style="top: 30%; right: 5%; animation: rotate 20s linear infinite reverse;"></div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navigation">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#000000"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html#lend">Lend</a>
+                <a href="index.html#borrow">Borrow</a>
+                <div class="dropdown">
+                    <button class="dropbtn">Market ▼</button>
+                    <div class="dropdown-content">
+                        <a href="primary-market.html">Primary Market</a>
+                        <a href="secondary-market.html">Secondary Market</a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html">Kairo AI</a>
+                <a href="index.html#download-app" class="btn-tertiary">Download App</a>
+            </div>
+            <button class="mobile-menu-btn" aria-label="Toggle menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu-drawer">
+        <div class="mobile-menu-overlay"></div>
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <div class="mobile-logo">
+                    <svg width="160" height="26" viewBox="0 0 180 29" fill="none">
+                        <circle cx="13" cy="13" r="13" fill="#38e07b"/>
+                        <text x="35" y="19" font-family="Space Grotesk" font-size="16" font-weight="600" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </div>
+                <button class="mobile-menu-close" aria-label="Close menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mobile-menu-links">
+                <a href="index.html#lend" class="mobile-menu-link">
+                    <span class="link-icon">💰</span>
+                    <span class="link-text">Lend</span>
+                </a>
+                <a href="index.html#borrow" class="mobile-menu-link">
+                    <span class="link-icon">🤝</span>
+                    <span class="link-text">Borrow</span>
+                </a>
+                <div class="mobile-menu-dropdown">
+                    <div class="mobile-menu-link dropdown-toggle">
+                        <span class="link-icon">📈</span>
+                        <span class="link-text">Market</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="mobile-dropdown-content">
+                        <a href="primary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">📊</span>
+                            <span class="link-text">Primary Market</span>
+                        </a>
+                        <a href="secondary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">🔄</span>
+                            <span class="link-text">Secondary Market</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html" class="mobile-menu-link">
+                    <span class="link-icon">🤖</span>
+                    <span class="link-text">Kairo AI</span>
+                </a>
+                <div class="mobile-menu-divider"></div>
+                <a href="index.html#download-app" class="mobile-menu-cta">
+                    <span class="cta-icon">📱</span>
+                    <span class="cta-text">Download App</span>
+                </a>
+            </div>
+            <div class="mobile-menu-footer">
+                <p>Building Community Finance</p>
+                <div class="mobile-social-links">
+                    <a href="#" class="mobile-social-link" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-content">
+                <h1><span class="label label-green">Contact Support</span> - We're Here to Help</h1>
+                <p class="header-subtitle">Need assistance with your account, loans, or have questions about ZimCrowd? Our support team is ready to help you succeed.</p>
+                <div class="button-group">
+                    <button class="btn-primary">Start Live Chat</button>
+                    <button class="btn-secondary">Send Email</button>
+                </div>
+            </div>
+            <div class="header-image">
+                <img src="images/Gemini_Generated_Image_qycesxqycesxqyce.png" alt="Contact Support" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+        </div>
+    </header>
+
+    <!-- Support Options -->
+    <section class="section" id="support-options">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Choose Your Support Channel</span>
+            </div>
+            <p class="section-description">Select the best way to get help based on your needs and urgency.</p>
+        </div>
+
+        <div class="support-options-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px; margin-top: 60px;">
+            <div class="support-option-card featured" style="background: linear-gradient(135deg, #38e07b, #2ecc71); color: white; border-radius: 20px; padding: 50px; text-align: center; box-shadow: 0 15px 40px rgba(56, 224, 123, 0.3); position: relative; overflow: hidden;">
+                <div class="card-ribbon" style="position: absolute; top: 20px; right: 20px; background: white; color: #38e07b; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: 600;">RECOMMENDED</div>
+                <div class="support-icon" style="font-size: 80px; margin-bottom: 25px;">💬</div>
+                <h3 style="margin-bottom: 15px; font-size: 28px;">Live Chat Support</h3>
+                <p style="margin-bottom: 30px; font-size: 16px; opacity: 0.9;">Get instant help from our support specialists during business hours.</p>
+                <div class="support-features" style="text-align: left; display: inline-block; margin-bottom: 30px;">
+                    <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <span style="color: white; margin-right: 10px;">✓</span>
+                        <span>Instant responses</span>
+                    </div>
+                    <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <span style="color: white; margin-right: 10px;">✓</span>
+                        <span>Real-time assistance</span>
+                    </div>
+                    <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <span style="color: white; margin-right: 10px;">✓</span>
+                        <span>Screen sharing available</span>
+                    </div>
+                    <div class="feature-item" style="display: flex; align-items: center;">
+                        <span style="color: white; margin-right: 10px;">✓</span>
+                        <span>Account-specific help</span>
+                    </div>
+                </div>
+                <div class="availability-status" style="margin-bottom: 25px;">
+                    <span style="color: white; font-size: 14px;">● Online now - Mon-Fri, 8AM-6PM CAT</span>
+                </div>
+                <button class="btn-primary" style="background: white; color: #38e07b; border: none; padding: 15px 30px; font-size: 16px; font-weight: 600;">Start Live Chat</button>
+            </div>
+
+            <div class="support-option-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 50px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="support-icon" style="font-size: 80px; margin-bottom: 25px;">📧</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px; font-size: 28px;">Email Support</h3>
+                <p style="color: #666; margin-bottom: 30px; font-size: 16px;">Send detailed questions and receive comprehensive responses.</p>
+                <div class="support-features" style="text-align: left; display: inline-block; margin-bottom: 30px;">
+                    <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <span style="color: #38e07b; margin-right: 10px;">✓</span>
+                        <span>Detailed responses</span>
+                    </div>
+                    <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <span style="color: #38e07b; margin-right: 10px;">✓</span>
+                        <span>24/7 submission</span>
+                    </div>
+                    <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <span style="color: #38e07b; margin-right: 10px;">✓</span>
+                        <span>Attachment support</span>
+                    </div>
+                    <div class="feature-item" style="display: flex; align-items: center;">
+                        <span style="color: #38e07b; margin-right: 10px;">✓</span>
+                        <span>Response within 24 hours</span>
+                    </div>
+                </div>
+                <div class="contact-info" style="margin-bottom: 25px;">
+                    <p style="color: #666; font-size: 14px; margin-bottom: 5px;">Email us at:</p>
+                    <p style="color: var(--color-black); font-weight: 600; font-size: 16px;">support@zimcrowd.com</p>
+                </div>
+                <button class="btn-secondary">Send Email</button>
+            </div>
+
+            <div class="support-option-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 50px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="support-icon" style="font-size: 80px; margin-bottom: 25px;">📞</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px; font-size: 28px;">Phone Support</h3>
+                <p style="color: #666; margin-bottom: 30px; font-size: 16px;">Speak directly with our support team for urgent or complex matters.</p>
+                <div class="support-features" style="text-align: left; display: inline-block; margin-bottom: 30px;">
+                    <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <span style="color: #38e07b; margin-right: 10px;">✓</span>
+                        <span>Direct conversation</span>
+                    </div>
+                    <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <span style="color: #38e07b; margin-right: 10px;">✓</span>
+                        <span>Immediate assistance</span>
+                    </div>
+                    <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <span style="color: #38e07b; margin-right: 10px;">✓</span>
+                        <span>Complex issue resolution</span>
+                    </div>
+                    <div class="feature-item" style="display: flex; align-items: center;">
+                        <span style="color: #38e07b; margin-right: 10px;">✓</span>
+                        <span>Urgent matters</span>
+                    </div>
+                </div>
+                <div class="contact-info" style="margin-bottom: 25px;">
+                    <p style="color: #666; font-size: 14px; margin-bottom: 5px;">Call us at:</p>
+                    <p style="color: var(--color-black); font-weight: 600; font-size: 16px;">+263 710 467 317</p>
+                    <p style="color: #666; font-size: 12px;">Mon-Fri, 8AM-6PM CAT</p>
+                </div>
+                <button class="btn-secondary">Call Now</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Support Form -->
+    <section class="section" id="support-form" style="background-color: #f8fafc;">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Submit a Support Request</span>
+            </div>
+            <p class="section-description">Can't find what you need? Send us a detailed message and we'll get back to you promptly.</p>
+        </div>
+
+        <div class="support-form-container" style="max-width: 900px; margin: 0 auto; background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 60px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+            <form class="support-form" style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+                <div class="form-group">
+                    <label for="firstName" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--color-black);">First Name *</label>
+                    <input type="text" id="firstName" name="firstName" required style="width: 100%; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; font-size: 16px;">
+                </div>
+
+                <div class="form-group">
+                    <label for="lastName" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--color-black);">Last Name *</label>
+                    <input type="text" id="lastName" name="lastName" required style="width: 100%; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; font-size: 16px;">
+                </div>
+
+                <div class="form-group">
+                    <label for="email" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--color-black);">Email Address *</label>
+                    <input type="email" id="email" name="email" required style="width: 100%; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; font-size: 16px;">
+                </div>
+
+                <div class="form-group">
+                    <label for="accountId" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--color-black);">Account ID (Optional)</label>
+                    <input type="text" id="accountId" name="accountId" style="width: 100%; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; font-size: 16px;" placeholder="Found in your account settings">
+                </div>
+
+                <div class="form-group" style="grid-column: span 2;">
+                    <label for="category" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--color-black);">Support Category *</label>
+                    <select id="category" name="category" required style="width: 100%; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; font-size: 16px;">
+                        <option value="">Select a category</option>
+                        <option value="account">Account & Login Issues</option>
+                        <option value="borrowing">Borrowing & Loan Requests</option>
+                        <option value="lending">Lending & Investments</option>
+                        <option value="payments">Payments & Transfers</option>
+                        <option value="security">Security & Privacy</option>
+                        <option value="app">Mobile App Issues</option>
+                        <option value="kairo">Kairo AI Assistant</option>
+                        <option value="technical">Technical Problems</option>
+                        <option value="feedback">Feedback & Suggestions</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="grid-column: span 2;">
+                    <label for="urgency" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--color-black);">Urgency Level *</label>
+                    <select id="urgency" name="urgency" required style="width: 100%; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; font-size: 16px;">
+                        <option value="">Select urgency level</option>
+                        <option value="low">Low - General question or feedback</option>
+                        <option value="medium">Medium - Issue affecting functionality</option>
+                        <option value="high">High - Urgent issue requiring immediate attention</option>
+                        <option value="critical">Critical - Account security or payment issue</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="grid-column: span 2;">
+                    <label for="subject" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--color-black);">Subject *</label>
+                    <input type="text" id="subject" name="subject" required style="width: 100%; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; font-size: 16px;" placeholder="Brief description of your issue">
+                </div>
+
+                <div class="form-group" style="grid-column: span 2;">
+                    <label for="message" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--color-black);">Detailed Description *</label>
+                    <textarea id="message" name="message" required rows="8" style="width: 100%; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; font-size: 16px; resize: vertical;" placeholder="Please provide as much detail as possible about your issue, including steps to reproduce, error messages, and what you've already tried."></textarea>
+                </div>
+
+                <div class="form-group" style="grid-column: span 2;">
+                    <label for="attachments" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--color-black);">Attachments (Optional)</label>
+                    <input type="file" id="attachments" name="attachments" multiple style="width: 100%; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; font-size: 16px;" accept="image/*,.pdf,.doc,.docx">
+                    <small style="color: #666; display: block; margin-top: 5px;">Supported formats: Images, PDF, Word documents (Max 10MB total)</small>
+                </div>
+
+                <div class="form-group" style="grid-column: span 2; text-align: center;">
+                    <button type="submit" class="btn-primary" style="padding: 18px 40px; font-size: 16px; font-weight: 600;">Submit Support Request</button>
+                    <p style="color: #666; font-size: 14px; margin-top: 15px;">We'll respond within 24 hours during business days</p>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Self-Service Resources -->
+    <section class="section" id="self-service">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Self-Service Resources</span>
+            </div>
+            <p class="section-description">Find quick answers and helpful resources before contacting support.</p>
+        </div>
+
+        <div class="resources-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-top: 60px;">
+            <div class="resource-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="resource-icon" style="font-size: 48px; margin-bottom: 20px;">❓</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">FAQ</h3>
+                <p style="color: #666; margin-bottom: 20px;">Browse our frequently asked questions for quick answers.</p>
+                <button class="btn-secondary">View FAQ</button>
+            </div>
+
+            <div class="resource-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="resource-icon" style="font-size: 48px; margin-bottom: 20px;">📚</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Help Center</h3>
+                <p style="color: #666; margin-bottom: 20px;">Comprehensive guides and tutorials for all ZimCrowd features.</p>
+                <button class="btn-secondary">Browse Help Center</button>
+            </div>
+
+            <div class="resource-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="resource-icon" style="font-size: 48px; margin-bottom: 20px;">🎥</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Video Tutorials</h3>
+                <p style="color: #666; margin-bottom: 20px;">Step-by-step video guides to help you get the most out of ZimCrowd.</p>
+                <button class="btn-secondary">Watch Tutorials</button>
+            </div>
+
+            <div class="resource-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="resource-icon" style="font-size: 48px; margin-bottom: 20px;">👥</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Community Forum</h3>
+                <p style="color: #666; margin-bottom: 20px;">Connect with other users and share experiences in our community.</p>
+                <button class="btn-secondary">Join Community</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Zimcrowd Footer -->
+    <footer class="zimcrowd-footer">
+        <div class="footer-container">
+            <div class="footer-column brand">
+                <div class="footer-logo">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#FFFFFF"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#FFFFFF">ZimCrowd</text>
+                    </svg>
+                </div>
+                <p>Fair, community-first lending. Borrow on your terms, invest with impact.</p>
+            </div>
+            <div class="footer-column">
+                <h4>Platform</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html#borrow">Borrow</a></li>
+                    <li><a href="index.html#lend">Lend</a></li>
+                    <li><a href="primary-market.html">Primary Market</a></li>
+                    <li><a href="secondary-market.html">Secondary Market</a></li>
+                    <li><a href="kairo-ai.html">Kairo AI Coach</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="about-us.html">About Us</a></li>
+                    <li><a href="careers.html">Careers</a></li>
+                    <li><a href="press.html">Press</a></li>
+                    <li><a href="blog.html">Blog</a></li>
+                    <li><a href="partners.html">Partners</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Support</h4>
+                <ul class="footer-links">
+                    <li><a href="help-center.html">Help Center</a></li>
+                    <li><a href="contact-support.html">Contact Support</a></li>
+                    <li><a href="index.html#faq">FAQ</a></li>
+                    <li><a href="community-forum.html">Community Forum</a></li>
+                    <li><a href="live-chat.html">Live Chat</a></li>
+                    <li><a href="tutorials.html">Tutorials</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Contact Us</h4>
+                <div class="footer-contact-info">
+                    <p><i class="fas fa-envelope"></i> info@zimcrowd.com</p>
+                    <p><i class="fas fa-phone"></i> +263710467317</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Harare, Zimbabwe</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Navigation Hide/Show on Scroll
+        let lastScrollTop = 0;
+        const navigation = document.querySelector('.navigation');
+
+        window.addEventListener('scroll', function() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            if (scrollTop > lastScrollTop && scrollTop > 100) {
+                navigation.classList.add('hidden');
+            } else {
+                navigation.classList.remove('hidden');
+            }
+
+            lastScrollTop = scrollTop;
+        });
+
+        // Mobile Menu Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const mobileMenuDrawer = document.querySelector('.mobile-menu-drawer');
+            const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
+            const mobileMenuClose = document.querySelector('.mobile-menu-close');
+            const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
+
+            function toggleMobileMenu() {
+                mobileMenuDrawer.classList.toggle('active');
+                document.body.style.overflow = mobileMenuDrawer.classList.contains('active') ? 'hidden' : '';
+            }
+
+            function closeMobileMenu() {
+                mobileMenuDrawer.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            if (mobileMenuOverlay) mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+            if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeMobileMenu);
+
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && mobileMenuDrawer.classList.contains('active')) {
+                    closeMobileMenu();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

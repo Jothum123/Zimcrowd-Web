@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>Press - ZimCrowd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Custom hover effects for navigation buttons */
+        .nav-links a[href="#download-app"]:hover {
+            background: black;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+</head>
+<body>
+    <!-- Animated Background Circles -->
+    <div class="animated-background">
+        <div class="circle-container">
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+        </div>
+
+        <!-- Animated Solid Shapes -->
+        <div class="solid-shapes">
+            <!-- Floating Squares -->
+            <div class="solid-shape square" style="top: 15%; left: 20%; animation: float 8s ease-in-out infinite;"></div>
+            <div class="solid-shape square" style="top: 70%; right: 15%; animation: float 10s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape square" style="bottom: 20%; left: 70%; animation: float 12s ease-in-out infinite;"></div>
+
+            <!-- Pulsing Circles -->
+            <div class="solid-shape circle-shape" style="top: 25%; right: 25%; animation: pulse 6s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="bottom: 35%; left: 25%; animation: pulse 8s ease-in-out infinite reverse;"></div>
+
+            <!-- Bouncing Triangles -->
+            <div class="solid-shape triangle" style="top: 40%; left: 5%; animation: bounce 7s ease-in-out infinite;"></div>
+            <div class="solid-shape triangle" style="top: 60%; right: 70%; animation: bounce 9s ease-in-out infinite reverse;"></div>
+
+            <!-- Rotating Hexagons -->
+            <div class="solid-shape hexagon" style="top: 80%; left: 40%; animation: rotate 15s linear infinite;"></div>
+            <div class="solid-shape hexagon" style="top: 30%; right: 5%; animation: rotate 20s linear infinite reverse;"></div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navigation">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#000000"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html#lend">Lend</a>
+                <a href="index.html#borrow">Borrow</a>
+                <div class="dropdown">
+                    <button class="dropbtn">Market ▼</button>
+                    <div class="dropdown-content">
+                        <a href="primary-market.html">Primary Market</a>
+                        <a href="secondary-market.html">Secondary Market</a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html">Kairo AI</a>
+                <a href="index.html#download-app" class="btn-tertiary">Download App</a>
+            </div>
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" aria-label="Toggle menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu-drawer">
+        <div class="mobile-menu-overlay"></div>
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <div class="mobile-logo">
+                    <svg width="160" height="26" viewBox="0 0 180 29" fill="none">
+                        <circle cx="13" cy="13" r="13" fill="#38e07b"/>
+                        <text x="35" y="19" font-family="Space Grotesk" font-size="16" font-weight="600" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </div>
+                <button class="mobile-menu-close" aria-label="Close menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mobile-menu-links">
+                <a href="index.html#lend" class="mobile-menu-link">
+                    <span class="link-icon">💰</span>
+                    <span class="link-text">Lend</span>
+                </a>
+                <a href="index.html#borrow" class="mobile-menu-link">
+                    <span class="link-icon">🤝</span>
+                    <span class="link-text">Borrow</span>
+                </a>
+                <div class="mobile-menu-dropdown">
+                    <div class="mobile-menu-link dropdown-toggle">
+                        <span class="link-icon">📈</span>
+                        <span class="link-text">Market</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="mobile-dropdown-content">
+                        <a href="primary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">📊</span>
+                            <span class="link-text">Primary Market</span>
+                        </a>
+                        <a href="secondary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">🔄</span>
+                            <span class="link-text">Secondary Market</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html" class="mobile-menu-link">
+                    <span class="link-icon">🤖</span>
+                    <span class="link-text">Kairo AI</span>
+                </a>
+                <div class="mobile-menu-divider"></div>
+                <a href="index.html#download-app" class="mobile-menu-cta">
+                    <span class="cta-icon">📱</span>
+                    <span class="cta-text">Download App</span>
+                </a>
+            </div>
+            <div class="mobile-menu-footer">
+                <p>Building Community Finance</p>
+                <div class="mobile-social-links">
+                    <a href="#" class="mobile-social-link" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-content">
+                <h1><span class="label label-green">Press Center</span> - Stay Updated</h1>
+                <p class="header-subtitle">Latest news, announcements, and media resources about ZimCrowd's mission to democratize financial services.</p>
+                <div class="button-group">
+                    <button class="btn-primary">Latest News</button>
+                    <button class="btn-secondary">Press Kit</button>
+                </div>
+            </div>
+            <div class="header-image">
+                <!-- Hero image -->
+                <img src="images/Gemini_Generated_Image_qycesxqycesxqyce.png" alt="Press Center" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+        </div>
+    </header>
+
+    <!-- Latest News Section -->
+    <section class="section" id="latest-news">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Latest News</span>
+            </div>
+            <p class="section-description">Stay informed about our latest developments and achievements.</p>
+        </div>
+
+        <div class="news-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px; margin-top: 60px;">
+            <div class="news-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border: 1px solid rgba(56, 231, 123, 0.1);">
+                <div class="news-date" style="color: var(--color-green); font-weight: 600; margin-bottom: 15px;">November 5, 2025</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">ZimCrowd Reaches 500,000 Users Milestone</h3>
+                <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">We're excited to announce that ZimCrowd has reached 500,000 active users across Zimbabwe, marking a significant milestone in our mission to provide fair financial access.</p>
+                <a href="#" style="color: var(--color-green); font-weight: 600; text-decoration: none;">Read More →</a>
+            </div>
+
+            <div class="news-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border: 1px solid rgba(56, 231, 123, 0.1);">
+                <div class="news-date" style="color: var(--color-green); font-weight: 600; margin-bottom: 15px;">October 28, 2025</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">AI-Powered Risk Assessment Launch</h3>
+                <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">Our new AI-driven risk assessment system is now live, providing faster and more accurate lending decisions while maintaining our commitment to fair and transparent practices.</p>
+                <a href="#" style="color: var(--color-green); font-weight: 600; text-decoration: none;">Read More →</a>
+            </div>
+
+            <div class="news-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border: 1px solid rgba(56, 231, 123, 0.1);">
+                <div class="news-date" style="color: var(--color-green); font-weight: 600; margin-bottom: 15px;">October 15, 2025</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Partnership with Local Banks</h3>
+                <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">ZimCrowd announces strategic partnerships with major Zimbabwean banks to expand our reach and provide even more comprehensive financial services to our community.</p>
+                <a href="#" style="color: var(--color-green); font-weight: 600; text-decoration: none;">Read More →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Press Kit Section -->
+    <section class="section" id="press-kit" style="background-color: #f8fafc;">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Press Kit</span>
+            </div>
+            <p class="section-description">Download our media resources and brand assets.</p>
+        </div>
+
+        <div class="press-kit-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-top: 60px;">
+            <div class="press-kit-item" style="text-align: center; padding: 30px; background: rgba(255, 255, 255, 0.9); border-radius: 15px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
+                <div class="kit-icon" style="font-size: 48px; margin-bottom: 20px;">📸</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Logo & Branding</h3>
+                <p style="color: #666; margin-bottom: 20px;">High-resolution logos, brand guidelines, and color palettes.</p>
+                <button class="btn-secondary">Download</button>
+            </div>
+
+            <div class="press-kit-item" style="text-align: center; padding: 30px; background: rgba(255, 255, 255, 0.9); border-radius: 15px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
+                <div class="kit-icon" style="font-size: 48px; margin-bottom: 20px;">📄</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Company Factsheet</h3>
+                <p style="color: #666; margin-bottom: 20px;">Key statistics, milestones, and company information.</p>
+                <button class="btn-secondary">Download</button>
+            </div>
+
+            <div class="press-kit-item" style="text-align: center; padding: 30px; background: rgba(255, 255, 255, 0.9); border-radius: 15px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
+                <div class="kit-icon" style="font-size: 48px; margin-bottom: 20px;">📹</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Video Assets</h3>
+                <p style="color: #666; margin-bottom: 20px;">Product demos, founder interviews, and promotional videos.</p>
+                <button class="btn-secondary">Download</button>
+            </div>
+
+            <div class="press-kit-item" style="text-align: center; padding: 30px; background: rgba(255, 255, 255, 0.9); border-radius: 15px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
+                <div class="kit-icon" style="font-size: 48px; margin-bottom: 20px;">📰</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Press Releases</h3>
+                <p style="color: #666; margin-bottom: 20px;">Official announcements and company statements.</p>
+                <button class="btn-secondary">Download</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Press Section -->
+    <section class="section" id="contact-press">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Contact Press</span>
+            </div>
+            <p class="section-description">For press inquiries and media requests.</p>
+        </div>
+
+        <div class="contact-press-card" style="max-width: 600px; margin: 0 auto; background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); text-align: center;">
+            <div class="contact-icon" style="font-size: 64px; margin-bottom: 20px;">📧</div>
+            <h3 style="color: var(--color-black); margin-bottom: 15px;">Press Inquiries</h3>
+            <p style="color: #666; margin-bottom: 25px;">For all press-related questions, please contact our communications team.</p>
+            <div class="contact-details" style="text-align: left; display: inline-block;">
+                <p style="margin-bottom: 10px;"><strong>Email:</strong> press@zimcrowd.com</p>
+                <p style="margin-bottom: 10px;"><strong>Phone:</strong> +263 710 467 317</p>
+                <p style="margin-bottom: 20px;"><strong>Response Time:</strong> Within 24 hours</p>
+            </div>
+            <button class="btn-primary">Send Press Inquiry</button>
+        </div>
+    </section>
+
+    <!-- Zimcrowd Footer -->
+    <footer class="zimcrowd-footer">
+        <div class="footer-container">
+            <div class="footer-column brand">
+                <div class="footer-logo">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#FFFFFF"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#FFFFFF">ZimCrowd</text>
+                    </svg>
+                </div>
+                <p>Fair, community-first lending. Borrow on your terms, invest with impact.</p>
+            </div>
+            <div class="footer-column">
+                <h4>Platform</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html#borrow">Borrow</a></li>
+                    <li><a href="index.html#lend">Lend</a></li>
+                    <li><a href="primary-market.html">Primary Market</a></li>
+                    <li><a href="secondary-market.html">Secondary Market</a></li>
+                    <li><a href="kairo-ai.html">Kairo AI Coach</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="about-us.html">About Us</a></li>
+                    <li><a href="careers.html">Careers</a></li>
+                    <li><a href="press.html">Press</a></li>
+                    <li><a href="blog.html">Blog</a></li>
+                    <li><a href="partners.html">Partners</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Contact Us</h4>
+                <div class="footer-contact-info">
+                    <p><i class="fas fa-envelope"></i> info@zimcrowd.com</p>
+                    <p><i class="fas fa-phone"></i> +263710467317</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Harare, Zimbabwe</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Navigation Hide/Show on Scroll
+        let lastScrollTop = 0;
+        const navigation = document.querySelector('.navigation');
+
+        window.addEventListener('scroll', function() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            if (scrollTop > lastScrollTop && scrollTop > 100) {
+                navigation.classList.add('hidden');
+            } else {
+                navigation.classList.remove('hidden');
+            }
+
+            lastScrollTop = scrollTop;
+        });
+
+        // Mobile Menu Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const mobileMenuDrawer = document.querySelector('.mobile-menu-drawer');
+            const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
+            const mobileMenuClose = document.querySelector('.mobile-menu-close');
+            const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
+
+            function toggleMobileMenu() {
+                mobileMenuDrawer.classList.toggle('active');
+                document.body.style.overflow = mobileMenuDrawer.classList.contains('active') ? 'hidden' : '';
+            }
+
+            function closeMobileMenu() {
+                mobileMenuDrawer.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            if (mobileMenuOverlay) mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+            if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeMobileMenu);
+
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && mobileMenuDrawer.classList.contains('active')) {
+                    closeMobileMenu();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

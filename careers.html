@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>Careers - ZimCrowd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Custom hover effects for navigation buttons */
+        .nav-links a[href="#download-app"]:hover {
+            background: black;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+</head>
+<body>
+    <!-- Animated Background Circles -->
+    <div class="animated-background">
+        <div class="circle-container">
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+        </div>
+
+        <!-- Animated Solid Shapes -->
+        <div class="solid-shapes">
+            <!-- Floating Squares -->
+            <div class="solid-shape square" style="top: 15%; left: 20%; animation: float 8s ease-in-out infinite;"></div>
+            <div class="solid-shape square" style="top: 70%; right: 15%; animation: float 10s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape square" style="bottom: 20%; left: 70%; animation: float 12s ease-in-out infinite;"></div>
+
+            <!-- Pulsing Circles -->
+            <div class="solid-shape circle-shape" style="top: 25%; right: 25%; animation: pulse 6s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="bottom: 35%; left: 25%; animation: pulse 8s ease-in-out infinite reverse;"></div>
+
+            <!-- Bouncing Triangles -->
+            <div class="solid-shape triangle" style="top: 40%; left: 5%; animation: bounce 7s ease-in-out infinite;"></div>
+            <div class="solid-shape triangle" style="top: 60%; right: 70%; animation: bounce 9s ease-in-out infinite reverse;"></div>
+
+            <!-- Rotating Hexagons -->
+            <div class="solid-shape hexagon" style="top: 80%; left: 40%; animation: rotate 15s linear infinite;"></div>
+            <div class="solid-shape hexagon" style="top: 30%; right: 5%; animation: rotate 20s linear infinite reverse;"></div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navigation">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#000000"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html#lend">Lend</a>
+                <a href="index.html#borrow">Borrow</a>
+                <div class="dropdown">
+                    <button class="dropbtn">Market ▼</button>
+                    <div class="dropdown-content">
+                        <a href="primary-market.html">Primary Market</a>
+                        <a href="secondary-market.html">Secondary Market</a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html">Kairo AI</a>
+                <a href="index.html#download-app" class="btn-tertiary">Download App</a>
+            </div>
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" aria-label="Toggle menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu-drawer">
+        <div class="mobile-menu-overlay"></div>
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <div class="mobile-logo">
+                    <svg width="160" height="26" viewBox="0 0 180 29" fill="none">
+                        <circle cx="13" cy="13" r="13" fill="#38e07b"/>
+                        <text x="35" y="19" font-family="Space Grotesk" font-size="16" font-weight="600" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </div>
+                <button class="mobile-menu-close" aria-label="Close menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mobile-menu-links">
+                <a href="index.html#lend" class="mobile-menu-link">
+                    <span class="link-icon">💰</span>
+                    <span class="link-text">Lend</span>
+                </a>
+                <a href="index.html#borrow" class="mobile-menu-link">
+                    <span class="link-icon">🤝</span>
+                    <span class="link-text">Borrow</span>
+                </a>
+                <div class="mobile-menu-dropdown">
+                    <div class="mobile-menu-link dropdown-toggle">
+                        <span class="link-icon">📈</span>
+                        <span class="link-text">Market</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="mobile-dropdown-content">
+                        <a href="primary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">📊</span>
+                            <span class="link-text">Primary Market</span>
+                        </a>
+                        <a href="secondary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">🔄</span>
+                            <span class="link-text">Secondary Market</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html" class="mobile-menu-link">
+                    <span class="link-icon">🤖</span>
+                    <span class="link-text">Kairo AI</span>
+                </a>
+                <div class="mobile-menu-divider"></div>
+                <a href="index.html#download-app" class="mobile-menu-cta">
+                    <span class="cta-icon">📱</span>
+                    <span class="cta-text">Download App</span>
+                </a>
+            </div>
+            <div class="mobile-menu-footer">
+                <p>Building Community Finance</p>
+                <div class="mobile-social-links">
+                    <a href="#" class="mobile-social-link" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-content">
+                <h1><span class="label label-green">Join Our Team</span> - Shape the Future of Finance</h1>
+                <p class="header-subtitle">We're building technology that democratizes access to fair financial services. Join us in creating a world where finance serves people, not profits.</p>
+                <div class="button-group">
+                    <button class="btn-primary">View Open Positions</button>
+                    <button class="btn-secondary">Our Culture</button>
+                </div>
+            </div>
+            <div class="header-image">
+                <!-- Hero image -->
+                <img src="images/Gemini_Generated_Image_qycesxqycesxqyce.png" alt="Careers at ZimCrowd" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+        </div>
+    </header>
+
+    <!-- Why Join ZimCrowd Section -->
+    <section class="section" id="why-join">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Why Join ZimCrowd?</span>
+            </div>
+            <p class="section-description">Work on problems that matter in an environment that values innovation, impact, and community.</p>
+        </div>
+
+        <div class="cards-grid">
+            <div class="card card-grey">
+                <div class="card-content">
+                    <span class="label label-green">Impact-Driven Work</span>
+                    <div class="card-with-icon">
+                        <div class="card-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M2 17L12 22L22 17" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M2 12L12 17L22 12" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <p>Every line of code you write, every feature you build, directly impacts thousands of lives. We're not just building software—we're building financial inclusion.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-green">
+                <div class="card-content">
+                    <span class="label label-white">Innovation First</span>
+                    <div class="card-with-icon">
+                        <div class="card-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="12" r="3" stroke="#ffffff" stroke-width="2"/>
+                                <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m16.24-3.76l-4.24 4.24m-6-6L4.76 7.76m16.24 12.52l-4.24-4.24m-6 6l-4.24-4.24" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <p>Work with cutting-edge AI, blockchain, and fintech technologies. We encourage experimentation and learning, with resources dedicated to your professional growth.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-dark">
+                <div class="card-content">
+                    <span class="label label-green">Inclusive Culture</span>
+                    <div class="card-with-icon">
+                        <div class="card-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M16 3.13C16.8604 3.35031 17.623 3.8507 18.1676 4.55231C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <p>We believe diverse teams build better products. Our inclusive culture celebrates different perspectives, backgrounds, and experiences. Everyone's voice matters here.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-grey">
+                <div class="card-content">
+                    <span class="label label-green">Work-Life Balance</span>
+                    <div class="card-with-icon">
+                        <div class="card-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="12" r="10" stroke="#38e07b" stroke-width="2"/>
+                                <polyline points="12,6 12,12 16,14" stroke="#38e07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <p>Flexible work arrangements, competitive benefits, and a supportive environment that values your well-being. We work hard, but we also value rest and personal time.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Open Positions Section -->
+    <section class="section" id="open-positions" style="background-color: #f8fafc;">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Open Positions</span>
+            </div>
+            <p class="section-description">Join our growing team and help build the future of community finance.</p>
+        </div>
+
+        <div class="positions-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px; margin-top: 60px;">
+            <div class="position-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border: 1px solid rgba(56, 231, 123, 0.1);">
+                <div class="position-header" style="margin-bottom: 20px;">
+                    <h3 style="color: var(--color-black); margin-bottom: 10px;">Senior Software Engineer</h3>
+                    <div class="position-meta" style="display: flex; gap: 15px; color: #666; font-size: 14px;">
+                        <span>🏢 Harare, Zimbabwe</span>
+                        <span>💼 Full-time</span>
+                        <span>💰 Competitive</span>
+                    </div>
+                </div>
+                <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">Build scalable fintech solutions using modern technologies. Work on our AI-powered lending platform and help millions access fair credit.</p>
+                <div class="position-tags" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 25px;">
+                    <span style="background: rgba(56, 231, 123, 0.1); color: var(--color-green); padding: 4px 12px; border-radius: 12px; font-size: 12px;">React</span>
+                    <span style="background: rgba(56, 231, 123, 0.1); color: var(--color-green); padding: 4px 12px; border-radius: 12px; font-size: 12px;">Node.js</span>
+                    <span style="background: rgba(56, 231, 123, 0.1); color: var(--color-green); padding: 4px 12px; border-radius: 12px; font-size: 12px;">Python</span>
+                    <span style="background: rgba(56, 231, 123, 0.1); color: var(--color-green); padding: 4px 12px; border-radius: 12px; font-size: 12px;">AI/ML</span>
+                </div>
+                <button class="btn-primary" style="width: 100%;">Apply Now</button>
+            </div>
+
+            <div class="position-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border: 1px solid rgba(56, 231, 123, 0.1);">
+                <div class="position-header" style="margin-bottom: 20px;">
+                    <h3 style="color: var(--color-black); margin-bottom: 10px;">Product Manager</h3>
+                    <div class="position-meta" style="display: flex; gap: 15px; color: #666; font-size: 14px;">
+                        <span>🏢 Harare, Zimbabwe</span>
+                        <span>💼 Full-time</span>
+                        <span>💰 Competitive</span>
+                    </div>
+                </div>
+                <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">Drive product strategy and execution for our community lending platform. Work closely with engineering, design, and stakeholders to deliver exceptional user experiences.</p>
+                <div class="position-tags" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 25px;">
+                    <span style="background: rgba(56, 231, 123, 0.1); color: var(--color-green); padding: 4px 12px; border-radius: 12px; font-size: 12px;">Product Strategy</span>
+                    <span style="background: rgba(56, 231, 123, 0.1); color: var(--color-green); padding: 4px 12px; border-radius: 12px; font-size: 12px;">Analytics</span>
+                    <span style="background: rgba(56, 231, 123, 0.1); color: var(--color-green); padding: 4px 12px; border-radius: 12px; font-size: 12px;">User Research</span>
+                </div>
+                <button class="btn-primary" style="width: 100%;">Apply Now</button>
+            </div>
+
+            <div class="position-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border: 1px solid rgba(56, 231, 123, 0.1);">
+                <div class="position-header" style="margin-bottom: 20px;">
+                    <h3 style="color: var(--color-black); margin-bottom: 10px;">Data Scientist</h3>
+                    <div class="position-meta" style="display: flex; gap: 15px; color: #666; font-size: 14px;">
+                        <span>🏢 Harare, Zimbabwe</span>
+                        <span>💼 Full-time</span>
+                        <span>💰 Competitive</span>
+                    </div>
+                </div>
+                <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">Develop AI models and analytics to improve our lending decisions and user experience. Work with large datasets to build predictive models for credit scoring and risk assessment.</p>
+                <div class="position-tags" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 25px;">
+                    <span style="background: rgba(56, 231, 123, 0.1); color: var(--color-green); padding: 4px 12px; border-radius: 12px; font-size: 12px;">Machine Learning</span>
+                    <span style="background: rgba(56, 231, 123, 0.1); color: var(--color-green); padding: 4px 12px; border-radius: 12px; font-size: 12px;">Python</span>
+                    <span style="background: rgba(56, 231, 123, 0.1); color: var(--color-green); padding: 4px 12px; border-radius: 12px; font-size: 12px;">SQL</span>
+                </div>
+                <button class="btn-primary" style="width: 100%;">Apply Now</button>
+            </div>
+
+            <div class="position-card" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border: 1px solid rgba(56, 231, 123, 0.1);">
+                <div class="position-header" style="margin-bottom: 20px;">
+                    <h3 style="color: var(--color-black); margin-bottom: 10px;">UX/UI Designer</h3>
+                    <div class="position-meta" style="display: flex; gap: 15px; color: #666; font-size: 14px;">
+                        <span>🏢 Harare, Zimbabwe</span>
+                        <span>💼 Full-time</span>
+                        <span>💰 Competitive</span>
+                    </div>
+                </div>
+                <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">Design intuitive and accessible interfaces for our fintech platform. Create user experiences that make complex financial concepts simple and trustworthy.</p>
+                <div class="position-tags" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 25px;">
+                    <span style="background: rgba(56, 231, 123, 0.1); color: var(--color-green); padding: 4px 12px; border-radius: 12px; font-size: 12px;">Figma</span>
+                    <span style="background: rgba(56, 231, 123, 0.1); color: var(--color-green); padding: 4px 12px; border-radius: 12px; font-size: 12px;">User Research</span>
+                    <span style="background: rgba(56, 231, 123, 0.1); color: var(--color-green); padding: 4px 12px; border-radius: 12px; font-size: 12px;">Prototyping</span>
+                </div>
+                <button class="btn-primary" style="width: 100%;">Apply Now</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Culture Section -->
+    <section class="section" id="culture">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Our Culture</span>
+            </div>
+            <p class="section-description">Life at ZimCrowd is about collaboration, innovation, and making a real difference.</p>
+        </div>
+
+        <div class="culture-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; margin-top: 60px;">
+            <div class="culture-item" style="text-align: center;">
+                <div class="culture-icon" style="font-size: 64px; margin-bottom: 20px;">🚀</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Innovation</h3>
+                <p style="color: #666; line-height: 1.6;">We encourage bold ideas and provide the resources to turn them into reality.</p>
+            </div>
+
+            <div class="culture-item" style="text-align: center;">
+                <div class="culture-icon" style="font-size: 64px; margin-bottom: 20px;">🤝</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Collaboration</h3>
+                <p style="color: #666; line-height: 1.6;">Cross-functional teams work together to solve complex problems and deliver exceptional results.</p>
+            </div>
+
+            <div class="culture-item" style="text-align: center;">
+                <div class="culture-icon" style="font-size: 64px; margin-bottom: 20px;">💡</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Learning</h3>
+                <p style="color: #666; line-height: 1.6;">Continuous learning and professional development are core to our culture.</p>
+            </div>
+
+            <div class="culture-item" style="text-align: center;">
+                <div class="culture-icon" style="font-size: 64px; margin-bottom: 20px;">🌍</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Impact</h3>
+                <p style="color: #666; line-height: 1.6;">Every team member understands how their work contributes to financial inclusion.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Zimcrowd Footer -->
+    <footer class="zimcrowd-footer">
+        <!-- CTA Block -->
+        <section class="cta-block" id="download-app">
+            <div class="cta-container">
+                <div class="cta-content">
+                    <h3 style="color: black;">Ready to Join Our Mission?</h3>
+                    <p style="color: black;">Help us build the future of community finance. Apply today and be part of something meaningful.</p>
+                    <div class="app-store-buttons">
+                        <a href="#" class="app-store-btn google-play">
+                            <img src="images/GetItOnGooglePlay_Badge_Web_color_English.svg" alt="Get it on Google Play" style="height: 60px; width: auto;">
+                        </a>
+                        <a href="#" class="app-store-btn app-store">
+                            <img src="images/Download_on_the_App_Store_Badge_US-UK_RGB_blk_092917.svg" alt="Download on the App Store" style="height: 60px; width: auto;">
+                        </a>
+                    </div>
+                </div>
+                <div class="cta-illustration">
+                    <img src="images/Gemini_Generated_Image_2wm05r2wm05r2wm0.png" alt="Young people Smiling on Phones" style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);">
+                </div>
+            </div>
+        </section>
+
+        <div class="footer-container">
+            <div class="footer-column brand">
+                <div class="footer-logo">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#FFFFFF"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#FFFFFF">ZimCrowd</text>
+                    </svg>
+                </div>
+                <p>Fair, community-first lending. Borrow on your terms, invest with impact.</p>
+                <h4>Stay in the loop</h4>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="Your email address" required>
+                    <button type="submit">Subscribe</button>
+                </form>
+            </div>
+
+            <div class="footer-column">
+                <h4>Platform</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html#borrow">Borrow</a></li>
+                    <li><a href="index.html#lend">Lend</a></li>
+                    <li><a href="primary-market.html">Primary Market</a></li>
+                    <li><a href="secondary-market.html">Secondary Market</a></li>
+                    <li><a href="kairo-ai.html">Kairo AI Coach</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="about-us.html">About Us</a></li>
+                    <li><a href="careers.html">Careers</a></li>
+                    <li><a href="press.html">Press</a></li>
+                    <li><a href="blog.html">Blog</a></li>
+                    <li><a href="partners.html">Partners</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+                <div class="company-badge">
+                    <div class="badge-icon">🏢</div>
+                    <p>Building Community Finance</p>
+                </div>
+            </div>
+
+            <div class="footer-column" id="contact">
+                <h4>Contact Us</h4>
+                <div class="footer-contact-info">
+                    <p><i class="fas fa-envelope"></i> info@zimcrowd.com</p>
+                    <p><i class="fas fa-phone"></i> +263710467317</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Harare, Zimbabwe</p>
+                </div>
+                <div class="footer-contact-hours">
+                    <p><strong>Support Hours:</strong></p>
+                    <p>Mon-Fri: 8AM-6PM</p>
+                    <p>Sat: 9AM-4PM</p>
+                </div>
+            </div>
+
+            <div class="footer-column">
+                <h4>Legal</h4>
+                <ul class="footer-links">
+                    <li><a href="#general-loan-terms">General Loan Terms</a></li>
+                    <li><a href="#risk-warnings">Risk Warnings</a></li>
+                    <li><a href="#terms-conditions">Terms & Conditions</a></li>
+                    <li><a href="#privacy-policy">Privacy Policy</a></li>
+                    <li><a href="#cookie-policy">Cookie Policy</a></li>
+                    <li><a href="#terms-of-service">Terms of Service</a></li>
+                    <li><a href="#complaint-submission">Complaint Submission</a></li>
+                    <li><a href="#conflicts-interest">Conflicts of Interest Policy</a></li>
+                    <li><a href="#other-documents">Other Documents</a></li>
+                </ul>
+                <div class="footer-animation">
+                    <div class="animated-shape shape-1"></div>
+                    <div class="animated-shape shape-2"></div>
+                    <div class="animated-shape shape-3"></div>
+                </div>
+            </div>
+
+            <div class="footer-column">
+                <h4>Support</h4>
+                <ul class="footer-links">
+                    <li><a href="#help-center">Help Center</a></li>
+                    <li><a href="#contact-support">Contact Support</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                    <li><a href="#community-forum">Community Forum</a></li>
+                    <li><a href="#live-chat">Live Chat</a></li>
+                    <li><a href="#tutorials">Tutorials</a></li>
+                </ul>
+                <div class="support-badge">
+                    <div class="badge-icon">🛟</div>
+                    <p>24/7 Support Available</p>
+                </div>
+            </div>
+
+            <div class="footer-socials">
+                <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            </div>
+
+            <div class="footer-copyright">
+                &copy; 2025 ZimCrowd. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Navigation Hide/Show on Scroll
+        let lastScrollTop = 0;
+        const navigation = document.querySelector('.navigation');
+
+        window.addEventListener('scroll', function() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            if (scrollTop > lastScrollTop && scrollTop > 100) {
+                // Scrolling down and past 100px
+                navigation.classList.add('hidden');
+            } else {
+                // Scrolling up or at top
+                navigation.classList.remove('hidden');
+            }
+
+            lastScrollTop = scrollTop;
+        });
+
+        // Mobile Menu Drawer Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const mobileMenuDrawer = document.querySelector('.mobile-menu-drawer');
+            const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
+            const mobileMenuClose = document.querySelector('.mobile-menu-close');
+            const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
+
+            // Function to toggle mobile menu
+            function toggleMobileMenu() {
+                mobileMenuDrawer.classList.toggle('active');
+                document.body.style.overflow = mobileMenuDrawer.classList.contains('active') ? 'hidden' : '';
+            }
+
+            // Function to close mobile menu
+            function closeMobileMenu() {
+                mobileMenuDrawer.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            // Event listeners
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            }
+
+            if (mobileMenuOverlay) {
+                mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+            }
+
+            if (mobileMenuClose) {
+                mobileMenuClose.addEventListener('click', closeMobileMenu);
+            }
+
+            // Close menu when clicking on menu links
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+
+            // Close menu on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && mobileMenuDrawer.classList.contains('active')) {
+                    closeMobileMenu();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

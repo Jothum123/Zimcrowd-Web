@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>Contact Us - ZimCrowd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .nav-links a[href="#download-app"]:hover {
+            background: black;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+</head>
+<body>
+    <!-- Animated Background Circles -->
+    <div class="animated-background">
+        <div class="circle-container">
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+            <div class="dotted-circle"></div>
+        </div>
+        <div class="solid-shapes">
+            <div class="solid-shape square" style="top: 15%; left: 20%; animation: float 8s ease-in-out infinite;"></div>
+            <div class="solid-shape square" style="top: 70%; right: 15%; animation: float 10s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape square" style="bottom: 20%; left: 70%; animation: float 12s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="top: 25%; right: 25%; animation: pulse 6s ease-in-out infinite;"></div>
+            <div class="solid-shape circle-shape" style="bottom: 35%; left: 25%; animation: pulse 8s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape triangle" style="top: 40%; left: 5%; animation: bounce 7s ease-in-out infinite;"></div>
+            <div class="solid-shape triangle" style="top: 60%; right: 70%; animation: bounce 9s ease-in-out infinite reverse;"></div>
+            <div class="solid-shape hexagon" style="top: 80%; left: 40%; animation: rotate 15s linear infinite;"></div>
+            <div class="solid-shape hexagon" style="top: 30%; right: 5%; animation: rotate 20s linear infinite reverse;"></div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navigation">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#000000"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html#lend">Lend</a>
+                <a href="index.html#borrow">Borrow</a>
+                <div class="dropdown">
+                    <button class="dropbtn">Market ▼</button>
+                    <div class="dropdown-content">
+                        <a href="primary-market.html">Primary Market</a>
+                        <a href="secondary-market.html">Secondary Market</a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html">Kairo AI</a>
+                <a href="index.html#download-app" class="btn-tertiary">Download App</a>
+            </div>
+            <button class="mobile-menu-btn" aria-label="Toggle menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu-drawer">
+        <div class="mobile-menu-overlay"></div>
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <div class="mobile-logo">
+                    <svg width="160" height="26" viewBox="0 0 180 29" fill="none">
+                        <circle cx="13" cy="13" r="13" fill="#38e07b"/>
+                        <text x="35" y="19" font-family="Space Grotesk" font-size="16" font-weight="600" fill="#000000">ZimCrowd</text>
+                    </svg>
+                </div>
+                <button class="mobile-menu-close" aria-label="Close menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mobile-menu-links">
+                <a href="index.html#lend" class="mobile-menu-link">
+                    <span class="link-icon">💰</span>
+                    <span class="link-text">Lend</span>
+                </a>
+                <a href="index.html#borrow" class="mobile-menu-link">
+                    <span class="link-icon">🤝</span>
+                    <span class="link-text">Borrow</span>
+                </a>
+                <div class="mobile-menu-dropdown">
+                    <div class="mobile-menu-link dropdown-toggle">
+                        <span class="link-icon">📈</span>
+                        <span class="link-text">Market</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="mobile-dropdown-content">
+                        <a href="primary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">📊</span>
+                            <span class="link-text">Primary Market</span>
+                        </a>
+                        <a href="secondary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">🔄</span>
+                            <span class="link-text">Secondary Market</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html" class="mobile-menu-link">
+                    <span class="link-icon">🤖</span>
+                    <span class="link-text">Kairo AI</span>
+                </a>
+                <div class="mobile-menu-divider"></div>
+                <a href="index.html#download-app" class="mobile-menu-cta">
+                    <span class="cta-icon">📱</span>
+                    <span class="cta-text">Download App</span>
+                </a>
+            </div>
+            <div class="mobile-menu-footer">
+                <p>Building Community Finance</p>
+                <div class="mobile-social-links">
+                    <a href="#" class="mobile-social-link" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="mobile-social-link" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-content">
+                <h1><span class="label label-green">Contact Us</span> - Let's Connect</h1>
+                <p class="header-subtitle">Have questions about ZimCrowd? Need support with your account? We're here to help. Reach out to our friendly team.</p>
+                <div class="button-group">
+                    <button class="btn-primary">Send Message</button>
+                    <button class="btn-secondary">Find Support</button>
+                </div>
+            </div>
+            <div class="header-image">
+                <img src="images/Gemini_Generated_Image_qycesxqycesxqyce.png" alt="Contact Us" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+        </div>
+    </header>
+
+    <!-- Contact Methods -->
+    <section class="section" id="contact-methods">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Get in Touch</span>
+            </div>
+            <p class="section-description">Multiple ways to reach our team and get the help you need.</p>
+        </div>
+
+        <div class="contact-methods-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; margin-top: 60px;">
+            <div class="contact-method" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="method-icon" style="font-size: 64px; margin-bottom: 20px;">💬</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Live Chat</h3>
+                <p style="color: #666; margin-bottom: 25px;">Get instant help from our support team during business hours.</p>
+                <div class="method-details" style="text-align: left; display: inline-block;">
+                    <p style="margin-bottom: 10px;"><strong>Available:</strong> Mon-Fri, 8AM-6PM CAT</p>
+                    <p style="margin-bottom: 20px;"><strong>Response Time:</strong> Instant</p>
+                </div>
+                <button class="btn-primary">Start Chat</button>
+            </div>
+
+            <div class="contact-method" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="method-icon" style="font-size: 64px; margin-bottom: 20px;">📧</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Email Support</h3>
+                <p style="color: #666; margin-bottom: 25px;">Send us a detailed message and we'll get back to you within 24 hours.</p>
+                <div class="method-details" style="text-align: left; display: inline-block;">
+                    <p style="margin-bottom: 10px;"><strong>Email:</strong> support@zimcrowd.com</p>
+                    <p style="margin-bottom: 20px;"><strong>Response Time:</strong> Within 24 hours</p>
+                </div>
+                <button class="btn-secondary">Send Email</button>
+            </div>
+
+            <div class="contact-method" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="method-icon" style="font-size: 64px; margin-bottom: 20px;">📞</div>
+                <h3 style="color: var(--color-black); margin-bottom: 15px;">Phone Support</h3>
+                <p style="color: #666; margin-bottom: 25px;">Speak directly with our customer service team for urgent matters.</p>
+                <div class="method-details" style="text-align: left; display: inline-block;">
+                    <p style="margin-bottom: 10px;"><strong>Phone:</strong> +263 710 467 317</p>
+                    <p style="margin-bottom: 20px;"><strong>Available:</strong> Mon-Fri, 8AM-6PM CAT</p>
+                </div>
+                <button class="btn-secondary">Call Now</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Form -->
+    <section class="section" id="contact-form" style="background-color: #f8fafc;">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Send us a Message</span>
+            </div>
+            <p class="section-description">Fill out the form below and we'll get back to you as soon as possible.</p>
+        </div>
+
+        <div class="contact-form-container" style="max-width: 800px; margin: 0 auto; background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 50px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+            <form class="contact-form" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label for="firstName" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--color-black);">First Name *</label>
+                    <input type="text" id="firstName" name="firstName" required style="width: 100%; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; font-size: 16px;">
+                </div>
+
+                <div class="form-group">
+                    <label for="lastName" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--color-black);">Last Name *</label>
+                    <input type="text" id="lastName" name="lastName" required style="width: 100%; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; font-size: 16px;">
+                </div>
+
+                <div class="form-group">
+                    <label for="email" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--color-black);">Email Address *</label>
+                    <input type="email" id="email" name="email" required style="width: 100%; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; font-size: 16px;">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--color-black);">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" style="width: 100%; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; font-size: 16px;">
+                </div>
+
+                <div class="form-group" style="grid-column: span 2;">
+                    <label for="subject" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--color-black);">Subject *</label>
+                    <select id="subject" name="subject" required style="width: 100%; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; font-size: 16px;">
+                        <option value="">Select a subject</option>
+                        <option value="general">General Inquiry</option>
+                        <option value="support">Technical Support</option>
+                        <option value="borrowing">Borrowing Questions</option>
+                        <option value="lending">Lending Questions</option>
+                        <option value="partnership">Partnership Inquiry</option>
+                        <option value="press">Press Inquiry</option>
+                        <option value="careers">Career Opportunities</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="grid-column: span 2;">
+                    <label for="message" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--color-black);">Message *</label>
+                    <textarea id="message" name="message" required rows="6" style="width: 100%; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; font-size: 16px; resize: vertical;"></textarea>
+                </div>
+
+                <div class="form-group" style="grid-column: span 2; text-align: center;">
+                    <button type="submit" class="btn-primary" style="padding: 15px 40px; font-size: 16px;">Send Message</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Office Information -->
+    <section class="section" id="office-info">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Visit Our Office</span>
+            </div>
+            <p class="section-description">Located in the heart of Harare, we're always happy to welcome visitors.</p>
+        </div>
+
+        <div class="office-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 60px; margin-top: 60px; align-items: center;">
+            <div class="office-details">
+                <div class="office-address" style="margin-bottom: 30px;">
+                    <h3 style="color: var(--color-black); margin-bottom: 15px;">📍 Office Address</h3>
+                    <p style="color: #666; line-height: 1.6; font-size: 18px;">
+                        ZimCrowd Headquarters<br>
+                        123 Samora Machel Avenue<br>
+                        Harare, Zimbabwe<br>
+                        P.O. Box 1234
+                    </p>
+                </div>
+
+                <div class="office-hours">
+                    <h3 style="color: var(--color-black); margin-bottom: 15px;">🕒 Business Hours</h3>
+                    <div class="hours-list" style="color: #666;">
+                        <p><strong>Monday - Friday:</strong> 8:00 AM - 6:00 PM CAT</p>
+                        <p><strong>Saturday:</strong> 9:00 AM - 4:00 PM CAT</p>
+                        <p><strong>Sunday:</strong> Closed</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="office-map" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+                <div class="map-placeholder" style="width: 100%; height: 300px; background: linear-gradient(135deg, #f8fafc, #e2e8f0); border-radius: 15px; display: flex; align-items: center; justify-content: center; border: 2px dashed #cbd5e1;">
+                    <div style="text-align: center; color: #64748b;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🗺️</div>
+                        <p style="font-size: 18px; font-weight: 600;">Interactive Map</p>
+                        <p style="font-size: 14px;">Coming Soon</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="section" id="faq" style="background-color: #f8fafc;">
+        <div class="section-header">
+            <div class="heading-wrapper">
+                <span class="label label-green">Frequently Asked Questions</span>
+            </div>
+            <p class="section-description">Quick answers to common questions about contacting ZimCrowd.</p>
+        </div>
+
+        <div class="faq-container" style="max-width: 800px; margin: 0 auto;">
+            <div class="faq-item" style="background: rgba(255, 255, 255, 0.9); border-radius: 15px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
+                <div class="faq-question" style="padding: 25px; cursor: pointer; border: none; background: none; width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0; color: var(--color-black); font-size: 18px;">How quickly will I receive a response?</h3>
+                    <div class="faq-toggle" style="font-size: 24px; font-weight: bold; color: var(--color-green); transition: transform 0.3s;">+</div>
+                </div>
+                <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s; background: rgba(56, 231, 123, 0.02);">
+                    <p style="padding: 0 25px 25px; margin: 0; color: #666; line-height: 1.6;">We typically respond to all inquiries within 24 hours during business days. For urgent technical issues, we aim to respond within 4 hours.</p>
+                </div>
+            </div>
+
+            <div class="faq-item" style="background: rgba(255, 255, 255, 0.9); border-radius: 15px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
+                <div class="faq-question" style="padding: 25px; cursor: pointer; border: none; background: none; width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0; color: var(--color-black); font-size: 18px;">Do you offer phone support?</h3>
+                    <div class="faq-toggle" style="font-size: 24px; font-weight: bold; color: var(--color-green); transition: transform 0.3s;">+</div>
+                </div>
+                <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s; background: rgba(56, 231, 123, 0.02);">
+                    <p style="padding: 0 25px 25px; margin: 0; color: #666; line-height: 1.6;">Yes, we offer phone support during business hours (Monday-Friday, 8AM-6PM CAT). Our phone number is +263 710 467 317.</p>
+                </div>
+            </div>
+
+            <div class="faq-item" style="background: rgba(255, 255, 255, 0.9); border-radius: 15px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
+                <div class="faq-question" style="padding: 25px; cursor: pointer; border: none; background: none; width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0; color: var(--color-black); font-size: 18px;">Can I visit your office?</h3>
+                    <div class="faq-toggle" style="font-size: 24px; font-weight: bold; color: var(--color-green); transition: transform 0.3s;">+</div>
+                </div>
+                <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s; background: rgba(56, 231, 123, 0.02);">
+                    <p style="padding: 0 25px 25px; margin: 0; color: #666; line-height: 1.6;">Yes, we welcome visitors to our Harare office. Please contact us in advance to schedule an appointment and ensure someone is available to meet with you.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Zimcrowd Footer -->
+    <footer class="zimcrowd-footer">
+        <div class="footer-container">
+            <div class="footer-column brand">
+                <div class="footer-logo">
+                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
+                        <circle cx="14.76" cy="14.5" r="14.5" fill="#FFFFFF"/>
+                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#FFFFFF">ZimCrowd</text>
+                    </svg>
+                </div>
+                <p>Fair, community-first lending. Borrow on your terms, invest with impact.</p>
+            </div>
+            <div class="footer-column">
+                <h4>Platform</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html#borrow">Borrow</a></li>
+                    <li><a href="index.html#lend">Lend</a></li>
+                    <li><a href="primary-market.html">Primary Market</a></li>
+                    <li><a href="secondary-market.html">Secondary Market</a></li>
+                    <li><a href="kairo-ai.html">Kairo AI Coach</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="about-us.html">About Us</a></li>
+                    <li><a href="careers.html">Careers</a></li>
+                    <li><a href="press.html">Press</a></li>
+                    <li><a href="blog.html">Blog</a></li>
+                    <li><a href="partners.html">Partners</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Contact Us</h4>
+                <div class="footer-contact-info">
+                    <p><i class="fas fa-envelope"></i> info@zimcrowd.com</p>
+                    <p><i class="fas fa-phone"></i> +263710467317</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Harare, Zimbabwe</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Navigation Hide/Show on Scroll
+        let lastScrollTop = 0;
+        const navigation = document.querySelector('.navigation');
+
+        window.addEventListener('scroll', function() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            if (scrollTop > lastScrollTop && scrollTop > 100) {
+                navigation.classList.add('hidden');
+            } else {
+                navigation.classList.remove('hidden');
+            }
+
+            lastScrollTop = scrollTop;
+        });
+
+        // Mobile Menu Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const mobileMenuDrawer = document.querySelector('.mobile-menu-drawer');
+            const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
+            const mobileMenuClose = document.querySelector('.mobile-menu-close');
+            const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
+
+            function toggleMobileMenu() {
+                mobileMenuDrawer.classList.toggle('active');
+                document.body.style.overflow = mobileMenuDrawer.classList.contains('active') ? 'hidden' : '';
+            }
+
+            function closeMobileMenu() {
+                mobileMenuDrawer.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            if (mobileMenuOverlay) mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+            if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeMobileMenu);
+
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && mobileMenuDrawer.classList.contains('active')) {
+                    closeMobileMenu();
+                }
+            });
+        });
+
+        // FAQ Accordion Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const faqQuestions = document.querySelectorAll('.faq-question');
+
+            faqQuestions.forEach(question => {
+                question.addEventListener('click', function() {
+                    const faqItem = this.parentElement;
+                    const toggle = this.querySelector('.faq-toggle');
+                    const answer = faqItem.querySelector('.faq-answer');
+                    const isActive = faqItem.classList.contains('active');
+
+                    // Close all FAQ items
+                    document.querySelectorAll('.faq-item').forEach(item => {
+                        item.classList.remove('active');
+                        const itemToggle = item.querySelector('.faq-toggle');
+                        const itemAnswer = item.querySelector('.faq-answer');
+                        if (itemToggle) itemToggle.textContent = '+';
+                        if (itemAnswer) itemAnswer.style.maxHeight = '0';
+                    });
+
+                    // Open clicked item if it wasn't already active
+                    if (!isActive) {
+                        faqItem.classList.add('active');
+                        if (toggle) toggle.textContent = '−';
+                        if (answer) answer.style.maxHeight = answer.scrollHeight + 'px';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
