@@ -1150,6 +1150,112 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
             showNextMessage();
         });
 
+        // Newsletter Subscription Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const newsletterForm = document.querySelector('.newsletter-form');
+            const emailInput = newsletterForm.querySelector('input[type="email"]');
+            const submitButton = newsletterForm.querySelector('button[type="submit"]');
+
+            newsletterForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const email = emailInput.value.trim();
+
+                if (!email) {
+                    showNewsletterMessage('Please enter your email address', 'error');
+                    return;
+                }
+
+                if (!isValidEmail(email)) {
+                    showNewsletterMessage('Please enter a valid email address', 'error');
+                    return;
+                }
+
+                // Disable form during submission
+                submitButton.disabled = true;
+                submitButton.textContent = 'Subscribing...';
+
+                try {
+                    const response = await fetch('/api/newsletter/subscribe', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `email=${encodeURIComponent(email)}`
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        showNewsletterMessage(result.message, 'success');
+                        emailInput.value = ''; // Clear the input
+                    } else {
+                        showNewsletterMessage(result.message, 'error');
+                    }
+
+                } catch (error) {
+                    console.error('Newsletter subscription error:', error);
+                    showNewsletterMessage('Failed to subscribe. Please try again later.', 'error');
+                } finally {
+                    // Re-enable form
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Subscribe';
+                }
+            });
+
+            function isValidEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+
+            function showNewsletterMessage(message, type) {
+                // Remove any existing message
+                const existingMessage = newsletterForm.querySelector('.newsletter-message');
+                if (existingMessage) {
+                    existingMessage.remove();
+                }
+
+                // Create message element
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `newsletter-message ${type}`;
+                messageDiv.textContent = message;
+                messageDiv.style.cssText = `
+                    margin-top: 10px;
+                    padding: 8px 12px;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    font-weight: 500;
+                    text-align: center;
+                `;
+
+                if (type === 'success') {
+                    messageDiv.style.cssText += `
+                        background-color: #d4edda;
+                        color: #155724;
+                        border: 1px solid #c3e6cb;
+                    `;
+                } else {
+                    messageDiv.style.cssText += `
+                        background-color: #f8d7da;
+                        color: #721c24;
+                        border: 1px solid #f5c6cb;
+                    `;
+                }
+
+                // Insert message after the form
+                newsletterForm.appendChild(messageDiv);
+
+                // Auto-remove success messages after 5 seconds
+                if (type === 'success') {
+                    setTimeout(() => {
+                        if (messageDiv.parentNode) {
+                            messageDiv.remove();
+                        }
+                    }, 5000);
+                }
+            }
+        });
+
         // Stats Counter Animation with Real-time Updates
         document.addEventListener('DOMContentLoaded', function() {
             const statsSection = document.querySelector('.stats-section');
