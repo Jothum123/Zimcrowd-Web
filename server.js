@@ -1,8 +1,10 @@
+require('dotenv').config();
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
 const querystring = require('querystring');
+const nodemailer = require('nodemailer');
 
 // Newsletter subscribers storage
 const SUBSCRIBERS_FILE = path.join(__dirname, 'subscribers.json');
@@ -10,6 +12,46 @@ const SUBSCRIBERS_FILE = path.join(__dirname, 'subscribers.json');
 // Initialize subscribers file if it doesn't exist
 if (!fs.existsSync(SUBSCRIBERS_FILE)) {
     fs.writeFileSync(SUBSCRIBERS_FILE, JSON.stringify([], null, 2));
+}
+
+// Email configuration - Update these with your actual email credentials
+const emailConfig = {
+    service: 'gmail',
+    auth: {
+        user: 'support@zimcrowd.co.zw', // Your email
+        pass: process.env.EMAIL_PASSWORD || 'your-app-password' // Use app password for Gmail
+    }
+};
+
+// Create email transporter
+const transporter = nodemailer.createTransporter(emailConfig);
+
+// Function to send notification email
+async function sendSubscriptionNotification(subscriberEmail, subscriberData) {
+    try {
+        const mailOptions = {
+            from: emailConfig.auth.user,
+            to: emailConfig.auth.user, // Send to yourself
+            subject: 'New Newsletter Subscriber - ZimCrowd',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #38e07b;">New Newsletter Subscriber!</h2>
+                    <p><strong>Email:</strong> ${subscriberEmail}</p>
+                    <p><strong>Subscribed At:</strong> ${subscriberData.subscribedAt}</p>
+                    <p><strong>IP Address:</strong> ${subscriberData.ip}</p>
+                    <hr>
+                    <p>You now have a new subscriber to your ZimCrowd newsletter.</p>
+                    <p>Total subscribers: Check your subscribers.json file for the complete list.</p>
+                </div>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log(`Notification email sent for subscriber: ${subscriberEmail}`);
+    } catch (error) {
+        console.error('Failed to send notification email:', error);
+        // Don't fail the subscription if email fails
+    }
 }
 
 const server = http.createServer((req, res) => {
@@ -56,6 +98,9 @@ const server = http.createServer((req, res) => {
 
                 // Save to file
                 fs.writeFileSync(SUBSCRIBERS_FILE, JSON.stringify(subscribers, null, 2));
+
+                // Send notification email to admin
+                sendSubscriptionNotification(email, newSubscriber);
 
                 console.log(`New newsletter subscriber: ${email}`);
 
