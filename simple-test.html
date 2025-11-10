@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #38e77b;
+            margin-bottom: 20px;
+        }
+        .test-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: #f9f9f9;
+            border-left: 4px solid #38e77b;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Dashboard Troubleshooting</h1>
+        
+        <div class="test-item">
+            <h3>✅ Test 1: HTML Works</h3>
+            <p>If you can see this page, your browser can render HTML correctly.</p>
+        </div>
+
+        <div class="test-item">
+            <h3>📋 Your My Loans Data:</h3>
+            <p><strong>This is what SHOULD appear in dashboard.html:</strong></p>
+            <ul>
+                <li>Total Loan Amount: $12,450</li>
+                <li>Average Term: 24 Months</li>
+                <li>Average Interest: 8.5%</li>
+                <li>Active Loans: 5</li>
+            </ul>
+            <h4>Active Loans:</h4>
+            <ul>
+                <li>Personal Loan: $3,500 (7.5%, 24 months)</li>
+                <li>Business Loan: $5,000 (9.2%, 18 months)</li>
+                <li>Education Loan: $3,950 (6.8%, 30 months)</li>
+            </ul>
+        </div>
+
+        <div class="test-item">
+            <h3>🔧 Possible Issues:</h3>
+            <ol>
+                <li><strong>JavaScript Error:</strong> A script error is preventing the page from loading</li>
+                <li><strong>File Size:</strong> The dashboard.html file is very large (284KB) which might cause issues</li>
+                <li><strong>Browser Cache:</strong> Your browser is showing an old cached version</li>
+                <li><strong>CSS Conflict:</strong> Styles are hiding all content</li>
+            </ol>
+        </div>
+
+        <div class="test-item">
+            <h3>🎯 Next Steps:</h3>
+            <p><strong>Option 1: Check Browser Console</strong></p>
+            <ol>
+                <li>Open dashboard.html in your browser</li>
+                <li>Press F12 to open Developer Tools</li>
+                <li>Go to "Console" tab</li>
+                <li>Look for RED error messages</li>
+                <li>Take a screenshot and share the errors</li>
+            </ol>
+
+            <p><strong>Option 2: Try Different Browser</strong></p>
+            <p>Open dashboard.html in a different browser (Chrome, Firefox, Edge) to see if the issue persists.</p>
+
+            <p><strong>Option 3: Clear Everything</strong></p>
+            <ol>
+                <li>Close all browser windows</li>
+                <li>Delete browser cache completely</li>
+                <li>Restart browser</li>
+                <li>Open dashboard.html fresh</li>
+            </ol>
+        </div>
+
+        <div class="test-item" style="background: #fff3cd; border-left-color: #ffc107;">
+            <h3>⚠️ Important Information:</h3>
+            <p class="success">✅ The My Loans data IS in the file (verified at lines 5986-6184)</p>
+            <p class="success">✅ The HTML structure is correct</p>
+            <p class="success">✅ All CSS styling is present</p>
+            <p class="error">❌ Something is preventing the page from rendering</p>
+            
+            <p><strong>Most likely cause:</strong> JavaScript error on page load that's breaking everything.</p>
+        </div>
+
+        <div class="test-item">
+            <h3>📸 What I Need From You:</h3>
+            <ul>
+                <li>Open dashboard.html</li>
+                <li>Press F12</li>
+                <li>Go to Console tab</li>
+                <li>Take a screenshot of any errors</li>
+                <li>Share the screenshot or describe the errors you see</li>
+            </ul>
+            <p>This will help me identify the exact problem!</p>
+        </div>
+    </div>
+</body>
+</html>

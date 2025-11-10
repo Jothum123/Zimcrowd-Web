@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Login - ZimCrowd Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* CSS Variables */
+        :root {
+            --color-green: #38e77b;
+            --color-black: #000000;
+            --color-white: #FFFFFF;
+        }
+
+        /* Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        /* Navigation Styles */
+        .navigation {
+            padding: 8px 100px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo img {
+            width: 180px;
+            height: auto;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            font-size: 14px;
+            font-weight: 500;
+            color: #000000;
+            text-decoration: none;
+        }
+
+        .nav-links a:hover {
+            color: var(--color-green);
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropbtn {
+            background: none;
+            border: none;
+            color: #000000;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-content {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: white;
+            min-width: 200px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            z-index: 1001;
+            margin-top: 8px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .dropdown:hover .dropdown-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-content a {
+            color: #000000;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: rgba(56, 231, 123, 0.05);
+            color: var(--color-green);
+        }
+
+        .btn-tertiary {
+            background: #000000;
+            color: white !important;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .hamburger-line {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background: #000000;
+            margin: 5px 0;
+            transition: 0.3s;
+        }
+
+        @media (max-width: 968px) {
+            .nav-links {
+                display: none;
+            }
+            .mobile-menu-btn {
+                display: block;
+            }
+            .navigation {
+                padding: 8px 20px;
+            }
+        }
+
+        /* Mobile Menu Styles */
+        .mobile-menu-drawer {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            background: white;
+            z-index: 2000;
+            transition: right 0.3s ease;
+        }
+
+        .mobile-menu-drawer.active {
+            right: 0;
+        }
+
+        .mobile-menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-menu-drawer.active ~ .mobile-menu-overlay,
+        .mobile-menu-drawer.active .mobile-menu-overlay {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .mobile-menu-content {
+            position: relative;
+            z-index: 2001;
+            background: white;
+            height: 100%;
+            padding: 20px;
+        }
+
+        .mobile-menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .mobile-menu-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .mobile-menu-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            color: #000000;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 5px;
+        }
+
+        .mobile-menu-link:hover {
+            background: rgba(56, 231, 123, 0.05);
+        }
+
+        .mobile-menu-cta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            background: #000000;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .mobile-menu-divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 20px 0;
+        }
+
+        /* CRITICAL: Force white text - must be in body to override styles.css */
+        body .login-card,
+        body .login-card *,
+        body .login-card h1,
+        body .login-card h2,
+        body .login-card h3,
+        body .login-card p,
+        body .login-card label,
+        body .login-card input,
+        body .login-card span,
+        body .login-card div,
+        body .login-header,
+        body .login-header *,
+        body .login-form,
+        body .login-form *,
+        body .form-label,
+        body .login-subtitle,
+        body .signup-prompt,
+        body .remember-me label {
+            color: white !important;
+        }
+
+        body .login-card input {
+            color: white !important;
+        }
+
+        /* Force Welcome Back heading to be white */
+        body .login-header h1,
+        body .login-card .login-header h1,
+        body .login-card h1 {
+            color: white !important;
+        }
+
+        /* Green color for links */
+        body .forgot-password,
+        body .signup-link {
+            color: #38e77b !important;
+        }
+
+        body .forgot-password:hover,
+        body .signup-link:hover {
+            color: #34d399 !important;
+        }
+
+        /* Override dark mode styles from styles.css */
+        @media (prefers-color-scheme: dark) {
+            body .login-card,
+            body .login-card *,
+            body .login-header,
+            body .login-header *,
+            body .login-form,
+            body .login-form * {
+                color: white !important;
+                background-color: transparent !important;
+            }
+        }
+        
+        /* Custom styles for login page */
+        .nav-links a[href="#download-app"]:hover {
+            background: black;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        /* Login page specific styles */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: url('assets/images/pexels-brett-sayles-3963829.jpg') center/cover no-repeat;
+            padding: 100px 20px 20px 20px;
+            position: relative;
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.85) 100%);
+            z-index: 0;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(56, 231, 123, 0.4), 0 0 60px rgba(56, 231, 123, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(56, 231, 123, 0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            z-index: 1;
+            color: white !important;
+        }
+
+        .login-card * {
+            color: white;
+        }
+
+        .login-card input {
+            color: white !important;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-header * {
+            color: white !important;
+        }
+
+        .login-logo {
+            width: 120px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        .login-header h1 {
+            color: white !important;
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-subtitle {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: white !important;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-input {
+            padding: 16px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+            color: white !important;
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--color-green);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 3px rgba(56, 231, 123, 0.2);
+        }
+
+        .form-input.error {
+            border-color: #fca5a5;
+        }
+
+        .error-message {
+            color: #fca5a5;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--color-green);
+        }
+
+        .remember-me label {
+            font-size: 14px;
+            color: white !important;
+            cursor: pointer;
+        }
+
+        .forgot-password {
+            font-size: 14px;
+            color: var(--color-green);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        .login-btn {
+            background: var(--color-green);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            background: #34d399;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(56, 231, 123, 0.3);
+        }
+
+        .login-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 30px 0;
+            position: relative;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .divider span {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0 15px;
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        .signup-prompt {
+            text-align: center;
+            margin-top: 30px;
+            color: white !important;
+            font-size: 14px;
+        }
+
+        .signup-link {
+            color: white !important;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .signup-link:hover {
+            color: var(--color-green);
+            text-decoration: underline;
+        }
+
+        .app-download-prompt {
+            background: rgba(56, 231, 123, 0.15);
+            border: 1px solid rgba(56, 231, 123, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .app-download-prompt h3 {
+            color: white;
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .app-download-prompt p {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .download-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-block;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .download-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .login-card {
+                padding: 30px 25px;
+                margin: 20px;
+            }
+
+            .login-header h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navigation">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="assets/images/zimcrowd_light.png" alt="ZimCrowd Logo">
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html#lend">Lend</a>
+                <a href="index.html#borrow">Borrow</a>
+                <div class="dropdown">
+                    <button class="dropbtn">Market <i class="fas fa-chevron-down"></i></button>
+                    <div class="dropdown-content">
+                        <a href="primary-market.html">Primary Market</a>
+                        <a href="secondary-market.html">Secondary Market</a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html">Kairo AI</a>
+                <a href="index.html#download-app" class="btn-tertiary">Download App</a>
+            </div>
+            <button class="mobile-menu-btn" aria-label="Toggle menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu-drawer">
+        <div class="mobile-menu-overlay"></div>
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <div class="mobile-logo">
+                    <img src="assets/images/zimcrowd_light.png" alt="ZimCrowd Logo">
+                </div>
+                <button class="mobile-menu-close" aria-label="Close menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mobile-menu-links">
+                <a href="index.html#lend" class="mobile-menu-link">
+                    <span class="link-icon">💰</span>
+                    <span class="link-text">Lend</span>
+                </a>
+                <a href="index.html#borrow" class="mobile-menu-link">
+                    <span class="link-icon">🤝</span>
+                    <span class="link-text">Borrow</span>
+                </a>
+                <div class="mobile-menu-dropdown">
+                    <div class="mobile-menu-link dropdown-toggle">
+                        <span class="link-icon">📈</span>
+                        <span class="link-text">Market</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="mobile-dropdown-content">
+                        <a href="primary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">📊</span>
+                            <span class="link-text">Primary Market</span>
+                        </a>
+                        <a href="secondary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">🔄</span>
+                            <span class="link-text">Secondary Market</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html" class="mobile-menu-link">
+                    <span class="link-icon">🤖</span>
+                    <span class="link-text">Kairo AI</span>
+                </a>
+                <div class="mobile-menu-divider"></div>
+                <a href="index.html#download-app" class="mobile-menu-cta">
+                    <span class="cta-icon">📱</span>
+                    <span class="cta-text">Download App</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Container -->
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <img src="assets/images/Zimcrowd_Dark.png" alt="ZimCrowd" class="login-logo">
+                <h1 style="color: #ffffff !important; color: white !important;">Welcome Back</h1>
+                <p class="login-subtitle" style="color: rgba(255, 255, 255, 0.9) !important;">Access your ZimCrowd dashboard to manage your loans, investments, and account settings.</p>
+            </div>
+
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label for="email" class="form-label" style="color: white !important;">Email/Phone</label>
+                    <input type="text" id="email" name="email" class="form-input" placeholder="Enter your email or phone number" required>
+                    <div class="error-message" id="emailError">Please enter a valid email or phone number</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label" style="color: white !important;">Password</label>
+                    <input type="password" id="password" name="password" class="form-input" placeholder="Enter your password" required>
+                    <div class="error-message" id="passwordError">Password is required</div>
+                </div>
+
+                <div class="form-options">
+                    <div class="remember-me">
+                        <input type="checkbox" id="rememberMe" name="rememberMe">
+                        <label for="rememberMe" style="color: white !important;">Remember me</label>
+                    </div>
+                    <a href="forgot-password.html" class="forgot-password" style="color: #38e77b !important;">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="login-btn" id="loginBtn">
+                    <span id="loginText">Sign In</span>
+                    <div id="loginSpinner" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                </button>
+            </form>
+
+            <div class="signup-prompt">
+                <span style="color: white !important;">Don't have an account?</span> <a href="signup.html" class="signup-link" style="color: #38e77b !important;">Sign up here</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Force white text colors on load
+        window.addEventListener('load', function() {
+            // Force Welcome Back to white
+            const h1 = document.querySelector('.login-header h1');
+            if (h1) {
+                h1.style.setProperty('color', 'white', 'important');
+            }
+            
+            // Force all labels to white
+            document.querySelectorAll('.form-label, .remember-me label').forEach(function(el) {
+                el.style.setProperty('color', 'white', 'important');
+            });
+            
+            // Force subtitle to white
+            const subtitle = document.querySelector('.login-subtitle');
+            if (subtitle) {
+                subtitle.style.setProperty('color', 'rgba(255, 255, 255, 0.9)', 'important');
+            }
+            
+            // Force signup prompt to white
+            const signupPrompt = document.querySelector('.signup-prompt');
+            if (signupPrompt) {
+                signupPrompt.style.setProperty('color', 'white', 'important');
+            }
+            
+            // Force links to green
+            const forgotLink = document.querySelector('.forgot-password');
+            if (forgotLink) {
+                forgotLink.style.setProperty('color', '#38e77b', 'important');
+            }
+            
+            const signupLink = document.querySelector('.signup-link');
+            if (signupLink) {
+                signupLink.style.setProperty('color', '#38e77b', 'important');
+            }
+        });
+
+        // Mobile Menu Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const mobileMenuDrawer = document.querySelector('.mobile-menu-drawer');
+            const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
+            const mobileMenuClose = document.querySelector('.mobile-menu-close');
+            const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
+
+            function toggleMobileMenu() {
+                mobileMenuDrawer.classList.toggle('active');
+                document.body.style.overflow = mobileMenuDrawer.classList.contains('active') ? 'hidden' : '';
+            }
+
+            function closeMobileMenu() {
+                mobileMenuDrawer.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            if (mobileMenuOverlay) mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+            if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeMobileMenu);
+
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && mobileMenuDrawer.classList.contains('active')) {
+                    closeMobileMenu();
+                }
+            });
+        });
+
+        // Login Form Handling
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const loginBtn = document.getElementById('loginBtn');
+            const loginText = document.getElementById('loginText');
+            const loginSpinner = document.getElementById('loginSpinner');
+
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                // Get form data
+                const emailOrPhone = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const rememberMe = document.getElementById('rememberMe').checked;
+
+                // Basic validation
+                let isValid = true;
+
+                if (!emailOrPhone.trim()) {
+                    showError('emailError');
+                    isValid = false;
+                } else {
+                    hideError('emailError');
+                }
+
+                if (!password.trim()) {
+                    showError('passwordError');
+                    isValid = false;
+                } else {
+                    hideError('passwordError');
+                }
+
+                if (!isValid) return;
+
+                // Show loading state
+                loginBtn.disabled = true;
+                loginText.style.display = 'none';
+                loginSpinner.style.display = 'inline-block';
+
+                try {
+                    // Make API call to backend
+                    const response = await fetch('http://localhost:5003/api/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            emailOrPhone: emailOrPhone.trim(),
+                            password: password,
+                            rememberMe: rememberMe
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Store authentication data
+                        localStorage.setItem('isAuthenticated', 'true');
+                        localStorage.setItem('authToken', data.token);
+                        localStorage.setItem('userData', JSON.stringify(data.user));
+
+                        // Redirect to dashboard
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        // Show error
+                        alert(data.message || 'Login failed. Please try again.');
+                        loginBtn.disabled = false;
+                        loginText.style.display = 'inline';
+                        loginSpinner.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    alert('Network error. Please check your connection and try again.');
+                    loginBtn.disabled = false;
+                    loginText.style.display = 'inline';
+                    loginSpinner.style.display = 'none';
+                }
+            });
+
+            function showError(errorId) {
+                document.getElementById(errorId).style.display = 'block';
+                document.getElementById(errorId.replace('Error', '')).classList.add('error');
+            }
+
+            function hideError(errorId) {
+                document.getElementById(errorId).style.display = 'none';
+                document.getElementById(errorId.replace('Error', '')).classList.remove('error');
+            }
+        });
+    </script>
+</body>
+</html>

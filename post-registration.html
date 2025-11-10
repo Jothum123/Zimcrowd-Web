@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Profile - ZimCrowd</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 18px;
+            color: #94a3b8;
+        }
+
+        /* Progress Steps */
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .progress-steps::before {
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 0;
+        }
+
+        .progress-line {
+            position: absolute;
+            top: 25px;
+            left: 0;
+            height: 2px;
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            transition: width 0.5s ease;
+            z-index: 1;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+
+        .step-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .step.active .step-circle {
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            border-color: #38e77b;
+            box-shadow: 0 0 20px rgba(56, 231, 123, 0.4);
+        }
+
+        .step.completed .step-circle {
+            background: #38e77b;
+            border-color: #38e77b;
+        }
+
+        .step-circle i {
+            font-size: 20px;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 14px;
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        .step.active .step-label {
+            color: #38e77b;
+            font-weight: 600;
+        }
+
+        /* Step Content */
+        .step-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+        }
+
+        .content-header {
+            margin-bottom: 30px;
+        }
+
+        .content-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .content-subtitle {
+            font-size: 16px;
+            color: #94a3b8;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+
+        .form-label .required {
+            color: #ef4444;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            font-size: 15px;
+            font-family: 'Space Grotesk', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #38e77b;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-input::placeholder {
+            color: #64748b;
+        }
+
+        .form-select option {
+            background: #1e293b;
+            color: white;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .upload-area:hover {
+            border-color: #38e77b;
+            background: rgba(56, 231, 123, 0.05);
+        }
+
+        .upload-area.dragover {
+            border-color: #38e77b;
+            background: rgba(56, 231, 123, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #38e77b;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 16px;
+            color: #94a3b8;
+            margin-bottom: 5px;
+        }
+
+        .upload-hint {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .uploaded-file {
+            display: none;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(56, 231, 123, 0.1);
+            border: 1px solid rgba(56, 231, 123, 0.3);
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .uploaded-file.show {
+            display: flex;
+        }
+
+        .file-icon {
+            font-size: 24px;
+            color: #38e77b;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .remove-file {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+        }
+
+        /* Payment Method Cards */
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .payment-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .payment-card:hover {
+            border-color: #38e77b;
+            background: rgba(56, 231, 123, 0.05);
+            transform: translateY(-3px);
+        }
+
+        .payment-card.selected {
+            border-color: #38e77b;
+            background: rgba(56, 231, 123, 0.1);
+        }
+
+        .payment-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .payment-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .payment-desc {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: rgba(56, 231, 123, 0.1);
+            border: 1px solid rgba(56, 231, 123, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .info-icon {
+            font-size: 24px;
+            color: #38e77b;
+            flex-shrink: 0;
+        }
+
+        .info-text {
+            font-size: 14px;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 14px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            color: #0f172a;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(56, 231, 123, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .progress-steps {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .progress-steps::before,
+            .progress-line {
+                display: none;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .content-card {
+                padding: 25px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Complete Your Profile</h1>
+            <p>Just a few more steps to unlock the full ZimCrowd experience</p>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="progress-steps">
+            <div class="progress-line" id="progressLine" style="width: 0%"></div>
+            
+            <div class="step active" data-step="1">
+                <div class="step-circle">
+                    <i class="fas fa-id-card"></i>
+                </div>
+                <div class="step-label">KYC Verification</div>
+            </div>
+
+            <div class="step" data-step="2">
+                <div class="step-circle">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="step-label">Profile Setup</div>
+            </div>
+
+            <div class="step" data-step="3">
+                <div class="step-circle">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div class="step-label">Payment Method</div>
+            </div>
+        </div>
+
+        <!-- Step 1: KYC Verification -->
+        <div class="step-content active" id="step1">
+            <div class="content-card">
+                <div class="content-header">
+                    <h2 class="content-title">Identity Verification</h2>
+                    <p class="content-subtitle">Upload your National ID for verification. This helps us keep the platform secure.</p>
+                </div>
+
+                <div class="info-box">
+                    <i class="fas fa-shield-alt info-icon"></i>
+                    <div class="info-text">
+                        Your documents are encrypted and stored securely. We use bank-level security to protect your information.
+                    </div>
+                </div>
+
+                <form id="kycForm">
+                    <div class="form-group">
+                        <label class="form-label">National ID Number <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="idNumber" placeholder="63-1234567A12" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">First Name (as on ID) <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="idFirstName" placeholder="Tendai" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Last Name (as on ID) <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="idLastName" placeholder="Moyo" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Upload National ID (Front) <span class="required">*</span></label>
+                        <div class="upload-area" onclick="document.getElementById('idFront').click()">
+                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                            <div class="upload-text">Click to upload or drag and drop</div>
+                            <div class="upload-hint">PNG, JPG or PDF (max. 5MB)</div>
+                        </div>
+                        <input type="file" id="idFront" class="file-input" accept="image/*,.pdf">
+                        <div class="uploaded-file" id="frontFilePreview">
+                            <i class="fas fa-file-image file-icon"></i>
+                            <div class="file-info">
+                                <div class="file-name" id="frontFileName"></div>
+                                <div class="file-size" id="frontFileSize"></div>
+                            </div>
+                            <button type="button" class="remove-file" onclick="removeFile('front')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Upload National ID (Back) <span class="required">*</span></label>
+                        <div class="upload-area" onclick="document.getElementById('idBack').click()">
+                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                            <div class="upload-text">Click to upload or drag and drop</div>
+                            <div class="upload-hint">PNG, JPG or PDF (max. 5MB)</div>
+                        </div>
+                        <input type="file" id="idBack" class="file-input" accept="image/*,.pdf">
+                        <div class="uploaded-file" id="backFilePreview">
+                            <i class="fas fa-file-image file-icon"></i>
+                            <div class="file-info">
+                                <div class="file-name" id="backFileName"></div>
+                                <div class="file-size" id="backFileSize"></div>
+                            </div>
+                            <button type="button" class="remove-file" onclick="removeFile('back')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn btn-primary" onclick="nextStep()">
+                            Continue <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Step 2: Profile Setup -->
+        <div class="step-content" id="step2">
+            <div class="content-card">
+                <div class="content-header">
+                    <h2 class="content-title">Complete Your Profile</h2>
+                    <p class="content-subtitle">Tell us more about yourself to personalize your experience</p>
+                </div>
+
+                <form id="profileForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Date of Birth <span class="required">*</span></label>
+                            <input type="date" class="form-input" id="dob" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Gender <span class="required">*</span></label>
+                            <select class="form-select" id="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                                <option value="prefer-not-to-say">Prefer not to say</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Address <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="address" placeholder="123 Main Street, Harare" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Employment Status <span class="required">*</span></label>
+                            <select class="form-select" id="employment" required>
+                                <option value="">Select Status</option>
+                                <option value="employed">Employed</option>
+                                <option value="self-employed">Self-Employed</option>
+                                <option value="unemployed">Unemployed</option>
+                                <option value="student">Student</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Monthly Income (USD)</label>
+                            <select class="form-select" id="income">
+                                <option value="">Select Range</option>
+                                <option value="0-500">$0 - $500</option>
+                                <option value="500-1000">$500 - $1,000</option>
+                                <option value="1000-2000">$1,000 - $2,000</option>
+                                <option value="2000+">$2,000+</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Employment Details Section -->
+                    <div style="margin-top: 30px; padding-top: 25px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #38e77b;">
+                            <i class="fas fa-briefcase"></i> Employment Details
+                        </h3>
+
+                        <div class="form-group">
+                            <label class="form-label">Employer/Business Name <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="employer" placeholder="Company or business name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Occupation/Job Title <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="occupation" placeholder="Your job title or profession" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Work Address <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="workAddress" placeholder="123 Business Street, Harare" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Work Phone Number</label>
+                                <input type="tel" class="form-input" id="workPhone" placeholder="+263 24 123 4567">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Work Email</label>
+                                <input type="email" class="form-input" id="workEmail" placeholder="you@company.com">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Years at Current Job <span class="required">*</span></label>
+                                <select class="form-select" id="yearsEmployed" required>
+                                    <option value="">Select Duration</option>
+                                    <option value="0-1">Less than 1 year</option>
+                                    <option value="1-2">1-2 years</option>
+                                    <option value="2-5">2-5 years</option>
+                                    <option value="5-10">5-10 years</option>
+                                    <option value="10+">10+ years</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Department/Division</label>
+                                <input type="text" class="form-input" id="department" placeholder="e.g., Sales, IT, Finance">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Supervisor/Manager Name</label>
+                            <input type="text" class="form-input" id="supervisorName" placeholder="Your direct supervisor's name">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Supervisor Contact Number</label>
+                            <input type="tel" class="form-input" id="supervisorPhone" placeholder="+263 77 123 4567">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Upload Bank Statement (Last 3 months)</label>
+                        <div class="upload-area" onclick="document.getElementById('bankStatement').click()">
+                            <i class="fas fa-file-invoice-dollar upload-icon"></i>
+                            <div class="upload-text">Click to upload or drag and drop</div>
+                            <div class="upload-hint">PDF format (max. 10MB) - Helps us verify your income</div>
+                        </div>
+                        <input type="file" id="bankStatement" class="file-input" accept=".pdf">
+                        <div class="uploaded-file" id="bankStatementPreview">
+                            <i class="fas fa-file-pdf file-icon"></i>
+                            <div class="file-info">
+                                <div class="file-name" id="bankStatementName"></div>
+                                <div class="file-size" id="bankStatementSize"></div>
+                            </div>
+                            <button type="button" class="remove-file" onclick="removeFile('bankStatement')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Next of Kin Section -->
+                    <div style="margin-top: 40px; padding-top: 30px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 20px; color: #38e77b;">
+                            <i class="fas fa-users"></i> Next of Kin Details
+                        </h3>
+                        <p style="font-size: 14px; color: #94a3b8; margin-bottom: 25px;">
+                            Provide two emergency contacts in case we need to reach someone on your behalf
+                        </p>
+
+                        <!-- Next of Kin 1 -->
+                        <div style="margin-bottom: 30px;">
+                            <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 15px; color: #94a3b8;">
+                                Primary Contact
+                            </h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Full Name <span class="required">*</span></label>
+                                    <input type="text" class="form-input" id="kin1Name" placeholder="e.g., John Doe" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Relationship <span class="required">*</span></label>
+                                    <select class="form-select" id="kin1Relationship" required>
+                                        <option value="">Select Relationship</option>
+                                        <option value="spouse">Spouse</option>
+                                        <option value="parent">Parent</option>
+                                        <option value="sibling">Sibling</option>
+                                        <option value="child">Child</option>
+                                        <option value="friend">Friend</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Phone Number <span class="required">*</span></label>
+                                <input type="tel" class="form-input" id="kin1Phone" placeholder="+263 77 123 4567" required>
+                            </div>
+                        </div>
+
+                        <!-- Next of Kin 2 -->
+                        <div>
+                            <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 15px; color: #94a3b8;">
+                                Secondary Contact
+                            </h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Full Name <span class="required">*</span></label>
+                                    <input type="text" class="form-input" id="kin2Name" placeholder="e.g., Jane Smith" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Relationship <span class="required">*</span></label>
+                                    <select class="form-select" id="kin2Relationship" required>
+                                        <option value="">Select Relationship</option>
+                                        <option value="spouse">Spouse</option>
+                                        <option value="parent">Parent</option>
+                                        <option value="sibling">Sibling</option>
+                                        <option value="child">Child</option>
+                                        <option value="friend">Friend</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Phone Number <span class="required">*</span></label>
+                                <input type="tel" class="form-input" id="kin2Phone" placeholder="+263 77 123 4567" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn btn-secondary" onclick="prevStep()">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="nextStep()">
+                            Continue <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Step 3: Payment Method -->
+        <div class="step-content" id="step3">
+            <div class="content-card">
+                <div class="content-header">
+                    <h2 class="content-title">Link Payment Method</h2>
+                    <p class="content-subtitle">Connect your mobile money account for seamless transactions</p>
+                </div>
+
+                <div class="info-box">
+                    <i class="fas fa-info-circle info-icon"></i>
+                    <div class="info-text">
+                        Your payment information is encrypted and secure. We never store your PIN or password.
+                    </div>
+                </div>
+
+                <form id="paymentForm">
+                    <div class="payment-methods">
+                        <div class="payment-card" onclick="selectPayment('ecocash')">
+                            <div class="payment-icon">📱</div>
+                            <div class="payment-name">EcoCash</div>
+                            <div class="payment-desc">Most popular in Zimbabwe</div>
+                        </div>
+
+                        <div class="payment-card" onclick="selectPayment('onemoney')">
+                            <div class="payment-icon">💳</div>
+                            <div class="payment-name">OneMoney</div>
+                            <div class="payment-desc">NetOne mobile money</div>
+                        </div>
+
+                        <div class="payment-card" onclick="selectPayment('innbucks')">
+                            <div class="payment-icon">🏦</div>
+                            <div class="payment-name">InnBucks</div>
+                            <div class="payment-desc">NMB mobile wallet</div>
+                        </div>
+                    </div>
+
+                    <div id="paymentDetails" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">Mobile Number <span class="required">*</span></label>
+                            <input type="tel" class="form-input" id="mobileNumber" placeholder="+263 77 123 4567" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Account Name <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="accountName" placeholder="Name as registered" required>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn btn-secondary" onclick="prevStep()">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="completeSetup()">
+                            Complete Setup <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let selectedPaymentMethod = null;
+
+        // File upload handling
+        document.getElementById('idFront').addEventListener('change', function(e) {
+            handleFileUpload(e, 'front');
+        });
+
+        document.getElementById('idBack').addEventListener('change', function(e) {
+            handleFileUpload(e, 'back');
+        });
+
+        document.getElementById('bankStatement').addEventListener('change', function(e) {
+            handleFileUpload(e, 'bankStatement');
+        });
+
+        function handleFileUpload(event, side) {
+            const file = event.target.files[0];
+            if (file) {
+                const fileName = file.name;
+                const fileSize = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                
+                document.getElementById(`${side}FileName`).textContent = fileName;
+                document.getElementById(`${side}FileSize`).textContent = fileSize;
+                document.getElementById(`${side}FilePreview`).classList.add('show');
+            }
+        }
+
+        function removeFile(side) {
+            if (side === 'front') {
+                document.getElementById('idFront').value = '';
+            } else if (side === 'back') {
+                document.getElementById('idBack').value = '';
+            } else if (side === 'bankStatement') {
+                document.getElementById('bankStatement').value = '';
+            }
+            document.getElementById(`${side}FilePreview`).classList.remove('show');
+        }
+
+        // Payment method selection
+        function selectPayment(method) {
+            selectedPaymentMethod = method;
+            
+            // Remove selected class from all cards
+            document.querySelectorAll('.payment-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked card
+            event.currentTarget.classList.add('selected');
+            
+            // Show payment details form
+            document.getElementById('paymentDetails').style.display = 'block';
+        }
+
+        // Navigation functions
+        function nextStep() {
+            if (currentStep < 3) {
+                // Hide current step
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('completed');
+                document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
+                
+                // Show next step
+                currentStep++;
+                document.getElementById(`step${currentStep}`).classList.add('active');
+                document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('active');
+                
+                // Update progress line
+                updateProgressLine();
+                
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                // Hide current step
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
+                
+                // Show previous step
+                currentStep--;
+                document.getElementById(`step${currentStep}`).classList.add('active');
+                document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('active');
+                document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('completed');
+                
+                // Update progress line
+                updateProgressLine();
+                
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function updateProgressLine() {
+            const progress = ((currentStep - 1) / 2) * 100;
+            document.getElementById('progressLine').style.width = progress + '%';
+        }
+
+        function completeSetup() {
+            // Validate payment method selection
+            if (!selectedPaymentMethod) {
+                alert('Please select a payment method');
+                return;
+            }
+            
+            // Store completion status
+            localStorage.setItem('profileCompleted', 'true');
+            
+            // Show success message
+            alert('Profile setup complete! Redirecting to dashboard...');
+            
+            // Redirect to dashboard
+            window.location.href = 'dashboard.html';
+        }
+
+        // Drag and drop functionality
+        const uploadAreas = document.querySelectorAll('.upload-area');
+        
+        uploadAreas.forEach(area => {
+            area.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                area.classList.add('dragover');
+            });
+            
+            area.addEventListener('dragleave', () => {
+                area.classList.remove('dragover');
+            });
+            
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const input = area.nextElementSibling;
+                    input.files = files;
+                    input.dispatchEvent(new Event('change'));
+                }
+            });
+        });
+    </script>
+</body>
+</html>

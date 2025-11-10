@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Diagnostic - My Loans</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        h2 { color: #666; }
+        .loan-card {
+            background: #f9f9f9;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #38e77b;
+        }
+    </style>
+</head>
+<body>
+    <h1>My Loans - Diagnostic Page</h1>
+    
+    <div class="section">
+        <h2>Loan Statistics</h2>
+        <p><strong>Total Loan Amount:</strong> $12,450</p>
+        <p><strong>Average Term:</strong> 24 Months</p>
+        <p><strong>Average Interest:</strong> 8.5%</p>
+        <p><strong>Active Loans:</strong> 5</p>
+    </div>
+
+    <div class="section">
+        <h2>Active Loans</h2>
+        
+        <div class="loan-card">
+            <h3>Personal Loan - $3,500</h3>
+            <p>Monthly Payment: $185.50</p>
+            <p>Interest Rate: 7.5%</p>
+            <p>Term: 24 months</p>
+            <p>Next Payment: Dec 15, 2024</p>
+        </div>
+
+        <div class="loan-card">
+            <h3>Business Loan - $5,000</h3>
+            <p>Monthly Payment: $312.50</p>
+            <p>Interest Rate: 9.2%</p>
+            <p>Term: 18 months</p>
+            <p>Next Payment: Dec 20, 2024</p>
+        </div>
+
+        <div class="loan-card">
+            <h3>Education Loan - $3,950</h3>
+            <p>Monthly Payment: $165.42</p>
+            <p>Interest Rate: 6.8%</p>
+            <p>Term: 30 months</p>
+            <p>Next Payment: Dec 10, 2024</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Completed Loans</h2>
+        <div class="loan-card">
+            <h3>Personal Loan - $2,000</h3>
+            <p>Total Paid: $2,120</p>
+            <p>Interest Paid: $120</p>
+            <p>Completion Date: Oct 15, 2024</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Loan Applications</h2>
+        <div class="loan-card">
+            <h3>Car Loan Application - $8,000</h3>
+            <p>Application Date: Nov 25, 2024</p>
+            <p>Estimated Rate: 7.2%</p>
+            <p>Status: Under Review - Document Review</p>
+        </div>
+    </div>
+
+    <div class="section" style="background: #fff3cd; border-left: 4px solid #ffc107;">
+        <h2>⚠️ If you see this page:</h2>
+        <p>✅ Your browser is working correctly</p>
+        <p>✅ HTML files can be opened</p>
+        <p>✅ The loan data exists and is formatted correctly</p>
+        <p><strong>The issue is likely:</strong></p>
+        <ul>
+            <li>JavaScript error in main dashboard.html preventing content from showing</li>
+            <li>CSS hiding the loans section</li>
+            <li>Navigation not switching to loans section</li>
+        </ul>
+        <p><strong>Next step:</strong> Open dashboard.html, press F12, check Console tab for errors</p>
+    </div>
+</body>
+</html>

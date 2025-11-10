@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Loans - ZimCrowd</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #0f172a;
+            color: white;
+            padding: 40px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 30px;
+            color: #38e77b;
+        }
+
+        .loans-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: #1e293b;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+        }
+
+        .stat-card h3 {
+            font-size: 32px;
+            color: #38e77b;
+            margin-bottom: 8px;
+        }
+
+        .stat-card p {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #334155;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            color: #38e77b;
+            border-bottom-color: #38e77b;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .loan-card {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            margin-bottom: 20px;
+        }
+
+        .loan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .loan-header h4 {
+            font-size: 20px;
+            color: white;
+        }
+
+        .loan-amount {
+            font-size: 28px;
+            font-weight: 700;
+            color: #38e77b;
+        }
+
+        .loan-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #334155;
+        }
+
+        .detail-row span {
+            color: #94a3b8;
+        }
+
+        .detail-row strong {
+            color: white;
+        }
+
+        .loan-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .loan-status.active {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .loan-status.completed {
+            background: rgba(56, 231, 123, 0.2);
+            color: #38e77b;
+        }
+
+        .loan-status.pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>My Loans</h1>
+
+        <!-- Loan Statistics -->
+        <div class="loans-stats">
+            <div class="stat-card">
+                <h3>$12,450</h3>
+                <p>Total Loan Amount</p>
+            </div>
+            <div class="stat-card">
+                <h3>24 Months</h3>
+                <p>Average Term</p>
+            </div>
+            <div class="stat-card">
+                <h3>8.5%</h3>
+                <p>Average Interest</p>
+            </div>
+            <div class="stat-card">
+                <h3>5 Active</h3>
+                <p>Current Loans</p>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('active')">Active Loans (5)</button>
+            <button class="tab-btn" onclick="switchTab('completed')">Completed (12)</button>
+            <button class="tab-btn" onclick="switchTab('applications')">Applications (1)</button>
+        </div>
+
+        <!-- Active Loans Tab -->
+        <div id="active" class="tab-content active">
+            <div class="loan-card">
+                <div class="loan-header">
+                    <div>
+                        <h4>Personal Loan</h4>
+                        <span class="loan-status active">Active</span>
+                    </div>
+                    <div class="loan-amount">$3,500</div>
+                </div>
+                <div class="loan-details">
+                    <div class="detail-row">
+                        <span>Monthly Payment</span>
+                        <strong>$185.50</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Interest Rate</span>
+                        <strong>7.5%</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Term</span>
+                        <strong>24 months</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Next Payment</span>
+                        <strong>Dec 15, 2024</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="loan-card">
+                <div class="loan-header">
+                    <div>
+                        <h4>Business Loan</h4>
+                        <span class="loan-status active">Active</span>
+                    </div>
+                    <div class="loan-amount">$5,000</div>
+                </div>
+                <div class="loan-details">
+                    <div class="detail-row">
+                        <span>Monthly Payment</span>
+                        <strong>$312.50</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Interest Rate</span>
+                        <strong>9.2%</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Term</span>
+                        <strong>18 months</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Next Payment</span>
+                        <strong>Dec 20, 2024</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="loan-card">
+                <div class="loan-header">
+                    <div>
+                        <h4>Education Loan</h4>
+                        <span class="loan-status active">Active</span>
+                    </div>
+                    <div class="loan-amount">$3,950</div>
+                </div>
+                <div class="loan-details">
+                    <div class="detail-row">
+                        <span>Monthly Payment</span>
+                        <strong>$165.42</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Interest Rate</span>
+                        <strong>6.8%</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Term</span>
+                        <strong>30 months</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Next Payment</span>
+                        <strong>Dec 10, 2024</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Completed Loans Tab -->
+        <div id="completed" class="tab-content">
+            <div class="loan-card">
+                <div class="loan-header">
+                    <div>
+                        <h4>Personal Loan</h4>
+                        <span class="loan-status completed">Completed</span>
+                    </div>
+                    <div class="loan-amount">$2,000</div>
+                </div>
+                <div class="loan-details">
+                    <div class="detail-row">
+                        <span>Total Paid</span>
+                        <strong>$2,120</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Interest Paid</span>
+                        <strong>$120</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Completion Date</span>
+                        <strong>Oct 15, 2024</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Applications Tab -->
+        <div id="applications" class="tab-content">
+            <div class="loan-card">
+                <div class="loan-header">
+                    <div>
+                        <h4>Car Loan Application</h4>
+                        <span class="loan-status pending">Under Review</span>
+                    </div>
+                    <div class="loan-amount">$8,000</div>
+                </div>
+                <div class="loan-details">
+                    <div class="detail-row">
+                        <span>Application Date</span>
+                        <strong>Nov 25, 2024</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Estimated Rate</span>
+                        <strong>7.2%</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Status</span>
+                        <strong>Document Review</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            const buttons = document.querySelectorAll('.tab-btn');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

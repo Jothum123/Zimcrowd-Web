@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - ZimCrowd</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .test-section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        .success { color: green; }
+        .error { color: red; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🚀 ZimCrowd API Test</h1>
+    <p>Test your Supabase backend integration</p>
+
+    <div class="test-section">
+        <h2>Health Check</h2>
+        <button onclick="testHealth()">Test Health</button>
+        <div id="healthResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>User Registration</h2>
+        <button onclick="testRegister()">Test Registration</button>
+        <div id="registerResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Login Test</h2>
+        <button onclick="testLogin()">Test Login</button>
+        <div id="loginResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Password Reset</h2>
+        <button onclick="testForgotPassword()">Test Forgot Password</button>
+        <div id="forgotResult"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5003/api';
+
+        function showResult(elementId, result, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<pre class="${isSuccess ? 'success' : 'error'}">${JSON.stringify(result, null, 2)}</pre>`;
+        }
+
+        async function testHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                showResult('healthResult', data, response.ok);
+            } catch (error) {
+                showResult('healthResult', { error: error.message }, false);
+            }
+        }
+
+        async function testRegister() {
+            const testEmail = `test${Date.now()}@example.com`;
+            const userData = {
+                firstName: 'Test',
+                lastName: 'User',
+                email: testEmail,
+                password: 'SecurePass123!'
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                const data = await response.json();
+                showResult('registerResult', data, response.ok);
+            } catch (error) {
+                showResult('registerResult', { error: error.message }, false);
+            }
+        }
+
+        async function testLogin() {
+            const loginData = {
+                emailOrPhone: 'jane.smith@gmail.com',
+                password: 'SecurePass123!'
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(loginData)
+                });
+                const data = await response.json();
+                showResult('loginResult', data, response.ok);
+            } catch (error) {
+                showResult('loginResult', { error: error.message }, false);
+            }
+        }
+
+        async function testForgotPassword() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/forgot-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ emailOrPhone: 'jane.smith@gmail.com' })
+                });
+                const data = await response.json();
+                showResult('forgotResult', data, response.ok);
+            } catch (error) {
+                showResult('forgotResult', { error: error.message }, false);
+            }
+        }
+
+        // Auto-run health check on page load
+        window.onload = () => testHealth();
+    </script>
+</body>
+</html>

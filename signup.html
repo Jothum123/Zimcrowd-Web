@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - ZimCrowd</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .signup-container {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Left Side - Branding */
+        .signup-branding {
+            background: url('assets/images/pexels-ayaka-kato-1441033-2860905.jpg') center/cover no-repeat;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+
+        .signup-branding::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.2);
+            z-index: 0;
+        }
+
+        .signup-branding > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-logo {
+            margin-bottom: 20px;
+        }
+
+        .brand-logo img {
+            width: 200px;
+            height: auto;
+            display: block;
+        }
+
+        .brand-logo-text {
+            font-size: 48px;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .brand-tagline {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 40px;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .brand-features {
+            text-align: left;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .brand-feature {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .brand-feature-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: rgba(56, 231, 123, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .brand-feature-icon i {
+            font-size: 18px;
+            color: #38e77b;
+        }
+
+        .brand-feature-text {
+            font-size: 15px;
+            font-weight: 500;
+            color: #0f172a;
+        }
+
+        /* Right Side - Form */
+        .signup-form-container {
+            padding: 60px 40px;
+            background: #0f172a;
+        }
+
+        .form-header {
+            margin-bottom: 40px;
+        }
+
+        .form-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-subtitle {
+            color: #94a3b8;
+            font-size: 16px;
+        }
+
+        .signup-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+
+        .form-label .required {
+            color: #ef4444;
+        }
+
+        .form-input {
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            font-size: 15px;
+            font-family: 'Space Grotesk', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #38e77b;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-input::placeholder {
+            color: #64748b;
+        }
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .input-icon:hover {
+            color: #38e77b;
+        }
+
+        .form-select {
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            font-size: 15px;
+            font-family: 'Space Grotesk', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #38e77b;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-select option {
+            background: #1e293b;
+            color: white;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            cursor: pointer;
+        }
+
+        .checkbox-label {
+            font-size: 14px;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        .checkbox-label a {
+            color: #38e77b;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .checkbox-label a:hover {
+            text-decoration: underline;
+        }
+
+        .password-strength {
+            margin-top: 8px;
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s ease;
+        }
+
+        .strength-fill.weak {
+            width: 33%;
+            background: #ef4444;
+        }
+
+        .strength-fill.medium {
+            width: 66%;
+            background: #f59e0b;
+        }
+
+        .strength-fill.strong {
+            width: 100%;
+            background: #38e77b;
+        }
+
+        .strength-text {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .submit-btn {
+            padding: 16px;
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            color: #0f172a;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(56, 231, 123, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .divider-text {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .social-login {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .social-btn {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .social-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 25px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .login-link a {
+            color: #38e77b;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .signup-container {
+                grid-template-columns: 1fr;
+            }
+
+            .signup-branding {
+                padding: 40px 30px;
+            }
+
+            .brand-logo {
+                font-size: 36px;
+            }
+
+            .brand-tagline {
+                font-size: 18px;
+            }
+
+            .signup-form-container {
+                padding: 40px 30px;
+            }
+
+            .form-title {
+                font-size: 28px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .social-login {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <!-- Left Side - Branding -->
+        <div class="signup-branding">
+            <div class="brand-logo">
+                <img src="assets/images/Zimcrowd_Dark.png" alt="ZimCrowd Logo">
+            </div>
+            <div class="brand-tagline">Join Zimbabwe's First P2P Lending Platform</div>
+            
+            <div class="brand-features">
+                <div class="brand-feature">
+                    <div class="brand-feature-icon">
+                        <i class="fas fa-user-friends"></i>
+                    </div>
+                    <div class="brand-feature-text">Connect directly with lenders in your community</div>
+                </div>
+                
+                <div class="brand-feature">
+                    <div class="brand-feature-icon">
+                        <i class="fas fa-hand-holding-usd"></i>
+                    </div>
+                    <div class="brand-feature-text">Peer-to-peer lending with transparent rates</div>
+                </div>
+                
+                <div class="brand-feature">
+                    <div class="brand-feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="brand-feature-text">Earn competitive returns by funding loans</div>
+                </div>
+                
+                <div class="brand-feature">
+                    <div class="brand-feature-icon">
+                        <i class="fas fa-globe-africa"></i>
+                    </div>
+                    <div class="brand-feature-text">Build financial networks that empower Zimbabwe</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side - Sign Up Form -->
+        <div class="signup-form-container">
+            <div class="form-header">
+                <h1 class="form-title">Create Your Account</h1>
+                <p class="form-subtitle">Start your journey to financial freedom</p>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <form class="signup-form" id="signupForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">First Name <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="firstName" placeholder="Tendai" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Name <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="lastName" placeholder="Moyo" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email Address <span class="required">*</span></label>
+                    <input type="email" class="form-input" id="email" placeholder="tendai@example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Phone Number <span class="required">*</span></label>
+                    <input type="tel" class="form-input" id="phone" placeholder="+263 77 123 4567" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Country <span class="required">*</span></label>
+                        <select class="form-select" id="country" required>
+                            <option value="">Select Country</option>
+                            <option value="Zimbabwe" selected>Zimbabwe</option>
+                            <option value="South Africa">South Africa</option>
+                            <option value="Botswana">Botswana</option>
+                            <option value="Zambia">Zambia</option>
+                            <option value="Mozambique">Mozambique</option>
+                            <option value="Namibia">Namibia</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">City <span class="required">*</span></label>
+                        <select class="form-select" id="city" required>
+                            <option value="">Select City</option>
+                            <option value="Harare">Harare</option>
+                            <option value="Bulawayo">Bulawayo</option>
+                            <option value="Mutare">Mutare</option>
+                            <option value="Gweru">Gweru</option>
+                            <option value="Kwekwe">Kwekwe</option>
+                            <option value="Kadoma">Kadoma</option>
+                            <option value="Masvingo">Masvingo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <input type="password" class="form-input" id="password" placeholder="Create a strong password" required>
+                        <i class="fas fa-eye input-icon" id="togglePassword" onclick="togglePasswordVisibility()"></i>
+                    </div>
+                    <div class="password-strength">
+                        <div class="strength-bar">
+                            <div class="strength-fill" id="strengthFill"></div>
+                        </div>
+                        <div class="strength-text" id="strengthText">Password strength: None</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Confirm Password <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <input type="password" class="form-input" id="confirmPassword" placeholder="Re-enter your password" required>
+                        <i class="fas fa-eye input-icon" id="toggleConfirmPassword" onclick="toggleConfirmPasswordVisibility()"></i>
+                    </div>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="terms" required>
+                    <label class="checkbox-label" for="terms">
+                        I agree to the <a href="#" target="_blank">Terms of Service</a> and <a href="#" target="_blank">Privacy Policy</a>
+                    </label>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="marketing">
+                    <label class="checkbox-label" for="marketing">
+                        Send me updates about new features and promotions
+                    </label>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    Create Account <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+
+            <div class="divider">
+                <div class="divider-line"></div>
+                <div class="divider-text">Or sign up with</div>
+                <div class="divider-line"></div>
+            </div>
+
+            <div class="social-login">
+                <button class="social-btn" onclick="signUpWithGoogle()">
+                    <i class="fab fa-google"></i> Google
+                </button>
+                <button class="social-btn" onclick="signUpWithFacebook()">
+                    <i class="fab fa-facebook"></i> Facebook
+                </button>
+            </div>
+
+            <div class="login-link">
+                Already have an account? <a href="login.html">Sign In</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Password visibility toggle
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('togglePassword');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+        function toggleConfirmPasswordVisibility() {
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            const toggleIcon = document.getElementById('toggleConfirmPassword');
+            
+            if (confirmPasswordInput.type === 'password') {
+                confirmPasswordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                confirmPasswordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+        // Password strength checker
+        document.getElementById('password').addEventListener('input', function(e) {
+            const password = e.target.value;
+            const strengthFill = document.getElementById('strengthFill');
+            const strengthText = document.getElementById('strengthText');
+            
+            let strength = 0;
+            
+            if (password.length >= 8) strength++;
+            if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+            if (password.match(/[0-9]/)) strength++;
+            if (password.match(/[^a-zA-Z0-9]/)) strength++;
+            
+            strengthFill.className = 'strength-fill';
+            
+            if (strength === 0) {
+                strengthText.textContent = 'Password strength: None';
+            } else if (strength <= 2) {
+                strengthFill.classList.add('weak');
+                strengthText.textContent = 'Password strength: Weak';
+            } else if (strength === 3) {
+                strengthFill.classList.add('medium');
+                strengthText.textContent = 'Password strength: Medium';
+            } else {
+                strengthFill.classList.add('strong');
+                strengthText.textContent = 'Password strength: Strong';
+            }
+        });
+
+        // Form submission
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.classList.remove('show');
+
+            // Get form values
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const termsAccepted = document.getElementById('terms').checked;
+
+            // Validation
+            if (!firstName || !lastName || !email || !phone || !password) {
+                showError('Please fill in all required fields');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showError('Passwords do not match');
+                return;
+            }
+
+            if (password.length < 8) {
+                showError('Password must be at least 8 characters long');
+                return;
+            }
+
+            if (!termsAccepted) {
+                showError('You must agree to the Terms of Service and Privacy Policy');
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = document.querySelector('.submit-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Creating Account...';
+            submitBtn.disabled = true;
+
+            try {
+                // Make API call to backend
+                const response = await fetch('http://localhost:5003/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        firstName,
+                        lastName,
+                        email,
+                        phone,
+                        password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Store user ID for OTP verification
+                    localStorage.setItem('verificationUserId', data.userId);
+                    localStorage.setItem('verificationEmail', email);
+
+                    // Show success message and redirect to OTP verification
+                    alert('Account created successfully! Please check your email for verification code.');
+                    window.location.href = `verify-otp.html?email=${encodeURIComponent(email)}&type=signup`;
+                } else {
+                    // Show error
+                    showError(data.message || 'Registration failed. Please try again.');
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showError('Network error. Please check your connection and try again.');
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+            
+            // Scroll to error
+            errorMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Hide after 5 seconds
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 5000);
+        }
+
+        // Social login functions (placeholders)
+        function signUpWithGoogle() {
+            alert('Google Sign Up - This would integrate with Google OAuth in production');
+            // In production, this would trigger Google OAuth flow
+        }
+
+        function signUpWithFacebook() {
+            alert('Facebook Sign Up - This would integrate with Facebook OAuth in production');
+            // In production, this would trigger Facebook OAuth flow
+        }
+
+        // Page loaded
+        window.addEventListener('DOMContentLoaded', function() {
+            // Initialize page
+        });
+    </script>
+</body>
+</html>

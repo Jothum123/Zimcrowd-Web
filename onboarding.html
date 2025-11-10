@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to ZimCrowd</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #0f172a;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* Splash Screen */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.85) 100%), 
+                        url('assets/images/pexels-brett-sayles-3963829.jpg') center/cover no-repeat;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: fadeOut 0.5s ease 2.5s forwards;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+
+        .splash-logo {
+            font-size: 64px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .splash-tagline {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #94a3b8;
+            animation: slideUp 0.8s ease 0.5s both;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Onboarding Container */
+        .onboarding-container {
+            display: none;
+            min-height: 100vh;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%), 
+                        url('assets/images/pexels-rsekoua-2402239.jpg') center/cover no-repeat fixed;
+        }
+
+        .onboarding-container.active {
+            display: block;
+        }
+
+        .onboarding-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Progress Indicator */
+        .progress-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 40px;
+        }
+
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .progress-dot.active {
+            width: 40px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #38e77b, #34d399);
+        }
+
+        /* Onboarding Screens */
+        .onboarding-screen {
+            display: none;
+            animation: fadeInSlide 0.5s ease;
+        }
+
+        .onboarding-screen.active {
+            display: block;
+        }
+
+        @keyframes fadeInSlide {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .screen-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .screen-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .screen-subtitle {
+            font-size: 20px;
+            color: #94a3b8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Feature Cards */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: #38e77b;
+            box-shadow: 0 8px 30px rgba(56, 231, 123, 0.2);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(56, 231, 123, 0.2), rgba(52, 211, 153, 0.2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .feature-icon i {
+            font-size: 28px;
+            color: #38e77b;
+        }
+
+        .feature-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .feature-description {
+            font-size: 15px;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        /* Benefits List */
+        .benefits-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .benefit-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: rgba(56, 231, 123, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .benefit-icon i {
+            color: #38e77b;
+            font-size: 18px;
+        }
+
+        .benefit-text {
+            flex: 1;
+        }
+
+        .benefit-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .benefit-desc {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        .btn {
+            padding: 16px 40px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            color: #0f172a;
+            box-shadow: 0 4px 20px rgba(56, 231, 123, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(56, 231, 123, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* User Type Selection */
+        .user-type-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .user-type-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .user-type-card:hover,
+        .user-type-card.selected {
+            border-color: #38e77b;
+            background: rgba(56, 231, 123, 0.05);
+            transform: translateY(-5px);
+        }
+
+        .user-type-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(56, 231, 123, 0.2), rgba(52, 211, 153, 0.2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .user-type-icon i {
+            font-size: 36px;
+            color: #38e77b;
+        }
+
+        .user-type-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .user-type-description {
+            font-size: 15px;
+            color: #94a3b8;
+            margin-bottom: 20px;
+        }
+
+        .user-type-features {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .user-type-features li {
+            padding: 8px 0;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .user-type-features li i {
+            color: #38e77b;
+            margin-right: 8px;
+        }
+
+        /* Skip Button */
+        .skip-button {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 16px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .skip-button:hover {
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .screen-title {
+                font-size: 36px;
+            }
+
+            .screen-subtitle {
+                font-size: 16px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .user-type-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="splash-logo">ZimCrowd</div>
+        <div class="splash-tagline">Empowering Zimbabwe's Financial Future</div>
+    </div>
+
+    <!-- Onboarding Container -->
+    <div class="onboarding-container" id="onboardingContainer">
+        <button class="skip-button" onclick="skipOnboarding()">Skip <i class="fas fa-arrow-right"></i></button>
+
+        <!-- Progress Indicator -->
+        <div class="progress-indicator">
+            <div class="progress-dot active" data-step="1"></div>
+            <div class="progress-dot" data-step="2"></div>
+            <div class="progress-dot" data-step="3"></div>
+        </div>
+
+        <div class="onboarding-content">
+            <!-- Screen 1: Welcome & Introduction -->
+            <div class="onboarding-screen active" id="screen1">
+                <div class="screen-header">
+                    <h1 class="screen-title">Welcome to ZimCrowd</h1>
+                    <p class="screen-subtitle">Zimbabwe's premier peer-to-peer lending platform connecting borrowers and lenders</p>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-hand-holding-usd"></i>
+                        </div>
+                        <h3 class="feature-title">Access to Loans</h3>
+                        <p class="feature-description">Get loans from $100 to $1,000 with flexible repayment terms tailored to your needs</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="feature-title">Build Your Credit</h3>
+                        <p class="feature-description">Improve your ZimScore with every on-time payment and unlock better loan terms</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3 class="feature-title">Secure & Transparent</h3>
+                        <p class="feature-description">Bank-level security with full transparency on rates, fees, and loan terms</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <h3 class="feature-title">Earn Returns</h3>
+                        <p class="feature-description">Lenders earn competitive returns by funding loans in their community</p>
+                    </div>
+                </div>
+
+                <div class="benefits-list">
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div class="benefit-text">
+                            <div class="benefit-title">Quick Approval</div>
+                            <div class="benefit-desc">Get approved in minutes, not days</div>
+                        </div>
+                    </div>
+
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <div class="benefit-text">
+                            <div class="benefit-title">Mobile Money</div>
+                            <div class="benefit-desc">EcoCash, OneMoney, InnBucks supported</div>
+                        </div>
+                    </div>
+
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="benefit-text">
+                            <div class="benefit-title">Flexible Terms</div>
+                            <div class="benefit-desc">Choose repayment plans that work for you</div>
+                        </div>
+                    </div>
+
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="fas fa-eye-slash"></i>
+                        </div>
+                        <div class="benefit-text">
+                            <div class="benefit-title">No Hidden Fees</div>
+                            <div class="benefit-desc">Clear pricing with no surprises</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="nextScreen()">
+                        Get Started <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Screen 2: Choose Your Path -->
+            <div class="onboarding-screen" id="screen2">
+                <div class="screen-header">
+                    <h1 class="screen-title">How will you use ZimCrowd?</h1>
+                    <p class="screen-subtitle">Select your primary goal to personalize your experience</p>
+                </div>
+
+                <div class="user-type-cards">
+                    <div class="user-type-card" onclick="selectUserType('borrower')">
+                        <div class="user-type-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <h3 class="user-type-title">I Need a Loan</h3>
+                        <p class="user-type-description">Access funds quickly for personal or business needs</p>
+                        <ul class="user-type-features">
+                            <li><i class="fas fa-check"></i> Loans from $100 - $1,000</li>
+                            <li><i class="fas fa-check"></i> Build credit with ZimScore</li>
+                            <li><i class="fas fa-check"></i> Flexible repayment terms</li>
+                            <li><i class="fas fa-check"></i> Progressive limit increases</li>
+                        </ul>
+                    </div>
+
+                    <div class="user-type-card" onclick="selectUserType('lender')">
+                        <div class="user-type-icon">
+                            <i class="fas fa-hand-holding-usd"></i>
+                        </div>
+                        <h3 class="user-type-title">I Want to Invest</h3>
+                        <p class="user-type-description">Earn returns by funding loans in your community</p>
+                        <ul class="user-type-features">
+                            <li><i class="fas fa-check"></i> Competitive returns (15-25%)</li>
+                            <li><i class="fas fa-check"></i> Diversify your portfolio</li>
+                            <li><i class="fas fa-check"></i> Choose your risk level</li>
+                            <li><i class="fas fa-check"></i> Support local businesses</li>
+                        </ul>
+                    </div>
+
+                    <div class="user-type-card" onclick="selectUserType('both')">
+                        <div class="user-type-icon">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <h3 class="user-type-title">Both</h3>
+                        <p class="user-type-description">Borrow when you need, invest when you can</p>
+                        <ul class="user-type-features">
+                            <li><i class="fas fa-check"></i> Full platform access</li>
+                            <li><i class="fas fa-check"></i> Flexible switching</li>
+                            <li><i class="fas fa-check"></i> All features unlocked</li>
+                            <li><i class="fas fa-check"></i> Maximum flexibility</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="prevScreen()">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                </div>
+            </div>
+
+            <!-- Screen 3: Next Steps -->
+            <div class="onboarding-screen" id="screen3">
+                <div class="screen-header">
+                    <h1 class="screen-title">Let's Get You Started</h1>
+                    <p class="screen-subtitle">Complete these steps to unlock the full ZimCrowd experience</p>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <h3 class="feature-title">1. Verify Your Identity</h3>
+                        <p class="feature-description">Upload your National ID and complete KYC verification for security and compliance</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-id-card"></i>
+                        </div>
+                        <h3 class="feature-title">2. Complete Your Profile</h3>
+                        <p class="feature-description">Add personal information, employment details, and contact information</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h3 class="feature-title">3. Link Payment Method</h3>
+                        <p class="feature-description">Connect your mobile money account (EcoCash, OneMoney, InnBucks) for transactions</p>
+                    </div>
+
+                    <div class="feature-card" id="borrowerStep" style="display: none;">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h3 class="feature-title">4. Credit Assessment</h3>
+                        <p class="feature-description">Submit bank statements for automated risk scoring and personalized loan offers</p>
+                    </div>
+
+                    <div class="feature-card" id="lenderStep" style="display: none;">
+                        <div class="feature-icon">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <h3 class="feature-title">4. Fund Your Wallet</h3>
+                        <p class="feature-description">Add funds via mobile money or bank transfer to start investing in loans</p>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="prevScreen()">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn btn-primary" onclick="completeOnboarding()">
+                        Continue to Dashboard <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentScreen = 1;
+        let selectedUserType = null;
+
+        // Show onboarding after splash screen
+        setTimeout(() => {
+            document.getElementById('onboardingContainer').classList.add('active');
+        }, 3000);
+
+        // Check if user has completed onboarding
+        window.addEventListener('DOMContentLoaded', () => {
+            const hasCompletedOnboarding = localStorage.getItem('onboardingCompleted');
+            const isAuthenticated = localStorage.getItem('isAuthenticated');
+            
+            // Only redirect if onboarding is completed AND user is authenticated
+            if (hasCompletedOnboarding === 'true' && isAuthenticated === 'true') {
+                // Redirect to dashboard
+                window.location.href = 'dashboard.html';
+            }
+        });
+
+        function nextScreen() {
+            if (currentScreen < 3) {
+                document.getElementById(`screen${currentScreen}`).classList.remove('active');
+                currentScreen++;
+                document.getElementById(`screen${currentScreen}`).classList.add('active');
+                updateProgress();
+            }
+        }
+
+        function prevScreen() {
+            if (currentScreen > 1) {
+                document.getElementById(`screen${currentScreen}`).classList.remove('active');
+                currentScreen--;
+                document.getElementById(`screen${currentScreen}`).classList.add('active');
+                updateProgress();
+            }
+        }
+
+        function updateProgress() {
+            document.querySelectorAll('.progress-dot').forEach((dot, index) => {
+                if (index + 1 === currentScreen) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+
+        function selectUserType(type) {
+            selectedUserType = type;
+            
+            // Remove selected class from all cards
+            document.querySelectorAll('.user-type-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked card
+            event.currentTarget.classList.add('selected');
+            
+            // Store user type preference
+            localStorage.setItem('userType', type);
+            
+            // Move to next screen after selection
+            setTimeout(() => {
+                nextScreen();
+                
+                // Show relevant step based on user type
+                const borrowerStep = document.getElementById('borrowerStep');
+                const lenderStep = document.getElementById('lenderStep');
+                
+                if (type === 'borrower') {
+                    borrowerStep.style.display = 'block';
+                    lenderStep.style.display = 'none';
+                } else if (type === 'lender') {
+                    borrowerStep.style.display = 'none';
+                    lenderStep.style.display = 'block';
+                } else {
+                    borrowerStep.style.display = 'block';
+                    lenderStep.style.display = 'block';
+                }
+            }, 500);
+        }
+
+        function skipOnboarding() {
+            if (confirm('Are you sure you want to skip the introduction? You can always view this again in settings.')) {
+                completeOnboarding();
+            }
+        }
+
+        function goToSignup() {
+            // Redirect to signup page
+            window.location.href = 'signup.html';
+        }
+
+        function completeOnboarding() {
+            // Mark onboarding as completed
+            localStorage.setItem('onboardingCompleted', 'true');
+            
+            // Check if profile is completed
+            const profileCompleted = localStorage.getItem('profileCompleted');
+            
+            if (profileCompleted === 'false') {
+                // New user - go to dashboard (they'll see the completion prompt there)
+                window.location.href = 'dashboard.html';
+            } else {
+                // Returning user - go to post-registration
+                window.location.href = 'post-registration.html';
+            }
+        }
+    </script>
+</body>
+</html>

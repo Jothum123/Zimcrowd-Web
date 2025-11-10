@@ -23,45 +23,20 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
 </head>
 <body>
-    <!-- Animated Background Circles -->
-    <div class="animated-background">
-        <div class="circle-container">
-            <div class="dotted-circle"></div>
-            <div class="dotted-circle"></div>
-            <div class="dotted-circle"></div>
-            <div class="dotted-circle"></div>
-            <div class="dotted-circle"></div>
-        </div>
-
-        <!-- Animated Solid Shapes -->
-        <div class="solid-shapes">
-            <!-- Floating Squares -->
-            <div class="solid-shape square" style="top: 15%; left: 20%; animation: float 8s ease-in-out infinite;"></div>
-            <div class="solid-shape square" style="top: 70%; right: 15%; animation: float 10s ease-in-out infinite reverse;"></div>
-            <div class="solid-shape square" style="bottom: 20%; left: 70%; animation: float 12s ease-in-out infinite;"></div>
-
-            <!-- Pulsing Circles -->
-            <div class="solid-shape circle-shape" style="top: 25%; right: 25%; animation: pulse 6s ease-in-out infinite;"></div>
-            <div class="solid-shape circle-shape" style="bottom: 35%; left: 25%; animation: pulse 8s ease-in-out infinite reverse;"></div>
-
-            <!-- Bouncing Triangles -->
-            <div class="solid-shape triangle" style="top: 40%; left: 5%; animation: bounce 7s ease-in-out infinite;"></div>
-            <div class="solid-shape triangle" style="top: 60%; right: 70%; animation: bounce 9s ease-in-out infinite reverse;"></div>
-
-            <!-- Rotating Hexagons -->
-            <div class="solid-shape hexagon" style="top: 80%; left: 40%; animation: rotate 15s linear infinite;"></div>
-            <div class="solid-shape hexagon" style="top: 30%; right: 5%; animation: rotate 20s linear infinite reverse;"></div>
-        </div>
+    <!-- Animated Ripple Background -->
+    <div class='ripple-background'>
+        <div class='circle xxlarge shade1'></div>
+        <div class='circle xlarge shade2'></div>
+        <div class='circle large shade3'></div>
+        <div class='circle medium shade4'></div>
+        <div class='circle small shade5'></div>
     </div>
 
     <!-- Navigation Bar -->
     <nav class="navigation">
         <div class="nav-container">
             <div class="logo">
-                <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
-                    <circle cx="14.76" cy="14.5" r="14.5" fill="#000000"/>
-                    <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#000000">ZimCrowd</text>
-                </svg>
+                <img src="assets/images/zimcrowd_light.png" alt="ZimCrowd Logo">
             </div>
             <div class="nav-links">
                 <a href="index.html#lend">Lend</a>
@@ -74,6 +49,7 @@
                     </div>
                 </div>
                 <a href="kairo-ai.html">Kairo AI</a>
+                <a href="login.html" class="btn-secondary">Login</a>
                 <a href="index.html#download-app" class="btn-tertiary">Download App</a>
             </div>
             <!-- Mobile Menu Button -->
@@ -91,10 +67,7 @@
         <div class="mobile-menu-content">
             <div class="mobile-menu-header">
                 <div class="mobile-logo">
-                    <svg width="160" height="26" viewBox="0 0 180 29" fill="none">
-                        <circle cx="13" cy="13" r="13" fill="#38e07b"/>
-                        <text x="35" y="19" font-family="Space Grotesk" font-size="16" font-weight="600" fill="#000000">ZimCrowd</text>
-                    </svg>
+                    <img src="assets/images/zimcrowd_light.png" alt="ZimCrowd Logo">
                 </div>
                 <button class="mobile-menu-close" aria-label="Close menu">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -131,6 +104,10 @@
                 <a href="kairo-ai.html" class="mobile-menu-link">
                     <span class="link-icon">🤖</span>
                     <span class="link-text">Kairo AI</span>
+                </a>
+                <a href="login.html" class="mobile-menu-link">
+                    <span class="link-icon">🔐</span>
+                    <span class="link-text">Login</span>
                 </a>
                 <div class="mobile-menu-divider"></div>
                 <a href="index.html#download-app" class="mobile-menu-cta">
@@ -171,7 +148,7 @@
             </div>
             <div class="header-image">
                 <!-- Hero image -->
-                <img src="images/Gemini_Generated_Image_qycesxqycesxqyce.png" alt="ZimCrowd Finance Illustration" style="width: 100%; height: 100%; object-fit: cover;">
+                <img src="assets/images/Gemini_Generated_Image_qycesxqycesxqyce.png" alt="ZimCrowd Finance Illustration" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
             </div>
 
             <!-- Animated Messages -->
@@ -675,7 +652,7 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
     </div>
 
     <!-- Testimonials Section -->
-    <section class="section testimonials-section" id="testimonials" style="padding-bottom: 40px;">
+    <section class="section testimonials-section" id="testimonials">
         <div class="section-header">
             <div class="heading-wrapper">
                 <span class="label label-green">Testimonials</span>
@@ -737,7 +714,7 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
     </section>
 
     <!-- FAQ Section -->
-    <section class="section faq-section" id="faq" style="background-color: #f5f5f5; padding-bottom: 100px;">
+    <section class="section faq-section" id="faq">
         <div class="section-header">
             <div class="heading-wrapper">
                 <span class="label label-green">Frequently Asked Questions</span>
@@ -818,15 +795,15 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
                     <p style="color: black;">Join ZimCrowd's community-powered lending platform. Whether you need funds or want to help others, get started in minutes with fair, transparent terms.</p>
                     <div class="app-store-buttons">
                         <a href="#" class="app-store-btn google-play">
-                            <img src="images/GetItOnGooglePlay_Badge_Web_color_English.svg" alt="Get it on Google Play" style="height: 60px; width: auto;">
+                            <img src="assets/svg/GetItOnGooglePlay_Badge_Web_color_English.svg" alt="Get it on Google Play" style="height: 45px; width: 135px;">
                         </a>
                         <a href="#" class="app-store-btn app-store">
-                            <img src="images/Download_on_the_App_Store_Badge_US-UK_RGB_blk_092917.svg" alt="Download on the App Store" style="height: 60px; width: auto;">
+                            <img src="assets/svg/Download_on_the_App_Store_Badge_US-UK_RGB_blk_092917.svg" alt="Download on the App Store" style="height: 45px; width: 135px;">
                         </a>
                     </div>
                 </div>
                 <div class="cta-illustration">
-                    <img src="images/Gemini_Generated_Image_2wm05r2wm05r2wm0.png" alt="Young people Smiling on Phones" style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);">
+                    <img src="assets/images/Gemini_Generated_Image_2wm05r2wm05r2wm0.png" alt="Young people Smiling on Phones" style="width: 100%; height: 100%; object-fit: cover; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);">
                 </div>
             </div>
         </section>
@@ -835,10 +812,7 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
 
             <div class="footer-column brand">
                 <div class="footer-logo">
-                    <svg width="180" height="29" viewBox="0 0 180 29" fill="none">
-                        <circle cx="14.76" cy="14.5" r="14.5" fill="#FFFFFF"/>
-                        <text x="45" y="22" font-family="Space Grotesk" font-size="20" font-weight="500" fill="#FFFFFF">ZimCrowd</text>
-                    </svg>
+                    <img src="assets/images/Zimcrowd_Dark.png" alt="ZimCrowd Logo">
                 </div>
                 <p>Fair, community-first lending. Borrow on your terms, invest with impact.</p>
 
@@ -850,7 +824,7 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
                 <h4 style="color: white;">Payment Method</h4>
                 <div style="margin-top: 20px;">
                     <a href="#" style="display: inline-block;">
-                        <img src="images/Paynow Badge-vector-hires LIGHT.svg" alt="PayNow" style="height: 120px; width: auto;">
+                        <img src="assets/svg/Paynow Badge-vector-hires LIGHT.svg" alt="PayNow" style="height: 120px; width: auto;">
                     </a>
                 </div>
             </div>
