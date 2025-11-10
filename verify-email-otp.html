@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Verify Email - ZimCrowd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* CSS Variables */
+        :root {
+            --color-green: #38e77b;
+            --color-black: #000000;
+            --color-white: #FFFFFF;
+        }
+
+        /* Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        /* Navigation Styles */
+        .navigation {
+            padding: 8px 100px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo img {
+            width: 180px;
+            height: auto;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            font-size: 14px;
+            font-weight: 500;
+            color: #000000;
+            text-decoration: none;
+        }
+
+        .nav-links a:hover {
+            color: var(--color-green);
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropbtn {
+            background: none;
+            border: none;
+            color: #000000;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-content {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: white;
+            min-width: 200px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            z-index: 1001;
+            margin-top: 8px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .dropdown:hover .dropdown-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-content a {
+            color: #000000;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: rgba(56, 231, 123, 0.05);
+            color: var(--color-green);
+        }
+
+        .btn-tertiary {
+            background: #000000;
+            color: white !important;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .hamburger-line {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background: #000000;
+            margin: 5px 0;
+            transition: 0.3s;
+        }
+
+        @media (max-width: 968px) {
+            .nav-links {
+                display: none;
+            }
+            .mobile-menu-btn {
+                display: block;
+            }
+            .navigation {
+                padding: 8px 20px;
+            }
+        }
+
+        /* Mobile Menu Styles */
+        .mobile-menu-drawer {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            background: white;
+            z-index: 2000;
+            transition: right 0.3s ease;
+        }
+
+        .mobile-menu-drawer.active {
+            right: 0;
+        }
+
+        .mobile-menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-menu-drawer.active ~ .mobile-menu-overlay,
+        .mobile-menu-drawer.active .mobile-menu-overlay {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .mobile-menu-content {
+            position: relative;
+            z-index: 2001;
+            background: white;
+            height: 100%;
+            padding: 20px;
+        }
+
+        .mobile-menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .mobile-menu-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .mobile-menu-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            color: #000000;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 5px;
+        }
+
+        .mobile-menu-link:hover {
+            background: rgba(56, 231, 123, 0.05);
+        }
+
+        .mobile-menu-cta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            background: #000000;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .mobile-menu-divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 20px 0;
+        }
+
+        /* Email Verification Page Styles */
+        .otp-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: url('assets/images/pexels-brett-sayles-3963829.jpg') center/cover no-repeat;
+            padding: 100px 20px 20px 20px;
+            position: relative;
+        }
+
+        .otp-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.85) 100%);
+            z-index: 0;
+        }
+
+        .otp-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(56, 231, 123, 0.4), 0 0 60px rgba(56, 231, 123, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(56, 231, 123, 0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .otp-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .otp-logo {
+            width: 120px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        .otp-header h1 {
+            color: white;
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .otp-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .otp-email {
+            color: #38e77b;
+            font-weight: 600;
+        }
+
+        .otp-form {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .otp-inputs {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .otp-input {
+            width: 60px;
+            height: 60px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .otp-input:focus {
+            outline: none;
+            border-color: #38e77b;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 3px rgba(56, 231, 123, 0.2);
+            transform: scale(1.05);
+        }
+
+        .otp-input.filled {
+            border-color: #38e77b;
+            background: rgba(56, 231, 123, 0.1);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            color: #0f172a;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(56, 231, 123, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .resend-section {
+            text-align: center;
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+
+        .resend-btn {
+            background: none;
+            border: none;
+            color: #38e77b;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 14px;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .resend-btn:hover {
+            color: #34d399;
+        }
+
+        .resend-btn:disabled {
+            color: rgba(255, 255, 255, 0.5);
+            cursor: not-allowed;
+            text-decoration: none;
+        }
+
+        .timer {
+            color: #38e77b;
+            font-weight: 600;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            color: #fca5a5;
+            text-align: center;
+            display: none;
+            font-size: 14px;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .otp-card {
+                padding: 30px 25px;
+                margin: 20px;
+            }
+
+            .otp-header h1 {
+                font-size: 28px;
+            }
+
+            .otp-input {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+
+            .otp-inputs {
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navigation">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="assets/images/zimcrowd_light.png" alt="ZimCrowd Logo">
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html#lend">Lend</a>
+                <a href="index.html#borrow">Borrow</a>
+                <div class="dropdown">
+                    <button class="dropbtn">Market <i class="fas fa-chevron-down"></i></button>
+                    <div class="dropdown-content">
+                        <a href="primary-market.html">Primary Market</a>
+                        <a href="secondary-market.html">Secondary Market</a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html">Kairo AI</a>
+                <a href="index.html#download-app" class="btn-tertiary">Download App</a>
+            </div>
+            <button class="mobile-menu-btn" aria-label="Toggle menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu-drawer">
+        <div class="mobile-menu-overlay"></div>
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <div class="mobile-logo">
+                    <img src="assets/images/zimcrowd_light.png" alt="ZimCrowd Logo">
+                </div>
+                <button class="mobile-menu-close" aria-label="Close menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mobile-menu-links">
+                <a href="index.html#lend" class="mobile-menu-link">
+                    <span class="link-icon">💰</span>
+                    <span class="link-text">Lend</span>
+                </a>
+                <a href="index.html#borrow" class="mobile-menu-link">
+                    <span class="link-icon">🤝</span>
+                    <span class="link-text">Borrow</span>
+                </a>
+                <div class="mobile-menu-dropdown">
+                    <div class="mobile-menu-link dropdown-toggle">
+                        <span class="link-icon">📈</span>
+                        <span class="link-text">Market</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="mobile-dropdown-content">
+                        <a href="primary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">📊</span>
+                            <span class="link-text">Primary Market</span>
+                        </a>
+                        <a href="secondary-market.html" class="mobile-menu-link submenu">
+                            <span class="link-icon">🔄</span>
+                            <span class="link-text">Secondary Market</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="kairo-ai.html" class="mobile-menu-link">
+                    <span class="link-icon">🤖</span>
+                    <span class="link-text">Kairo AI</span>
+                </a>
+                <div class="mobile-menu-divider"></div>
+                <a href="index.html#download-app" class="mobile-menu-cta">
+                    <span class="cta-icon">📱</span>
+                    <span class="cta-text">Download App</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Verification Container -->
+    <div class="otp-container">
+        <div class="otp-card">
+            <div class="otp-header">
+                <img src="assets/images/Zimcrowd_Dark.png" alt="ZimCrowd" class="otp-logo">
+                <h1 style="color: white !important;">Verify Your Email</h1>
+                <p class="otp-subtitle" style="color: rgba(255, 255, 255, 0.9) !important;">
+                    We've sent a 6-digit code to <span class="otp-email" id="userEmail">your email</span>. Please enter it below to continue.
+                </p>
+            </div>
+
+            <div class="error-message" id="errorMessage">
+                Invalid OTP code. Please try again.
+            </div>
+
+            <form class="otp-form" id="otpForm">
+                <div class="otp-inputs">
+                    <input type="text" maxlength="1" class="otp-input" id="otp1" autocomplete="off">
+                    <input type="text" maxlength="1" class="otp-input" id="otp2" autocomplete="off">
+                    <input type="text" maxlength="1" class="otp-input" id="otp3" autocomplete="off">
+                    <input type="text" maxlength="1" class="otp-input" id="otp4" autocomplete="off">
+                    <input type="text" maxlength="1" class="otp-input" id="otp5" autocomplete="off">
+                    <input type="text" maxlength="1" class="otp-input" id="otp6" autocomplete="off">
+                </div>
+
+                <button type="submit" class="submit-btn" id="verifyBtn">
+                    <span id="verifyText">Verify Code</span>
+                    <div id="verifySpinner" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                </button>
+            </form>
+
+            <div class="resend-section">
+                <span style="color: rgba(255, 255, 255, 0.9) !important;">Didn't receive the code?</span>
+                <button class="resend-btn" id="resendBtn">Resend Code</button>
+                <span id="timerSection" style="display: none;">
+                    <span style="color: rgba(255, 255, 255, 0.9) !important;">Resend in</span> <span class="timer" id="timer">60</span>s
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mobile Menu Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const mobileMenuDrawer = document.querySelector('.mobile-menu-drawer');
+            const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
+            const mobileMenuClose = document.querySelector('.mobile-menu-close');
+            const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
+
+            function toggleMobileMenu() {
+                mobileMenuDrawer.classList.toggle('active');
+                document.body.style.overflow = mobileMenuDrawer.classList.contains('active') ? 'hidden' : '';
+            }
+
+            function closeMobileMenu() {
+                mobileMenuDrawer.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            if (mobileMenuOverlay) mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+            if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeMobileMenu);
+
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && mobileMenuDrawer.classList.contains('active')) {
+                    closeMobileMenu();
+                }
+            });
+        });
+
+        // Email OTP Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            const otpForm = document.getElementById('otpForm');
+            const verifyBtn = document.getElementById('verifyBtn');
+            const verifyText = document.getElementById('verifyText');
+            const verifySpinner = document.getElementById('verifySpinner');
+            const errorMessage = document.getElementById('errorMessage');
+            const resendBtn = document.getElementById('resendBtn');
+            const timerSection = document.getElementById('timerSection');
+            const timerDisplay = document.getElementById('timer');
+            const userEmailDisplay = document.getElementById('userEmail');
+
+            // Get email from URL params or localStorage
+            const urlParams = new URLSearchParams(window.location.search);
+            const email = urlParams.get('email') || localStorage.getItem('resetEmail') || localStorage.getItem('verificationEmail') || 'your email';
+            const tempToken = urlParams.get('token') || localStorage.getItem('tempToken');
+            const verificationType = urlParams.get('type') || 'email-signup';
+
+            // Display the email (prioritize URL param to ensure correct email is shown)
+            userEmailDisplay.textContent = urlParams.get('email') || email;
+
+            // Auto-focus first input
+            otpInputs[0].focus();
+
+            // Handle OTP input
+            otpInputs.forEach((input, index) => {
+                input.addEventListener('input', function(e) {
+                    const value = e.target.value;
+
+                    // Only allow numbers
+                    if (!/^\d*$/.test(value)) {
+                        e.target.value = '';
+                        return;
+                    }
+
+                    // Add filled class
+                    if (value) {
+                        e.target.classList.add('filled');
+                    } else {
+                        e.target.classList.remove('filled');
+                    }
+
+                    // Move to next input
+                    if (value && index < otpInputs.length - 1) {
+                        otpInputs[index + 1].focus();
+                    }
+
+                    // Auto-submit when all filled
+                    if (index === otpInputs.length - 1 && value) {
+                        const allFilled = Array.from(otpInputs).every(input => input.value);
+                        if (allFilled) {
+                            setTimeout(() => otpForm.dispatchEvent(new Event('submit')), 300);
+                        }
+                    }
+                });
+
+                // Handle backspace
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        otpInputs[index - 1].focus();
+                        otpInputs[index - 1].value = '';
+                        otpInputs[index - 1].classList.remove('filled');
+                    }
+                });
+
+                // Handle paste
+                input.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const pastedData = e.clipboardData.getData('text').slice(0, 6);
+                    const digits = pastedData.match(/\d/g);
+
+                    if (digits) {
+                        digits.forEach((digit, i) => {
+                            if (otpInputs[i]) {
+                                otpInputs[i].value = digit;
+                                otpInputs[i].classList.add('filled');
+                            }
+                        });
+
+                        const lastFilledIndex = Math.min(digits.length - 1, otpInputs.length - 1);
+                        otpInputs[lastFilledIndex].focus();
+                    }
+                });
+            });
+
+            // Handle form submission
+            otpForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                errorMessage.classList.remove('show');
+
+                // Get OTP value
+                const otp = Array.from(otpInputs).map(input => input.value).join('');
+
+                if (otp.length !== 6) {
+                    errorMessage.textContent = 'Please enter a complete 6-digit code';
+                    errorMessage.classList.add('show');
+                    return;
+                }
+
+                // Show loading state
+                verifyBtn.disabled = true;
+                verifyText.style.display = 'none';
+                verifySpinner.style.display = 'inline-block';
+
+                try {
+                    // Make API call to backend (auto-detect environment)
+                    const API_URL = window.location.hostname === 'localhost'
+                        ? 'http://localhost:5003'
+                        : 'https://zimcrowd-backend-qsvfl2nqu-jojola.vercel.app';
+
+                    let endpoint, requestBody;
+
+                    if (verificationType === 'email-signup') {
+                        endpoint = '/api/email-auth/verify-email-signup';
+                        requestBody = {
+                            tempToken: tempToken,
+                            otp: otp
+                        };
+                    } else {
+                        // For password reset or other types
+                        endpoint = '/api/email-auth/verify-email-otp';
+                        requestBody = {
+                            email: email,
+                            otp: otp,
+                            type: verificationType
+                        };
+                    }
+
+                    const response = await fetch(`${API_URL}${endpoint}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        if (verificationType === 'email-signup') {
+                            // Successful signup - redirect to onboarding
+                            localStorage.setItem('isAuthenticated', 'true');
+                            localStorage.setItem('onboardingCompleted', 'false');
+                            localStorage.setItem('authToken', data.token || '');
+                            localStorage.setItem('userData', JSON.stringify(data.user || {}));
+                            window.location.href = 'onboarding.html';
+                        } else if (verificationType === 'reset') {
+                            // Password reset - redirect to reset password page
+                            window.location.href = `reset-password.html?token=${otp}&email=${encodeURIComponent(email)}`;
+                        } else {
+                            // General success - redirect to login
+                            window.location.href = 'login.html';
+                        }
+                    } else {
+                        // Show error
+                        errorMessage.textContent = data.message || 'Invalid OTP code';
+                        errorMessage.classList.add('show');
+                        verifyBtn.disabled = false;
+                        verifyText.style.display = 'inline';
+                        verifySpinner.style.display = 'none';
+
+                        // Clear inputs
+                        otpInputs.forEach(input => {
+                            input.value = '';
+                            input.classList.remove('filled');
+                        });
+                        otpInputs[0].focus();
+                    }
+                } catch (error) {
+                    console.error('Email OTP verification error:', error);
+                    errorMessage.textContent = 'Network error. Please try again.';
+                    errorMessage.classList.add('show');
+                    verifyBtn.disabled = false;
+                    verifyText.style.display = 'inline';
+                    verifySpinner.style.display = 'none';
+                }
+            });
+
+            // Resend functionality
+            let resendTimer;
+            let timeLeft = 60;
+
+            function startResendTimer() {
+                resendBtn.style.display = 'none';
+                timerSection.style.display = 'inline';
+                timeLeft = 60;
+                timerDisplay.textContent = timeLeft;
+
+                resendTimer = setInterval(() => {
+                    timeLeft--;
+                    timerDisplay.textContent = timeLeft;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(resendTimer);
+                        resendBtn.style.display = 'inline';
+                        timerSection.style.display = 'none';
+                    }
+                }, 1000);
+            }
+
+            resendBtn.addEventListener('click', async function() {
+                try {
+                    const API_URL = window.location.hostname === 'localhost'
+                        ? 'http://localhost:5003'
+                        : 'https://zimcrowd-backend-qsvfl2nqu-jojola.vercel.app';
+
+                    const response = await fetch(`${API_URL}/api/email-auth/resend-email-otp`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            purpose: verificationType === 'email-signup' ? 'signup' : verificationType
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        startResendTimer();
+
+                        // Show brief success message
+                        const originalText = resendBtn.textContent;
+                        resendBtn.textContent = 'Code Sent!';
+                        setTimeout(() => {
+                            resendBtn.textContent = originalText;
+                        }, 2000);
+                    } else {
+                        errorMessage.textContent = data.message || 'Failed to resend code';
+                        errorMessage.classList.add('show');
+                    }
+                } catch (error) {
+                    console.error('Resend error:', error);
+                    errorMessage.textContent = 'Network error. Please try again.';
+                    errorMessage.classList.add('show');
+                }
+            });
+
+            // Start timer on page load
+            startResendTimer();
+        });
+    </script>
+</body>
+</html>

@@ -354,19 +354,119 @@
             text-decoration: underline;
         }
 
+        .signup-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .tab-btn.active {
+            background: var(--color-green);
+            color: white;
+            box-shadow: 0 4px 12px rgba(56, 224, 123, 0.3);
+        }
+
+        .tab-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: rgba(255, 255, 255, 0.1);
+            color: #666;
+        }
+
+        .tab-btn.disabled:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #666;
+        }
+
+        .tab-content {
+            transition: all 0.3s ease;
+        }
+
+        .form-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .form-tab-btn {
+            flex: 1;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-tab-btn.active {
+            background: var(--color-green);
+            color: white;
+            box-shadow: 0 4px 12px rgba(56, 224, 123, 0.3);
+        }
+
+        .form-tab-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+            color: #e2e8f0;
+        }
+
+        .form-content {
+            display: none;
+        }
+
+        .form-content.active {
+            display: block;
+        }
+
         .error-message {
             background: rgba(239, 68, 68, 0.1);
             border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #ef4444;
-            padding: 12px 16px;
-            border-radius: 8px;
+            color: #fca5a5;
+            padding: 16px 20px;
+            border-radius: 12px;
             font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 24px;
             display: none;
-            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
         }
 
-        .error-message.show {
-            display: block;
+        .success-message {
+            background: rgba(56, 224, 123, 0.1);
+            border: 1px solid rgba(56, 224, 123, 0.3);
+            color: #4ade80;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 24px;
+            display: none;
+            backdrop-filter: blur(10px);
         }
 
         @media (max-width: 968px) {
@@ -427,11 +527,19 @@
                 </a>
             </div>
             <div class="form-title">Create Account</div>
-            <div class="form-subtitle">Join thousands of Zimbabweans building the future</div>
+            <div class="form-subtitle">Join thousands of Zimbabweans with secure email or phone verification - enter either email or phone number</div>
+
+            <!-- Form Type Tabs -->
+            <div class="form-tabs">
+                <button type="button" class="form-tab-btn active" data-form="signup">📝 Sign Up</button>
+                <button type="button" class="form-tab-btn" data-form="reset">🔑 Reset Password</button>
+            </div>
 
             <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
 
-            <form id="signupForm">
+            <!-- Signup Form -->
+            <form id="signupForm" class="form-content active">
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">First Name <span class="required">*</span></label>
@@ -443,21 +551,30 @@
                     </div>
                 </div>
 
+                <!-- Unified Contact Field -->
                 <div class="form-group">
-                    <label class="form-label">Email Address <span class="optional">(Email OR Phone required)</span></label>
-                    <input type="email" class="form-input" id="email" placeholder="tendai@example.com">
-                    <div class="field-hint">📧 Choose email for email verification</div>
-                    <div class="verification-method" id="emailMethod">
-                        ✅ Email verification selected - You'll receive a verification code via email
-                    </div>
+                    <label class="form-label">Email or Phone Number <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="contact" placeholder="tendai@example.com or +263 77 123 4567" required>
+                    <div class="field-hint" id="contactHint">📧 Enter email address or 📱 phone number with country code</div>
+                    <div class="verification-method" id="verificationMethod"></div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Phone Number <span class="optional">(Email OR Phone required)</span></label>
-                    <input type="tel" class="form-input" id="phone" placeholder="+263 77 123 4567">
-                    <div class="field-hint">📱 Choose phone for SMS verification</div>
-                    <div class="verification-method" id="phoneMethod">
-                        ✅ SMS verification selected - You'll receive a verification code via SMS
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Password <span class="required">*</span></label>
+                        <div class="input-with-icon">
+                            <input type="password" class="form-input" id="password" placeholder="Create a strong password" required>
+                            <i class="fas fa-eye input-icon" id="togglePassword" onclick="togglePasswordVisibility()"></i>
+                        </div>
+                        <div class="field-hint">Must be 8+ characters with uppercase, lowercase, and number</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password <span class="required">*</span></label>
+                        <div class="input-with-icon">
+                            <input type="password" class="form-input" id="confirmPassword" placeholder="Re-enter your password" required>
+                            <i class="fas fa-eye input-icon" id="toggleConfirmPassword" onclick="toggleConfirmPasswordVisibility()"></i>
+                        </div>
                     </div>
                 </div>
 
@@ -487,44 +604,7 @@
                             <option value="Masvingo">Masvingo</option>
                             <option value="Chinhoyi">Chinhoyi</option>
                             <option value="Marondera">Marondera</option>
-                            <option value="Norton">Norton</option>
-                            <option value="Chegutu">Chegutu</option>
-                            <option value="Bindura">Bindura</option>
-                            <option value="Zvishavane">Zvishavane</option>
-                            <option value="Victoria Falls">Victoria Falls</option>
-                            <option value="Hwange">Hwange</option>
-                            <option value="Redcliff">Redcliff</option>
-                            <option value="Rusape">Rusape</option>
-                            <option value="Chiredzi">Chiredzi</option>
-                            <option value="Kariba">Kariba</option>
-                            <option value="Karoi">Karoi</option>
-                            <option value="Gokwe">Gokwe</option>
-                            <option value="Shurugwi">Shurugwi</option>
-                            <option value="Plumtree">Plumtree</option>
-                            <option value="Beitbridge">Beitbridge</option>
-                            <option value="Triangle">Triangle</option>
-                            <option value="Banket">Banket</option>
-                            <option value="Shamva">Shamva</option>
-                            <option value="Mazowe">Mazowe</option>
-                            <option value="Mvurwi">Mvurwi</option>
-                            <option value="Concession">Concession</option>
                         </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Password <span class="required">*</span></label>
-                    <div class="input-with-icon">
-                        <input type="password" class="form-input" id="password" placeholder="Create a strong password" required>
-                        <i class="fas fa-eye input-icon" id="togglePassword" onclick="togglePasswordVisibility()"></i>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Confirm Password <span class="required">*</span></label>
-                    <div class="input-with-icon">
-                        <input type="password" class="form-input" id="confirmPassword" placeholder="Re-enter your password" required>
-                        <i class="fas fa-eye input-icon" id="toggleConfirmPassword" onclick="toggleConfirmPasswordVisibility()"></i>
                     </div>
                 </div>
 
@@ -535,14 +615,32 @@
                     </label>
                 </div>
 
-                <div class="checkbox-group">
-                    <input type="checkbox" id="marketing">
-                    <label class="checkbox-label" for="marketing">
-                        Send me updates about new features and promotions
-                    </label>
+                <button type="submit" class="submit-btn" id="signupBtn">📨 Send Verification Code</button>
+            </form>
+
+            <!-- Password Reset Form -->
+            <form id="resetForm" class="form-content">
+                <!-- Reset Method Tabs -->
+                <div class="signup-tabs">
+                    <button type="button" class="tab-btn active" data-tab="reset-email">📧 Email Reset</button>
+                    <button type="button" class="tab-btn" data-tab="reset-phone">📱 Phone Reset</button>
                 </div>
 
-                <button type="submit" class="submit-btn">Create Account</button>
+                <!-- Email Reset Fields -->
+                <div class="form-group">
+                    <label class="form-label">Email Address <span class="required">*</span></label>
+                    <input type="email" class="form-input" id="resetEmail" placeholder="tendai@example.com" required>
+                    <div class="field-hint">📧 Enter your registered email address</div>
+                </div>
+
+                <!-- Phone Reset Fields -->
+                <div class="form-group" style="display: none;">
+                    <label class="form-label">Phone Number <span class="required">*</span></label>
+                    <input type="tel" class="form-input" id="resetPhone" placeholder="+263 77 123 4567">
+                    <div class="field-hint">📱 Enter your registered phone number</div>
+                </div>
+
+                <button type="submit" class="submit-btn">🔑 Send Reset Code</button>
             </form>
 
             <div class="login-link">
@@ -553,43 +651,163 @@
 
     <script>
         // API Configuration
-        const API_URL = window.location.hostname === 'localhost' 
+        const API_URL = window.location.hostname === 'localhost'
             ? 'http://localhost:5003'
-            : 'https://zimcrowd-backend-qiapq9wbe-jojola.vercel.app';
+            : 'https://zimcrowd-backend-qsvfl2nqu-jojola.vercel.app';
 
-        // Show verification method based on input
-        document.getElementById('email').addEventListener('input', function() {
-            const emailMethod = document.getElementById('emailMethod');
-            const phoneMethod = document.getElementById('phoneMethod');
-            const phoneInput = document.getElementById('phone');
-            
-            if (this.value.trim()) {
-                emailMethod.classList.add('show');
-                phoneMethod.classList.remove('show');
-                phoneInput.value = ''; // Clear phone when email is entered
-            } else {
-                emailMethod.classList.remove('show');
-            }
+        let currentSignupMethod = 'email'; // Default, will be auto-detected
+        let currentResetMethod = 'email';
+        document.addEventListener('DOMContentLoaded', function() {
+            // Form tab switching
+            const formTabBtns = document.querySelectorAll('.form-tab-btn');
+            const formContents = document.querySelectorAll('.form-content');
+
+            formTabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const formType = this.dataset.form;
+
+                    // Update active tab
+                    formTabBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Show/hide forms
+                    formContents.forEach(content => {
+                        content.classList.remove('active');
+                    });
+
+                    document.getElementById(formType + 'Form').classList.add('active');
+
+                    // Clear any messages
+                    hideError();
+                    hideSuccess();
+                });
+            });
+
+            // Contact field input detection
+            const contactField = document.getElementById('contact');
+            const contactHint = document.getElementById('contactHint');
+            const verificationMethod = document.getElementById('verificationMethod');
+            const signupBtn = document.getElementById('signupBtn');
+
+            contactField.addEventListener('input', function() {
+                const value = this.value.trim();
+                const detectedMethod = detectContactMethod(value);
+
+                if (detectedMethod === 'email') {
+                    contactHint.innerHTML = '📧 Email address detected - OTP will be sent via email';
+                    verificationMethod.innerHTML = 'Verification will be sent to your email inbox';
+                    verificationMethod.classList.add('show');
+                    signupBtn.textContent = '📧 Send Email Verification';
+                    currentSignupMethod = 'email';
+                } else if (detectedMethod === 'phone') {
+                    contactHint.innerHTML = '📱 Phone number detected - OTP will be sent via SMS';
+                    verificationMethod.innerHTML = 'Verification will be sent as SMS to your phone';
+                    verificationMethod.classList.add('show');
+                    signupBtn.textContent = '📱 Send SMS Verification';
+                    currentSignupMethod = 'phone';
+                } else {
+                    contactHint.innerHTML = '📧 Enter email address or 📱 phone number with country code';
+                    verificationMethod.classList.remove('show');
+                    signupBtn.textContent = '📨 Send Verification Code';
+                    currentSignupMethod = 'unknown';
+                }
+            });
+
+            // Phone number formatting for reset form
+            document.getElementById('resetPhone').addEventListener('input', function(e) {
+                formatPhoneNumber(e.target);
+            });
+
+            // Reset method tab switching
+            const resetTabBtns = document.querySelectorAll('#resetForm .tab-btn');
+            const resetEmailField = document.getElementById('resetEmail');
+            const resetPhoneField = document.getElementById('resetPhone');
+            const resetEmailGroup = resetEmailField.parentElement;
+            const resetPhoneGroup = resetPhoneField.parentElement;
+
+            resetTabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tab = this.dataset.tab;
+
+                    // Update active tab
+                    resetTabBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Show/hide fields
+                    if (tab === 'reset-email') {
+                        resetEmailGroup.style.display = 'block';
+                        resetPhoneGroup.style.display = 'none';
+                        resetEmailField.required = true;
+                        resetPhoneField.required = false;
+                        resetPhoneField.value = '';
+                        currentResetMethod = 'email';
+                    } else {
+                        resetEmailGroup.style.display = 'none';
+                        resetPhoneGroup.style.display = 'block';
+                        resetEmailField.required = false;
+                        resetPhoneField.required = true;
+                        resetEmailField.value = '';
+                        currentResetMethod = 'phone';
+                    }
+
+                    // Clear any messages
+                    hideError();
+                    hideSuccess();
+                });
+            });
         });
 
-        document.getElementById('phone').addEventListener('input', function() {
-            const emailMethod = document.getElementById('emailMethod');
-            const phoneMethod = document.getElementById('phoneMethod');
-            const emailInput = document.getElementById('email');
-            
-            if (this.value.trim()) {
-                phoneMethod.classList.add('show');
-                emailMethod.classList.remove('show');
-                emailInput.value = ''; // Clear email when phone is entered
-            } else {
-                phoneMethod.classList.remove('show');
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            successDiv.style.display = 'none';
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 8000);
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            errorDiv.style.display = 'none';
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+        }
+
+        // Hide messages
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function hideSuccess() {
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        // Password validation
+        function validatePassword(password) {
+            if (password.length < 8) {
+                return 'Password must be at least 8 characters long';
             }
-        });
+
+            const hasUpperCase = /[A-Z]/.test(password);
+            const hasLowerCase = /[a-z]/.test(password);
+            const hasNumber = /\d/.test(password);
+
+            if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+                return 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
+            }
+
+            return null;
+        }
 
         // Phone number formatting
-        document.getElementById('phone').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            
+        function formatPhoneNumber(input) {
+            let value = input.value.replace(/\D/g, '');
+
             if (value.startsWith('263')) {
                 // Zimbabwe format: +263 77 123 4567
                 if (value.length <= 12) {
@@ -600,15 +818,15 @@
                 value = value.substring(0, 10);
                 value = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
             }
-            
-            e.target.value = value;
-        });
+
+            input.value = value;
+        }
 
         // Password visibility toggles
         function togglePasswordVisibility() {
             const passwordInput = document.getElementById('password');
             const toggleIcon = document.getElementById('togglePassword');
-            
+
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
                 toggleIcon.classList.remove('fa-eye');
@@ -623,7 +841,7 @@
         function toggleConfirmPasswordVisibility() {
             const confirmPasswordInput = document.getElementById('confirmPassword');
             const toggleIcon = document.getElementById('toggleConfirmPassword');
-            
+
             if (confirmPasswordInput.type === 'password') {
                 confirmPasswordInput.type = 'text';
                 toggleIcon.classList.remove('fa-eye');
@@ -635,35 +853,48 @@
             }
         }
 
-        // Form submission with smart routing
+        // Detect if input is email or phone number
+        function detectContactMethod(value) {
+            if (!value) return 'unknown';
+
+            // Check if it's an email (contains @ and looks like email)
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (emailRegex.test(value)) {
+                return 'email';
+            }
+
+            // Check if it's a phone number (starts with + or contains digits)
+            const phoneRegex = /^[\+]?[0-9\s\-\(\)]+$/;
+            if (phoneRegex.test(value) && (value.startsWith('+') || value.length >= 10)) {
+                return 'phone';
+            }
+
+            return 'unknown';
+        }
+
+        // Handle signup form submission
         document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            const errorMessage = document.getElementById('errorMessage');
-            errorMessage.classList.remove('show');
-
-            // Get form values
             const firstName = document.getElementById('firstName').value.trim();
             const lastName = document.getElementById('lastName').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const phone = document.getElementById('phone').value.trim();
+            const contact = document.getElementById('contact').value.trim();
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
+            const country = document.getElementById('country').value;
+            const city = document.getElementById('city').value;
             const termsAccepted = document.getElementById('terms').checked;
 
-            // Smart validation - require either email OR phone
-            if (!firstName || !lastName || !password || !confirmPassword) {
+            // Validation
+            if (!firstName || !lastName || !contact || !password || !confirmPassword || !country || !city) {
                 showError('Please fill in all required fields');
                 return;
             }
 
-            if (!email && !phone) {
-                showError('Please provide either an email address or phone number');
-                return;
-            }
-
-            if (email && phone) {
-                showError('Please provide either email OR phone number, not both');
+            // Detect contact method
+            const contactMethod = detectContactMethod(contact);
+            if (contactMethod === 'unknown') {
+                showError('Please enter a valid email address or phone number');
                 return;
             }
 
@@ -672,8 +903,9 @@
                 return;
             }
 
-            if (password.length < 8) {
-                showError('Password must be at least 8 characters long');
+            const passwordError = validatePassword(password);
+            if (passwordError) {
+                showError(passwordError);
                 return;
             }
 
@@ -682,22 +914,18 @@
                 return;
             }
 
-            // Determine verification method
-            const useEmail = email && email.length > 0;
-            const usePhone = phone && phone.length > 0;
-
             // Show loading state
-            const submitBtn = document.querySelector('.submit-btn');
+            const submitBtn = this.querySelector('.submit-btn');
             const originalText = submitBtn.textContent;
-            submitBtn.textContent = useEmail ? 'Sending Email...' : 'Sending SMS...';
+            submitBtn.textContent = contactMethod === 'email' ? '📧 Sending Email...' : '📱 Sending SMS...';
             submitBtn.disabled = true;
 
             try {
                 let response, data;
 
-                if (useEmail) {
+                if (contactMethod === 'email') {
                     // Email registration
-                    response = await fetch(`${API_URL}/api/auth/register`, {
+                    response = await fetch(`${API_URL}/api/email-auth/register-email`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -705,9 +933,10 @@
                         body: JSON.stringify({
                             firstName,
                             lastName,
-                            email,
-                            phone: '', // Empty phone for email registration
-                            password
+                            email: contact,
+                            password,
+                            country,
+                            city
                         })
                     });
                 } else {
@@ -720,8 +949,10 @@
                         body: JSON.stringify({
                             firstName,
                             lastName,
-                            phone,
-                            password
+                            phone: contact,
+                            password,
+                            country,
+                            city
                         })
                     });
                 }
@@ -729,26 +960,25 @@
                 data = await response.json();
 
                 if (data.success) {
-                    if (useEmail) {
-                        // Email verification flow
-                        localStorage.setItem('verificationUserId', data.userId);
-                        localStorage.setItem('verificationEmail', email);
-                        alert('Account created successfully! Please check your email for verification code.');
-                        window.location.href = `verify-otp.html?email=${encodeURIComponent(email)}&type=signup`;
-                    } else {
-                        // Phone verification flow
+                    if (contactMethod === 'email') {
+                        // Email verification - redirect to OTP page
                         localStorage.setItem('tempToken', data.tempToken);
-                        localStorage.setItem('verificationPhone', phone);
-                        alert('Verification code sent to your phone! Please enter the 6-digit code.');
-                        window.location.href = `verify-otp.html?phone=${encodeURIComponent(phone)}&type=phone-signup&token=${data.tempToken}`;
+                        localStorage.setItem('verificationEmail', contact);
+                        showSuccess('📧 OTP sent to email! Redirecting to verification...');
+                        setTimeout(() => {
+                            window.location.href = `verify-email-otp.html?email=${encodeURIComponent(contact)}&type=email-signup&token=${data.tempToken}`;
+                        }, 2000);
+                    } else {
+                        // Phone verification - redirect to OTP page
+                        localStorage.setItem('tempToken', data.tempToken);
+                        localStorage.setItem('verificationPhone', contact);
+                        showSuccess('📱 SMS sent! Redirecting to verification...');
+                        setTimeout(() => {
+                            window.location.href = `verify-otp.html?phone=${encodeURIComponent(contact)}&type=phone-signup&token=${data.tempToken}`;
+                        }, 2000);
                     }
                 } else {
-                    // Show error
-                    if (data.errors && data.errors.length > 0) {
-                        showError(data.errors.map(err => err.msg).join(', '));
-                    } else {
-                        showError(data.message || 'Registration failed. Please try again.');
-                    }
+                    showError(data.message || 'Registration failed. Please try again.');
                 }
             } catch (error) {
                 console.error('Registration error:', error);
@@ -759,19 +989,87 @@
             }
         });
 
-        function showError(message) {
-            const errorMessage = document.getElementById('errorMessage');
-            errorMessage.textContent = message;
-            errorMessage.classList.add('show');
-            
-            // Scroll to error
-            errorMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // Hide after 5 seconds
-            setTimeout(() => {
-                errorMessage.classList.remove('show');
-            }, 5000);
-        }
+        // Handle password reset form submission
+        document.getElementById('resetForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('resetEmail').value.trim();
+            const phone = document.getElementById('resetPhone').value.trim();
+
+            if (currentResetMethod === 'email' && !email) {
+                showError('Please enter your email address');
+                return;
+            }
+
+            if (currentResetMethod === 'phone' && !phone) {
+                showError('Please enter your phone number');
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = this.querySelector('.submit-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '🔑 Sending Code...';
+            submitBtn.disabled = true;
+
+            try {
+                let response, data;
+
+                if (currentResetMethod === 'email') {
+                    // Email password reset
+                    response = await fetch(`${API_URL}/api/email-auth/forgot-password-email`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            email
+                        })
+                    });
+                } else {
+                    // Phone password reset
+                    response = await fetch(`${API_URL}/api/phone-auth/forgot-password-phone`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            phone
+                        })
+                    });
+                }
+
+                data = await response.json();
+
+                if (data.success) {
+                    if (currentResetMethod === 'email') {
+                        // Email reset - redirect to verification
+                        // Clear old verification email from signup
+                        localStorage.removeItem('verificationEmail');
+                        localStorage.setItem('resetEmail', email);
+                        showSuccess('📧 Reset code sent to email! Redirecting to verification...');
+                        setTimeout(() => {
+                            window.location.href = `verify-email-otp.html?email=${encodeURIComponent(email)}&type=reset`;
+                        }, 2000);
+                    } else {
+                        // Phone reset - redirect to verification
+                        localStorage.setItem('resetPhone', phone);
+                        showSuccess('📱 Reset code sent! Redirecting to verification...');
+                        setTimeout(() => {
+                            window.location.href = `verify-otp.html?phone=${encodeURIComponent(phone)}&type=reset`;
+                        }, 2000);
+                    }
+                } else {
+                    showError(data.message || 'Failed to send reset code. Please try again.');
+                }
+            } catch (error) {
+                console.error('Password reset error:', error);
+                showError('Network error. Please check your connection and try again.');
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        });
     </script>
 </body>
 </html>
