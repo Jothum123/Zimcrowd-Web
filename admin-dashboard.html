@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zimcrowd Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="admin-styles.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Admin Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="admin-logo">
+                <h2>ZIMCROWD ADMIN</h2>
+                <p>Back Office System</p>
+            </div>
+            <ul class="admin-nav">
+                <li><a href="#overview" class="nav-link active"><i class="fas fa-chart-line"></i> Overview</a></li>
+                <li><a href="#users" class="nav-link"><i class="fas fa-users"></i> Users <span class="badge">12</span></a></li>
+                <li><a href="#loans" class="nav-link"><i class="fas fa-hand-holding-usd"></i> Loans <span class="badge">8</span></a></li>
+                <li><a href="#financial" class="nav-link"><i class="fas fa-dollar-sign"></i> Financial</a></li>
+                <li><a href="#risk" class="nav-link"><i class="fas fa-shield-alt"></i> Risk <span class="badge">3</span></a></li>
+                <li><a href="#reports" class="nav-link"><i class="fas fa-file-alt"></i> Reports</a></li>
+                <li><a href="dashboard.html"><i class="fas fa-arrow-left"></i> User Dashboard</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <div class="admin-header">
+                <h1>Admin Dashboard</h1>
+                <div class="admin-user">
+                    <span>Super Admin</span>
+                    <div class="avatar">AD</div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon green"><i class="fas fa-users"></i></div>
+                    <div class="stat-value">12,456</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue"><i class="fas fa-hand-holding-usd"></i></div>
+                    <div class="stat-value">$2.4M</div>
+                    <div class="stat-label">Active Loans</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple"><i class="fas fa-chart-pie"></i></div>
+                    <div class="stat-value">$1.8M</div>
+                    <div class="stat-label">Investments</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange"><i class="fas fa-dollar-sign"></i></div>
+                    <div class="stat-value">$450K</div>
+                    <div class="stat-label">Revenue</div>
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="section-card">
+                <h2>Recent Activity</h2>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Activity</th>
+                            <th>User</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>10:45 AM</td>
+                            <td>Loan Application</td>
+                            <td>John Doe</td>
+                            <td>$5,000</td>
+                            <td><span class="badge pending">Pending</span></td>
+                            <td><button class="btn-sm">Review</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

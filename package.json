@@ -1,6 +1,36 @@
 {
+  "name": "zimcrowd-supabase-backend",
+  "version": "1.0.0",
+  "description": "Backend API for ZimCrowd using Supabase",
+  "main": "backend-server.js",
+  "scripts": {
+    "start": "node backend-server.js",
+    "dev": "nodemon backend-server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "authentication",
+    "api",
+    "supabase",
+    "express"
+  ],
+  "author": "ZimCrowd",
+  "license": "MIT",
   "dependencies": {
-    "dotenv": "^17.2.3",
-    "nodemailer": "^7.0.10"
+    "@supabase/supabase-js": "^2.39.3",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-async-errors": "^3.1.1",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "validator": "^13.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "supabase": "^2.54.11"
   }
 }

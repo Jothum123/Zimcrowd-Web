@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reset Theme</title>
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #0f172a;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background: #1e293b;
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+        }
+        h1 {
+            color: #38e77b;
+            margin-bottom: 20px;
+        }
+        p {
+            margin-bottom: 30px;
+            color: #94a3b8;
+        }
+        .success {
+            color: #38e77b;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        a {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+        a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(56, 231, 123, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Theme Reset Complete!</h1>
+        <p class="success" id="status">✓ Dark mode has been set as default</p>
+        <p>Your dashboard will now display in dark mode.</p>
+        <a href="dashboard.html">Open Dashboard</a>
+    </div>
+    
+    <script>
+        // Clear any saved theme and set to dark
+        localStorage.removeItem('theme');
+        localStorage.setItem('theme', 'dark');
+        console.log('Theme reset to dark mode');
+    </script>
+</body>
+</html>
