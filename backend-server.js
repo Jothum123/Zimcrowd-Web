@@ -40,7 +40,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/phone', phoneAuthRoutes);
+app.use('/api/phone-auth', phoneAuthRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
