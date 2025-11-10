@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Set Auth Token</title>
+</head>
+<body>
+    <h1>Setting Authentication Token...</h1>
+    <p id="status">Please wait...</p>
+    
+    <script>
+        // Set the auth token
+        localStorage.setItem('zimcrowd_auth_token', 'test-token-12345');
+        
+        document.getElementById('status').innerHTML = 
+            'Auth token set!<br><br>' +
+            '<a href="dashboard.html" style="font-size: 20px; color: #38e77b;">Click here to open Dashboard</a>';
+    </script>
+</body>
+</html>

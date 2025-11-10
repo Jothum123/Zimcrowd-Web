@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>ZimCrowd - Start Here</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, var(--color-grey) 100%);
+            min-height: 100vh;
+        }
+
+        .start-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .welcome-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .welcome-header h1 {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--color-black);
+            margin-bottom: 20px;
+        }
+
+        .welcome-header p {
+            font-size: 20px;
+            color: #6b7280;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .zimcrowd-logo {
+            width: 120px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        .pages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .page-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .page-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .page-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .page-icon.home { background: rgba(56, 231, 123, 0.1); color: var(--color-green); }
+        .page-icon.login { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+        .page-icon.dashboard { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .page-icon.about { background: rgba(139, 69, 19, 0.1); color: #8b4513; }
+
+        .page-card h3 {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--color-black);
+            margin-bottom: 12px;
+        }
+
+        .page-card p {
+            color: #6b7280;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .quick-actions {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+            margin-bottom: 40px;
+        }
+
+        .quick-actions h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--color-black);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px 25px;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--color-black);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        .action-btn:hover {
+            background: var(--color-green);
+            color: white;
+            border-color: var(--color-green);
+            transform: translateY(-2px);
+        }
+
+        .action-btn i {
+            font-size: 20px;
+        }
+
+        .footer-note {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 14px;
+            padding: 20px;
+        }
+
+        .footer-note p {
+            margin: 5px 0;
+        }
+
+        .highlight {
+            color: var(--color-green);
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .welcome-header h1 {
+                font-size: 32px;
+            }
+
+            .pages-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-card {
+                padding: 20px;
+            }
+
+            .quick-actions {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="start-container">
+        <div class="welcome-header">
+            <h1>Welcome to ZimCrowd</h1>
+            <p>Your complete community lending platform. Download the app first, then access your dashboard.</p>
+        </div>
+
+        <div class="logo-section">
+            <img src="assets/images/zimcrowd_light.png" alt="ZimCrowd Logo" class="zimcrowd-logo">
+            <p style="font-size: 18px; color: var(--color-black); font-weight: 600;">Building Community Finance</p>
+        </div>
+
+        <div class="pages-grid">
+            <a href="index.html" class="page-card">
+                <div class="page-icon home">
+                    <i class="fas fa-home"></i>
+                </div>
+                <h3>Homepage</h3>
+                <p>Explore ZimCrowd's mission, features, and download the mobile app to get started.</p>
+            </a>
+
+            <a href="login.html" class="page-card">
+                <div class="page-icon login">
+                    <i class="fas fa-sign-in-alt"></i>
+                </div>
+                <h3>Login</h3>
+                <p>Access your dashboard after downloading the app and creating your account.</p>
+            </a>
+
+            <a href="dashboard.html" class="page-card">
+                <div class="page-icon dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                </div>
+                <h3>Dashboard</h3>
+                <p>Manage your loans, investments, wallet, transactions, and account settings in one place. Features professional glassmorphism design with smooth animations, isolated sections, and comprehensive investment overview with horizontal card layout.</p>
+            </a>
+
+            <a href="about-us.html" class="page-card">
+                <div class="page-icon about">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <h3>About Us</h3>
+                <p>Learn about our mission to democratize access to fair financial services.</p>
+            </a>
+        </div>
+
+        <div class="quick-actions">
+            <h2>Quick Start Guide</h2>
+            <div class="actions-grid">
+                <a href="index.html#download-app" class="action-btn">
+                    <i class="fas fa-mobile-alt"></i>
+                    <div>
+                        <strong>Step 1:</strong> Download the App
+                        <br><small>Get started with ZimCrowd</small>
+                    </div>
+                </a>
+
+                <a href="login.html" class="action-btn">
+                    <i class="fas fa-key"></i>
+                    <div>
+                        <strong>Step 2:</strong> Login to Dashboard
+                        <br><small>Use your app credentials</small>
+                    </div>
+                </a>
+
+                <a href="dashboard.html" class="action-btn">
+                    <i class="fas fa-chart-line"></i>
+                    <div>
+                        <strong>Step 3:</strong> Manage Your Finances
+                        <br><small>Loans, investments, wallet & more</small>
+                    </div>
+                </a>
+
+                <a href="help-center.html" class="action-btn">
+                    <i class="fas fa-question-circle"></i>
+                    <div>
+                        <strong>Need Help?</strong> Visit Help Center
+                        <br><small>Guides and support</small>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            <p><span class="highlight">💡 Tip:</span> Double-click this HTML file to open it directly in your browser.</p>
+            <p><span class="highlight">📱 Mobile:</span> This website is fully responsive and works great on all devices.</p>
+            <p><span class="highlight">🔄 Assets:</span> All images and SVGs are organized in the assets/ folder for easy management.</p>
+            <p><span class="highlight">✨ Professional:</span> Dashboard features glassmorphism design, smooth animations, professional table layouts, isolated sections, and comprehensive investment overview with horizontal card layout.</p>
+        </div>
+    </div>
+</body>
+</html>
