@@ -8,9 +8,13 @@ const path = require('path');
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const phoneAuthRoutes = require('./routes/phone-auth');
 
 // Import Supabase utilities
 const { supabase } = require('./utils/supabase-auth');
+
+// Import Twilio utilities
+const { testTwilioConnection } = require('./utils/twilio-service');
 
 const app = express();
 
@@ -36,6 +40,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/phone', phoneAuthRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -114,13 +119,24 @@ const testSupabaseConnection = async () => {
     }
 };
 
+// Test Twilio connection on startup
+const testTwilioConnectionOnStartup = async () => {
+    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+        await testTwilioConnection();
+    } else {
+        console.warn('⚠️  Twilio credentials not found - SMS features disabled');
+        console.warn('   Add TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER to enable SMS');
+    }
+};
+
 // Start server
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
     try {
-        // Test Supabase connection
+        // Test connections
         await testSupabaseConnection();
+        await testTwilioConnectionOnStartup();
 
         app.listen(PORT, () => {
             console.log(`
