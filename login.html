@@ -101,82 +101,33 @@
             font-weight: 400;
         }
 
-        .login-form-container {
-            padding: 60px 50px;
-            overflow-y: auto;
-            max-height: 100vh;
-        }
-
-        .back-to-home {
-            margin-bottom: 20px;
-        }
-
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: #94a3b8;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            padding: 8px 0;
-        }
-
-        .back-link:hover {
-            color: #38e07b;
-            transform: translateX(-2px);
-        }
-
-        .back-link i {
-            font-size: 12px;
-        }
-
-        .form-title {
-            font-size: 36px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            color: white;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            background-clip: text;
-            letter-spacing: -0.5px;
-            line-height: 1.2;
-        }
-
-        .form-subtitle {
-            color: #94a3b8;
-            margin-bottom: 48px;
-            font-size: 17px;
-            line-height: 1.5;
-            font-weight: 400;
-        }
-
         .login-form {
             display: flex;
             flex-direction: column;
             gap: 24px;
+            margin-bottom: 30px;
         }
 
         .form-group {
-            margin-bottom: 24px;
+            text-align: left;
         }
 
         .form-label {
             display: block;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             font-size: 14px;
             font-weight: 500;
-            color: #e2e8f0;
+            color: #374151;
             letter-spacing: 0.3px;
         }
 
         .form-input {
             width: 100%;
             padding: 16px 20px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
             border-radius: 12px;
-            color: white;
+            color: #191A23;
             font-size: 15px;
             font-family: 'Space Grotesk', sans-serif;
             font-weight: 400;
@@ -187,15 +138,15 @@
         .form-input:focus {
             outline: none;
             border-color: #38e07b;
-            background: rgba(255, 255, 255, 0.12);
+            background: white;
             box-shadow: 
-                0 0 0 3px rgba(56, 224, 123, 0.15),
-                0 4px 12px rgba(0, 0, 0, 0.1);
+                0 0 0 3px rgba(56, 224, 123, 0.1),
+                0 4px 12px rgba(56, 224, 123, 0.05);
             transform: translateY(-1px);
         }
 
         .form-input::placeholder {
-            color: rgba(255, 255, 255, 0.4);
+            color: #9ca3af;
         }
 
         .form-options {
@@ -212,14 +163,14 @@
         }
 
         .remember-me input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             accent-color: #38e07b;
         }
 
         .remember-me label {
             font-size: 14px;
-            color: #cbd5e1;
+            color: #6b7280;
             cursor: pointer;
         }
 
@@ -232,22 +183,22 @@
         }
 
         .forgot-password:hover {
-            color: #4ade80;
+            color: #22c55e;
             text-decoration: underline;
         }
 
         .login-btn {
             width: 100%;
-            padding: 18px 24px;
+            padding: 16px 24px;
             background: linear-gradient(135deg, #38e07b 0%, #22c55e 100%);
             border: none;
             border-radius: 12px;
-            color: #191A23;
+            color: white;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            margin: 32px 0 24px 0;
+            margin: 24px 0 16px 0;
             letter-spacing: 0.5px;
             text-transform: uppercase;
             position: relative;
@@ -270,11 +221,10 @@
         }
 
         .login-btn:hover {
-            transform: translateY(-3px);
+            transform: translateY(-2px);
             box-shadow: 
-                0 12px 40px rgba(56, 224, 123, 0.4),
+                0 10px 25px rgba(56, 224, 123, 0.3),
                 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-            background: linear-gradient(135deg, #4ade80 0%, #38e07b 100%);
         }
 
         .login-btn:disabled {
@@ -285,9 +235,9 @@
 
         .divider {
             text-align: center;
-            margin: 30px 0;
+            margin: 24px 0;
             position: relative;
-            color: #666;
+            color: #6b7280;
             font-size: 14px;
         }
 
@@ -298,23 +248,18 @@
             left: 0;
             right: 0;
             height: 1px;
-            background: rgba(255, 255, 255, 0.2);
+            background: #e5e7eb;
         }
 
         .divider span {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 0 15px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 0 12px;
             position: relative;
-            backdrop-filter: blur(10px);
         }
 
         .signup-prompt {
             text-align: center;
-            color: #94a3b8;
-            font-size: 15px;
-            font-weight: 400;
-            margin-top: 8px;
-            padding: 16px 0;
+            margin-top: 16px;
         }
 
         .signup-link {
@@ -322,164 +267,134 @@
             text-decoration: none;
             font-weight: 500;
             transition: all 0.3s ease;
+            font-size: 14px;
         }
 
         .signup-link:hover {
-            color: #4ade80;
+            color: #22c55e;
             text-decoration: underline;
         }
 
         .app-download-prompt {
-            background: rgba(56, 224, 123, 0.08);
-            border: 1px solid rgba(56, 224, 123, 0.25);
+            background: rgba(56, 224, 123, 0.05);
+            border: 1px solid rgba(56, 224, 123, 0.15);
             border-radius: 12px;
             padding: 20px;
-            margin-top: 30px;
+            margin: 20px 0;
             text-align: center;
         }
 
         .app-download-prompt h3 {
-            color: white;
-            margin-bottom: 10px;
+            color: #191A23;
+            margin-bottom: 8px;
             font-size: 16px;
         }
 
         .app-download-prompt p {
-            color: #cbd5e1;
+            color: #6b7280;
             font-size: 14px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .download-btn {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 12px 24px;
+            background: rgba(56, 224, 123, 0.1);
+            color: #38e07b;
+            padding: 10px 20px;
             border-radius: 8px;
             text-decoration: none;
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 500;
             display: inline-block;
             transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(56, 224, 123, 0.2);
         }
 
         .download-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(56, 224, 123, 0.2);
             transform: translateY(-1px);
         }
 
         .error-message {
             background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #fca5a5;
-            padding: 16px 20px;
-            border-radius: 12px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #dc2626;
+            padding: 12px 16px;
+            border-radius: 8px;
             font-size: 14px;
             font-weight: 500;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             display: none;
-            backdrop-filter: blur(10px);
         }
 
-        @media (max-width: 968px) {
+        @media (max-width: 480px) {
             .login-container {
-                grid-template-columns: 1fr;
+                padding: 30px 20px;
+                margin: 20px;
+                max-width: none;
             }
 
-            .login-branding {
-                padding: 40px 30px;
-            }
-
-            .brand-logo {
-                font-size: 36px;
-            }
-
-            .brand-tagline {
-                font-size: 18px;
-            }
-
-            .login-form-container {
-                padding: 40px 30px;
-            }
-
-            .form-title {
+            .login-header h1 {
                 font-size: 28px;
             }
-        }
 
-        @media (max-width: 640px) {
-            .login-form-container {
-                padding: 30px 20px;
+            .login-logo {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
             }
         }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <!-- Left Side - Branding -->
-        <div class="login-branding">
-            <div class="branding-content">
-                <a href="index.html" class="brand-logo-link">
-                    <div class="brand-logo">ZimCrowd</div>
-                </a>
-                <div class="brand-tagline">Welcome Back to ZimCrowd</div>
-                <p>Access your dashboard to manage your loans, investments, and account settings.</p>
-            </div>
+        <div class="login-header">
+            <div class="login-logo">ZC</div>
+            <h1>Welcome Back</h1>
+            <p class="login-subtitle">Sign in to your ZimCrowd account</p>
         </div>
 
-        <!-- Right Side - Login Form -->
-        <div class="login-form-container">
-            <div class="back-to-home">
-                <a href="index.html" class="back-link">
-                    <i class="fas fa-arrow-left"></i> Back to Home
-                </a>
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- Login Form -->
+        <form class="login-form" id="loginForm">
+            <div class="form-group">
+                <label class="form-label">Email or Phone Number</label>
+                <input type="text" class="form-input" id="emailOrPhone" placeholder="Enter your email or phone number" required>
             </div>
-            <div class="form-title">Welcome Back</div>
-            <div class="form-subtitle">Sign in to access your ZimCrowd dashboard</div>
 
-            <div class="error-message" id="errorMessage"></div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-input" id="password" placeholder="Enter your password" required>
+            </div>
 
-            <!-- Login Form -->
-            <form class="login-form" id="loginForm">
-                <div class="form-group">
-                    <label class="form-label">Email or Phone Number</label>
-                    <input type="text" class="form-input" id="emailOrPhone" placeholder="Enter your email or phone number" required>
+            <div class="form-options">
+                <div class="remember-me">
+                    <input type="checkbox" id="rememberMe" name="rememberMe">
+                    <label for="rememberMe">Remember me</label>
                 </div>
+                <a href="forgot-password.html" class="forgot-password">Forgot password?</a>
+            </div>
 
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" class="form-input" id="password" placeholder="Enter your password" required>
+            <button type="submit" class="login-btn" id="loginBtn">
+                <span id="loginText">Sign In</span>
+                <div id="loginSpinner" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
                 </div>
+            </button>
+        </form>
 
-                <div class="form-options">
-                    <div class="remember-me">
-                        <input type="checkbox" id="rememberMe" name="rememberMe">
-                        <label for="rememberMe">Remember me</label>
-                    </div>
-                    <a href="forgot-password.html" class="forgot-password">Forgot password?</a>
-                </div>
+        <div class="divider">
+            <span>or</span>
+        </div>
 
-                <button type="submit" class="login-btn" id="loginBtn">
-                    <span id="loginText">Sign In</span>
-                    <div id="loginSpinner" style="display: none;">
-                        <i class="fas fa-spinner fa-spin"></i>
-                    </div>
-                </button>
-            </form>
+        <div class="app-download-prompt">
+            <h3>New to ZimCrowd?</h3>
+            <p>Get started with borrowing and lending.</p>
+            <a href="signup.html" class="download-btn">Create Account</a>
+        </div>
 
-            <div class="divider">
-                <span>or</span>
-            </div>
-
-            <div class="app-download-prompt">
-                <h3>New to ZimCrowd?</h3>
-                <p>Download our mobile app to get started with borrowing and lending.</p>
-                <a href="index.html#download-app" class="download-btn">Download App</a>
-            </div>
-
-            <div class="signup-prompt">
-                Don't have an account? <a href="signup.html" class="signup-link">Sign up here</a>
-            </div>
+        <div class="signup-prompt">
+            <a href="index.html" class="signup-link">← Back to Home</a>
         </div>
     </div>
 
