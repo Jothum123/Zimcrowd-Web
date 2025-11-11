@@ -743,12 +743,15 @@
                 try {
                     // Make API call to backend (auto-detect environment)
                     
-                    // Choose the correct endpoint based on contact type
+                    // Choose the correct endpoint based on contact type and verification type
                     let endpoint;
                     if (contactType === 'email') {
                         endpoint = `${API_URL}/api/email-auth/verify-email-otp`;
                     } else if (contactType === 'phone') {
-                        endpoint = `${API_URL}/api/phone-auth/verify-phone-otp`;
+                        // Use different endpoint for signup vs password reset
+                        endpoint = verificationType === 'reset' 
+                            ? `${API_URL}/api/phone-auth/verify-phone-otp`
+                            : `${API_URL}/api/phone-auth/verify-phone-signup`;
                     } else {
                         endpoint = `${API_URL}/api/auth/verify-otp`;
                     }
@@ -758,12 +761,19 @@
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({
-                            [contactType === 'email' ? 'email' : contactType === 'phone' ? 'phone' : 'identifier']: contactValue,
-                            otp: otp,
-                            ...(contactType === 'email' ? { type: verificationType } : {}),
-                            ...(contactType === 'phone' ? { purpose: verificationType === 'reset' ? 'password_reset' : 'signup' } : {})
-                        })
+                        body: JSON.stringify(
+                            contactType === 'phone' && verificationType === 'signup'
+                            ? {
+                                tempToken: localStorage.getItem('tempToken'),
+                                otp: otp
+                              }
+                            : {
+                                [contactType === 'email' ? 'email' : contactType === 'phone' ? 'phone' : 'identifier']: contactValue,
+                                otp: otp,
+                                ...(contactType === 'email' ? { type: verificationType } : {}),
+                                ...(contactType === 'phone' ? { purpose: verificationType === 'reset' ? 'password_reset' : 'signup' } : {})
+                              }
+                        )
                     });
 
                     const data = await response.json();
@@ -839,12 +849,15 @@
                 resendBtn.textContent = 'Sending...';
 
                 try {
-                    // Choose the correct resend endpoint based on contact type
+                    // Choose the correct resend endpoint based on contact type and verification type
                     let resendEndpoint;
                     if (contactType === 'email') {
                         resendEndpoint = `${API_URL}/api/email-auth/resend-email-otp`;
                     } else if (contactType === 'phone') {
-                        resendEndpoint = `${API_URL}/api/phone-auth/resend-phone-otp`;
+                        // Use different endpoint for signup vs password reset
+                        resendEndpoint = verificationType === 'reset' 
+                            ? `${API_URL}/api/phone-auth/resend-phone-otp`
+                            : `${API_URL}/api/phone-auth/resend-phone-otp`; // Same endpoint, different purpose
                     } else {
                         resendEndpoint = `${API_URL}/api/auth/resend-otp`;
                     }
@@ -854,10 +867,17 @@
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({
-                            [contactType === 'email' ? 'email' : contactType === 'phone' ? 'phone' : 'identifier']: contactValue,
-                            ...(contactType === 'email' ? { type: verificationType } : { purpose: verificationType === 'reset' ? 'password_reset' : 'signup' })
-                        })
+                        body: JSON.stringify(
+                            contactType === 'phone' && verificationType === 'signup'
+                            ? {
+                                phone: contactValue,
+                                purpose: 'signup'
+                              }
+                            : {
+                                [contactType === 'email' ? 'email' : contactType === 'phone' ? 'phone' : 'identifier']: contactValue,
+                                ...(contactType === 'email' ? { type: verificationType } : { purpose: verificationType === 'reset' ? 'password_reset' : 'signup' })
+                              }
+                        )
                     });
 
                     const data = await response.json();
