@@ -915,6 +915,7 @@
                         // Email verification - redirect to OTP page
                         localStorage.setItem('tempToken', data.tempToken);
                         localStorage.setItem('verificationEmail', contact);
+                        localStorage.removeItem('verificationPhone'); // Clear phone to avoid conflicts
                         showSuccess('📧 OTP sent to email! Redirecting to verification...');
                         setTimeout(() => {
                             window.location.href = `verify-otp.html?email=${encodeURIComponent(contact)}&type=signup&token=${data.tempToken}`;
@@ -923,6 +924,7 @@
                         // Phone verification - redirect to OTP page
                         localStorage.setItem('tempToken', data.tempToken);
                         localStorage.setItem('verificationPhone', contact);
+                        localStorage.removeItem('verificationEmail'); // Clear email to avoid conflicts
                         showSuccess('📱 SMS sent! Redirecting to verification...');
                         setTimeout(() => {
                             window.location.href = `verify-otp.html?phone=${encodeURIComponent(contact)}&type=signup&token=${data.tempToken}`;
