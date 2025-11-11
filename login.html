@@ -3,109 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="light">
     <title>Login - ZimCrowd Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
     <style>
-        /* Custom styles for login page */
-        .nav-links a[href="#download-app"]:hover {
-            background: black;
-            color: white !important;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        /* Login page specific styles */
-        .login-container {
+        :root {
+            --color-green: #38e07b;
+            --color-green-light: #4ade80;
+            --color-green-dark: #22c55e;
+            --color-dark: #191A23;
+            --color-grey: #F3F3F3;
+            --color-grey-light: #f8fafc;
+            --color-white: #FFFFFF;
+            --color-black: #000000;
+            --color-text: #374151;
+            --color-text-light: #6b7280;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: url('assets/images/pexels-ayaka-kato-1441033-2860905.jpg') center/cover no-repeat;
+            color: white;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, var(--color-grey) 0%, #f8fafc 100%);
             padding: 20px;
+            position: relative;
         }
 
-        .login-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-            padding: 50px;
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(25, 26, 35, 0.9) 0%, rgba(56, 224, 123, 0.1) 100%);
+            z-index: 0;
+        }
+
+        .login-container {
             width: 100%;
-            max-width: 450px;
-            backdrop-filter: blur(10px);
+            max-width: 480px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 20px;
+            padding: 50px 40px;
+            border: 1px solid rgba(56, 231, 123, 0.2);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(56, 231, 123, 0.1);
+            position: relative;
+            z-index: 1;
+            text-align: center;
         }
 
         .login-header {
-            text-align: center;
             margin-bottom: 40px;
         }
 
         .login-logo {
-            width: 80px;
-            height: auto;
-            margin-bottom: 20px;
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #38e07b, #22c55e);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            box-shadow: 0 8px 25px rgba(56, 231, 123, 0.3);
         }
 
         .login-header h1 {
-            color: var(--color-black);
+            color: #191A23;
             font-size: 32px;
-            margin-bottom: 10px;
             font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #191A23, #374151);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .login-subtitle {
-            color: #666;
+            color: #6b7280;
             font-size: 16px;
             line-height: 1.5;
+            font-weight: 400;
+        }
+
+        .login-form-container {
+            padding: 60px 50px;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+
+        .back-to-home {
+            margin-bottom: 20px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 8px 0;
+        }
+
+        .back-link:hover {
+            color: #38e07b;
+            transform: translateX(-2px);
+        }
+
+        .back-link i {
+            font-size: 12px;
+        }
+
+        .form-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            background-clip: text;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+        }
+
+        .form-subtitle {
+            color: #94a3b8;
+            margin-bottom: 48px;
+            font-size: 17px;
+            line-height: 1.5;
+            font-weight: 400;
         }
 
         .login-form {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 24px;
         }
 
         .form-group {
-            display: flex;
-            flex-direction: column;
+            margin-bottom: 24px;
         }
 
         .form-label {
-            font-weight: 600;
-            color: var(--color-black);
-            margin-bottom: 8px;
+            display: block;
+            margin-bottom: 10px;
             font-size: 14px;
+            font-weight: 500;
+            color: #e2e8f0;
+            letter-spacing: 0.3px;
         }
 
         .form-input {
+            width: 100%;
             padding: 16px 20px;
-            border: 2px solid #e5e7eb;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 12px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background: white;
+            color: white;
+            font-size: 15px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 400;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            line-height: 1.5;
         }
 
         .form-input:focus {
             outline: none;
-            border-color: var(--color-green);
-            box-shadow: 0 0 0 3px rgba(56, 231, 123, 0.1);
+            border-color: #38e07b;
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 
+                0 0 0 3px rgba(56, 224, 123, 0.15),
+                0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
         }
 
-        .form-input.error {
-            border-color: #ef4444;
-        }
-
-        .error-message {
-            color: #ef4444;
-            font-size: 14px;
-            margin-top: 5px;
-            display: none;
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
         }
 
         .form-options {
@@ -122,52 +212,75 @@
         }
 
         .remember-me input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--color-green);
+            width: 18px;
+            height: 18px;
+            accent-color: #38e07b;
         }
 
         .remember-me label {
             font-size: 14px;
-            color: #666;
+            color: #cbd5e1;
             cursor: pointer;
         }
 
         .forgot-password {
             font-size: 14px;
-            color: var(--color-green);
+            color: #38e07b;
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 500;
+            transition: all 0.3s ease;
         }
 
         .forgot-password:hover {
+            color: #4ade80;
             text-decoration: underline;
         }
 
         .login-btn {
-            background: var(--color-green);
-            color: white;
+            width: 100%;
+            padding: 18px 24px;
+            background: linear-gradient(135deg, #38e07b 0%, #22c55e 100%);
             border: none;
-            padding: 18px;
             border-radius: 12px;
+            color: #191A23;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 32px 0 24px 0;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .login-btn:hover::before {
+            left: 100%;
         }
 
         .login-btn:hover {
-            background: #34d399;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(56, 231, 123, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 
+                0 12px 40px rgba(56, 224, 123, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            background: linear-gradient(135deg, #4ade80 0%, #38e07b 100%);
         }
 
         .login-btn:disabled {
-            background: #9ca3af;
+            opacity: 0.6;
             cursor: not-allowed;
             transform: none;
-            box-shadow: none;
         }
 
         .divider {
@@ -185,35 +298,40 @@
             left: 0;
             right: 0;
             height: 1px;
-            background: #e5e7eb;
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .divider span {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.1);
             padding: 0 15px;
             position: relative;
+            backdrop-filter: blur(10px);
         }
 
         .signup-prompt {
             text-align: center;
-            margin-top: 30px;
-            color: #666;
-            font-size: 14px;
+            color: #94a3b8;
+            font-size: 15px;
+            font-weight: 400;
+            margin-top: 8px;
+            padding: 16px 0;
         }
 
         .signup-link {
-            color: var(--color-green);
+            color: #38e07b;
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 500;
+            transition: all 0.3s ease;
         }
 
         .signup-link:hover {
+            color: #4ade80;
             text-decoration: underline;
         }
 
         .app-download-prompt {
-            background: rgba(56, 231, 123, 0.1);
-            border: 1px solid rgba(56, 231, 123, 0.2);
+            background: rgba(56, 224, 123, 0.08);
+            border: 1px solid rgba(56, 224, 123, 0.25);
             border-radius: 12px;
             padding: 20px;
             margin-top: 30px;
@@ -221,19 +339,19 @@
         }
 
         .app-download-prompt h3 {
-            color: var(--color-black);
+            color: white;
             margin-bottom: 10px;
             font-size: 16px;
         }
 
         .app-download-prompt p {
-            color: #666;
+            color: #cbd5e1;
             font-size: 14px;
             margin-bottom: 15px;
         }
 
         .download-btn {
-            background: var(--color-black);
+            background: rgba(255, 255, 255, 0.1);
             color: white;
             padding: 12px 24px;
             border-radius: 8px;
@@ -242,46 +360,95 @@
             font-weight: 600;
             display: inline-block;
             transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .download-btn:hover {
-            background: #333;
+            background: rgba(255, 255, 255, 0.2);
             transform: translateY(-1px);
         }
 
-        @media (max-width: 768px) {
-            .login-card {
-                padding: 30px 25px;
-                margin: 20px;
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 24px;
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+
+        @media (max-width: 968px) {
+            .login-container {
+                grid-template-columns: 1fr;
             }
 
-            .login-header h1 {
+            .login-branding {
+                padding: 40px 30px;
+            }
+
+            .brand-logo {
+                font-size: 36px;
+            }
+
+            .brand-tagline {
+                font-size: 18px;
+            }
+
+            .login-form-container {
+                padding: 40px 30px;
+            }
+
+            .form-title {
                 font-size: 28px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .login-form-container {
+                padding: 30px 20px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Login Container -->
     <div class="login-container">
-        <div class="login-card">
-            <div class="login-header">
-                <img src="assets/images/zimcrowd_light.png" alt="ZimCrowd" class="login-logo">
-                <h1>Welcome Back</h1>
-                <p class="login-subtitle">Access your ZimCrowd dashboard to manage your loans, investments, and account settings.</p>
+        <!-- Left Side - Branding -->
+        <div class="login-branding">
+            <div class="branding-content">
+                <a href="index.html" class="brand-logo-link">
+                    <div class="brand-logo">ZimCrowd</div>
+                </a>
+                <div class="brand-tagline">Welcome Back to ZimCrowd</div>
+                <p>Access your dashboard to manage your loans, investments, and account settings.</p>
             </div>
+        </div>
 
+        <!-- Right Side - Login Form -->
+        <div class="login-form-container">
+            <div class="back-to-home">
+                <a href="index.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Back to Home
+                </a>
+            </div>
+            <div class="form-title">Welcome Back</div>
+            <div class="form-subtitle">Sign in to access your ZimCrowd dashboard</div>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <!-- Login Form -->
             <form class="login-form" id="loginForm">
                 <div class="form-group">
-                    <label for="emailOrPhone" class="form-label">Email or Phone Number</label>
-                    <input type="text" id="emailOrPhone" name="emailOrPhone" class="form-input" placeholder="Enter your email or phone number" required>
-                    <div class="error-message" id="emailOrPhoneError">Please enter a valid email or phone number</div>
+                    <label class="form-label">Email or Phone Number</label>
+                    <input type="text" class="form-input" id="emailOrPhone" placeholder="Enter your email or phone number" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" id="password" name="password" class="form-input" placeholder="Enter your password" required>
-                    <div class="error-message" id="passwordError">Password is required</div>
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="password" placeholder="Enter your password" required>
                 </div>
 
                 <div class="form-options">
@@ -325,7 +492,7 @@
             const loginSpinner = document.getElementById('loginSpinner');
 
             // API Configuration
-            const API_URL = window.location.hostname === 'localhost' 
+            const API_URL = window.location.hostname === 'localhost'
                 ? 'http://localhost:5003'
                 : 'https://zimcrowd-backend-pfzb6c7x3-jojola.vercel.app';
 
@@ -341,17 +508,17 @@
                 let isValid = true;
 
                 if (!emailOrPhone) {
-                    showError('emailOrPhoneError');
+                    showError('Please enter a valid email or phone number');
                     isValid = false;
                 } else {
-                    hideError('emailOrPhoneError');
+                    hideError();
                 }
 
                 if (!password) {
-                    showError('passwordError');
+                    showError('Password is required');
                     isValid = false;
                 } else {
-                    hideError('passwordError');
+                    hideError();
                 }
 
                 if (!isValid) return;
@@ -402,16 +569,11 @@
                         window.location.href = 'dashboard.html';
                     } else {
                         // Show error
-                        if (data.message.includes('Invalid') || data.message.includes('not found')) {
-                            showError('emailOrPhoneError');
-                            document.getElementById('emailOrPhoneError').textContent = 'Invalid email/phone or password';
-                        } else {
-                            alert(data.message || 'Login failed. Please try again.');
-                        }
+                        showError(data.message || 'Login failed. Please try again.');
                     }
                 } catch (error) {
                     console.error('Login error:', error);
-                    alert('Network error. Please check your connection and try again.');
+                    showError('Network error. Please check your connection and try again.');
                 } finally {
                     // Reset loading state
                     loginBtn.disabled = false;
@@ -420,24 +582,14 @@
                 }
             });
 
-            function showError(errorId) {
-                const errorElement = document.getElementById(errorId);
-                errorElement.style.display = 'block';
-                const inputId = errorId.replace('Error', '');
-                const inputElement = document.getElementById(inputId === 'emailOrPhone' ? 'emailOrPhone' : inputId);
-                if (inputElement) {
-                    inputElement.classList.add('error');
-                }
+            function showError(message) {
+                const errorDiv = document.getElementById('errorMessage');
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
             }
 
-            function hideError(errorId) {
-                const errorElement = document.getElementById(errorId);
-                errorElement.style.display = 'none';
-                const inputId = errorId.replace('Error', '');
-                const inputElement = document.getElementById(inputId === 'emailOrPhone' ? 'emailOrPhone' : inputId);
-                if (inputElement) {
-                    inputElement.classList.remove('error');
-                }
+            function hideError() {
+                document.getElementById('errorMessage').style.display = 'none';
             }
         });
     </script>
