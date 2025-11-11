@@ -591,50 +591,38 @@ router.post('/verify-reset-otp', [
             });
         }
         
-        // Verify OTP - use Twilio Verify if configured
+        // Verify OTP - use database verification for password reset
+        // (Password reset uses regular SMS, not Twilio Verify API)
         let otpVerified = false;
         
-        if (process.env.TWILIO_VERIFY_SERVICE_SID) {
-            console.log('[Verify Reset OTP] Using Twilio Verify API');
-            const twilioVerification = await verifyOTPWithTwilio(formattedPhone, otp);
-            otpVerified = twilioVerification.success;
+        console.log('[Verify Reset OTP] Using database verification');
+        // Database verification
+        const { data: verification, error: verifyError } = await supabase
+            .from('phone_verifications')
+            .select('*')
+            .eq('phone_number', formattedPhone)
+            .eq('otp_code', otp)
+            .eq('purpose', 'password_reset')
+            .eq('verified', false)
+            .gt('expires_at', new Date().toISOString())
+            .single();
             
-            console.log(`[Verify Reset OTP] Twilio verification result: ${otpVerified ? 'SUCCESS' : 'FAILED'}`);
-            
-            if (!otpVerified) {
-                return res.status(400).json({
-                    success: false,
-                    message: twilioVerification.message || 'Invalid or expired code'
-                });
-            }
-        } else {
-            console.log('[Verify Reset OTP] Using database verification');
-            // Fallback to database verification
-            const { data: verification, error: verifyError } = await supabase
-                .from('phone_verifications')
-                .select('*')
-                .eq('phone_number', formattedPhone)
-                .eq('otp_code', otp)
-                .eq('purpose', 'password_reset')
-                .eq('verified', false)
-                .gt('expires_at', new Date().toISOString())
-                .single();
-                
-            if (verifyError || !verification) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid or expired code'
-                });
-            }
-            
-            // Mark as verified
-            await supabase
-                .from('phone_verifications')
-                .update({ verified: true })
-                .eq('id', verification.id);
-                
-            otpVerified = true;
+        if (verifyError || !verification) {
+            console.log('[Verify Reset OTP] Database verification failed:', verifyError?.message || 'No matching verification found');
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired code'
+            });
         }
+        
+        // Mark as verified
+        await supabase
+            .from('phone_verifications')
+            .update({ verified: true })
+            .eq('id', verification.id);
+            
+        otpVerified = true;
+        console.log('[Verify Reset OTP] Database verification SUCCESS');
         
         // Return success with reset token
         res.status(200).json({
