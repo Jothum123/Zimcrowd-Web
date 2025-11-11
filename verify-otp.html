@@ -856,7 +856,7 @@
                         },
                         body: JSON.stringify({
                             [contactType === 'email' ? 'email' : contactType === 'phone' ? 'phone' : 'identifier']: contactValue,
-                            [contactType === 'email' ? 'purpose' : 'purpose']: verificationType === 'reset' ? 'password_reset' : 'signup'
+                            ...(contactType === 'email' ? { type: verificationType } : { purpose: verificationType === 'reset' ? 'password_reset' : 'signup' })
                         })
                     });
 
