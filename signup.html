@@ -853,7 +853,7 @@
                         localStorage.setItem('verificationEmail', contact);
                         showSuccess('📧 OTP sent to email! Redirecting to verification...');
                         setTimeout(() => {
-                            window.location.href = `verify-email-otp.html?email=${encodeURIComponent(contact)}&type=signup&token=${data.tempToken}`;
+                            window.location.href = `verify-otp.html?email=${encodeURIComponent(contact)}&type=signup&token=${data.tempToken}`;
                         }, 2000);
                     } else {
                         // Phone verification - redirect to OTP page

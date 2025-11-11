@@ -743,13 +743,23 @@
                 try {
                     // Make API call to backend (auto-detect environment)
                     
-                    const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
+                    // Choose the correct endpoint based on contact type
+                    let endpoint;
+                    if (contactType === 'email') {
+                        endpoint = `${API_URL}/api/email-auth/verify-email-otp`;
+                    } else if (contactType === 'phone') {
+                        endpoint = `${API_URL}/api/phone-auth/verify-phone-otp`;
+                    } else {
+                        endpoint = `${API_URL}/api/auth/verify-otp`;
+                    }
+                    
+                    const response = await fetch(endpoint, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            identifier: contactValue,
+                            [contactType === 'email' ? 'email' : contactType === 'phone' ? 'phone' : 'identifier']: contactValue,
                             otp: otp,
                             type: verificationType
                         })
@@ -823,14 +833,24 @@
                 resendBtn.textContent = 'Sending...';
 
                 try {
-                    const response = await fetch(`${API_URL}/api/auth/resend-otp`, {
+                    // Choose the correct resend endpoint based on contact type
+                    let resendEndpoint;
+                    if (contactType === 'email') {
+                        resendEndpoint = `${API_URL}/api/email-auth/resend-email-otp`;
+                    } else if (contactType === 'phone') {
+                        resendEndpoint = `${API_URL}/api/phone-auth/resend-phone-otp`;
+                    } else {
+                        resendEndpoint = `${API_URL}/api/auth/resend-otp`;
+                    }
+                    
+                    const response = await fetch(resendEndpoint, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            identifier: contactValue,
-                            type: verificationType || 'signup'
+                            [contactType === 'email' ? 'email' : contactType === 'phone' ? 'phone' : 'identifier']: contactValue,
+                            [contactType === 'email' ? 'purpose' : 'type']: verificationType === 'reset' ? 'password_reset' : 'signup'
                         })
                     });
 
