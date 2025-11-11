@@ -591,15 +591,38 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
-        @media (max-width: 768px) {
-            .login-card {
-                padding: 30px 25px;
-                margin: 20px;
-            }
+        .login-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 4px;
+            backdrop-filter: blur(10px);
+        }
 
-            .login-header h1 {
-                font-size: 28px;
-            }
+        .tab-btn {
+            flex: 1;
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab-btn.active {
+            background: var(--color-green);
+            color: white;
+            box-shadow: 0 4px 12px rgba(56, 231, 123, 0.3);
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.1);
         }
     </style>
 </head>
@@ -695,7 +718,14 @@
                 <p class="login-subtitle" style="color: rgba(255, 255, 255, 0.9) !important;">Access your ZimCrowd dashboard to manage your loans, investments, and account settings.</p>
             </div>
 
-            <form class="login-form" id="loginForm">
+            <!-- Login Method Tabs -->
+            <div class="login-tabs">
+                <button type="button" class="tab-btn active" id="emailTab">Email/Phone</button>
+                <button type="button" class="tab-btn" id="phoneTab">Phone Login</button>
+            </div>
+
+            <!-- Email/Phone Login Form -->
+            <form class="login-form" id="emailLoginForm">
                 <div class="form-group">
                     <label for="email" class="form-label" style="color: white !important;">Email/Phone</label>
                     <input type="text" id="email" name="email" class="form-input" placeholder="Enter your email or phone number" required>
@@ -713,12 +743,42 @@
                         <input type="checkbox" id="rememberMe" name="rememberMe">
                         <label for="rememberMe" style="color: white !important;">Remember me</label>
                     </div>
-                    <a href="forgot-password.html" class="forgot-password" style="color: #38e77b !important;">Forgot password?</a>
+                    <a href="forgot-password-clean.html" class="forgot-password" style="color: #38e77b !important;">Forgot password?</a>
                 </div>
 
-                <button type="submit" class="login-btn" id="loginBtn">
-                    <span id="loginText">Sign In</span>
-                    <div id="loginSpinner" style="display: none;">
+                <button type="submit" class="login-btn" id="emailLoginBtn">
+                    <span id="emailLoginText">Sign In</span>
+                    <div id="emailLoginSpinner" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                </button>
+            </form>
+
+            <!-- Phone Login Form -->
+            <form class="login-form" id="phoneLoginForm" style="display: none;">
+                <div class="form-group">
+                    <label for="phoneNumber" class="form-label" style="color: white !important;">Phone Number</label>
+                    <input type="tel" id="phoneNumber" name="phone" class="form-input" placeholder="+263 77 123 4567" required>
+                    <div class="error-message" id="phoneError">Please enter a valid phone number</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="phonePassword" class="form-label" style="color: white !important;">Password</label>
+                    <input type="password" id="phonePassword" name="password" class="form-input" placeholder="Enter your password" required>
+                    <div class="error-message" id="phonePasswordError">Password is required</div>
+                </div>
+
+                <div class="form-options">
+                    <div class="remember-me">
+                        <input type="checkbox" id="phoneRememberMe" name="rememberMe">
+                        <label for="phoneRememberMe" style="color: white !important;">Remember me</label>
+                    </div>
+                    <a href="forgot-password-clean.html" class="forgot-password" style="color: #38e77b !important;">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="login-btn" id="phoneLoginBtn">
+                    <span id="phoneLoginText">Sign In with Phone</span>
+                    <div id="phoneLoginSpinner" style="display: none;">
                         <i class="fas fa-spinner fa-spin"></i>
                     </div>
                 </button>
@@ -803,12 +863,51 @@
 
         // Login Form Handling
         document.addEventListener('DOMContentLoaded', function() {
-            const loginForm = document.getElementById('loginForm');
-            const loginBtn = document.getElementById('loginBtn');
-            const loginText = document.getElementById('loginText');
-            const loginSpinner = document.getElementById('loginSpinner');
+            // Tab switching
+            const emailTab = document.getElementById('emailTab');
+            const phoneTab = document.getElementById('phoneTab');
+            const emailForm = document.getElementById('emailLoginForm');
+            const phoneForm = document.getElementById('phoneLoginForm');
 
-            loginForm.addEventListener('submit', async function(e) {
+            emailTab.addEventListener('click', function() {
+                emailTab.classList.add('active');
+                phoneTab.classList.remove('active');
+                emailForm.style.display = 'block';
+                phoneForm.style.display = 'none';
+            });
+
+            phoneTab.addEventListener('click', function() {
+                phoneTab.classList.add('active');
+                emailTab.classList.remove('active');
+                phoneForm.style.display = 'block';
+                emailForm.style.display = 'none';
+            });
+
+            // Phone number formatting for phone login
+            document.getElementById('phoneNumber').addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                
+                if (value.startsWith('263')) {
+                    // Zimbabwe format: +263 77 123 4567
+                    if (value.length <= 12) {
+                        value = value.replace(/(\d{3})(\d{2})(\d{3})(\d{4})/, '+$1 $2 $3 $4');
+                    }
+                } else if (value.length >= 10) {
+                    // Default format: (123) 456-7890
+                    value = value.substring(0, 10);
+                    value = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+                }
+                
+                e.target.value = value;
+            });
+
+            // Email/Phone login form handling
+            const emailFormElement = document.getElementById('emailLoginForm');
+            const emailLoginBtn = document.getElementById('emailLoginBtn');
+            const emailLoginText = document.getElementById('emailLoginText');
+            const emailLoginSpinner = document.getElementById('emailLoginSpinner');
+
+            emailFormElement.addEventListener('submit', async function(e) {
                 e.preventDefault();
 
                 // Get form data
@@ -836,15 +935,15 @@
                 if (!isValid) return;
 
                 // Show loading state
-                loginBtn.disabled = true;
-                loginText.style.display = 'none';
-                loginSpinner.style.display = 'inline-block';
+                emailLoginBtn.disabled = true;
+                emailLoginText.style.display = 'none';
+                emailLoginSpinner.style.display = 'inline-block';
 
                 try {
                     // Make API call to backend (auto-detect environment)
                     const API_URL = window.location.hostname === 'localhost' 
                         ? 'http://localhost:5003'
-                        : 'https://zimcrowd-backend-qsvfl2nqu-jojola.vercel.app';
+                        : 'https://zimcrowd-backend-i8tjcuzr3-jojola.vercel.app';
                     
                     const response = await fetch(`${API_URL}/api/auth/login`, {
                         method: 'POST',
@@ -871,16 +970,98 @@
                     } else {
                         // Show error
                         alert(data.message || 'Login failed. Please try again.');
-                        loginBtn.disabled = false;
-                        loginText.style.display = 'inline';
-                        loginSpinner.style.display = 'none';
+                        emailLoginBtn.disabled = false;
+                        emailLoginText.style.display = 'inline';
+                        emailLoginSpinner.style.display = 'none';
                     }
                 } catch (error) {
                     console.error('Login error:', error);
                     alert('Network error. Please check your connection and try again.');
-                    loginBtn.disabled = false;
-                    loginText.style.display = 'inline';
-                    loginSpinner.style.display = 'none';
+                    emailLoginBtn.disabled = false;
+                    emailLoginText.style.display = 'inline';
+                    emailLoginSpinner.style.display = 'none';
+                }
+            });
+
+            // Phone login form handling
+            const phoneFormElement = document.getElementById('phoneLoginForm');
+            const phoneLoginBtn = document.getElementById('phoneLoginBtn');
+            const phoneLoginText = document.getElementById('phoneLoginText');
+            const phoneLoginSpinner = document.getElementById('phoneLoginSpinner');
+
+            phoneFormElement.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                // Get form data
+                const phone = document.getElementById('phoneNumber').value;
+                const password = document.getElementById('phonePassword').value;
+                const rememberMe = document.getElementById('phoneRememberMe').checked;
+
+                // Basic validation
+                let isValid = true;
+
+                if (!phone.trim()) {
+                    showError('phoneError');
+                    isValid = false;
+                } else {
+                    hideError('phoneError');
+                }
+
+                if (!password.trim()) {
+                    showError('phonePasswordError');
+                    isValid = false;
+                } else {
+                    hideError('phonePasswordError');
+                }
+
+                if (!isValid) return;
+
+                // Show loading state
+                phoneLoginBtn.disabled = true;
+                phoneLoginText.style.display = 'none';
+                phoneLoginSpinner.style.display = 'inline-block';
+
+                try {
+                    // Make API call to backend
+                    const API_URL = window.location.hostname === 'localhost' 
+                        ? 'http://localhost:5003'
+                        : 'https://zimcrowd-backend-i8tjcuzr3-jojola.vercel.app';
+                    
+                    const response = await fetch(`${API_URL}/api/phone-auth/login-phone`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            phone: phone.trim(),
+                            password: password,
+                            rememberMe: rememberMe
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Store authentication data
+                        localStorage.setItem('isAuthenticated', 'true');
+                        localStorage.setItem('authToken', data.session?.access_token || data.token);
+                        localStorage.setItem('userData', JSON.stringify(data.user));
+
+                        // Redirect to dashboard
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        // Show error
+                        alert(data.message || 'Login failed. Please try again.');
+                        phoneLoginBtn.disabled = false;
+                        phoneLoginText.style.display = 'inline';
+                        phoneLoginSpinner.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Phone login error:', error);
+                    alert('Network error. Please check your connection and try again.');
+                    phoneLoginBtn.disabled = false;
+                    phoneLoginText.style.display = 'inline';
+                    phoneLoginSpinner.style.display = 'none';
                 }
             });
 
