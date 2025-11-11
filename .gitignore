@@ -3,3 +3,6 @@
 .env*.local
 .env.example
 .vercel
+
+# Ignore package-lock.json (can be regenerated)
+package-lock.json
