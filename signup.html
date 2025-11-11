@@ -414,48 +414,6 @@
             transition: all 0.3s ease;
         }
 
-        .form-tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 24px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 4px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .form-tab-btn {
-            flex: 1;
-            padding: 12px 16px;
-            background: transparent;
-            border: none;
-            color: #94a3b8;
-            font-size: 14px;
-            font-weight: 500;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: inherit;
-        }
-
-        .form-tab-btn.active {
-            background: var(--color-green);
-            color: white;
-            box-shadow: 0 4px 12px rgba(56, 224, 123, 0.3);
-        }
-
-        .form-tab-btn:hover:not(.active) {
-            background: rgba(255, 255, 255, 0.05);
-            color: #e2e8f0;
-        }
-
-        .form-content {
-            display: none;
-        }
-
-        .form-content.active {
-            display: block;
-        }
 
         .error-message {
             background: rgba(239, 68, 68, 0.1);
@@ -543,11 +501,6 @@
             <div class="form-title">Create Account</div>
             <div class="form-subtitle">Join thousands of Zimbabweans with secure email or phone verification - enter either email or phone number</div>
 
-            <!-- Form Type Tabs -->
-            <div class="form-tabs">
-                <button type="button" class="form-tab-btn active" data-form="signup">📝 Sign Up</button>
-                <button type="button" class="form-tab-btn" data-form="reset">🔑 Reset Password</button>
-            </div>
 
             <div class="error-message" id="errorMessage"></div>
             <div class="success-message" id="successMessage"></div>
@@ -632,30 +585,6 @@
                 <button type="submit" class="submit-btn" id="signupBtn">📨 Send Verification Code</button>
             </form>
 
-            <!-- Password Reset Form -->
-            <form id="resetForm" class="form-content">
-                <!-- Reset Method Tabs -->
-                <div class="signup-tabs">
-                    <button type="button" class="tab-btn active" data-tab="reset-email">📧 Email Reset</button>
-                    <button type="button" class="tab-btn" data-tab="reset-phone">📱 Phone Reset</button>
-                </div>
-
-                <!-- Email Reset Fields -->
-                <div class="form-group">
-                    <label class="form-label">Email Address <span class="required">*</span></label>
-                    <input type="email" class="form-input" id="resetEmail" placeholder="tendai@example.com" required>
-                    <div class="field-hint">📧 Enter your registered email address</div>
-                </div>
-
-                <!-- Phone Reset Fields -->
-                <div class="form-group" style="display: none;">
-                    <label class="form-label">Phone Number <span class="required">*</span></label>
-                    <input type="tel" class="form-input" id="resetPhone" placeholder="+263 77 123 4567">
-                    <div class="field-hint">📱 Enter your registered phone number</div>
-                </div>
-
-                <button type="submit" class="submit-btn">🔑 Send Reset Code</button>
-            </form>
 
             <div class="login-link">
                 Already have an account? <a href="login.html">Sign In</a>
@@ -667,35 +596,10 @@
         // API Configuration
         const API_URL = window.location.hostname === 'localhost'
             ? 'http://localhost:5003'
-            : 'https://zimcrowd-backend-i8tjcuzr3-jojola.vercel.app';
+            : 'https://zimcrowd-backend-qdh34h2vq-jojola.vercel.app';
 
         let currentSignupMethod = 'email'; // Default, will be auto-detected
-        let currentResetMethod = 'email';
         document.addEventListener('DOMContentLoaded', function() {
-            // Form tab switching
-            const formTabBtns = document.querySelectorAll('.form-tab-btn');
-            const formContents = document.querySelectorAll('.form-content');
-
-            formTabBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const formType = this.dataset.form;
-
-                    // Update active tab
-                    formTabBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-
-                    // Show/hide forms
-                    formContents.forEach(content => {
-                        content.classList.remove('active');
-                    });
-
-                    document.getElementById(formType + 'Form').classList.add('active');
-
-                    // Clear any messages
-                    hideError();
-                    hideSuccess();
-                });
-            });
 
             // Contact field input detection
             const contactField = document.getElementById('contact');
@@ -727,48 +631,6 @@
                 }
             });
 
-            // Phone number formatting for reset form
-            document.getElementById('resetPhone').addEventListener('input', function(e) {
-                formatPhoneNumber(e.target);
-            });
-
-            // Reset method tab switching
-            const resetTabBtns = document.querySelectorAll('#resetForm .tab-btn');
-            const resetEmailField = document.getElementById('resetEmail');
-            const resetPhoneField = document.getElementById('resetPhone');
-            const resetEmailGroup = resetEmailField.parentElement;
-            const resetPhoneGroup = resetPhoneField.parentElement;
-
-            resetTabBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const tab = this.dataset.tab;
-
-                    // Update active tab
-                    resetTabBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-
-                    // Show/hide fields
-                    if (tab === 'reset-email') {
-                        resetEmailGroup.style.display = 'block';
-                        resetPhoneGroup.style.display = 'none';
-                        resetEmailField.required = true;
-                        resetPhoneField.required = false;
-                        resetPhoneField.value = '';
-                        currentResetMethod = 'email';
-                    } else {
-                        resetEmailGroup.style.display = 'none';
-                        resetPhoneGroup.style.display = 'block';
-                        resetEmailField.required = false;
-                        resetPhoneField.required = true;
-                        resetEmailField.value = '';
-                        currentResetMethod = 'phone';
-                    }
-
-                    // Clear any messages
-                    hideError();
-                    hideSuccess();
-                });
-            });
         });
 
         // Show error message
@@ -1003,88 +865,6 @@
             }
         });
 
-        // Handle password reset form submission
-        document.getElementById('resetForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const email = document.getElementById('resetEmail').value.trim();
-            const phone = document.getElementById('resetPhone').value.trim();
-
-            if (currentResetMethod === 'email' && !email) {
-                showError('Please enter your email address');
-                return;
-            }
-
-            if (currentResetMethod === 'phone' && !phone) {
-                showError('Please enter your phone number');
-                return;
-            }
-
-            // Show loading state
-            const submitBtn = this.querySelector('.submit-btn');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = '🔑 Sending Code...';
-            submitBtn.disabled = true;
-
-            try {
-                let response, data;
-
-                if (currentResetMethod === 'email') {
-                    // Email password reset
-                    response = await fetch(`${API_URL}/api/email-auth/forgot-password-email`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            email
-                        })
-                    });
-                } else {
-                    // Phone password reset
-                    response = await fetch(`${API_URL}/api/phone-auth/forgot-password-phone`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            phone
-                        })
-                    });
-                }
-
-                data = await response.json();
-
-                if (data.success) {
-                    if (currentResetMethod === 'email') {
-                        // Email reset - redirect to NEW password reset flow
-                        // Clear old verificationEmail from localStorage before password reset redirect
-                        localStorage.removeItem('verificationEmail');
-                        localStorage.removeItem('resetEmail');
-                        localStorage.removeItem('tempToken');
-                        showSuccess('📧 Reset code sent to email! Redirecting to verification...');
-                        setTimeout(() => {
-                            window.location.href = `password-reset-verify.html?email=${encodeURIComponent(email)}`;
-                        }, 2000);
-                    } else {
-                        // Phone reset - redirect to verification
-                        localStorage.setItem('resetPhone', phone);
-                        showSuccess('📱 Reset code sent! Redirecting to verification...');
-                        setTimeout(() => {
-                            window.location.href = `verify-otp.html?phone=${encodeURIComponent(phone)}&type=reset`;
-                        }, 2000);
-                    }
-                } else {
-                    showError(data.message || 'Failed to send reset code. Please try again.');
-                }
-            } catch (error) {
-                console.error('Password reset error:', error);
-                showError('Network error. Please check your connection and try again.');
-            } finally {
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
-            }
-        });
     </script>
 </body>
 </html>
