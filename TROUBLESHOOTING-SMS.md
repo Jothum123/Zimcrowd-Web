@@ -85,10 +85,10 @@ node test-phone-signup.js
 
 Check `.env` file has:
 ```
-TWILIO_ACCOUNT_SID=ACb0000257c28e2e0cb777f83886464d5a
-TWILIO_AUTH_TOKEN=d3748d116077ba61ce5b858a61478d1d
-TWILIO_PHONE_NUMBER=+12298509774
-TWILIO_VERIFY_SERVICE_SID=VA24be06e61b9a614a3f5bd0c8cc6ec320
+TWILIO_ACCOUNT_SID=your_twilio_account_sid_here
+TWILIO_AUTH_TOKEN=your_twilio_auth_token_here
+TWILIO_PHONE_NUMBER=your_twilio_phone_number_here
+TWILIO_VERIFY_SERVICE_SID=your_verify_service_sid_here
 ```
 
 ### Step 6: Enhanced Error Messages
