@@ -2217,23 +2217,49 @@
         }
 
         .banner-content {
-            background: linear-gradient(135deg, #38e77b 0%, #34d399 100%);
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             border-radius: 16px;
             padding: 24px 30px;
-            box-shadow: 0 12px 48px rgba(56, 231, 123, 0.35);
+            box-shadow:
+                0 0 60px rgba(239, 68, 68, 0.3),
+                0 0 120px rgba(239, 68, 68, 0.2),
+                0 0 180px rgba(239, 68, 68, 0.1),
+                0 25px 50px rgba(239, 68, 68, 0.15),
+                0 0 0 1px rgba(239, 68, 68, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
             display: flex;
             align-items: center;
             gap: 20px;
             color: #0f172a;
             cursor: pointer;
             transition: all 0.3s ease;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(239, 68, 68, 0.6);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            animation: registrationBannerEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes registrationBannerEntrance {
+            0% {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+                filter: drop-shadow(0 0 0 rgba(239, 68, 68, 0));
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: drop-shadow(0 0 60px rgba(239, 68, 68, 0.3));
+            }
         }
 
         .banner-content:hover {
             transform: translateY(-3px);
-            box-shadow: 0 16px 56px rgba(56, 231, 123, 0.45);
-            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow:
+                0 16px 56px rgba(239, 68, 68, 0.45),
+                0 0 80px rgba(239, 68, 68, 0.35),
+                0 0 140px rgba(239, 68, 68, 0.25),
+                0 0 0 1px rgba(239, 68, 68, 0.5);
+            border-color: rgba(239, 68, 68, 0.8);
         }
 
         .banner-icon {
@@ -2246,9 +2272,11 @@
         @keyframes pulse {
             0%, 100% {
                 transform: scale(1);
+                filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.3));
             }
             50% {
                 transform: scale(1.08);
+                filter: drop-shadow(0 0 30px rgba(239, 68, 68, 0.5));
             }
         }
 
@@ -2316,7 +2344,7 @@
         }
 
         .btn-dismiss:hover {
-            background: rgba(15, 23, 42, 0.25);
+            background: rgba(239, 68, 68, 0.25);
             transform: rotate(90deg);
         }
 
