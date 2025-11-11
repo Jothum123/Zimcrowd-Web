@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Verify Reset OTP</title>
+</head>
+<body>
+    <h1>Test Verify Reset OTP Route</h1>
+    <button onclick="testRoute()">Test Route</button>
+    <div id="result"></div>
+
+    <script>
+        async function testRoute() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Testing...';
+
+            try {
+                const response = await fetch('http://localhost:5003/api/phone-auth/verify-reset-otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phone: '+263771234567',
+                        otp: '123456'
+                    })
+                });
+
+                const data = await response.json();
+
+                result.innerHTML = `
+                    <h2>Response:</h2>
+                    <p>Status: ${response.status}</p>
+                    <p>Success: ${data.success}</p>
+                    <p>Message: ${data.message}</p>
+                `;
+            } catch (error) {
+                result.innerHTML = `<h2>Error:</h2><p>${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

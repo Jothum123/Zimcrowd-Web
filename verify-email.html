@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification - ZimCrowd</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-green: #38e07b;
+            --color-green-light: #4ade80;
+            --color-green-dark: #22c55e;
+            --color-dark: #191A23;
+            --color-grey: #F3F3F3;
+            --color-grey-light: #f8fafc;
+            --color-white: #FFFFFF;
+            --color-black: #000000;
+            --color-text: #374151;
+            --color-text-light: #6b7280;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: url('assets/images/pexels-brett-sayles-3963829.jpg') center/cover no-repeat;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.85) 100%);
+            z-index: 0;
+        }
+
+        .verification-container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid rgba(56, 231, 123, 0.3);
+            box-shadow: 0 8px 32px rgba(56, 231, 123, 0.2), 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+            animation: verificationEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes verificationEntrance {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+                filter: drop-shadow(0 0 0 rgba(56, 231, 123, 0));
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: drop-shadow(0 0 60px rgba(56, 231, 123, 0.3));
+            }
+        }
+
+        .verification-header {
+            background: url('assets/images/pexels-ayaka-kato-1441033-2860905.jpg') center/cover no-repeat;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .verification-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(56, 224, 123, 0.8), rgba(25, 26, 35, 0.8));
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-logo {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #ffffff, #e2e8f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .verification-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .verification-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .verification-content {
+            padding: 40px 30px;
+        }
+
+        .verification-icon {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .verification-icon i {
+            font-size: 64px;
+            color: var(--color-green);
+        }
+
+        .verification-message {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .verification-message h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .verification-message p {
+            color: #cbd5e1;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .verification-actions {
+            text-align: center;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 32px;
+            background: linear-gradient(135deg, var(--color-green) 0%, var(--color-green-dark) 100%);
+            border: none;
+            border-radius: 12px;
+            color: #191A23;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            margin: 10px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(56, 224, 123, 0.4);
+        }
+
+        .action-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .action-btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-state {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .success-state {
+            background: rgba(56, 224, 123, 0.1);
+            border: 1px solid rgba(56, 224, 123, 0.3);
+            color: #4ade80;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .back-to-home {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 8px 0;
+        }
+
+        .back-link:hover {
+            color: #38e07b;
+            transform: translateX(-2px);
+        }
+
+        @media (max-width: 640px) {
+            .verification-container {
+                margin: 20px;
+            }
+
+            .verification-header {
+                padding: 30px 20px;
+            }
+
+            .brand-logo {
+                font-size: 28px;
+            }
+
+            .verification-title {
+                font-size: 20px;
+            }
+
+            .verification-content {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="back-to-home">
+        <a href="index.html" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to Home
+        </a>
+    </div>
+
+    <div class="verification-container">
+        <div class="verification-header">
+            <div class="header-content">
+                <div class="brand-logo">ZimCrowd</div>
+                <div class="verification-title">Email Verification</div>
+                <div class="verification-subtitle">Verifying your email address</div>
+            </div>
+        </div>
+
+        <div class="verification-content">
+            <div class="verification-icon">
+                <i class="fas fa-envelope-open-text" id="statusIcon"></i>
+            </div>
+
+            <div class="verification-message">
+                <h2 id="messageTitle">Verifying Your Email...</h2>
+                <p id="messageText">Please wait while we verify your email address.</p>
+            </div>
+
+            <div class="verification-actions">
+                <button class="action-btn" id="continueBtn" style="display: none;">
+                    <i class="fas fa-check"></i>
+                    Continue to Login
+                </button>
+                <a href="signup.html" class="action-btn secondary" id="retryBtn" style="display: none;">
+                    <i class="fas fa-redo"></i>
+                    Try Again
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:5003'
+            : 'https://zimcrowd-backend-pfzb6c7x3-jojola.vercel.app';
+
+        // Get URL parameters
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // Update UI state
+        function updateUI(state, title, message, showContinue = false, showRetry = false) {
+            const statusIcon = document.getElementById('statusIcon');
+            const messageTitle = document.getElementById('messageTitle');
+            const messageText = document.getElementById('messageText');
+            const continueBtn = document.getElementById('continueBtn');
+            const retryBtn = document.getElementById('retryBtn');
+
+            messageTitle.textContent = title;
+            messageText.textContent = message;
+
+            // Update icon based on state
+            statusIcon.className = 'fas';
+            switch(state) {
+                case 'loading':
+                    statusIcon.classList.add('fa-spinner', 'fa-spin');
+                    break;
+                case 'success':
+                    statusIcon.classList.add('fa-check-circle');
+                    statusIcon.style.color = 'var(--color-green)';
+                    break;
+                case 'error':
+                    statusIcon.classList.add('fa-exclamation-triangle');
+                    statusIcon.style.color = '#ef4444';
+                    break;
+            }
+
+            continueBtn.style.display = showContinue ? 'inline-flex' : 'none';
+            retryBtn.style.display = showRetry ? 'inline-flex' : 'none';
+        }
+
+        // Handle verification
+        async function handleEmailVerification() {
+            try {
+                updateUI('loading', 'Verifying Your Email...', 'Please wait while we verify your email address.');
+
+                // Get the full URL as the email link
+                const emailLink = window.location.href;
+
+                // Try to extract email from URL parameters (Firebase may include it)
+                let email = getUrlParameter('email') || localStorage.getItem('pendingFirebaseEmail');
+
+                // If no email in URL, we'll need to get it from the user or handle it differently
+                if (!email) {
+                    // For Firebase email links, the email might not be in the URL
+                    // We'll handle this in the backend by checking the link validity
+                    email = 'unknown'; // Backend will extract from the link
+                }
+
+                // Call backend to verify the email link
+                const response = await fetch(`${API_URL}/api/email-auth/verify-firebase-email`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        emailLink: emailLink,
+                        email: email
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Clear pending data
+                    localStorage.removeItem('pendingFirebaseEmail');
+                    localStorage.removeItem('userData');
+
+                    updateUI(
+                        'success',
+                        'Email Verified Successfully!',
+                        'Your email has been verified. You can now log in to your account.',
+                        true,
+                        false
+                    );
+
+                    // Redirect to login after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 3000);
+
+                } else {
+                    throw new Error(data.message || 'Email verification failed');
+                }
+
+            } catch (error) {
+                console.error('Verification error:', error);
+                updateUI(
+                    'error',
+                    'Verification Failed',
+                    error.message || 'There was an error verifying your email. Please try again.',
+                    false,
+                    true
+                );
+            }
+        }
+
+        // Handle continue button
+        document.getElementById('continueBtn').addEventListener('click', () => {
+            window.location.href = 'login.html';
+        });
+
+        // Initialize verification when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if this is a Firebase email verification link
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasFirebaseParams = urlParams.has('oobCode') || urlParams.has('mode') || urlParams.has('apiKey');
+
+            if (hasFirebaseParams || localStorage.getItem('pendingFirebaseEmail')) {
+                handleEmailVerification();
+            } else {
+                updateUI(
+                    'error',
+                    'Invalid Link',
+                    'This verification link appears to be invalid or expired.',
+                    false,
+                    true
+                );
+            }
+        });
+    </script>
+</body>
+</html>

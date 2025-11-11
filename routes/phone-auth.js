@@ -16,17 +16,45 @@ const {
 
 const router = express.Router();
 
-// Rate limiting for phone auth
-const phoneAuthLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 20, // limit each IP to 20 requests per windowMs (increased from 5 for testing)
-    message: {
-        success: false,
-        message: 'Too many phone authentication attempts, please try again later.'
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
+// Rate limiting for phone auth - DISABLED in development mode
+const phoneAuthLimiter = (req, res, next) => {
+    // Skip all rate limiting in development mode
+    if (process.env.NODE_ENV === 'development') {
+        return next();
+    }
+    
+    // In production, apply rate limiting
+    return rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 100, // limit each IP to 100 requests per 15 minutes
+        message: {
+            success: false,
+            message: 'Too many phone authentication attempts, please try again later.'
+        },
+        standardHeaders: true,
+        legacyHeaders: false
+    })(req, res, next);
+};
+
+// OTP verification limiter - DISABLED in development mode
+const otpVerificationLimiter = (req, res, next) => {
+    // Skip all rate limiting in development mode
+    if (process.env.NODE_ENV === 'development') {
+        return next();
+    }
+    
+    // In production, apply lenient rate limiting for OTP
+    return rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 50, // Allow 50 OTP verification attempts per 15 minutes
+        message: {
+            success: false,
+            message: 'Too many verification attempts. Please try again later.'
+        },
+        standardHeaders: true,
+        legacyHeaders: false
+    })(req, res, next);
+};
 
 // Apply rate limiting to all phone auth routes
 router.use(phoneAuthLimiter);
@@ -160,7 +188,7 @@ router.post('/register-phone', [
 });
 
 // Phone registration - Step 2: Verify OTP and create account
-router.post('/verify-phone-signup', [
+router.post('/verify-phone-signup', otpVerificationLimiter, [
     body('tempToken')
         .notEmpty()
         .withMessage('Temporary token is required'),
@@ -441,7 +469,7 @@ router.post('/forgot-password-phone', [
     }
 });
 
-router.post('/verify-phone-otp', [
+router.post('/verify-phone-otp', otpVerificationLimiter, [
     body('phone')
         .custom((value) => {
             const validation = isValidPhoneNumber(value);
@@ -524,6 +552,106 @@ router.post('/verify-phone-otp', [
     }
 });
 
+// Verify reset OTP only (separate from password reset)
+router.post('/verify-reset-otp', [
+    body('phone')
+        .custom((value) => {
+            const validation = isValidPhoneNumber(value);
+            if (!validation.isValid) {
+                throw new Error('Please provide a valid phone number');
+            }
+            return true;
+        }),
+    body('otp')
+        .isLength({ min: 6, max: 6 })
+        .isNumeric()
+        .withMessage('OTP must be 6 digits'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { phone, otp } = req.body;
+        
+        // Validate and format phone number
+        const phoneValidation = isValidPhoneNumber(phone);
+        const formattedPhone = phoneValidation.formatted;
+        
+        console.log(`[Verify Reset OTP] Verifying OTP for phone: ${formattedPhone}`);
+        
+        // Find user by phone number
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('phone', formattedPhone)
+            .single();
+            
+        if (!profile) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid reset request'
+            });
+        }
+        
+        // Verify OTP - use Twilio Verify if configured
+        let otpVerified = false;
+        
+        if (process.env.TWILIO_VERIFY_SERVICE_SID) {
+            console.log('[Verify Reset OTP] Using Twilio Verify API');
+            const twilioVerification = await verifyOTPWithTwilio(formattedPhone, otp);
+            otpVerified = twilioVerification.success;
+            
+            console.log(`[Verify Reset OTP] Twilio verification result: ${otpVerified ? 'SUCCESS' : 'FAILED'}`);
+            
+            if (!otpVerified) {
+                return res.status(400).json({
+                    success: false,
+                    message: twilioVerification.message || 'Invalid or expired code'
+                });
+            }
+        } else {
+            console.log('[Verify Reset OTP] Using database verification');
+            // Fallback to database verification
+            const { data: verification, error: verifyError } = await supabase
+                .from('phone_verifications')
+                .select('*')
+                .eq('phone_number', formattedPhone)
+                .eq('otp_code', otp)
+                .eq('purpose', 'password_reset')
+                .eq('verified', false)
+                .gt('expires_at', new Date().toISOString())
+                .single();
+                
+            if (verifyError || !verification) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid or expired code'
+                });
+            }
+            
+            // Mark as verified
+            await supabase
+                .from('phone_verifications')
+                .update({ verified: true })
+                .eq('id', verification.id);
+                
+            otpVerified = true;
+        }
+        
+        // Return success with reset token
+        res.status(200).json({
+            success: true,
+            message: 'OTP verified successfully',
+            resetToken: otp // Send back OTP as token for next step
+        });
+        
+    } catch (error) {
+        console.error('Reset OTP verification error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Verification failed. Please try again.'
+        });
+    }
+});
+
 router.post('/reset-password-phone', [
     body('phone')
         .custom((value) => {
@@ -568,9 +696,17 @@ router.post('/reset-password-phone', [
         // Verify OTP - use Twilio Verify if configured
         let otpVerified = false;
         
+        console.log(`[Reset Password] Verifying OTP for phone: ${formattedPhone}`);
+        
         if (process.env.TWILIO_VERIFY_SERVICE_SID) {
+            console.log('[Reset Password] Using Twilio Verify API');
             const twilioVerification = await verifyOTPWithTwilio(formattedPhone, otp);
             otpVerified = twilioVerification.success;
+            
+            console.log(`[Reset Password] Twilio verification result: ${otpVerified ? 'SUCCESS' : 'FAILED'}`);
+            if (!otpVerified) {
+                console.log(`[Reset Password] Twilio error: ${twilioVerification.message}`);
+            }
             
             if (!otpVerified) {
                 return res.status(400).json({
@@ -579,6 +715,7 @@ router.post('/reset-password-phone', [
                 });
             }
         } else {
+            console.log('[Reset Password] Using database verification');
             // Fallback to database verification
             const { data: verification, error: verifyError } = await supabase
                 .from('phone_verifications')

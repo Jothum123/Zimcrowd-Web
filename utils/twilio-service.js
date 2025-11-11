@@ -68,11 +68,22 @@ const sendSMSOTP = async (phoneNumber, otp) => {
         };
     } catch (error) {
         console.error('Twilio SMS Error:', error);
+        
+        // Provide more specific error messages
+        let errorMessage = 'Failed to send SMS';
+        if (error.code === 60410) {
+            errorMessage = 'Phone number prefix is blocked by Twilio. Please contact support or use a different number.';
+        } else if (error.code === 21211) {
+            errorMessage = 'Invalid phone number format';
+        } else if (error.code === 20003) {
+            errorMessage = 'Authentication failed. Check Twilio credentials.';
+        }
 
         return {
             success: false,
             error: error.message,
-            message: 'Failed to send SMS'
+            errorCode: error.code,
+            message: errorMessage
         };
     }
 };
@@ -104,10 +115,21 @@ const sendPasswordResetSMS = async (phoneNumber, otp) => {
     } catch (error) {
         console.error('Twilio Password Reset SMS Error:', error);
         
+        // Provide more specific error messages
+        let errorMessage = 'Failed to send password reset SMS';
+        if (error.code === 60410) {
+            errorMessage = 'Phone number prefix is blocked by Twilio. Please contact support or use a different number.';
+        } else if (error.code === 21211) {
+            errorMessage = 'Invalid phone number format';
+        } else if (error.code === 20003) {
+            errorMessage = 'Authentication failed. Check Twilio credentials.';
+        }
+        
         return {
             success: false,
             error: error.message,
-            message: 'Failed to send password reset SMS'
+            errorCode: error.code,
+            message: errorMessage
         };
     }
 };
@@ -130,21 +152,27 @@ const isValidPhoneNumber = (phoneNumber) => {
     if (cleaned.startsWith('263')) {
         // Zimbabwe - already has country code
         formatted = `+${cleaned}`;
+    } else if (cleaned.startsWith('1') && cleaned.length === 11) {
+        // US/Canada - already has country code
+        formatted = `+${cleaned}`;
     } else if (cleaned.startsWith('0') && cleaned.length === 10) {
         // Zimbabwe local format (0771234567)
         formatted = `+263${cleaned.slice(1)}`;
     } else if (cleaned.length === 9 && cleaned.startsWith('77')) {
         // Zimbabwe mobile without leading zero
         formatted = `+263${cleaned}`;
-    } else if (!cleaned.startsWith('+') && cleaned.length >= 8) {
-        // Assume Zimbabwe if no country code
-        formatted = `+263${cleaned}`;
     } else if (cleaned.startsWith('+')) {
         // Already has + prefix
-        formatted = `+${cleaned.slice(1)}`;
+        formatted = phoneNumber; // Keep original formatting
+    } else if (cleaned.length === 10 && cleaned.startsWith('77')) {
+        // Zimbabwe mobile without country code
+        formatted = `+263${cleaned}`;
+    } else if (cleaned.length === 10) {
+        // Could be US number without country code - assume US for now
+        formatted = `+1${cleaned}`;
     } else {
-        // Other international formats - keep as is but add +
-        formatted = `+${cleaned}`;
+        // Default: assume Zimbabwe for shorter numbers
+        formatted = `+263${cleaned}`;
     }
 
     return {
