@@ -596,7 +596,7 @@
         // API Configuration
         const API_URL = window.location.hostname === 'localhost'
             ? 'http://localhost:5003'
-            : 'https://zimcrowd-backend-qdh34h2vq-jojola.vercel.app';
+            : 'https://zimcrowd-backend-pfzb6c7x3-jojola.vercel.app';
 
         let currentSignupMethod = 'email'; // Default, will be auto-detected
         document.addEventListener('DOMContentLoaded', function() {
@@ -624,7 +624,7 @@
                     signupBtn.textContent = '📱 Send SMS Verification';
                     currentSignupMethod = 'phone';
                 } else {
-                    contactHint.innerHTML = '📧 Enter email address or 📱 phone number with country code';
+                    contactHint.innerHTML = '📧 Enter email address or 📱 phone number with country code (+263...)';
                     verificationMethod.classList.remove('show');
                     signupBtn.textContent = '📨 Send Verification Code';
                     currentSignupMethod = 'unknown';
@@ -733,16 +733,27 @@
         function detectContactMethod(value) {
             if (!value) return 'unknown';
 
+            // Clean the value for better detection
+            const cleanValue = value.trim();
+
             // Check if it's an email (contains @ and looks like email)
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (emailRegex.test(value)) {
+            if (emailRegex.test(cleanValue)) {
                 return 'email';
             }
 
-            // Check if it's a phone number (starts with + or contains digits)
+            // Check if it's a phone number (starts with + or contains only digits/spaces/hyphens/parens)
             const phoneRegex = /^[\+]?[0-9\s\-\(\)]+$/;
-            if (phoneRegex.test(value) && (value.startsWith('+') || value.length >= 10)) {
-                return 'phone';
+            if (phoneRegex.test(cleanValue)) {
+                // Additional checks for phone numbers
+                const digitsOnly = cleanValue.replace(/\D/g, '');
+                if (digitsOnly.length >= 7 && digitsOnly.length <= 15) { // Reasonable phone length
+                    return 'phone';
+                }
+                // If starts with +, assume it's a phone number
+                if (cleanValue.startsWith('+')) {
+                    return 'phone';
+                }
             }
 
             return 'unknown';
