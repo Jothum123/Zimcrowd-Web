@@ -441,6 +441,89 @@ router.post('/forgot-password-phone', [
     }
 });
 
+router.post('/verify-phone-otp', [
+    body('phone')
+        .custom((value) => {
+            const validation = isValidPhoneNumber(value);
+            if (!validation.isValid) {
+                throw new Error('Please provide a valid phone number');
+            }
+            return true;
+        }),
+    body('otp')
+        .isLength({ min: 6, max: 6 })
+        .isNumeric()
+        .withMessage('OTP must be 6 digits'),
+    body('purpose')
+        .optional()
+        .isIn(['signup', 'password_reset'])
+        .withMessage('Invalid purpose'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { phone, otp, purpose = 'signup' } = req.body;
+        
+        // Validate and format phone number
+        const phoneValidation = isValidPhoneNumber(phone);
+        const formattedPhone = phoneValidation.formatted;
+        
+        // Verify OTP - use Twilio Verify if configured, otherwise fallback to database
+        let otpVerified = false;
+        
+        if (process.env.TWILIO_VERIFY_SERVICE_SID) {
+            // Use Twilio Verify API
+            const twilioVerification = await verifyOTPWithTwilio(formattedPhone, otp);
+            otpVerified = twilioVerification.success;
+            
+            if (!otpVerified) {
+                return res.status(400).json({
+                    success: false,
+                    message: twilioVerification.message || 'Invalid verification code'
+                });
+            }
+        } else {
+            // Fallback to database verification
+            const { data: verification, error: verifyError } = await supabase
+                .from('phone_verifications')
+                .select('*')
+                .eq('phone_number', formattedPhone)
+                .eq('otp_code', otp)
+                .eq('purpose', purpose)
+                .eq('verified', false)
+                .gt('expires_at', new Date().toISOString())
+                .single();
+                
+            if (verifyError || !verification) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid or expired verification code'
+                });
+            }
+            
+            // Mark OTP as verified
+            await supabase
+                .from('phone_verifications')
+                .update({ verified: true })
+                .eq('id', verification.id);
+                
+            otpVerified = true;
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: 'OTP verified successfully',
+            phone: formattedPhone
+        });
+        
+    } catch (error) {
+        console.error('Phone OTP verification error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Verification failed. Please try again.'
+        });
+    }
+});
+
 router.post('/reset-password-phone', [
     body('phone')
         .custom((value) => {
