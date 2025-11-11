@@ -266,10 +266,20 @@
         .signup-prompt {
             text-align: center;
             margin-top: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .divider-text {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            font-weight: 400;
         }
 
         .signup-link {
-            color: #38e07b;
+            color: rgba(56, 224, 123, 0.9);
             text-decoration: none;
             font-weight: 500;
             transition: all 0.3s ease;
@@ -304,6 +314,11 @@
 
             .login-header h1 {
                 font-size: 28px;
+            }
+
+            .signup-prompt {
+                flex-direction: column;
+                gap: 12px;
             }
         }
     </style>
@@ -353,6 +368,8 @@
         </div>
 
         <div class="signup-prompt">
+            <a href="signup.html" class="signup-link">Create Account</a>
+            <span class="divider-text">or</span>
             <a href="index.html" class="signup-link">← Back to Home</a>
         </div>
     </div>
