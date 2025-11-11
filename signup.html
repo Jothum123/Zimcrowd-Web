@@ -847,13 +847,12 @@
                 data = await response.json();
 
                 if (data.success) {
-                    if (contactMethod === 'email') {
                         // Email verification - redirect to OTP page
                         localStorage.setItem('tempToken', data.tempToken);
                         localStorage.setItem('verificationEmail', contact);
                         showSuccess('📧 OTP sent to email! Redirecting to verification...');
                         setTimeout(() => {
-                            window.location.href = `verify-email-otp.html?email=${encodeURIComponent(contact)}&type=email-signup&token=${data.tempToken}`;
+                            window.location.href = `verify-email-otp.html?email=${encodeURIComponent(contact)}&type=signup&token=${data.tempToken}`;
                         }, 2000);
                     } else {
                         // Phone verification - redirect to OTP page
@@ -861,9 +860,8 @@
                         localStorage.setItem('verificationPhone', contact);
                         showSuccess('📱 SMS sent! Redirecting to verification...');
                         setTimeout(() => {
-                            window.location.href = `verify-otp.html?phone=${encodeURIComponent(contact)}&type=phone-signup&token=${data.tempToken}`;
+                            window.location.href = `verify-otp.html?phone=${encodeURIComponent(contact)}&type=signup&token=${data.tempToken}`;
                         }, 2000);
-                    }
                 } else {
                     showError(data.message || 'Registration failed. Please try again.');
                 }
