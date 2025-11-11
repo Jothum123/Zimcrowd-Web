@@ -541,7 +541,7 @@
                 <img src="assets/images/Zimcrowd_Dark.png" alt="ZimCrowd" class="otp-logo">
                 <h1 style="color: white !important;">Verify Your Account</h1>
                 <p class="otp-subtitle" style="color: rgba(255, 255, 255, 0.9) !important;">
-                    We've sent a 6-digit code to <span class="otp-email" id="userEmail">your email</span>. Please enter it below to continue.
+                    We've sent a 6-digit code to <span class="otp-email" id="userContact">your contact</span>. Please enter it below to continue.
                 </p>
             </div>
 
@@ -613,6 +613,11 @@
 
         // OTP Functionality
         document.addEventListener('DOMContentLoaded', function() {
+            // API Configuration
+            const API_URL = window.location.hostname === 'localhost' 
+                ? 'http://localhost:5003'
+                : 'https://zimcrowd-backend-qsvfl2nqu-jojola.vercel.app';
+
             const otpInputs = document.querySelectorAll('.otp-input');
             const otpForm = document.getElementById('otpForm');
             const verifyBtn = document.getElementById('verifyBtn');
@@ -624,10 +629,30 @@
             const timerDisplay = document.getElementById('timer');
             const userEmailDisplay = document.getElementById('userEmail');
 
-            // Get email from URL params or localStorage
+            // Get contact info from URL params or localStorage (supports both email and phone)
             const urlParams = new URLSearchParams(window.location.search);
-            const email = urlParams.get('email') || localStorage.getItem('verificationEmail') || 'your email';
-            userEmailDisplay.textContent = email;
+            const email = urlParams.get('email') || localStorage.getItem('verificationEmail');
+            const phone = urlParams.get('phone') || localStorage.getItem('verificationPhone');
+            
+            // Determine contact type and value
+            let contactValue, contactType, contactDisplay;
+            if (email) {
+                contactValue = email;
+                contactType = 'email';
+                contactDisplay = email;
+            } else if (phone) {
+                contactValue = phone;
+                contactType = 'phone';
+                contactDisplay = phone;
+            } else {
+                contactValue = 'your contact';
+                contactType = 'unknown';
+                contactDisplay = 'your contact';
+            }
+            
+            // Update the display
+            const userContactDisplay = document.getElementById('userContact');
+            userContactDisplay.textContent = contactDisplay;
 
             // Get verification type (signup or reset)
             const verificationType = urlParams.get('type') || 'signup';
@@ -717,9 +742,6 @@
 
                 try {
                     // Make API call to backend (auto-detect environment)
-                    const API_URL = window.location.hostname === 'localhost' 
-                        ? 'http://localhost:5003'
-                        : 'https://zimcrowd-backend-qsvfl2nqu-jojola.vercel.app';
                     
                     const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
                         method: 'POST',
@@ -727,7 +749,7 @@
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            identifier: userEmailDisplay.textContent || localStorage.getItem('verificationEmail') || localStorage.getItem('verificationIdentifier'),
+                            identifier: contactValue,
                             otp: otp,
                             type: verificationType
                         })
@@ -794,17 +816,49 @@
                 }, 1000);
             }
 
-            resendBtn.addEventListener('click', function() {
-                // Simulate resend
-                console.log('Resending OTP to:', email);
-                startResendTimer();
-                
-                // Show brief success message
+            resendBtn.addEventListener('click', async function() {
+                // Disable button and show loading
+                resendBtn.disabled = true;
                 const originalText = resendBtn.textContent;
-                resendBtn.textContent = 'Code Sent!';
-                setTimeout(() => {
-                    resendBtn.textContent = originalText;
-                }, 2000);
+                resendBtn.textContent = 'Sending...';
+
+                try {
+                    const response = await fetch(`${API_URL}/api/auth/resend-otp`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            identifier: contactValue,
+                            type: contactType
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Show success message
+                        resendBtn.textContent = 'Code Sent!';
+                        setTimeout(() => {
+                            resendBtn.textContent = originalText;
+                            startResendTimer();
+                        }, 2000);
+                    } else {
+                        // Show error
+                        resendBtn.textContent = 'Failed to resend';
+                        setTimeout(() => {
+                            resendBtn.textContent = originalText;
+                            resendBtn.disabled = false;
+                        }, 2000);
+                    }
+                } catch (error) {
+                    console.error('Resend error:', error);
+                    resendBtn.textContent = 'Network error';
+                    setTimeout(() => {
+                        resendBtn.textContent = originalText;
+                        resendBtn.disabled = false;
+                    }, 2000);
+                }
             });
 
             // Start timer on page load
