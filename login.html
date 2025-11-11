@@ -281,77 +281,6 @@
             text-decoration: underline;
         }
 
-        .password-reset-section {
-            margin: 20px 0;
-        }
-
-        .password-reset-content {
-            background: rgba(56, 224, 123, 0.08);
-            border: 1px solid rgba(56, 224, 123, 0.15);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .password-reset-icon {
-            font-size: 24px;
-            color: rgba(56, 224, 123, 0.8);
-            background: rgba(56, 224, 123, 0.1);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .password-reset-text {
-            flex: 1;
-            text-align: left;
-        }
-
-        .password-reset-text h4 {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .password-reset-text p {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 13px;
-            line-height: 1.4;
-            margin-bottom: 12px;
-        }
-
-        .password-reset-btn {
-            background: rgba(56, 224, 123, 0.15);
-            color: rgba(56, 224, 123, 0.9);
-            padding: 8px 16px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(56, 224, 123, 0.2);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-
-        .password-reset-btn:hover {
-            background: rgba(56, 224, 123, 0.25);
-            transform: translateY(-1px);
-            color: #4ade80;
-        }
-
         .error-message {
             background: rgba(239, 68, 68, 0.1);
             border: 1px solid rgba(239, 68, 68, 0.2);
@@ -375,16 +304,6 @@
 
             .login-header h1 {
                 font-size: 28px;
-            }
-
-            .password-reset-content {
-                flex-direction: column;
-                text-align: center;
-                gap: 12px;
-            }
-
-            .password-reset-text {
-                text-align: center;
             }
         }
     </style>
@@ -431,23 +350,6 @@
 
         <div class="divider">
             <span>or</span>
-        </div>
-
-        <div class="password-reset-section">
-            <div class="password-reset-content">
-                <i class="fas fa-unlock-alt password-reset-icon"></i>
-                <div class="password-reset-text">
-                    <h4>Forgot Your Password?</h4>
-                    <p>Don't worry! Reset it securely with email or SMS verification.</p>
-                    <a href="forgot-password.html" class="password-reset-btn">
-                        <i class="fas fa-key"></i> Reset Password
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="divider">
-            <span>new user?</span>
         </div>
 
         <div class="signup-prompt">
