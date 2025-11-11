@@ -10,7 +10,11 @@ const {
     sendOTPEmail,
     sendPasswordResetOTPEmail,
     isValidEmail,
-    formatEmailForDisplay
+    formatEmailForDisplay,
+    signInWithGoogle,
+    handleGoogleAuthResult,
+    sendFirebaseEmailVerification,
+    verifyFirebaseEmail
 } = require('../utils/email-service');
 
 const router = express.Router();
@@ -653,6 +657,182 @@ router.post('/resend-email-otp', [
         res.status(500).json({
             success: false,
             message: 'Failed to resend code. Please try again.'
+        });
+    }
+});
+
+// Firebase Email Verification - Send verification link
+router.post('/send-firebase-verification', [
+    body('email')
+        .isEmail()
+        .normalizeEmail()
+        .withMessage('Please provide a valid email address'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        const normalizedEmail = email.toLowerCase();
+
+        // Validate email
+        if (!isValidEmail(normalizedEmail)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid email format'
+            });
+        }
+
+        // Check if email already exists
+        const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('email', normalizedEmail)
+            .single();
+
+        if (existingProfile) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email already registered'
+            });
+        }
+
+        // Send Firebase email verification
+        const firebaseResult = await sendFirebaseEmailVerification(normalizedEmail);
+
+        if (!firebaseResult.success) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to send verification email'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Verification link sent to your email',
+            email: formatEmailForDisplay(normalizedEmail),
+            note: 'Check your email and click the verification link'
+        });
+
+    } catch (error) {
+        console.error('Firebase email verification error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Verification request failed. Please try again.'
+        });
+    }
+});
+
+// Firebase Email Verification - Verify email link
+router.post('/verify-firebase-email', [
+    body('emailLink')
+        .notEmpty()
+        .withMessage('Email link is required'),
+    body('email')
+        .isEmail()
+        .normalizeEmail()
+        .withMessage('Please provide a valid email address'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { emailLink, email } = req.body;
+
+        const normalizedEmail = email.toLowerCase();
+
+        // Verify Firebase email link
+        const verifyResult = await verifyFirebaseEmail(emailLink, normalizedEmail);
+
+        if (!verifyResult.success) {
+            return res.status(400).json({
+                success: false,
+                message: verifyResult.message || 'Email verification failed'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: verifyResult.message,
+            user: verifyResult.user
+        });
+
+    } catch (error) {
+        console.error('Firebase email verification error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Email verification failed. Please try again.'
+        });
+    }
+});
+
+// Google Authentication - Initiate sign in
+router.post('/google-signin', async (req, res) => {
+    try {
+        const googleAuthResult = await signInWithGoogle();
+
+        if (!googleAuthResult.success) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to initiate Google authentication'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Google authentication initiated',
+            note: 'Use client-side Firebase SDK to complete authentication'
+        });
+
+    } catch (error) {
+        console.error('Google signin error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Google authentication failed. Please try again.'
+        });
+    }
+});
+
+// Google Authentication - Handle auth result
+router.post('/google-auth-callback', [
+    body('idToken')
+        .notEmpty()
+        .withMessage('ID token is required'),
+    body('user')
+        .notEmpty()
+        .withMessage('User data is required'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { idToken, user } = req.body;
+
+        // Create a mock userCredential object for server-side processing
+        const userCredential = {
+            user: {
+                uid: user.uid,
+                email: user.email,
+                displayName: user.displayName,
+                emailVerified: user.emailVerified
+            }
+        };
+
+        const authResult = await handleGoogleAuthResult(userCredential);
+
+        if (!authResult.success) {
+            return res.status(500).json({
+                success: false,
+                message: 'Google authentication processing failed'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Google authentication successful',
+            user: authResult.user
+        });
+
+    } catch (error) {
+        console.error('Google auth callback error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Google authentication processing failed. Please try again.'
         });
     }
 });

@@ -1,4 +1,4 @@
-﻿require('dotenv').config();
+require('dotenv').config();
 require('express-async-errors');
 
 const express = require('express');
@@ -77,6 +77,7 @@ app.get('/api/test', (req, res) => {
                 verifyPhoneSignup: 'POST /api/phone-auth/verify-phone-signup',
                 loginPhone: 'POST /api/phone-auth/login-phone',
                 forgotPasswordPhone: 'POST /api/phone-auth/forgot-password-phone',
+                verifyResetOtp: 'POST /api/phone-auth/verify-reset-otp',
                 resetPasswordPhone: 'POST /api/phone-auth/reset-password-phone',
                 resendPhoneOTP: 'POST /api/phone-auth/resend-phone-otp'
             },
@@ -121,6 +122,7 @@ app.use('*', (req, res) => {
             'POST /api/phone-auth/verify-phone-signup',
             'POST /api/phone-auth/login-phone',
             'POST /api/phone-auth/forgot-password-phone',
+            'POST /api/phone-auth/verify-reset-otp',
             'POST /api/phone-auth/reset-password-phone',
             'POST /api/phone-auth/resend-phone-otp',
             'POST /api/email-auth/register-email',
@@ -163,12 +165,12 @@ const testTwilioConnectionOnStartup = async () => {
 
 // Test Email connection on startup
 const testEmailConnectionOnStartup = async () => {
-    const emailConfigured = process.env.GMAIL_USER || process.env.OUTLOOK_USER || process.env.SMTP_HOST;
+    const emailConfigured = process.env.RESEND_API_KEY;
     if (emailConfigured) {
         await testEmailConnection();
     } else {
         console.warn('ÔÜá´©Å  Email credentials not found - Email OTP features disabled');
-        console.warn('   Add email credentials (GMAIL_USER/GMAIL_APP_PASSWORD or OUTLOOK_USER/OUTLOOK_PASSWORD or SMTP_*) to enable email OTP');
+        console.warn('   Add RESEND_API_KEY to enable email OTP');
     }
 };
 

@@ -523,14 +523,49 @@
             color: var(--color-green);
         }
 
-        @media (max-width: 640px) {
-            .signup-footer .footer-links {
-                gap: 16px;
-            }
+        .verification-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
 
-            .signup-footer .footer-links a {
-                font-size: 13px;
-            }
+        .verification-tab {
+            flex: 1;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+
+        .verification-tab:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(56, 224, 123, 0.3);
+        }
+
+        .verification-tab.active {
+            background: var(--color-green);
+            color: white;
+            border-color: var(--color-green);
+            box-shadow: 0 4px 12px rgba(56, 224, 123, 0.3);
+        }
+
+        .verification-description {
+            margin-top: 8px;
+        }
+
+        .method-description {
+            color: #64748b;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -555,7 +590,7 @@
                 </a>
             </div>
             <div class="form-title">Create Account</div>
-            <div class="form-subtitle">Join thousands of Zimbabweans with secure email or phone verification - enter either email or phone number</div>
+            <div class="form-subtitle">Join thousands of Zimbabweans with secure SMS verification</div>
 
 
             <div class="error-message" id="errorMessage"></div>
@@ -574,12 +609,11 @@
                     </div>
                 </div>
 
-                <!-- Unified Contact Field -->
+                <!-- Phone Number Field -->
                 <div class="form-group">
-                    <label class="form-label">Email or Phone Number <span class="required">*</span></label>
-                    <input type="text" class="form-input" id="contact" placeholder="tendai@example.com or +263 77 123 4567" required>
-                    <div class="field-hint" id="contactHint">📧 Enter email address or 📱 phone number with country code</div>
-                    <div class="verification-method" id="verificationMethod"></div>
+                    <label class="form-label">Phone Number <span class="required">*</span></label>
+                    <input type="tel" class="form-input" id="phone" placeholder="+263 77 123 4567" required>
+                    <div class="field-hint">📱 Enter phone number with country code (+263 for Zimbabwe)</div>
                 </div>
 
                 <div class="form-row">
@@ -638,7 +672,7 @@
                     </label>
                 </div>
 
-                <button type="submit" class="submit-btn" id="signupBtn">📨 Send Verification Code</button>
+                <button type="submit" class="submit-btn" id="signupBtn">📱 Send SMS Verification</button>
             </form>
 
 
@@ -662,39 +696,10 @@
             ? 'http://localhost:5003'
             : 'https://zimcrowd-backend-pfzb6c7x3-jojola.vercel.app';
 
-        let currentSignupMethod = 'email'; // Default, will be auto-detected
+        let currentSignupMethod = 'phone'; // Only SMS signup now
+
         document.addEventListener('DOMContentLoaded', function() {
-
-            // Contact field input detection
-            const contactField = document.getElementById('contact');
-            const contactHint = document.getElementById('contactHint');
-            const verificationMethod = document.getElementById('verificationMethod');
-            const signupBtn = document.getElementById('signupBtn');
-
-            contactField.addEventListener('input', function() {
-                const value = this.value.trim();
-                const detectedMethod = detectContactMethod(value);
-
-                if (detectedMethod === 'email') {
-                    contactHint.innerHTML = '📧 Email address detected - OTP will be sent via email';
-                    verificationMethod.innerHTML = 'Verification will be sent to your email inbox';
-                    verificationMethod.classList.add('show');
-                    signupBtn.textContent = '📧 Send Email Verification';
-                    currentSignupMethod = 'email';
-                } else if (detectedMethod === 'phone') {
-                    contactHint.innerHTML = '📱 Phone number detected - OTP will be sent via SMS';
-                    verificationMethod.innerHTML = 'Verification will be sent as SMS to your phone';
-                    verificationMethod.classList.add('show');
-                    signupBtn.textContent = '📱 Send SMS Verification';
-                    currentSignupMethod = 'phone';
-                } else {
-                    contactHint.innerHTML = '📧 Enter email address or 📱 phone number with country code (+263...)';
-                    verificationMethod.classList.remove('show');
-                    signupBtn.textContent = '📨 Send Verification Code';
-                    currentSignupMethod = 'unknown';
-                }
-            });
-
+            // No complex contact detection needed - only phone numbers accepted
         });
 
         // Show error message
@@ -793,43 +798,13 @@
             }
         }
 
-        // Detect if input is email or phone number
-        function detectContactMethod(value) {
-            if (!value) return 'unknown';
-
-            // Clean the value for better detection
-            const cleanValue = value.trim();
-
-            // Check if it's an email (contains @ and looks like email)
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (emailRegex.test(cleanValue)) {
-                return 'email';
-            }
-
-            // Check if it's a phone number (starts with + or contains only digits/spaces/hyphens/parens)
-            const phoneRegex = /^[\+]?[0-9\s\-\(\)]+$/;
-            if (phoneRegex.test(cleanValue)) {
-                // Additional checks for phone numbers
-                const digitsOnly = cleanValue.replace(/\D/g, '');
-                if (digitsOnly.length >= 7 && digitsOnly.length <= 15) { // Reasonable phone length
-                    return 'phone';
-                }
-                // If starts with +, assume it's a phone number
-                if (cleanValue.startsWith('+')) {
-                    return 'phone';
-                }
-            }
-
-            return 'unknown';
-        }
-
         // Handle signup form submission
         document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const firstName = document.getElementById('firstName').value.trim();
             const lastName = document.getElementById('lastName').value.trim();
-            const contact = document.getElementById('contact').value.trim();
+            const phone = document.getElementById('phone').value.trim();
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             const country = document.getElementById('country').value;
@@ -837,15 +812,8 @@
             const termsAccepted = document.getElementById('terms').checked;
 
             // Validation
-            if (!firstName || !lastName || !contact || !password || !confirmPassword || !country || !city) {
+            if (!firstName || !lastName || !phone || !password || !confirmPassword || !country || !city) {
                 showError('Please fill in all required fields');
-                return;
-            }
-
-            // Detect contact method
-            const contactMethod = detectContactMethod(contact);
-            if (contactMethod === 'unknown') {
-                showError('Please enter a valid email address or phone number');
                 return;
             }
 
@@ -868,70 +836,40 @@
             // Show loading state
             const submitBtn = this.querySelector('.submit-btn');
             const originalText = submitBtn.textContent;
-            submitBtn.textContent = contactMethod === 'email' ? '📧 Sending Email...' : '📱 Sending SMS...';
+
+            submitBtn.textContent = '📱 Sending SMS...';
             submitBtn.disabled = true;
 
             try {
-                let response, data;
+                // Phone registration only
+                const response = await fetch(`${API_URL}/api/phone-auth/register-phone`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        firstName,
+                        lastName,
+                        phone,
+                        password,
+                        country,
+                        city
+                    })
+                });
 
-                if (contactMethod === 'email') {
-                    // Email registration
-                    response = await fetch(`${API_URL}/api/email-auth/register-email`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            firstName,
-                            lastName,
-                            email: contact,
-                            password,
-                            country,
-                            city
-                        })
-                    });
-                } else {
-                    // Phone registration
-                    response = await fetch(`${API_URL}/api/phone-auth/register-phone`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            firstName,
-                            lastName,
-                            phone: contact,
-                            password,
-                            country,
-                            city
-                        })
-                    });
-                }
-
-                data = await response.json();
+                const data = await response.json();
 
                 if (data.success) {
-                    if (contactMethod === 'email') {
-                        // Email verification - redirect to OTP page
-                        localStorage.setItem('tempToken', data.tempToken);
-                        localStorage.setItem('verificationEmail', contact);
-                        localStorage.removeItem('verificationPhone'); // Clear phone to avoid conflicts
-                        showSuccess('📧 OTP sent to email! Redirecting to verification...');
-                        setTimeout(() => {
-                            window.location.href = `verify-otp.html?email=${encodeURIComponent(contact)}&type=signup&token=${data.tempToken}`;
-                        }, 2000);
-                    } else {
-                        // Phone verification - redirect to OTP page
-                        localStorage.setItem('tempToken', data.tempToken);
-                        localStorage.setItem('verificationPhone', contact);
-                        localStorage.removeItem('verificationEmail'); // Clear email to avoid conflicts
-                        showSuccess('📱 SMS sent! Redirecting to verification...');
-                        setTimeout(() => {
-                            window.location.href = `verify-otp.html?phone=${encodeURIComponent(contact)}&type=signup&token=${data.tempToken}`;
-                        }, 2000);
-                    }
+                    // Phone verification - redirect to OTP page
+                    localStorage.setItem('tempToken', data.tempToken);
+                    localStorage.setItem('verificationPhone', phone);
+                    localStorage.removeItem('verificationEmail'); // Clear email to avoid conflicts
+                    showSuccess('📱 SMS sent! Redirecting to verification...');
+                    setTimeout(() => {
+                        window.location.href = `verify-otp.html?phone=${encodeURIComponent(phone)}&type=signup&token=${data.tempToken}`;
+                    }, 2000);
                 } else {
-                    showError(data.message || 'Registration failed. Please try again.');
+                    showError(data.message || 'Failed to send SMS verification');
                 }
             } catch (error) {
                 console.error('Registration error:', error);
