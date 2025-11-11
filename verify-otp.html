@@ -759,7 +759,7 @@
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            [contactType === 'email' ? 'email' : contactType === 'phone' ? 'phone' : 'identifier']: contactType === 'phone' && verificationType !== 'reset' ? localStorage.getItem('tempToken') : contactValue,
+                            [contactType === 'email' ? 'email' : contactType === 'phone' ? 'phone' : 'identifier']: contactValue,
                             otp: otp,
                             ...(contactType === 'email' ? { type: verificationType } : {}),
                             ...(contactType === 'phone' ? { purpose: verificationType === 'reset' ? 'password_reset' : 'signup' } : {})
