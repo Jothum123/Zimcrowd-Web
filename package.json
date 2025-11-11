@@ -27,9 +27,12 @@
     "express-validator": "^7.0.1",
     "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.2",
+<<<<<<< HEAD
     "nodemailer": "^6.9.7",
     "resend": "^6.4.2",
     "twilio": "^5.10.4",
+=======
+>>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
     "validator": "^13.11.0"
   },
   "devDependencies": {

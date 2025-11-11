@@ -8,18 +8,24 @@ const path = require('path');
 
 // Import routes
 const authRoutes = require('./routes/auth');
+<<<<<<< HEAD
 const phoneAuthRoutes = require('./routes/phone-auth');
 const emailAuthRoutes = require('./routes/email-auth');
+=======
+>>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
 
 // Import Supabase utilities
 const { supabase } = require('./utils/supabase-auth');
 
+<<<<<<< HEAD
 // Import Twilio utilities
 const { testTwilioConnection } = require('./utils/twilio-service');
 
 // Import Email utilities
 const { testEmailConnection } = require('./utils/email-service');
 
+=======
+>>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
 const app = express();
 
 // Security middleware
@@ -44,8 +50,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
 app.use('/api/auth', authRoutes);
+<<<<<<< HEAD
 app.use('/api/phone-auth', phoneAuthRoutes);
 app.use('/api/email-auth', emailAuthRoutes);
+=======
+>>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -72,6 +81,7 @@ app.get('/api/test', (req, res) => {
                 resetPassword: 'POST /api/auth/reset-password',
                 resendOTP: 'POST /api/auth/resend-otp'
             },
+<<<<<<< HEAD
             phoneAuth: {
                 registerPhone: 'POST /api/phone-auth/register-phone',
                 verifyPhoneSignup: 'POST /api/phone-auth/verify-phone-signup',
@@ -88,6 +98,9 @@ app.get('/api/test', (req, res) => {
                 resetPasswordEmail: 'POST /api/email-auth/reset-password-email',
                 resendEmailOTP: 'POST /api/email-auth/resend-email-otp'
             }
+=======
+            health: 'GET /api/health'
+>>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
         }
     });
 });
@@ -117,6 +130,7 @@ app.use('*', (req, res) => {
             'POST /api/auth/verify-otp',
             'POST /api/auth/reset-password',
             'POST /api/auth/resend-otp',
+<<<<<<< HEAD
             'POST /api/phone-auth/register-phone',
             'POST /api/phone-auth/verify-phone-signup',
             'POST /api/phone-auth/login-phone',
@@ -129,6 +143,8 @@ app.use('*', (req, res) => {
             'POST /api/email-auth/forgot-password-email',
             'POST /api/email-auth/reset-password-email',
             'POST /api/email-auth/resend-email-otp',
+=======
+>>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
             'GET /api/health',
             'GET /api/test'
         ]
@@ -151,6 +167,7 @@ const testSupabaseConnection = async () => {
     }
 };
 
+<<<<<<< HEAD
 // Test Twilio connection on startup
 const testTwilioConnectionOnStartup = async () => {
     if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
@@ -172,15 +189,22 @@ const testEmailConnectionOnStartup = async () => {
     }
 };
 
+=======
+>>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
 // Start server
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
     try {
+<<<<<<< HEAD
         // Test connections
         await testSupabaseConnection();
         await testTwilioConnectionOnStartup();
         await testEmailConnectionOnStartup();
+=======
+        // Test Supabase connection
+        await testSupabaseConnection();
+>>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
 
         app.listen(PORT, () => {
             console.log(`

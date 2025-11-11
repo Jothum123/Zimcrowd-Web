@@ -3,17 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<<<<<<< HEAD
-    <title>Forgot Password - ZimCrowd</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-=======
     <meta name="color-scheme" content="light">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Forgot Password - ZimCrowd</title>
+    <title>Verify OTP - ZimCrowd</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -27,7 +21,6 @@
         }
 
         /* Reset */
->>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
         * {
             margin: 0;
             padding: 0;
@@ -36,9 +29,6 @@
 
         body {
             font-family: 'Space Grotesk', sans-serif;
-<<<<<<< HEAD
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.9) 100%);
-=======
         }
 
         /* Navigation Styles */
@@ -261,36 +251,18 @@
             margin: 20px 0;
         }
 
-        /* Forgot Password Page Styles */
-        .forgot-password-container {
->>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
+        /* OTP Verification Page Styles */
+        .otp-container {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-<<<<<<< HEAD
-            padding: 20px;
-        }
-
-        .container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            padding: 40px;
-            width: 100%;
-            max-width: 450px;
-            border: 1px solid rgba(56, 231, 123, 0.3);
-            box-shadow: 0 8px 32px rgba(56, 231, 123, 0.2);
-        }
-
-        .logo {
-=======
             background: url('assets/images/pexels-brett-sayles-3963829.jpg') center/cover no-repeat;
             padding: 100px 20px 20px 20px;
             position: relative;
         }
 
-        .forgot-password-container::before {
+        .otp-container::before {
             content: '';
             position: absolute;
             top: 0;
@@ -301,7 +273,7 @@
             z-index: 0;
         }
 
-        .forgot-password-card {
+        .otp-card {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 24px;
             box-shadow: 0 8px 32px 0 rgba(56, 231, 123, 0.4), 0 0 60px rgba(56, 231, 123, 0.2);
@@ -315,49 +287,18 @@
             z-index: 1;
         }
 
-        .forgot-password-header {
->>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
+        .otp-header {
             text-align: center;
             margin-bottom: 30px;
         }
 
-<<<<<<< HEAD
-        .logo img {
-            width: 120px;
-            height: auto;
-        }
-
-        .logo h1 {
-            color: white;
-            font-size: 28px;
-            margin: 20px 0 10px 0;
-            font-weight: 700;
-        }
-
-        .subtitle {
-            color: rgba(255, 255, 255, 0.8);
-            text-align: center;
-            margin-bottom: 40px;
-            line-height: 1.5;
-        }
-
-        .form-group {
-            margin-bottom: 30px;
-        }
-
-        .form-label {
-            display: block;
-            color: white;
-            font-weight: 600;
-            margin-bottom: 10px;
-=======
-        .forgot-password-logo {
+        .otp-logo {
             width: 120px;
             height: auto;
             margin-bottom: 20px;
         }
 
-        .forgot-password-header h1 {
+        .otp-header h1 {
             color: white;
             font-size: 32px;
             margin-bottom: 10px;
@@ -365,79 +306,55 @@
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
 
-        .forgot-password-subtitle {
+        .otp-subtitle {
             color: rgba(255, 255, 255, 0.9);
             font-size: 16px;
             line-height: 1.5;
         }
 
-        .forgot-password-form {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-label {
+        .otp-email {
+            color: #38e77b;
             font-weight: 600;
-            color: white;
-            margin-bottom: 8px;
->>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
-            font-size: 14px;
         }
 
-        .form-input {
-<<<<<<< HEAD
-            width: 100%;
-            padding: 16px 20px;
-            background: rgba(255, 255, 255, 0.1);
+        .otp-form {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .otp-inputs {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .otp-input {
+            width: 60px;
+            height: 60px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
             border: 2px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
             color: white;
-            font-size: 16px;
             font-family: 'Space Grotesk', sans-serif;
             transition: all 0.3s ease;
         }
 
-        .form-input:focus {
+        .otp-input:focus {
             outline: none;
             border-color: #38e77b;
             background: rgba(255, 255, 255, 0.15);
             box-shadow: 0 0 0 3px rgba(56, 231, 123, 0.2);
-=======
-            padding: 16px 20px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            font-family: 'Space Grotesk', sans-serif;
->>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
+            transform: scale(1.05);
         }
 
-        .form-input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-<<<<<<< HEAD
-        .submit-btn {
-            width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #38e77b, #34d399);
-            border: none;
-            border-radius: 12px;
-            color: #0f172a;
-=======
-        .form-input:focus {
-            outline: none;
-            border-color: var(--color-green);
-            background: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 0 0 3px rgba(56, 231, 123, 0.2);
+        .otp-input.filled {
+            border-color: #38e77b;
+            background: rgba(56, 231, 123, 0.1);
         }
 
         .submit-btn {
@@ -446,22 +363,14 @@
             border: none;
             padding: 18px;
             border-radius: 12px;
->>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
-<<<<<<< HEAD
-            margin-bottom: 20px;
-        }
-
-        .submit-btn:hover:not(:disabled) {
-=======
             margin-top: 10px;
         }
 
         .submit-btn:hover {
->>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(56, 231, 123, 0.3);
         }
@@ -472,160 +381,77 @@
             transform: none;
         }
 
-<<<<<<< HEAD
-        .message {
-            padding: 16px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-weight: 500;
-            display: none;
-        }
-
-        .message.success {
-            background: rgba(56, 231, 123, 0.1);
-            border: 1px solid rgba(56, 231, 123, 0.3);
-            color: #4ade80;
-        }
-
-        .message.error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #fca5a5;
-        }
-
-        .back-link {
+        .resend-section {
             text-align: center;
             margin-top: 20px;
-        }
-
-        .back-link a {
-            color: #38e77b;
-            text-decoration: none;
-            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
             font-size: 14px;
         }
 
-        .back-link a:hover {
+        .resend-btn {
+            background: none;
+            border: none;
+            color: #38e77b;
+            font-weight: 600;
+            cursor: pointer;
             text-decoration: underline;
-        }
-
-        .spinner {
-            display: none;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(15, 23, 42, 0.3);
-            border-top-color: #0f172a;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-left: 10px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 30px 20px;
-                margin: 20px;
-            }
-
-            .logo h1 {
-                font-size: 24px;
-=======
-        .back-to-login {
-            text-align: center;
-            margin-top: 20px;
-            color: white;
             font-size: 14px;
+            font-family: 'Space Grotesk', sans-serif;
         }
 
-        .back-to-login a {
-            color: #38e77b;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .back-to-login a:hover {
+        .resend-btn:hover {
             color: #34d399;
-            text-decoration: underline;
         }
 
-        .success-message {
-            background: rgba(56, 231, 123, 0.15);
-            border: 1px solid rgba(56, 231, 123, 0.3);
+        .resend-btn:disabled {
+            color: rgba(255, 255, 255, 0.5);
+            cursor: not-allowed;
+            text-decoration: none;
+        }
+
+        .timer {
+            color: #38e77b;
+            font-weight: 600;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
             border-radius: 12px;
-            padding: 15px;
-            color: white;
+            padding: 12px;
+            color: #fca5a5;
             text-align: center;
             display: none;
-            margin-bottom: 20px;
+            font-size: 14px;
         }
 
-        .success-message.show {
+        .error-message.show {
             display: block;
         }
 
-        .success-message i {
-            color: #38e77b;
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-
         @media (max-width: 768px) {
-            .forgot-password-card {
+            .otp-card {
                 padding: 30px 25px;
                 margin: 20px;
             }
 
-            .forgot-password-header h1 {
+            .otp-header h1 {
                 font-size: 28px;
->>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
+            }
+
+            .otp-input {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+
+            .otp-inputs {
+                gap: 8px;
             }
         }
     </style>
 </head>
 <body>
-<<<<<<< HEAD
-    <div class="container">
-        <div class="logo">
-            <img src="assets/images/Zimcrowd_Dark.png" alt="ZimCrowd">
-            <h1>Forgot Password</h1>
-        </div>
-
-        <p class="subtitle">
-            Enter your email address and we'll send you a reset link. Works for any registered email address.
-        </p>
-
-        <div id="message" class="message"></div>
-
-        <form id="forgotPasswordForm">
-            <div class="form-group">
-                <label for="email" class="form-label">
-                    <i class="fas fa-envelope"></i> Email Address
-                </label>
-                <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    class="form-input"
-                    placeholder="Enter any registered email address"
-                    required
-                    autocomplete="email"
-                >
-            </div>
-
-            <button type="submit" class="submit-btn" id="submitBtn">
-                <span id="btnText">Send Reset Link</span>
-                <div class="spinner" id="spinner"></div>
-            </button>
-        </form>
-
-        <div class="back-link">
-            <a href="login.html">
-                <i class="fas fa-arrow-left"></i> Back to Login
-            </a>
-=======
     <!-- Navigation Bar -->
     <nav class="navigation">
         <div class="nav-container">
@@ -708,135 +534,50 @@
         </div>
     </div>
 
-    <!-- Forgot Password Container -->
-    <div class="forgot-password-container">
-        <div class="forgot-password-card">
-            <div class="forgot-password-header">
-                <img src="assets/images/Zimcrowd_Dark.png" alt="ZimCrowd" class="forgot-password-logo">
-                <h1 style="color: white !important;">Forgot Password?</h1>
-                <p class="forgot-password-subtitle" style="color: rgba(255, 255, 255, 0.9) !important;">No worries! Enter your email or phone number and we'll send you a code to reset your password.</p>
+    <!-- OTP Verification Container -->
+    <div class="otp-container">
+        <div class="otp-card">
+            <div class="otp-header">
+                <img src="assets/images/Zimcrowd_Dark.png" alt="ZimCrowd" class="otp-logo">
+                <h1 style="color: white !important;">Verify Your Account</h1>
+                <p class="otp-subtitle" style="color: rgba(255, 255, 255, 0.9) !important;">
+                    We've sent a 6-digit code to <span class="otp-email" id="userEmail">your email</span>. Please enter it below to continue.
+                </p>
             </div>
 
-            <div class="success-message" id="successMessage">
-                <i class="fas fa-check-circle"></i>
-                <p>Password reset code sent! Please check your email or SMS.</p>
+            <div class="error-message" id="errorMessage">
+                Invalid OTP code. Please try again.
             </div>
 
-            <form class="forgot-password-form" id="forgotPasswordForm">
-                <div class="form-group">
-                    <label for="email" class="form-label" style="color: white !important;">Email/Phone</label>
-                    <input 
-                        type="text" 
-                        id="email" 
-                        name="emailOrPhone" 
-                        class="form-input" 
-                        placeholder="Enter your email or phone number"
-                        required
-                    >
+            <form class="otp-form" id="otpForm">
+                <div class="otp-inputs">
+                    <input type="text" maxlength="1" class="otp-input" id="otp1" autocomplete="off">
+                    <input type="text" maxlength="1" class="otp-input" id="otp2" autocomplete="off">
+                    <input type="text" maxlength="1" class="otp-input" id="otp3" autocomplete="off">
+                    <input type="text" maxlength="1" class="otp-input" id="otp4" autocomplete="off">
+                    <input type="text" maxlength="1" class="otp-input" id="otp5" autocomplete="off">
+                    <input type="text" maxlength="1" class="otp-input" id="otp6" autocomplete="off">
                 </div>
 
-                <button type="submit" class="submit-btn" id="resetBtn">
-                    <span id="resetText">Send Reset Code</span>
-                    <div id="resetSpinner" style="display: none;">
+                <button type="submit" class="submit-btn" id="verifyBtn">
+                    <span id="verifyText">Verify Code</span>
+                    <div id="verifySpinner" style="display: none;">
                         <i class="fas fa-spinner fa-spin"></i>
                     </div>
                 </button>
             </form>
 
-            <div class="back-to-login">
-                <span style="color: white !important;">Remember your password?</span> <a href="login.html">Back to Login</a>
+            <div class="resend-section">
+                <span style="color: rgba(255, 255, 255, 0.9) !important;">Didn't receive the code?</span>
+                <button class="resend-btn" id="resendBtn">Resend Code</button>
+                <span id="timerSection" style="display: none;">
+                    <span style="color: rgba(255, 255, 255, 0.9) !important;">Resend in</span> <span class="timer" id="timer">60</span>s
+                </span>
             </div>
->>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
         </div>
     </div>
 
     <script>
-<<<<<<< HEAD
-        const API_URL = window.location.hostname === 'localhost'
-            ? 'http://localhost:5003'
-            : 'https://zimcrowd-backend-i8tjcuzr3-jojola.vercel.app';
-
-        const form = document.getElementById('forgotPasswordForm');
-        const emailInput = document.getElementById('email');
-        const submitBtn = document.getElementById('submitBtn');
-        const btnText = document.getElementById('btnText');
-        const spinner = document.getElementById('spinner');
-        const messageDiv = document.getElementById('message');
-
-        function showMessage(text, type) {
-            messageDiv.textContent = text;
-            messageDiv.className = `message ${type}`;
-            messageDiv.style.display = 'block';
-        }
-
-        function hideMessage() {
-            messageDiv.style.display = 'none';
-        }
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            hideMessage();
-
-            const email = emailInput.value.trim();
-
-            if (!email) {
-                showMessage('Please enter your email address', 'error');
-                return;
-            }
-
-            // Basic email validation
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                showMessage('Please enter a valid email address', 'error');
-                return;
-            }
-
-            // Show loading
-            submitBtn.disabled = true;
-            btnText.textContent = 'Sending...';
-            spinner.style.display = 'inline-block';
-
-            try {
-                const response = await fetch(`${API_URL}/api/email-auth/forgot-password-email`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    showMessage(
-                        `✅ Reset link sent! Check your email (${email}) and click the link to reset your password.`,
-                        'success'
-                    );
-
-                    // Clear the form
-                    emailInput.value = '';
-
-                    // Disable form temporarily to prevent spam
-                    setTimeout(() => {
-                        submitBtn.disabled = false;
-                        btnText.textContent = 'Send Reset Link';
-                        spinner.style.display = 'none';
-                    }, 30000); // 30 seconds cooldown
-
-                } else {
-                    showMessage(data.message || 'Failed to send reset link. Please check if this email is registered.', 'error');
-                    submitBtn.disabled = false;
-                    btnText.textContent = 'Send Reset Link';
-                    spinner.style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Forgot password error:', error);
-                showMessage('Network error. Please check your connection and try again.', 'error');
-                submitBtn.disabled = false;
-                btnText.textContent = 'Send Reset Link';
-                spinner.style.display = 'none';
-            }
-=======
         // Mobile Menu Functionality
         document.addEventListener('DOMContentLoaded', function() {
             const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
@@ -870,27 +611,109 @@
             });
         });
 
-        // Forgot Password Form Handling
+        // OTP Functionality
         document.addEventListener('DOMContentLoaded', function() {
-            const forgotPasswordForm = document.getElementById('forgotPasswordForm');
-            const resetBtn = document.getElementById('resetBtn');
-            const resetText = document.getElementById('resetText');
-            const resetSpinner = document.getElementById('resetSpinner');
+            const otpInputs = document.querySelectorAll('.otp-input');
+            const otpForm = document.getElementById('otpForm');
+            const verifyBtn = document.getElementById('verifyBtn');
+            const verifyText = document.getElementById('verifyText');
+            const verifySpinner = document.getElementById('verifySpinner');
+            const errorMessage = document.getElementById('errorMessage');
+            const resendBtn = document.getElementById('resendBtn');
+            const timerSection = document.getElementById('timerSection');
+            const timerDisplay = document.getElementById('timer');
+            const userEmailDisplay = document.getElementById('userEmail');
 
-            forgotPasswordForm.addEventListener('submit', async function(e) {
+            // Get email from URL params or localStorage
+            const urlParams = new URLSearchParams(window.location.search);
+            const email = urlParams.get('email') || localStorage.getItem('verificationEmail') || 'your email';
+            userEmailDisplay.textContent = email;
+
+            // Get verification type (signup or reset)
+            const verificationType = urlParams.get('type') || 'signup';
+
+            // Auto-focus first input
+            otpInputs[0].focus();
+
+            // Handle OTP input
+            otpInputs.forEach((input, index) => {
+                input.addEventListener('input', function(e) {
+                    const value = e.target.value;
+
+                    // Only allow numbers
+                    if (!/^\d*$/.test(value)) {
+                        e.target.value = '';
+                        return;
+                    }
+
+                    // Add filled class
+                    if (value) {
+                        e.target.classList.add('filled');
+                    } else {
+                        e.target.classList.remove('filled');
+                    }
+
+                    // Move to next input
+                    if (value && index < otpInputs.length - 1) {
+                        otpInputs[index + 1].focus();
+                    }
+
+                    // Auto-submit when all filled
+                    if (index === otpInputs.length - 1 && value) {
+                        const allFilled = Array.from(otpInputs).every(input => input.value);
+                        if (allFilled) {
+                            setTimeout(() => otpForm.dispatchEvent(new Event('submit')), 300);
+                        }
+                    }
+                });
+
+                // Handle backspace
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        otpInputs[index - 1].focus();
+                        otpInputs[index - 1].value = '';
+                        otpInputs[index - 1].classList.remove('filled');
+                    }
+                });
+
+                // Handle paste
+                input.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const pastedData = e.clipboardData.getData('text').slice(0, 6);
+                    const digits = pastedData.match(/\d/g);
+                    
+                    if (digits) {
+                        digits.forEach((digit, i) => {
+                            if (otpInputs[i]) {
+                                otpInputs[i].value = digit;
+                                otpInputs[i].classList.add('filled');
+                            }
+                        });
+                        
+                        const lastFilledIndex = Math.min(digits.length - 1, otpInputs.length - 1);
+                        otpInputs[lastFilledIndex].focus();
+                    }
+                });
+            });
+
+            // Handle form submission
+            otpForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
+                errorMessage.classList.remove('show');
 
-                const emailOrPhone = document.getElementById('email').value.trim();
+                // Get OTP value
+                const otp = Array.from(otpInputs).map(input => input.value).join('');
 
-                if (!emailOrPhone) {
-                    alert('Please enter your email or phone number');
+                if (otp.length !== 6) {
+                    errorMessage.textContent = 'Please enter a complete 6-digit code';
+                    errorMessage.classList.add('show');
                     return;
                 }
 
                 // Show loading state
-                resetBtn.disabled = true;
-                resetText.textContent = 'Sending Code...';
-                resetSpinner.style.display = 'inline-block';
+                verifyBtn.disabled = true;
+                verifyText.style.display = 'none';
+                verifySpinner.style.display = 'inline-block';
 
                 try {
                     // Make API call to backend (auto-detect environment)
@@ -898,40 +721,94 @@
                         ? 'http://localhost:5003'
                         : 'https://zimcrowd-backend-qsvfl2nqu-jojola.vercel.app';
                     
-                    const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+                    const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            emailOrPhone: emailOrPhone.trim()
+                            identifier: userEmailDisplay.textContent || localStorage.getItem('verificationEmail') || localStorage.getItem('verificationIdentifier'),
+                            otp: otp,
+                            type: verificationType
                         })
                     });
 
                     const data = await response.json();
 
                     if (data.success) {
-                        // Store identifier for OTP verification
-                        localStorage.setItem('verificationIdentifier', emailOrPhone);
-
-                        // Redirect to OTP verification page
-                        window.location.href = `verify-otp.html?identifier=${encodeURIComponent(emailOrPhone)}&type=reset`;
+                        if (verificationType === 'reset') {
+                            // Password reset - redirect to reset password page
+                            window.location.href = `reset-password.html?token=${data.resetToken || otp}`;
+                        } else {
+                            // First-time user - redirect to onboarding
+                            localStorage.setItem('isAuthenticated', 'true');
+                            localStorage.setItem('onboardingCompleted', 'false');
+                            localStorage.setItem('authToken', data.token || '');
+                            localStorage.setItem('userData', JSON.stringify(data.user || {}));
+                            window.location.href = 'onboarding.html';
+                        }
                     } else {
                         // Show error
-                        alert(data.message || 'Failed to send reset code. Please try again.');
-                        resetBtn.disabled = false;
-                        resetText.textContent = 'Send Reset Code';
-                        resetSpinner.style.display = 'none';
+                        errorMessage.textContent = data.message || 'Invalid OTP code';
+                        errorMessage.classList.add('show');
+                        verifyBtn.disabled = false;
+                        verifyText.style.display = 'inline';
+                        verifySpinner.style.display = 'none';
+
+                        // Clear inputs
+                        otpInputs.forEach(input => {
+                            input.value = '';
+                            input.classList.remove('filled');
+                        });
+                        otpInputs[0].focus();
                     }
                 } catch (error) {
-                    console.error('Forgot password error:', error);
-                    alert('Network error. Please check your connection and try again.');
-                    resetBtn.disabled = false;
-                    resetText.textContent = 'Send Reset Code';
-                    resetSpinner.style.display = 'none';
+                    console.error('OTP verification error:', error);
+                    errorMessage.textContent = 'Network error. Please try again.';
+                    errorMessage.classList.add('show');
+                    verifyBtn.disabled = false;
+                    verifyText.style.display = 'inline';
+                    verifySpinner.style.display = 'none';
                 }
             });
->>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
+
+            // Resend functionality
+            let resendTimer;
+            let timeLeft = 60;
+
+            function startResendTimer() {
+                resendBtn.style.display = 'none';
+                timerSection.style.display = 'inline';
+                timeLeft = 60;
+                timerDisplay.textContent = timeLeft;
+
+                resendTimer = setInterval(() => {
+                    timeLeft--;
+                    timerDisplay.textContent = timeLeft;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(resendTimer);
+                        resendBtn.style.display = 'inline';
+                        timerSection.style.display = 'none';
+                    }
+                }, 1000);
+            }
+
+            resendBtn.addEventListener('click', function() {
+                // Simulate resend
+                console.log('Resending OTP to:', email);
+                startResendTimer();
+                
+                // Show brief success message
+                const originalText = resendBtn.textContent;
+                resendBtn.textContent = 'Code Sent!';
+                setTimeout(() => {
+                    resendBtn.textContent = originalText;
+                }, 2000);
+            });
+
+            // Start timer on page load
+            startResendTimer();
         });
     </script>
 </body>

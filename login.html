@@ -591,6 +591,7 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
+<<<<<<< HEAD
         .login-tabs {
             display: flex;
             margin-bottom: 30px;
@@ -623,6 +624,17 @@
         .tab-btn:hover:not(.active) {
             color: rgba(255, 255, 255, 0.9);
             background: rgba(255, 255, 255, 0.1);
+=======
+        @media (max-width: 768px) {
+            .login-card {
+                padding: 30px 25px;
+                margin: 20px;
+            }
+
+            .login-header h1 {
+                font-size: 28px;
+            }
+>>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
         }
     </style>
 </head>
@@ -718,6 +730,7 @@
                 <p class="login-subtitle" style="color: rgba(255, 255, 255, 0.9) !important;">Access your ZimCrowd dashboard to manage your loans, investments, and account settings.</p>
             </div>
 
+<<<<<<< HEAD
             <!-- Login Method Tabs -->
             <div class="login-tabs">
                 <button type="button" class="tab-btn active" id="emailTab">Email/Phone</button>
@@ -726,6 +739,9 @@
 
             <!-- Email/Phone Login Form -->
             <form class="login-form" id="emailLoginForm">
+=======
+            <form class="login-form" id="loginForm">
+>>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
                 <div class="form-group">
                     <label for="email" class="form-label" style="color: white !important;">Email/Phone</label>
                     <input type="text" id="email" name="email" class="form-input" placeholder="Enter your email or phone number" required>
@@ -746,6 +762,7 @@
                     <a href="forgot-password.html" class="forgot-password" style="color: #38e77b !important;">Forgot password?</a>
                 </div>
 
+<<<<<<< HEAD
                 <button type="submit" class="login-btn" id="emailLoginBtn">
                     <span id="emailLoginText">Sign In</span>
                     <div id="emailLoginSpinner" style="display: none;">
@@ -779,6 +796,11 @@
                 <button type="submit" class="login-btn" id="phoneLoginBtn">
                     <span id="phoneLoginText">Sign In with Phone</span>
                     <div id="phoneLoginSpinner" style="display: none;">
+=======
+                <button type="submit" class="login-btn" id="loginBtn">
+                    <span id="loginText">Sign In</span>
+                    <div id="loginSpinner" style="display: none;">
+>>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
                         <i class="fas fa-spinner fa-spin"></i>
                     </div>
                 </button>
@@ -863,6 +885,7 @@
 
         // Login Form Handling
         document.addEventListener('DOMContentLoaded', function() {
+<<<<<<< HEAD
             // Tab switching
             const emailTab = document.getElementById('emailTab');
             const phoneTab = document.getElementById('phoneTab');
@@ -908,6 +931,14 @@
             const emailLoginSpinner = document.getElementById('emailLoginSpinner');
 
             emailFormElement.addEventListener('submit', async function(e) {
+=======
+            const loginForm = document.getElementById('loginForm');
+            const loginBtn = document.getElementById('loginBtn');
+            const loginText = document.getElementById('loginText');
+            const loginSpinner = document.getElementById('loginSpinner');
+
+            loginForm.addEventListener('submit', async function(e) {
+>>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
                 e.preventDefault();
 
                 // Get form data
@@ -935,15 +966,25 @@
                 if (!isValid) return;
 
                 // Show loading state
+<<<<<<< HEAD
                 emailLoginBtn.disabled = true;
                 emailLoginText.style.display = 'none';
                 emailLoginSpinner.style.display = 'inline-block';
+=======
+                loginBtn.disabled = true;
+                loginText.style.display = 'none';
+                loginSpinner.style.display = 'inline-block';
+>>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
 
                 try {
                     // Make API call to backend (auto-detect environment)
                     const API_URL = window.location.hostname === 'localhost' 
                         ? 'http://localhost:5003'
+<<<<<<< HEAD
                         : 'https://zimcrowd-backend-i8tjcuzr3-jojola.vercel.app';
+=======
+                        : 'https://zimcrowd-backend-qsvfl2nqu-jojola.vercel.app';
+>>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
                     
                     const response = await fetch(`${API_URL}/api/auth/login`, {
                         method: 'POST',
@@ -970,13 +1011,20 @@
                     } else {
                         // Show error
                         alert(data.message || 'Login failed. Please try again.');
+<<<<<<< HEAD
                         emailLoginBtn.disabled = false;
                         emailLoginText.style.display = 'inline';
                         emailLoginSpinner.style.display = 'none';
+=======
+                        loginBtn.disabled = false;
+                        loginText.style.display = 'inline';
+                        loginSpinner.style.display = 'none';
+>>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
                     }
                 } catch (error) {
                     console.error('Login error:', error);
                     alert('Network error. Please check your connection and try again.');
+<<<<<<< HEAD
                     emailLoginBtn.disabled = false;
                     emailLoginText.style.display = 'inline';
                     emailLoginSpinner.style.display = 'none';
@@ -1062,6 +1110,11 @@
                     phoneLoginBtn.disabled = false;
                     phoneLoginText.style.display = 'inline';
                     phoneLoginSpinner.style.display = 'none';
+=======
+                    loginBtn.disabled = false;
+                    loginText.style.display = 'inline';
+                    loginSpinner.style.display = 'none';
+>>>>>>> fa6ee7f379aeda482e2f2cff449928ff250a7fd2
                 }
             });
 
