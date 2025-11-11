@@ -681,54 +681,32 @@ router.post('/reset-password-phone', [
             });
         }
         
-        // Verify OTP - use Twilio Verify if configured
+        // Verify OTP - check if it was already verified in previous step
         let otpVerified = false;
         
-        console.log(`[Reset Password] Verifying OTP for phone: ${formattedPhone}`);
+        console.log(`[Reset Password] Checking OTP for phone: ${formattedPhone}`);
         
-        if (process.env.TWILIO_VERIFY_SERVICE_SID) {
-            console.log('[Reset Password] Using Twilio Verify API');
-            const twilioVerification = await verifyOTPWithTwilio(formattedPhone, otp);
-            otpVerified = twilioVerification.success;
+        // Check database for verified OTP (from previous verification step)
+        const { data: verification, error: verifyError } = await supabase
+            .from('phone_verifications')
+            .select('*')
+            .eq('phone_number', formattedPhone)
+            .eq('otp_code', otp)
+            .eq('purpose', 'password_reset')
+            .eq('verified', true) // Already verified in previous step
+            .gt('expires_at', new Date().toISOString())
+            .single();
             
-            console.log(`[Reset Password] Twilio verification result: ${otpVerified ? 'SUCCESS' : 'FAILED'}`);
-            if (!otpVerified) {
-                console.log(`[Reset Password] Twilio error: ${twilioVerification.message}`);
-            }
-            
-            if (!otpVerified) {
-                return res.status(400).json({
-                    success: false,
-                    message: twilioVerification.message || 'Invalid reset code'
-                });
-            }
-        } else {
-            console.log('[Reset Password] Using database verification');
-            // Fallback to database verification
-            const { data: verification, error: verifyError } = await supabase
-                .from('phone_verifications')
-                .select('*')
-                .eq('phone_number', formattedPhone)
-                .eq('otp_code', otp)
-                .eq('purpose', 'password_reset')
-                .eq('verified', false)
-                .gt('expires_at', new Date().toISOString())
-                .single();
-                
-            if (verifyError || !verification) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid or expired reset code'
-                });
-            }
-            
-            await supabase
-                .from('phone_verifications')
-                .update({ verified: true })
-                .eq('id', verification.id);
-                
-            otpVerified = true;
+        if (verifyError || !verification) {
+            console.log('[Reset Password] OTP not found or not verified');
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired reset code. Please start the reset process again.'
+            });
         }
+        
+        console.log('[Reset Password] OTP verified successfully');
+        otpVerified = true;
         
         // Generate placeholder email for auth update
         const placeholderEmail = `${formattedPhone.replace(/\D/g, '')}@zimcrowd-phone.local`;
