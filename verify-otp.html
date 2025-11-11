@@ -769,8 +769,13 @@
 
                     if (data.success) {
                         if (verificationType === 'reset') {
-                            // Password reset - redirect to reset password page
-                            window.location.href = `reset-password.html?token=${data.resetToken || otp}`;
+                            // Password reset - redirect to reset password page with proper parameters
+                            const params = new URLSearchParams({
+                                token: data.resetToken || otp,
+                                type: contactType,
+                                identifier: contactValue
+                            });
+                            window.location.href = `reset-password.html?${params.toString()}`;
                         } else {
                             // First-time user - redirect to onboarding
                             localStorage.setItem('isAuthenticated', 'true');
