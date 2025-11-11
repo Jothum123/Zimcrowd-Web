@@ -748,7 +748,7 @@
                     if (contactType === 'email') {
                         endpoint = `${API_URL}/api/email-auth/verify-email-otp`;
                     } else if (contactType === 'phone') {
-                        endpoint = `${API_URL}/api/phone-auth/verify-phone-otp`;
+                        endpoint = `${API_URL}/api/phone-auth/verify-phone-signup`;
                     } else {
                         endpoint = `${API_URL}/api/auth/verify-otp`;
                     }
@@ -759,9 +759,9 @@
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            [contactType === 'email' ? 'email' : contactType === 'phone' ? 'phone' : 'identifier']: contactValue,
+                            [contactType === 'email' ? 'email' : contactType === 'phone' ? 'tempToken' : 'identifier']: contactType === 'phone' ? localStorage.getItem('tempToken') : contactValue,
                             otp: otp,
-                            type: verificationType
+                            ...(contactType === 'email' ? { type: verificationType } : {})
                         })
                     });
 
@@ -850,7 +850,7 @@
                         },
                         body: JSON.stringify({
                             [contactType === 'email' ? 'email' : contactType === 'phone' ? 'phone' : 'identifier']: contactValue,
-                            [contactType === 'email' ? 'purpose' : 'type']: verificationType === 'reset' ? 'password_reset' : 'signup'
+                            [contactType === 'email' ? 'purpose' : 'purpose']: verificationType === 'reset' ? 'password_reset' : 'signup'
                         })
                     });
 
