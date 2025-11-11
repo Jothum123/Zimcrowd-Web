@@ -543,6 +543,9 @@
                 <p class="otp-subtitle" style="color: rgba(255, 255, 255, 0.9) !important;">
                     We've sent a 6-digit code to <span class="otp-email" id="userEmail">your email</span>. Please enter it below to continue.
                 </p>
+                <div style="background: yellow; color: black; padding: 5px; margin: 10px 0; border-radius: 4px; font-size: 12px;">
+                    🔧 DEBUG: Code Version 2025-01-11-02 - Check console for logs
+                </div>
             </div>
 
             <div class="error-message" id="errorMessage">
@@ -613,6 +616,8 @@
 
         // Email OTP Functionality
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔄 Verification page loaded - Version: 2025-01-11-02');
+            console.log('URL:', window.location.href);
             const otpInputs = document.querySelectorAll('.otp-input');
             const otpForm = document.getElementById('otpForm');
             const verifyBtn = document.getElementById('verifyBtn');
@@ -624,17 +629,79 @@
             const timerDisplay = document.getElementById('timer');
             const userEmailDisplay = document.getElementById('userEmail');
 
-            // Get email from URL params or localStorage
+            // AGGRESSIVE FIX: Get URL parameters FIRST
             const urlParams = new URLSearchParams(window.location.search);
-            const email = urlParams.get('email') || localStorage.getItem('resetEmail') || localStorage.getItem('verificationEmail') || 'your email';
-            const tempToken = urlParams.get('token') || localStorage.getItem('tempToken');
             const verificationType = urlParams.get('type') || 'email-signup';
+            const urlEmail = urlParams.get('email');
 
-            // Display the email (prioritize URL param to ensure correct email is shown)
-            userEmailDisplay.textContent = urlParams.get('email') || email;
+            // If password reset, IMMEDIATELY clear all localStorage and force URL email
+            if (verificationType === 'reset') {
+                console.log('🚨 PASSWORD RESET DETECTED - CLEARING ALL localStorage');
+                localStorage.removeItem('verificationEmail');
+                localStorage.removeItem('resetEmail');
+                localStorage.removeItem('tempToken');
+                
+                if (urlEmail) {
+                    console.log('🚨 FORCING EMAIL DISPLAY TO:', urlEmail);
+                    userEmailDisplay.textContent = urlEmail;
+                    userEmailDisplay.style.color = '#ff0000';
+                    userEmailDisplay.style.fontWeight = 'bold';
+                    userEmailDisplay.style.fontSize = '18px';
+                }
+            }
 
-            // Auto-focus first input
-            otpInputs[0].focus();
+            // Get email from URL params or localStorage - prioritize resetEmail for password reset
+            let email;
+            if (verificationType === 'reset') {
+                // For password reset, ALWAYS use URL parameter
+                email = urlEmail || 'your email';
+            } else {
+                // For signup, use verificationEmail
+                email = urlParams.get('email') || localStorage.getItem('verificationEmail') || 'your email';
+            }
+
+            const tempToken = urlParams.get('token') || localStorage.getItem('tempToken');
+
+            // SECOND OVERRIDE: Force display again
+            if (verificationType === 'reset' && urlEmail) {
+                userEmailDisplay.textContent = urlEmail;
+                console.log('✅ SECOND OVERRIDE - Set display to:', urlEmail);
+            } else if (verificationType !== 'reset') {
+                // Display the email (prioritize URL param to ensure correct email is shown)
+                const displayEmail = urlParams.get('email') || email;
+                userEmailDisplay.textContent = displayEmail;
+                console.log('📧 Set display for signup/other:', displayEmail);
+            }
+
+            console.log('🎯 Final display email:', userEmailDisplay.textContent);
+
+            // THIRD OVERRIDE: Use setTimeout to override any async changes
+            setTimeout(() => {
+                if (verificationType === 'reset' && urlEmail) {
+                    userEmailDisplay.textContent = urlEmail;
+                    userEmailDisplay.style.color = '#ff0000';
+                    userEmailDisplay.style.fontWeight = 'bold';
+                    console.log('🚨 THIRD OVERRIDE (setTimeout) - Email:', urlEmail);
+                }
+            }, 100);
+
+            // FOURTH OVERRIDE: Use MutationObserver to watch for any changes
+            const observer = new MutationObserver((mutations) => {
+                if (verificationType === 'reset' && urlEmail) {
+                    if (userEmailDisplay.textContent !== urlEmail) {
+                        console.log('🚨 MUTATION DETECTED - Forcing back to:', urlEmail);
+                        userEmailDisplay.textContent = urlEmail;
+                        userEmailDisplay.style.color = '#ff0000';
+                        userEmailDisplay.style.fontWeight = 'bold';
+                    }
+                }
+            });
+
+            observer.observe(userEmailDisplay, { 
+                childList: true, 
+                characterData: true, 
+                subtree: true 
+            });
 
             // Handle OTP input
             otpInputs.forEach((input, index) => {
@@ -720,7 +787,7 @@
                     // Make API call to backend (auto-detect environment)
                     const API_URL = window.location.hostname === 'localhost'
                         ? 'http://localhost:5003'
-                        : 'https://zimcrowd-backend-qsvfl2nqu-jojola.vercel.app';
+                        : 'https://zimcrowd-backend-i8tjcuzr3-jojola.vercel.app';
 
                     let endpoint, requestBody;
 
@@ -731,10 +798,12 @@
                             otp: otp
                         };
                     } else {
-                        // For password reset or other types
+                        // For password reset or other types - ALWAYS use URL parameter email
+                        const verifyEmail = verificationType === 'reset' ? urlParams.get('email') : email;
+
                         endpoint = '/api/email-auth/verify-email-otp';
                         requestBody = {
-                            email: email,
+                            email: verifyEmail,
                             otp: otp,
                             type: verificationType
                         };
@@ -759,8 +828,9 @@
                             localStorage.setItem('userData', JSON.stringify(data.user || {}));
                             window.location.href = 'onboarding.html';
                         } else if (verificationType === 'reset') {
-                            // Password reset - redirect to reset password page
-                            window.location.href = `reset-password.html?token=${otp}&email=${encodeURIComponent(email)}`;
+                            // Password reset - redirect to reset password page with correct email
+                            const resetEmail = urlParams.get('email');
+                            window.location.href = `reset-password.html?token=${otp}&email=${encodeURIComponent(resetEmail)}`;
                         } else {
                             // General success - redirect to login
                             window.location.href = 'login.html';
@@ -816,7 +886,15 @@
                 try {
                     const API_URL = window.location.hostname === 'localhost'
                         ? 'http://localhost:5003'
-                        : 'https://zimcrowd-backend-qsvfl2nqu-jojola.vercel.app';
+                        : 'https://zimcrowd-backend-i8tjcuzr3-jojola.vercel.app';
+
+                    // For password reset, ALWAYS use URL parameter email
+                    let resendEmail;
+                    if (verificationType === 'reset') {
+                        resendEmail = urlParams.get('email');
+                    } else {
+                        resendEmail = email;
+                    }
 
                     const response = await fetch(`${API_URL}/api/email-auth/resend-email-otp`, {
                         method: 'POST',
@@ -824,7 +902,7 @@
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            email: email,
+                            email: resendEmail,
                             purpose: verificationType === 'email-signup' ? 'signup' : verificationType
                         })
                     });
