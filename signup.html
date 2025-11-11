@@ -490,6 +490,48 @@
                 padding: 30px 20px;
             }
         }
+
+        /* Signup Footer */
+        .signup-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(56, 231, 123, 0.1);
+            padding: 12px 20px;
+            z-index: 100;
+        }
+
+        .signup-footer .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .signup-footer .footer-links a {
+            color: #64748b;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .signup-footer .footer-links a:hover {
+            color: var(--color-green);
+        }
+
+        @media (max-width: 640px) {
+            .signup-footer .footer-links {
+                gap: 16px;
+            }
+
+            .signup-footer .footer-links a {
+                font-size: 13px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -592,7 +634,7 @@
                 <div class="checkbox-group">
                     <input type="checkbox" id="terms" required>
                     <label class="checkbox-label" for="terms">
-                        I agree to the <a href="#" target="_blank">Terms of Service</a> and <a href="#" target="_blank">Privacy Policy</a>
+                        I agree to the <a href="terms-of-service.html" target="_blank">Terms of Service</a> and <a href="privacy-policy.html" target="_blank">Privacy Policy</a>
                     </label>
                 </div>
 
@@ -603,6 +645,14 @@
             <div class="login-link">
                 Already have an account? <a href="login.html">Sign In</a>
             </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="signup-footer">
+        <div class="footer-links">
+            <a href="terms-of-service.html">Terms of Service</a>
+            <a href="privacy-policy.html">Privacy Policy</a>
         </div>
     </div>
 
