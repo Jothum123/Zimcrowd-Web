@@ -281,45 +281,72 @@
             text-decoration: underline;
         }
 
-        .app-download-prompt {
+        .password-reset-section {
+            margin: 20px 0;
+        }
+
+        .password-reset-content {
             background: rgba(56, 224, 123, 0.08);
             border: 1px solid rgba(56, 224, 123, 0.15);
             border-radius: 12px;
             padding: 20px;
-            margin: 20px 0;
             text-align: center;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
-        .app-download-prompt h3 {
+        .password-reset-icon {
+            font-size: 24px;
+            color: rgba(56, 224, 123, 0.8);
+            background: rgba(56, 224, 123, 0.1);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .password-reset-text {
+            flex: 1;
+            text-align: left;
+        }
+
+        .password-reset-text h4 {
             color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 8px;
             font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
         }
 
-        .app-download-prompt p {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 14px;
+        .password-reset-text p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            line-height: 1.4;
             margin-bottom: 12px;
         }
 
-        .download-btn {
+        .password-reset-btn {
             background: rgba(56, 224, 123, 0.15);
             color: rgba(56, 224, 123, 0.9);
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 8px;
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             transition: all 0.3s ease;
             border: 1px solid rgba(56, 224, 123, 0.2);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
         }
 
-        .download-btn:hover {
+        .password-reset-btn:hover {
             background: rgba(56, 224, 123, 0.25);
             transform: translateY(-1px);
             color: #4ade80;
@@ -350,9 +377,14 @@
                 font-size: 28px;
             }
 
-            .login-logo {
-                width: 100px;
-                height: auto;
+            .password-reset-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 12px;
+            }
+
+            .password-reset-text {
+                text-align: center;
             }
         }
     </style>
@@ -384,7 +416,9 @@
                     <input type="checkbox" id="rememberMe" name="rememberMe">
                     <label for="rememberMe">Remember me</label>
                 </div>
-                <a href="forgot-password.html" class="forgot-password">Forgot password?</a>
+                <a href="forgot-password.html" class="forgot-password">
+                    <i class="fas fa-key"></i> Reset Password
+                </a>
             </div>
 
             <button type="submit" class="login-btn" id="loginBtn">
@@ -399,10 +433,21 @@
             <span>or</span>
         </div>
 
-        <div class="app-download-prompt">
-            <h3>New to ZimCrowd?</h3>
-            <p>Get started with borrowing and lending.</p>
-            <a href="signup.html" class="download-btn">Create Account</a>
+        <div class="password-reset-section">
+            <div class="password-reset-content">
+                <i class="fas fa-unlock-alt password-reset-icon"></i>
+                <div class="password-reset-text">
+                    <h4>Forgot Your Password?</h4>
+                    <p>Don't worry! Reset it securely with email or SMS verification.</p>
+                    <a href="forgot-password.html" class="password-reset-btn">
+                        <i class="fas fa-key"></i> Reset Password
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="divider">
+            <span>new user?</span>
         </div>
 
         <div class="signup-prompt">
