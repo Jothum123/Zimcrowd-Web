@@ -18,7 +18,7 @@ const router = express.Router();
 // Rate limiting for email auth
 const emailAuthLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // limit each IP to 10 requests per windowMs (increased from 5)
+    max: 20, // limit each IP to 20 requests per windowMs (increased from 10 for testing)
     message: {
         success: false,
         message: 'Too many email authentication attempts, please try again later.'
