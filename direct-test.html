@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct Test - Verification Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: white; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .url-display { background: #f8f9fa; padding: 10px; border-radius: 4px; margin: 10px 0; word-break: break-all; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Direct Verification Page Test</h1>
+    <p>Testing if the verification page correctly displays the email from URL parameters.</p>
+
+    <div class="test-section">
+        <h2>Test URL Construction</h2>
+        <input type="email" id="testEmail" placeholder="Email" value="jchitewe@gmail.com" style="padding: 10px; width: 300px;">
+        <button class="btn-primary" onclick="constructAndOpenUrl()">🔗 Open Verification Page</button>
+        <div id="urlResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Current Page Analysis (if on verification page)</h2>
+        <div id="pageAnalysis"></div>
+        <button class="btn-success" onclick="analyzeCurrentPage()">🔍 Analyze This Page</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Force Correct Display</h2>
+        <button class="btn-danger" onclick="forceCorrectEmail()">⚡ Force Display jchitewe@gmail.com</button>
+        <div id="forceResult"></div>
+    </div>
+
+    <script>
+        function constructAndOpenUrl() {
+            const email = document.getElementById('testEmail').value;
+            if (!email) {
+                document.getElementById('urlResult').innerHTML = '<div class="result error">Please enter an email</div>';
+                return;
+            }
+
+            const baseUrl = window.location.origin;
+            const verificationUrl = `${baseUrl}/verify-email-otp.html?email=${encodeURIComponent(email)}&type=reset`;
+
+            document.getElementById('urlResult').innerHTML = `
+                <div class="result success">
+                    <strong>Opening URL:</strong><br>
+                    <div class="url-display">${verificationUrl}</div>
+                    <em>This should display: ${email}</em>
+                </div>
+            `;
+
+            // Open in new window
+            window.open(verificationUrl, '_blank');
+        }
+
+        function analyzeCurrentPage() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const emailParam = urlParams.get('email');
+            const typeParam = urlParams.get('type');
+
+            const emailDisplay = document.getElementById('userEmail');
+            const currentDisplay = emailDisplay ? emailDisplay.textContent : 'No email display element found';
+
+            let analysis = `
+                <div class="result info">
+                    <strong>URL Analysis:</strong><br>
+                    Email param: ${emailParam || 'NOT FOUND'}<br>
+                    Type param: ${typeParam || 'NOT FOUND'}<br>
+                    <br>
+                    <strong>Display Analysis:</strong><br>
+                    Currently showing: "${currentDisplay}"<br>
+                    <br>
+                    <strong>localStorage:</strong><br>
+            `;
+
+            // Check localStorage
+            const keys = Object.keys(localStorage);
+            if (keys.length === 0) {
+                analysis += 'No localStorage data<br>';
+            } else {
+                keys.forEach(key => {
+                    const value = localStorage.getItem(key);
+                    const highlight = key.includes('email') && value.includes('cashmasters') ? ' style="color: red;"' : '';
+                    analysis += `${key}: ${value}${highlight}<br>`;
+                });
+            }
+
+            analysis += '</div>';
+
+            document.getElementById('pageAnalysis').innerHTML = analysis;
+        }
+
+        function forceCorrectEmail() {
+            const emailDisplay = document.getElementById('userEmail');
+            if (emailDisplay) {
+                emailDisplay.textContent = 'jchitewe@gmail.com';
+                document.getElementById('forceResult').innerHTML = '<div class="result success">✅ Forced display to jchitewe@gmail.com</div>';
+            } else {
+                document.getElementById('forceResult').innerHTML = '<div class="result error">❌ No email display element found on this page</div>';
+            }
+        }
+
+        // Auto-analyze if we're on the verification page
+        if (window.location.pathname.includes('verify-email-otp.html')) {
+            setTimeout(analyzeCurrentPage, 1000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Signup Flows</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+        .result { margin-top: 10px; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Signup & Reset Flows</h1>
+
+    <div class="test-section">
+        <h2>📧 Email Signup Test</h2>
+        <input type="text" id="emailFirstName" placeholder="First Name" value="Test">
+        <input type="text" id="emailLastName" placeholder="Last Name" value="User">
+        <input type="email" id="emailAddress" placeholder="Email" value="test@example.com">
+        <input type="password" id="emailPassword" placeholder="Password" value="Test1234">
+        <br>
+        <button onclick="testEmailSignup()">📧 Test Email Signup</button>
+        <div id="emailResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📱 Phone Signup Test</h2>
+        <input type="text" id="phoneFirstName" placeholder="First Name" value="Test">
+        <input type="text" id="phoneLastName" placeholder="Last Name" value="User">
+        <input type="tel" id="phoneNumber" placeholder="Phone" value="+263771234567">
+        <input type="password" id="phonePassword" placeholder="Password" value="Test1234">
+        <br>
+        <button onclick="testPhoneSignup()">📱 Test Phone Signup</button>
+        <div id="phoneResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔑 Email Password Reset Test</h2>
+        <input type="email" id="resetEmail" placeholder="Email" value="test@example.com">
+        <br>
+        <button onclick="testEmailReset()">📧 Test Email Reset</button>
+        <div id="resetEmailResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📱 Phone Password Reset Test</h2>
+        <input type="tel" id="resetPhone" placeholder="Phone" value="+263771234567">
+        <br>
+        <button onclick="testPhoneReset()">📱 Test Phone Reset</button>
+        <div id="resetPhoneResult" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:5003'
+            : 'https://zimcrowd-backend-i8tjcuzr3-jojola.vercel.app';
+
+        function showResult(elementId, message, isSuccess) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = 'result ' + (isSuccess ? 'success' : 'error');
+            element.style.display = 'block';
+        }
+
+        async function testEmailSignup() {
+            const firstName = document.getElementById('emailFirstName').value;
+            const lastName = document.getElementById('emailLastName').value;
+            const email = document.getElementById('emailAddress').value;
+            const password = document.getElementById('emailPassword').value;
+
+            try {
+                const response = await fetch(`${API_URL}/api/email-auth/register-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        firstName,
+                        lastName,
+                        email,
+                        password,
+                        country: 'Zimbabwe',
+                        city: 'Harare'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult('emailResult', `✅ Email signup successful! Check ${email} for OTP`, true);
+                } else {
+                    showResult('emailResult', `❌ Email signup failed: ${data.message}`, false);
+                }
+            } catch (error) {
+                showResult('emailResult', `❌ Network error: ${error.message}`, false);
+            }
+        }
+
+        async function testPhoneSignup() {
+            const firstName = document.getElementById('phoneFirstName').value;
+            const lastName = document.getElementById('phoneLastName').value;
+            const phone = document.getElementById('phoneNumber').value;
+            const password = document.getElementById('phonePassword').value;
+
+            try {
+                const response = await fetch(`${API_URL}/api/phone-auth/register-phone`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        firstName,
+                        lastName,
+                        phone,
+                        password,
+                        country: 'Zimbabwe',
+                        city: 'Harare'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult('phoneResult', `✅ Phone signup successful! Check ${phone} for SMS`, true);
+                } else {
+                    showResult('phoneResult', `❌ Phone signup failed: ${data.message}`, false);
+                }
+            } catch (error) {
+                showResult('phoneResult', `❌ Network error: ${error.message}`, false);
+            }
+        }
+
+        async function testEmailReset() {
+            const email = document.getElementById('resetEmail').value;
+
+            try {
+                const response = await fetch(`${API_URL}/api/email-auth/forgot-password-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult('resetEmailResult', `✅ Email reset code sent to ${email}`, true);
+                } else {
+                    showResult('resetEmailResult', `❌ Email reset failed: ${data.message}`, false);
+                }
+            } catch (error) {
+                showResult('resetEmailResult', `❌ Network error: ${error.message}`, false);
+            }
+        }
+
+        async function testPhoneReset() {
+            const phone = document.getElementById('resetPhone').value;
+
+            try {
+                const response = await fetch(`${API_URL}/api/phone-auth/forgot-password-phone`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult('resetPhoneResult', `✅ Phone reset code sent to ${phone}`, true);
+                } else {
+                    showResult('resetPhoneResult', `❌ Phone reset failed: ${data.message}`, false);
+                }
+            } catch (error) {
+                showResult('resetPhoneResult', `❌ Network error: ${error.message}`, false);
+            }
+        }
+    </script>
+</body>
+</html>

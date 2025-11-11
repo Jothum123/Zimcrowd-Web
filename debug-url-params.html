@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Parameter & localStorage Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .debug-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: white; }
+        .param-item { margin: 10px 0; padding: 10px; background: #e9ecef; border-radius: 4px; }
+        .param-name { font-weight: bold; color: #495057; }
+        .param-value { color: #007bff; font-family: monospace; }
+        .error { color: #dc3545; }
+        .success { color: #28a745; }
+        .warning { color: #ffc107; }
+        .btn { padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .url-display { word-break: break-all; background: #f8f9fa; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .test-flow { background: #fff3cd; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #ffc107; }
+    </style>
+</head>
+<body>
+    <h1>🔍 URL Parameter & localStorage Debug Tool</h1>
+    <p>This tool helps debug why the wrong email is being displayed on the verification page.</p>
+
+    <div class="debug-section">
+        <h2>📊 Current Page Analysis</h2>
+        <div><strong>Current URL:</strong></div>
+        <div class="url-display" id="currentUrl"></div>
+
+        <div><strong>URL Parameters:</strong></div>
+        <div id="urlParams"></div>
+
+        <div><strong>localStorage Data:</strong></div>
+        <div id="localStorageData"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>🎯 Expected Behavior for Password Reset</h2>
+        <div class="test-flow">
+            <strong>Password Reset Flow:</strong>
+            <ol>
+                <li>User enters email in signup.html → reset form</li>
+                <li>API call to `/api/email-auth/forgot-password-email`</li>
+                <li>Redirect to: <code>verify-email-otp.html?email=USER_EMAIL&type=reset</code></li>
+                <li>Verification page should show USER_EMAIL</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <h2>🧪 Test Password Reset Flow</h2>
+        <input type="email" id="testEmail" placeholder="Enter email" value="jchitewe@gmail.com" style="padding: 10px; width: 300px; margin: 10px 0;">
+        <br>
+        <button class="btn btn-primary" onclick="simulatePasswordReset()">🔄 Simulate Password Reset</button>
+        <button class="btn btn-danger" onclick="clearAllData()">🧹 Clear All Data</button>
+        <button class="btn btn-success" onclick="testVerificationPage()">✅ Test Verification Page</button>
+        <div id="simulationResult" style="margin-top: 10px; padding: 10px; border-radius: 4px;"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>🔧 Manual URL Construction</h2>
+        <p>Create the exact URL that should be used for password reset verification:</p>
+        <input type="email" id="manualEmail" placeholder="Email" value="jchitewe@gmail.com">
+        <button class="btn btn-primary" onclick="constructUrl()">🔗 Build URL</button>
+        <div id="constructedUrl" style="margin-top: 10px;"></div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:5003'
+            : 'https://zimcrowd-backend-n2ukr7ao6-jojola.vercel.app';
+
+        function analyzePage() {
+            // Current URL
+            document.getElementById('currentUrl').textContent = window.location.href;
+
+            // URL Parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const paramDiv = document.getElementById('urlParams');
+
+            if (urlParams.toString() === '') {
+                paramDiv.innerHTML = '<div class="param-item"><span class="error">No URL parameters found!</span></div>';
+            } else {
+                let html = '';
+                for (const [key, value] of urlParams) {
+                    const status = key === 'email' && value.includes('@') ? 'success' : 'warning';
+                    html += `<div class="param-item"><span class="param-name">${key}:</span> <span class="param-value ${status}">${value}</span></div>`;
+                }
+                paramDiv.innerHTML = html;
+            }
+
+            // localStorage
+            const storageDiv = document.getElementById('localStorageData');
+            const keys = Object.keys(localStorage);
+
+            if (keys.length === 0) {
+                storageDiv.innerHTML = '<div class="param-item">No localStorage data</div>';
+            } else {
+                let html = '';
+                keys.forEach(key => {
+                    const value = localStorage.getItem(key);
+                    const isEmailKey = key.includes('email') || key.includes('Email');
+                    const status = isEmailKey && value.includes('cashmasters') ? 'error' : 'success';
+                    html += `<div class="param-item"><span class="param-name">${key}:</span> <span class="param-value ${status}">${value}</span></div>`;
+                });
+                storageDiv.innerHTML = html;
+            }
+        }
+
+        async function simulatePasswordReset() {
+            const email = document.getElementById('testEmail').value;
+            if (!email) {
+                showResult('Please enter an email', 'error');
+                return;
+            }
+
+            try {
+                showResult('Sending password reset request...', 'warning');
+
+                const response = await fetch(`${API_URL}/api/email-auth/forgot-password-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Clear old data and set new
+                    localStorage.removeItem('verificationEmail');
+                    localStorage.removeItem('resetEmail');
+                    localStorage.setItem('resetEmail', email);
+
+                    const redirectUrl = `verify-email-otp.html?email=${encodeURIComponent(email)}&type=reset`;
+                    showResult(`✅ Password reset sent! Should redirect to: ${redirectUrl}`, 'success');
+
+                    // Auto-redirect after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = redirectUrl;
+                    }, 2000);
+                } else {
+                    showResult(`❌ API Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Network Error: ${error.message}`, 'error');
+            }
+        }
+
+        function clearAllData() {
+            localStorage.clear();
+            analyzePage();
+            showResult('All localStorage data cleared!', 'success');
+        }
+
+        function testVerificationPage() {
+            const email = document.getElementById('testEmail').value;
+            if (!email) {
+                showResult('Please enter an email', 'error');
+                return;
+            }
+
+            const url = `verify-email-otp.html?email=${encodeURIComponent(email)}&type=reset`;
+            window.location.href = url;
+        }
+
+        function constructUrl() {
+            const email = document.getElementById('manualEmail').value;
+            if (!email) {
+                document.getElementById('constructedUrl').innerHTML = '<span class="error">Please enter an email</span>';
+                return;
+            }
+
+            const url = `${window.location.origin}/verify-email-otp.html?email=${encodeURIComponent(email)}&type=reset`;
+            document.getElementById('constructedUrl').innerHTML =
+                `<div><strong>Direct URL:</strong></div><div class="url-display">${url}</div><br><a href="${url}" target="_blank" class="btn btn-primary">Open Verification Page</a>`;
+        }
+
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('simulationResult');
+            resultDiv.innerHTML = message;
+            resultDiv.className = `result ${type}`;
+        }
+
+        // Analyze page on load
+        analyzePage();
+
+        // Refresh every 2 seconds to catch changes
+        setInterval(analyzePage, 2000);
+    </script>
+</body>
+</html>

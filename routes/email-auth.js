@@ -294,6 +294,14 @@ router.post('/verify-email-otp', [
         const normalizedEmail = email.toLowerCase();
         const purpose = type === 'reset' ? 'password_reset' : 'signup';
 
+        console.log('🔍 Verifying OTP:', {
+            email: normalizedEmail,
+            otp,
+            type,
+            purpose,
+            currentTime: new Date().toISOString()
+        });
+
         // Verify OTP from database
         const { data: verification, error: verifyError } = await supabase
             .from('email_verifications')
@@ -305,7 +313,34 @@ router.post('/verify-email-otp', [
             .gt('expires_at', new Date().toISOString())
             .single();
 
+        console.log('🔍 Database query result:', {
+            found: !!verification,
+            error: verifyError?.message,
+            verification: verification ? {
+                id: verification.id,
+                email: verification.email,
+                otp_code: verification.otp_code,
+                purpose: verification.purpose,
+                verified: verification.verified,
+                expires_at: verification.expires_at
+            } : null
+        });
+
         if (verifyError || !verification) {
+            // Let's also check if there's a verified OTP that matches
+            const { data: verifiedCheck } = await supabase
+                .from('email_verifications')
+                .select('*')
+                .eq('email', normalizedEmail)
+                .eq('otp_code', otp)
+                .eq('purpose', purpose)
+                .single();
+
+            console.log('🔍 Already verified check:', verifiedCheck ? {
+                verified: verifiedCheck.verified,
+                expires_at: verifiedCheck.expires_at
+            } : 'No matching OTP found');
+
             return res.status(400).json({
                 success: false,
                 message: 'Invalid or expired verification code'

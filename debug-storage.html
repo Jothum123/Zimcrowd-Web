@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug localStorage - Clear and Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .debug-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: white; }
+        .storage-item { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 4px; }
+        .clear-btn { background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+        .clear-btn:hover { background: #c82333; }
+        .test-btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        .test-btn:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🔧 localStorage Debug Tool</h1>
+    <p>Clear old authentication data and test password reset</p>
+
+    <div class="debug-section">
+        <h2>Current localStorage Data</h2>
+        <div id="storageData">Loading...</div>
+        <br>
+        <button class="clear-btn" onclick="clearAllStorage()">🧹 Clear All localStorage</button>
+        <button class="test-btn" onclick="testPasswordReset()">🔑 Test Password Reset</button>
+        <button class="test-btn" onclick="refreshStorage()">🔄 Refresh</button>
+    </div>
+
+    <div class="debug-section">
+        <h2>Password Reset Test</h2>
+        <input type="email" id="testEmail" placeholder="Enter email for password reset" value="jchitewe@gmail.com" style="padding: 10px; width: 300px;">
+        <br><br>
+        <button class="test-btn" onclick="sendPasswordReset()">📧 Send Password Reset</button>
+        <div id="resetResult" style="margin-top: 10px; padding: 10px; border-radius: 4px;"></div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:5003'
+            : 'https://zimcrowd-backend-n2ukr7ao6-jojola.vercel.app';
+
+        function displayStorageData() {
+            const storageData = document.getElementById('storageData');
+            const keys = Object.keys(localStorage);
+
+            if (keys.length === 0) {
+                storageData.innerHTML = '<p style="color: #666;">No localStorage data found</p>';
+                return;
+            }
+
+            storageData.innerHTML = keys.map(key => {
+                const value = localStorage.getItem(key);
+                return `<div class="storage-item"><strong>${key}:</strong> ${value}</div>`;
+            }).join('');
+        }
+
+        function clearAllStorage() {
+            localStorage.clear();
+            displayStorageData();
+            alert('All localStorage data cleared!');
+        }
+
+        function refreshStorage() {
+            displayStorageData();
+        }
+
+        async function testPasswordReset() {
+            const testEmail = document.getElementById('testEmail').value;
+            if (!testEmail) {
+                alert('Please enter an email');
+                return;
+            }
+
+            // Clear old data first
+            localStorage.removeItem('verificationEmail');
+            localStorage.removeItem('resetEmail');
+
+            window.location.href = `signup.html?tab=reset&email=${encodeURIComponent(testEmail)}`;
+        }
+
+        async function sendPasswordReset() {
+            const email = document.getElementById('testEmail').value;
+            if (!email) {
+                alert('Please enter an email');
+                return;
+            }
+
+            const resultDiv = document.getElementById('resetResult');
+
+            try {
+                const response = await fetch(`${API_URL}/api/email-auth/forgot-password-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.innerHTML = `<div style="color: green;">✅ Password reset sent to ${email}</div>`;
+                    // Store the reset email
+                    localStorage.setItem('resetEmail', email);
+                } else {
+                    resultDiv.innerHTML = `<div style="color: red;">❌ Error: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div style="color: red;">❌ Network error: ${error.message}</div>`;
+            }
+        }
+
+        // Load storage data on page load
+        displayStorageData();
+    </script>
+</body>
+</html>

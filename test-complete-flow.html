@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Signup → Verify → Login Flow Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: white; }
+        .step { margin: 15px 0; padding: 15px; border-left: 4px solid #007bff; background: #f8f9fa; }
+        .step-number { font-weight: bold; color: #007bff; }
+        button { padding: 12px 24px; margin: 5px; cursor: pointer; border: none; border-radius: 6px; font-weight: 500; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-info { background: #17a2b8; color: white; }
+        input { padding: 10px; margin: 5px; width: 250px; border: 1px solid #ddd; border-radius: 4px; }
+        .result { margin-top: 10px; padding: 15px; border-radius: 6px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .flow-diagram { text-align: center; margin: 20px 0; font-family: monospace; font-size: 14px; }
+        .user-data { background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 10px 0; }
+        .otp-display { font-size: 24px; font-weight: bold; color: #007bff; background: #e9ecef; padding: 10px; border-radius: 4px; display: inline-block; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🔄 Complete Signup → Verify → Login Flow Test</h1>
+    <p>Test the entire user journey from signup to login with our unified email/phone system.</p>
+
+    <div class="flow-diagram">
+        📝 SIGNUP → 🔢 VERIFY OTP → 🔑 LOGIN<br>
+        (Email 📧 or Phone 📱)
+    </div>
+
+    <!-- User Data Display -->
+    <div class="user-data" id="userData">
+        <strong>Current Test User:</strong> None selected yet
+    </div>
+
+    <!-- Step 1: Choose Signup Method -->
+    <div class="test-section">
+        <h2>Step 1: Choose Signup Method</h2>
+        <div class="step">
+            <div class="step-number">1.1</div>
+            <p>Select whether to test with email or phone signup:</p>
+            <button class="btn-primary" onclick="selectMethod('email')">📧 Test with Email</button>
+            <button class="btn-primary" onclick="selectMethod('phone')">📱 Test with Phone</button>
+            <div id="methodResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Step 2: Unified Signup Test -->
+    <div class="test-section">
+        <h2>Step 2: Unified Signup Test</h2>
+        <div class="step">
+            <div class="step-number">2.1</div>
+            <p>Enter user details for unified signup (single contact field):</p>
+            <input type="text" id="signupFirstName" placeholder="First Name" value="Test">
+            <input type="text" id="signupLastName" placeholder="Last Name" value="User">
+            <br>
+            <input type="text" id="signupContact" placeholder="Email or Phone (+263...)" value="">
+            <input type="password" id="signupPassword" placeholder="Password" value="Test1234">
+            <br>
+            <button class="btn-success" onclick="testUnifiedSignup()" id="signupBtn" disabled>📨 Test Unified Signup</button>
+            <div id="signupResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Step 3: OTP Verification Test -->
+    <div class="test-section">
+        <h2>Step 3: OTP Verification Test</h2>
+        <div class="step">
+            <div class="step-number">3.1</div>
+            <p>Enter the OTP received and verify the account:</p>
+            <input type="text" id="verificationToken" placeholder="Verification Token" value="">
+            <input type="text" id="verificationOTP" placeholder="6-digit OTP" maxlength="6" value="">
+            <br>
+            <button class="btn-warning" onclick="testOTPVerification()" id="verifyBtn" disabled>🔢 Verify OTP</button>
+            <div id="verifyResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="step">
+            <div class="step-number">3.2</div>
+            <p>Or manually enter OTP if received:</p>
+            <input type="text" id="manualOTP" placeholder="Enter OTP manually" maxlength="6" style="width: 150px;">
+            <button class="btn-info" onclick="setManualOTP()">Set Manual OTP</button>
+        </div>
+    </div>
+
+    <!-- Step 4: Login Test -->
+    <div class="test-section">
+        <h2>Step 4: Login Test</h2>
+        <div class="step">
+            <div class="step-number">4.1</div>
+            <p>Login with the newly created account:</p>
+            <input type="text" id="loginContact" placeholder="Email or Phone used for signup" value="">
+            <input type="password" id="loginPassword" placeholder="Password" value="Test1234">
+            <br>
+            <button class="btn-success" onclick="testLogin()" id="loginBtn" disabled>🔑 Test Login</button>
+            <div id="loginResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Quick Test Buttons -->
+    <div class="test-section">
+        <h2>🚀 Quick Test Flows</h2>
+        <button class="btn-primary" onclick="runEmailFlow()">📧 Complete Email Flow</button>
+        <button class="btn-primary" onclick="runPhoneFlow()">📱 Complete Phone Flow</button>
+        <button class="btn-warning" onclick="clearAll()">🧹 Clear All</button>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:5003'
+            : 'https://zimcrowd-backend-i8tjcuzr3-jojola.vercel.app';
+
+        let currentTestUser = null;
+        let selectedMethod = null;
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `result ${type}`;
+            element.style.display = 'block';
+        }
+
+        function selectMethod(method) {
+            selectedMethod = method;
+            currentTestUser = null;
+
+            // Update UI
+            document.getElementById('userData').innerHTML = `<strong>Selected Method:</strong> ${method.toUpperCase()}`;
+            document.getElementById('signupBtn').disabled = false;
+            document.getElementById('signupContact').value = method === 'email' ? 'test@example.com' : '+263771234567';
+            document.getElementById('loginContact').value = '';
+
+            showResult('methodResult', `✅ Testing with ${method.toUpperCase()} method selected!`, 'success');
+        }
+
+        async function testUnifiedSignup() {
+            const firstName = document.getElementById('signupFirstName').value;
+            const lastName = document.getElementById('signupLastName').value;
+            const contact = document.getElementById('signupContact').value;
+            const password = document.getElementById('signupPassword').value;
+
+            if (!firstName || !lastName || !contact || !password) {
+                showResult('signupResult', '❌ Please fill in all fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/email-auth/register-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        firstName,
+                        lastName,
+                        email: contact,
+                        password,
+                        country: 'Zimbabwe',
+                        city: 'Harare'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentTestUser = {
+                        firstName,
+                        lastName,
+                        contact,
+                        password,
+                        tempToken: data.tempToken,
+                        method: selectedMethod
+                    };
+
+                    // Update UI
+                    document.getElementById('userData').innerHTML = `
+                        <strong>Current Test User:</strong> ${firstName} ${lastName}<br>
+                        <strong>Contact:</strong> ${contact}<br>
+                        <strong>Method:</strong> ${selectedMethod.toUpperCase()}<br>
+                        <strong>Token:</strong> ${data.tempToken}
+                    `;
+                    document.getElementById('verificationToken').value = data.tempToken;
+                    document.getElementById('loginContact').value = contact;
+                    document.getElementById('verifyBtn').disabled = false;
+
+                    showResult('signupResult',
+                        `✅ Signup successful! Check ${contact} for OTP\nTemp Token: ${data.tempToken}`,
+                        'success');
+                } else {
+                    showResult('signupResult', `❌ Signup failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('signupResult', `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testOTPVerification() {
+            if (!currentTestUser) {
+                showResult('verifyResult', '❌ No test user found. Complete signup first.', 'error');
+                return;
+            }
+
+            const token = document.getElementById('verificationToken').value;
+            const otp = document.getElementById('verificationOTP').value;
+
+            if (!token || !otp) {
+                showResult('verifyResult', '❌ Please enter both token and OTP', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/email-auth/verify-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token,
+                        otp
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentTestUser.verified = true;
+                    document.getElementById('loginBtn').disabled = false;
+
+                    showResult('verifyResult',
+                        `✅ OTP verification successful!\nUser account is now active.`,
+                        'success');
+                } else {
+                    showResult('verifyResult', `❌ OTP verification failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('verifyResult', `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        function setManualOTP() {
+            const otp = document.getElementById('manualOTP').value;
+            if (otp && otp.length === 6) {
+                document.getElementById('verificationOTP').value = otp;
+                showResult('verifyResult', `✅ Manual OTP set: ${otp}`, 'info');
+            } else {
+                showResult('verifyResult', '❌ Please enter a valid 6-digit OTP', 'error');
+            }
+        }
+
+        async function testLogin() {
+            if (!currentTestUser) {
+                showResult('loginResult', '❌ No test user found. Complete signup and verification first.', 'error');
+                return;
+            }
+
+            const contact = document.getElementById('loginContact').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!contact || !password) {
+                showResult('loginResult', '❌ Please enter contact and password', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/email-auth/login-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: contact,
+                        password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult('loginResult',
+                        `✅ Login successful!\nWelcome back, ${data.user.first_name} ${data.user.last_name}!\nSession: ${data.session?.access_token ? 'Active' : 'None'}`,
+                        'success');
+                } else {
+                    showResult('loginResult', `❌ Login failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('loginResult', `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        async function runEmailFlow() {
+            selectMethod('email');
+            setTimeout(() => testUnifiedSignup(), 500);
+        }
+
+        async function runPhoneFlow() {
+            selectMethod('phone');
+            setTimeout(() => testUnifiedSignup(), 500);
+        }
+
+        function clearAll() {
+            currentTestUser = null;
+            selectedMethod = null;
+
+            document.getElementById('userData').innerHTML = '<strong>Current Test User:</strong> None selected yet';
+            document.getElementById('methodResult').style.display = 'none';
+            document.getElementById('signupResult').style.display = 'none';
+            document.getElementById('verifyResult').style.display = 'none';
+            document.getElementById('loginResult').style.display = 'none';
+
+            document.getElementById('signupBtn').disabled = true;
+            document.getElementById('verifyBtn').disabled = true;
+            document.getElementById('loginBtn').disabled = true;
+        }
+    </script>
+</body>
+</html>

@@ -9,12 +9,16 @@ const path = require('path');
 // Import routes
 const authRoutes = require('./routes/auth');
 const phoneAuthRoutes = require('./routes/phone-auth');
+const emailAuthRoutes = require('./routes/email-auth');
 
 // Import Supabase utilities
 const { supabase } = require('./utils/supabase-auth');
 
 // Import Twilio utilities
 const { testTwilioConnection } = require('./utils/twilio-service');
+
+// Import Email utilities
+const { testEmailConnection } = require('./utils/email-service');
 
 const app = express();
 
@@ -41,6 +45,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/phone-auth', phoneAuthRoutes);
+app.use('/api/email-auth', emailAuthRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -67,7 +72,22 @@ app.get('/api/test', (req, res) => {
                 resetPassword: 'POST /api/auth/reset-password',
                 resendOTP: 'POST /api/auth/resend-otp'
             },
-            health: 'GET /api/health'
+            phoneAuth: {
+                registerPhone: 'POST /api/phone-auth/register-phone',
+                verifyPhoneSignup: 'POST /api/phone-auth/verify-phone-signup',
+                loginPhone: 'POST /api/phone-auth/login-phone',
+                forgotPasswordPhone: 'POST /api/phone-auth/forgot-password-phone',
+                resetPasswordPhone: 'POST /api/phone-auth/reset-password-phone',
+                resendPhoneOTP: 'POST /api/phone-auth/resend-phone-otp'
+            },
+            emailAuth: {
+                registerEmail: 'POST /api/email-auth/register-email',
+                verifyEmailSignup: 'POST /api/email-auth/verify-email-signup',
+                loginEmail: 'POST /api/email-auth/login-email',
+                forgotPasswordEmail: 'POST /api/email-auth/forgot-password-email',
+                resetPasswordEmail: 'POST /api/email-auth/reset-password-email',
+                resendEmailOTP: 'POST /api/email-auth/resend-email-otp'
+            }
         }
     });
 });
@@ -97,6 +117,18 @@ app.use('*', (req, res) => {
             'POST /api/auth/verify-otp',
             'POST /api/auth/reset-password',
             'POST /api/auth/resend-otp',
+            'POST /api/phone-auth/register-phone',
+            'POST /api/phone-auth/verify-phone-signup',
+            'POST /api/phone-auth/login-phone',
+            'POST /api/phone-auth/forgot-password-phone',
+            'POST /api/phone-auth/reset-password-phone',
+            'POST /api/phone-auth/resend-phone-otp',
+            'POST /api/email-auth/register-email',
+            'POST /api/email-auth/verify-email-signup',
+            'POST /api/email-auth/login-email',
+            'POST /api/email-auth/forgot-password-email',
+            'POST /api/email-auth/reset-password-email',
+            'POST /api/email-auth/resend-email-otp',
             'GET /api/health',
             'GET /api/test'
         ]
@@ -129,6 +161,17 @@ const testTwilioConnectionOnStartup = async () => {
     }
 };
 
+// Test Email connection on startup
+const testEmailConnectionOnStartup = async () => {
+    const emailConfigured = process.env.GMAIL_USER || process.env.OUTLOOK_USER || process.env.SMTP_HOST;
+    if (emailConfigured) {
+        await testEmailConnection();
+    } else {
+        console.warn('⚠️  Email credentials not found - Email OTP features disabled');
+        console.warn('   Add email credentials (GMAIL_USER/GMAIL_APP_PASSWORD or OUTLOOK_USER/OUTLOOK_PASSWORD or SMTP_*) to enable email OTP');
+    }
+};
+
 // Start server
 const PORT = process.env.PORT || 5000;
 
@@ -137,6 +180,7 @@ const startServer = async () => {
         // Test connections
         await testSupabaseConnection();
         await testTwilioConnectionOnStartup();
+        await testEmailConnectionOnStartup();
 
         app.listen(PORT, () => {
             console.log(`

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Modal</title>
+</head>
+<body>
+    <h1>Modal Test</h1>
+    <button onclick="openSignupModal()">Test Modal</button>
+    
+    <script>
+        // Test if modal functions exist
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded');
+            
+            // Check if template exists
+            const template = document.getElementById('signupModalTemplate');
+            console.log('Template found:', !!template);
+            
+            // Check if openSignupModal function exists
+            setTimeout(() => {
+                console.log('openSignupModal function exists:', typeof window.openSignupModal);
+                console.log('Modal element exists:', !!document.getElementById('signupModal'));
+            }, 1000);
+        });
+        
+        // Fallback function
+        window.openSignupModal = function() {
+            alert('Modal function called but modal not found!');
+        };
+    </script>
+    
+    <!-- Include the modal from index.html -->
+    <iframe src="index.html" style="display: none;" onload="
+        try {
+            const iframe = this;
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            const template = iframeDoc.getElementById('signupModalTemplate');
+            if (template) {
+                document.body.appendChild(template.cloneNode(true));
+                console.log('Template copied from iframe');
+            }
+        } catch(e) {
+            console.error('Error copying template:', e);
+        }
+    "></iframe>
+</body>
+</html>

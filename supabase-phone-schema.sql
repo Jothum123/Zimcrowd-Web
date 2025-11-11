@@ -32,8 +32,7 @@ CREATE POLICY "Allow phone verification inserts" ON phone_verifications
 -- Add updated_at trigger for phone_verifications
 CREATE TRIGGER update_phone_verifications_updated_at
     BEFORE UPDATE ON phone_verifications
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
 
 -- Create index for faster lookups
 CREATE INDEX IF NOT EXISTS idx_phone_verifications_phone_number ON phone_verifications(phone_number);

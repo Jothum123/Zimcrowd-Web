@@ -14,6 +14,18 @@ After signup, you'll get:
 - **Auth Token**: `xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
 - **Phone Number**: `+1234567890` (your Twilio number)
 
+### Create Messaging Service (Recommended)
+For better SMS deliverability and professional setup:
+
+1. Go to: [https://console.twilio.com/](https://console.twilio.com/)
+2. Navigate to **Messaging → Services**
+3. Click **"Create Messaging Service"**
+4. **Service Name**: `ZimCrowd SMS`
+5. **Use Case**: Choose "Notifications, Reminders, and Alerts"
+6. **Sender Type**: "Phone Number"
+7. Click **"Add Senders"** and select your Twilio phone number
+8. **Messaging Service SID**: Copy this (starts with `MGxxxxxxxx`)
+
 ### Find Your Credentials
 1. Go to: [https://console.twilio.com/](https://console.twilio.com/)
 2. Dashboard → Account Info
@@ -22,6 +34,7 @@ After signup, you'll get:
    - Auth Token
 4. Phone Numbers → Manage → Active Numbers
 5. Copy your Twilio phone number
+6. Messaging → Services → Copy Messaging Service SID
 
 ---
 
@@ -33,6 +46,7 @@ Add these to your `.env` file:
 TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 TWILIO_PHONE_NUMBER=+1234567890
+TWILIO_MESSAGING_SERVICE_SID=MGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 Add to Vercel environment variables:

@@ -3,7 +3,7 @@
 
 const API_CONFIG = {
   // Production backend URL (deployed on Vercel)
-  PRODUCTION_URL: 'https://zimcrowd-backend-qsvfl2nqu-jojola.vercel.app',
+  PRODUCTION_URL: 'https://zimcrowd-backend-qiapq9wbe-jojola.vercel.app',
   DEVELOPMENT_URL: 'http://localhost:5003',
   
   // Auto-detect environment

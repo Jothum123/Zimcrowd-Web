@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Email Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test { margin: 20px 0; padding: 20px; border: 1px solid #ddd; }
+        input { padding: 10px; margin: 5px; width: 300px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Quick Email Test</h1>
+
+    <div class="test">
+        <h2>Test Password Reset Email Display</h2>
+        <input type="email" id="emailInput" placeholder="Enter your email" value="jchitewe@gmail.com">
+        <br><br>
+        <button onclick="testDirectUrl()">🔗 Test Direct URL</button>
+        <button onclick="simulateReset()">📧 Simulate Reset</button>
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://zimcrowd-backend-i0s6ez695-jojola.vercel.app';
+
+        function testDirectUrl() {
+            const email = document.getElementById('emailInput').value;
+            const url = `verify-email-otp.html?email=${encodeURIComponent(email)}&type=reset`;
+            window.location.href = url;
+        }
+
+        async function simulateReset() {
+            const email = document.getElementById('emailInput').value;
+            const resultDiv = document.getElementById('result');
+
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result';
+                resultDiv.textContent = 'Sending password reset...';
+
+                const response = await fetch(`${API_URL}/api/email-auth/forgot-password-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Reset sent! Now go to: verify-email-otp.html?email=${encodeURIComponent(email)}&type=reset`;
+
+                    setTimeout(() => {
+                        window.location.href = `verify-email-otp.html?email=${encodeURIComponent(email)}&type=reset`;
+                    }, 2000);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Error: ${data.message}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Network error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
