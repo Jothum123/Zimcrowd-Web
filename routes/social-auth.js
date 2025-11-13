@@ -16,7 +16,7 @@ socialRouter.get('/google', async (req, res) => {
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${req.protocol}://${req.get('host')}/dashboard`
+                redirectTo: `https://www.zimcrowd.com/dashboard.html`
             }
         });
 
@@ -45,7 +45,7 @@ socialRouter.get('/facebook', async (req, res) => {
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'facebook',
             options: {
-                redirectTo: `${req.protocol}://${req.get('host')}/dashboard`
+                redirectTo: `https://www.zimcrowd.com/dashboard.html`
             }
         });
 
