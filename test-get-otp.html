@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Testing Tool - ZimCrowd</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        input[type="tel"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="tel"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-bottom: 15px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .otp-display {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            letter-spacing: 3px;
+            border: 2px dashed #667eea;
+        }
+
+        .info {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            color: #0d47a1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .quick-phones {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .quick-phone {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .quick-phone:hover {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 OTP Testing Tool</h1>
+        
+        <div class="info">
+            <strong>Development Tool:</strong> Use this to get OTP codes for testing without Twilio credits. 
+            This works by reading the codes stored in the database.
+        </div>
+
+        <div class="form-group">
+            <label for="phone">Phone Number:</label>
+            <div class="quick-phones">
+                <span class="quick-phone" onclick="setPhone('+263771234567')">+263771234567</span>
+                <span class="quick-phone" onclick="setPhone('+263772345678')">+263772345678</span>
+                <span class="quick-phone" onclick="setPhone('+263773456789')">+263773456789</span>
+            </div>
+            <input type="tel" id="phone" placeholder="+263771234567" value="+263771234567">
+        </div>
+
+        <button class="btn" onclick="getOTP()" id="getOtpBtn">
+            📱 Get Latest OTP Code
+        </button>
+
+        <button class="btn" onclick="generateNewOTP()" id="generateBtn" style="background: linear-gradient(135deg, #38e07b 0%, #22c55e 100%);">
+            🔄 Generate New OTP (for testing)
+        </button>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:3000/api'
+            : 'https://zimcrowd-backend.vercel.app/api';
+
+        function setPhone(phoneNumber) {
+            document.getElementById('phone').value = phoneNumber;
+        }
+
+        async function getOTP() {
+            const phone = document.getElementById('phone').value.trim();
+            const btn = document.getElementById('getOtpBtn');
+            const result = document.getElementById('result');
+
+            if (!phone) {
+                showError('Please enter a phone number');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '🔍 Getting OTP...';
+
+            try {
+                const response = await fetch(`${API_URL}/phone-auth/dev-get-otp/${encodeURIComponent(phone)}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess(`
+                        <strong>OTP Found!</strong><br>
+                        <div class="otp-display">${data.otp}</div>
+                        <strong>Phone:</strong> ${data.phone}<br>
+                        <strong>Purpose:</strong> ${data.purpose}<br>
+                        <strong>Created:</strong> ${new Date(data.created_at).toLocaleString()}
+                    `);
+                } else {
+                    showError(data.message || 'No OTP found for this phone number');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to get OTP. Make sure the backend is running.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📱 Get Latest OTP Code';
+            }
+        }
+
+        async function generateNewOTP() {
+            const phone = document.getElementById('phone').value.trim();
+            const btn = document.getElementById('generateBtn');
+            const result = document.getElementById('result');
+
+            if (!phone) {
+                showError('Please enter a phone number');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '🔄 Generating...';
+
+            try {
+                // Generate a new OTP by calling the resend endpoint
+                const response = await fetch(`${API_URL}/phone-auth/resend-phone-otp`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        phone: phone,
+                        purpose: 'signup'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess(`
+                        <strong>New OTP Generated!</strong><br>
+                        Phone: ${data.phone}<br>
+                        <em>Click "Get Latest OTP Code" to retrieve it.</em>
+                    `);
+                    
+                    // Auto-get the OTP after 1 second
+                    setTimeout(() => {
+                        getOTP();
+                    }, 1000);
+                } else {
+                    showError(data.message || 'Failed to generate new OTP');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to generate OTP. Make sure the backend is running.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔄 Generate New OTP (for testing)';
+            }
+        }
+
+        function showSuccess(message) {
+            const result = document.getElementById('result');
+            result.className = 'result success';
+            result.innerHTML = message;
+            result.style.display = 'block';
+        }
+
+        function showError(message) {
+            const result = document.getElementById('result');
+            result.className = 'result error';
+            result.innerHTML = message;
+            result.style.display = 'block';
+        }
+
+        // Auto-focus phone input
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('phone').focus();
+        });
+
+        // Allow Enter key to trigger get OTP
+        document.getElementById('phone').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                getOTP();
+            }
+        });
+    </script>
+</body>
+</html>
