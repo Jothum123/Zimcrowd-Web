@@ -1405,6 +1405,79 @@ router.post('/passwordless-verify', [
     }
 });
 
+// Resend OTP endpoint
+router.post('/resend-phone-otp', [
+    body('phone')
+        .custom((value) => {
+            const validation = isValidPhoneNumber(value);
+            if (!validation.isValid) {
+                throw new Error('Please provide a valid phone number');
+            }
+            return true;
+        }),
+    body('purpose')
+        .optional()
+        .isIn(['signup', 'password_reset', 'passwordless_login'])
+        .withMessage('Invalid purpose'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { phone, purpose = 'password_reset' } = req.body;
+        
+        // Validate and format phone number
+        const phoneValidation = isValidPhoneNumber(phone);
+        const formattedPhone = phoneValidation.formatted;
+        
+        // Generate new OTP
+        const otp = generateOTP();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        
+        // Store new OTP in database
+        const { error: otpError } = await supabase
+            .from('phone_verifications')
+            .insert({
+                phone_number: formattedPhone,
+                otp_code: otp,
+                purpose: purpose,
+                expires_at: expiresAt.toISOString()
+            });
+            
+        if (otpError) {
+            console.error('Resend OTP storage error:', otpError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to generate new verification code'
+            });
+        }
+        
+        // Send SMS based on purpose
+        let smsResult;
+        if (purpose === 'password_reset') {
+            smsResult = await sendPasswordResetSMS(formattedPhone, otp);
+        } else {
+            smsResult = await sendSMSOTP(formattedPhone, otp);
+        }
+        
+        if (!smsResult.success) {
+            console.warn('SMS sending failed for resend:', smsResult.error);
+            // Don't fail the request - user can still use database verification
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: 'New verification code sent to your phone',
+            phone: formatPhoneForDisplay(formattedPhone)
+        });
+        
+    } catch (error) {
+        console.error('Resend OTP error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to resend verification code. Please try again.'
+        });
+    }
+});
+
 // Development endpoint to get latest OTP (REMOVE IN PRODUCTION)
 router.get('/dev-get-otp/:phone', async (req, res) => {
     try {
