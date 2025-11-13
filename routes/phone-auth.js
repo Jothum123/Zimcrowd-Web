@@ -583,11 +583,26 @@ router.post('/verify-phone-signup', otpVerificationLimiter, [
             });
         }
         
-        // Generate unique user ID
-        const userId = crypto.randomUUID();
-        console.log('[Phone Signup] Generated userId:', userId);
+        // Create user in Supabase Auth first (required for foreign key)
+        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+            phone: phone,
+            password: finalPassword,
+            phone_confirm: true
+        });
         
-        // Hash password
+        if (authError) {
+            console.error('[Phone Signup] Auth user creation error:', authError);
+            return res.status(500).json({
+                success: false,
+                message: 'Account creation failed. Please try again.',
+                error: authError.message
+            });
+        }
+        
+        const userId = authUser.user.id;
+        console.log('[Phone Signup] Auth user created:', userId);
+        
+        // Hash password for storage
         const hashedPassword = await bcrypt.hash(finalPassword, 10);
         
         // Create profile in database
@@ -1752,8 +1767,23 @@ router.post('/dev-simple-signup', async (req, res) => {
             .update({ verified: true })
             .eq('id', verification.id);
         
-        // Generate unique user ID
-        const userId = crypto.randomUUID();
+        // Create user in Supabase Auth first (required for foreign key)
+        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+            phone: phone,
+            password: password,
+            phone_confirm: true
+        });
+        
+        if (authError) {
+            console.error('[SIMPLE] Auth user creation error:', authError);
+            return res.status(500).json({
+                success: false,
+                message: 'Account creation failed',
+                error: authError.message
+            });
+        }
+        
+        const userId = authUser.user.id;
         
         // Create profile in database
         const { data: profile, error: profileError } = await supabase
