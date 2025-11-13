@@ -23,6 +23,8 @@ try {
     console.log('✅ Dashboard routes loaded');
     var socialAuthRoutes = require('./routes/social-auth');
     console.log('✅ Social auth routes loaded');
+    var profileRoutes = require('./routes/profile');
+    console.log('✅ Profile routes loaded');
     var loansRoutes = require('./routes/loans');
     console.log('✅ Loans routes loaded');
     var investmentsRoutes = require('./routes/investments');
