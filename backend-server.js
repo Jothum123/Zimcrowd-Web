@@ -138,9 +138,7 @@ app.get('/api/test', (req, res) => {
             auth: {
                 register: 'POST /api/auth/register',
                 login: 'POST /api/auth/login',
-                forgotPassword: 'POST /api/auth/forgot-password',
                 verifyOTP: 'POST /api/auth/verify-otp',
-                resetPassword: 'POST /api/auth/reset-password',
                 resendOTP: 'POST /api/auth/resend-otp'
             },
             phoneAuth: {
@@ -192,9 +190,7 @@ app.use('*', (req, res) => {
         availableRoutes: [
             'POST /api/auth/register',
             'POST /api/auth/login',
-            'POST /api/auth/forgot-password',
             'POST /api/auth/verify-otp',
-            'POST /api/auth/reset-password',
             'POST /api/auth/resend-otp',
             'POST /api/phone-auth/register-phone',
             'POST /api/phone-auth/verify-phone-signup',
@@ -322,9 +318,7 @@ const startServer = async () => {
 Ôòæ  API Endpoints:                                              Ôòæ
 Ôòæ  ÔÇó POST /api/auth/register     - User registration           Ôòæ
 Ôòæ  ÔÇó POST /api/auth/login        - User login                  Ôòæ
-Ôòæ  ÔÇó POST /api/auth/forgot-password - Password reset request   Ôòæ
 Ôòæ  ÔÇó POST /api/auth/verify-otp   - OTP verification            Ôòæ
-Ôòæ  ÔÇó POST /api/auth/reset-password - Password reset            Ôòæ
 Ôòæ  ÔÇó POST /api/auth/resend-otp   - Resend OTP                  Ôòæ
 Ôòæ  ÔÇó GET  /api/health          - Health check                  Ôòæ
 Ôòæ                                                              Ôòæ
