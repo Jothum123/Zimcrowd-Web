@@ -55,6 +55,9 @@ const { testEmailConnection } = require('./utils/email-service');
 
 const app = express();
 
+// Trust proxy for Vercel deployment
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
