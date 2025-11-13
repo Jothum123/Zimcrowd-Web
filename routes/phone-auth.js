@@ -1503,7 +1503,8 @@ router.post('/passwordless-verify', [
         const formattedPhone = phoneValidation.formatted;
 
         // Verify OTP - use database verification for passwordless login
-        const { data: verification, error: verifyError } = await supabase
+        // Get the most recent matching OTP to avoid "multiple rows" error
+        const { data: verifications, error: verifyError } = await supabase
             .from('phone_verifications')
             .select('*')
             .eq('phone_number', formattedPhone)
@@ -1511,7 +1512,10 @@ router.post('/passwordless-verify', [
             .eq('purpose', 'passwordless_login')
             .eq('verified', false)
             .gt('expires_at', new Date().toISOString())
-            .single();
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        const verification = verifications && verifications.length > 0 ? verifications[0] : null;
 
         if (verifyError || !verification) {
             console.log(`[Passwordless Verify] Database verification failed:`, verifyError?.message || 'No matching verification found');
