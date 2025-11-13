@@ -43,10 +43,11 @@ const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Send OTP Email using Resend
+// Send OTP Email with Automatic Fallback (Resend -> SendGrid)
 const sendOTPEmail = async (email, otp) => {
+    // Try Resend first
     try {
-        console.log('Sending OTP via Resend...');
+        console.log('Attempting to send OTP via Resend (primary)...');
 
         const data = await resend.emails.send({
             from: process.env.RESEND_EMAIL_FROM || 'noreply@zimcrowd.com',
@@ -83,28 +84,53 @@ const sendOTPEmail = async (email, otp) => {
             text: `ZimCrowd Code: ${otp}\n\nExpires in 10 minutes.`
         });
 
-        console.log(`OTP email sent to ${email}. Message ID: ${data.data?.id}`);
+        console.log(`✅ OTP email sent via Resend to ${email}. Message ID: ${data.data?.id}`);
 
         return {
             success: true,
             messageId: data.data?.id,
+            provider: 'resend',
             message: 'OTP email sent successfully via Resend'
         };
-    } catch (error) {
-        console.error('Resend OTP Error:', error);
+    } catch (resendError) {
+        console.error('❌ Resend failed:', resendError.message);
 
+        // Fallback to SendGrid if Resend fails
+        if (process.env.SENDGRID_API_KEY) {
+            console.log('🔄 Attempting fallback to SendGrid...');
+            try {
+                const sendGridResult = await sendOTPEmailSendGrid(email, otp);
+                if (sendGridResult.success) {
+                    console.log('✅ Fallback successful: OTP sent via SendGrid');
+                    return {
+                        ...sendGridResult,
+                        provider: 'sendgrid',
+                        fallback: true,
+                        primaryError: resendError.message
+                    };
+                }
+            } catch (sendGridError) {
+                console.error('❌ SendGrid fallback also failed:', sendGridError.message);
+            }
+        } else {
+            console.warn('⚠️ SendGrid not configured - no fallback available');
+        }
+
+        // Both failed
         return {
             success: false,
-            error: error.message,
-            message: 'Failed to send OTP email via Resend'
+            error: resendError.message,
+            message: 'Failed to send OTP email via all providers',
+            provider: 'none'
         };
     }
 };
 
-// Send Password Reset OTP Email using Resend
+// Send Password Reset OTP Email with Automatic Fallback (Resend -> SendGrid)
 const sendPasswordResetOTPEmail = async (email, otp) => {
+    // Try Resend first
     try {
-        console.log('Sending password reset OTP via Resend...');
+        console.log('Attempting to send password reset OTP via Resend (primary)...');
 
         const data = await resend.emails.send({
             from: process.env.RESEND_EMAIL_FROM || 'noreply@zimcrowd.com',
@@ -141,20 +167,44 @@ const sendPasswordResetOTPEmail = async (email, otp) => {
             text: `ZimCrowd Password Reset Code: ${otp}\n\nExpires in 10 minutes.`
         });
 
-        console.log(`Password reset OTP email sent to ${email}. Message ID: ${data.data?.id}`);
+        console.log(`✅ Password reset OTP sent via Resend to ${email}. Message ID: ${data.data?.id}`);
 
         return {
             success: true,
             messageId: data.data?.id,
+            provider: 'resend',
             message: 'Password reset OTP email sent successfully via Resend'
         };
-    } catch (error) {
-        console.error('Resend Password Reset Error:', error);
+    } catch (resendError) {
+        console.error('❌ Resend failed:', resendError.message);
 
+        // Fallback to SendGrid if Resend fails
+        if (process.env.SENDGRID_API_KEY) {
+            console.log('🔄 Attempting fallback to SendGrid...');
+            try {
+                const sendGridResult = await sendPasswordResetOTPEmailSendGrid(email, otp);
+                if (sendGridResult.success) {
+                    console.log('✅ Fallback successful: Password reset OTP sent via SendGrid');
+                    return {
+                        ...sendGridResult,
+                        provider: 'sendgrid',
+                        fallback: true,
+                        primaryError: resendError.message
+                    };
+                }
+            } catch (sendGridError) {
+                console.error('❌ SendGrid fallback also failed:', sendGridError.message);
+            }
+        } else {
+            console.warn('⚠️ SendGrid not configured - no fallback available');
+        }
+
+        // Both failed
         return {
             success: false,
-            error: error.message,
-            message: 'Failed to send password reset OTP email via Resend'
+            error: resendError.message,
+            message: 'Failed to send password reset OTP via all providers',
+            provider: 'none'
         };
     }
 };
