@@ -5766,43 +5766,82 @@
             console.log('Updating investment portfolio');
         }
 
-        function showCompletionMessageCard() {
-            // Create and show the completion message card
-            const card = document.createElement('div');
-            card.id = 'completionMessageCard';
-            card.className = 'completion-message-card';
-            card.innerHTML = `
-                <div class="completion-card-content">
-                    <div class="completion-icon">
-                        <i class="fas fa-user-check"></i>
-                    </div>
-                    <div class="completion-text">
-                        <h3>Welcome to ZimCrowd!</h3>
-                        <p>Complete your profile to unlock all features and start borrowing or investing.</p>
-                    </div>
-                    <button class="btn-primary completion-btn" onclick="completeRegistration()">
-                        Complete Registration <i class="fas fa-arrow-right"></i>
-                    </button>
-                </div>
-            `;
+        function checkRegistrationCompletion() {
+            // Check if user has completed all required registration steps
+            const onboardingCompleted = localStorage.getItem('onboardingCompleted') === 'true';
+            const socialSignupCompleted = localStorage.getItem('socialSignupCompleted') === 'true';
 
-            // Add styles
-            card.style.cssText = `
-                position: relative;
-                margin: 20px auto;
-                max-width: 800px;
-                background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
-                border: 1px solid rgba(239, 68, 68, 0.3);
-                border-radius: 16px;
-                padding: 30px;
-                text-align: center;
-                animation: slideIn 0.5s ease;
-                box-shadow: 0 8px 25px rgba(239, 68, 68, 0.15);
-            `;
+            // Only check for social signup users
+            if (!socialSignupCompleted) {
+                return; // Not a social signup user
+            }
 
-            // Insert at the top of the main content area
-            const mainContainer = document.querySelector('.dashboard-container') || document.body;
-            mainContainer.insertBefore(card, mainContainer.firstChild);
+            // Check comprehensive completion status (this would be stored in user profile)
+            // For now, we'll check localStorage flags that would be set by post-registration.html
+            const profileCompleted = localStorage.getItem('profileCompleted') === 'true';
+            const documentsUploaded = localStorage.getItem('documentsUploaded') === 'true';
+            const employmentVerified = localStorage.getItem('employmentVerified') === 'true';
+            const paymentSetup = localStorage.getItem('paymentSetup') === 'true';
+
+            // Show red completion card if any required step is incomplete
+            const allComplete = profileCompleted && documentsUploaded && employmentVerified && paymentSetup;
+
+            if (!allComplete) {
+                showCompletionMessageCard();
+                limitAppFunctionality(); // Limit features for incomplete profiles
+            } else {
+                hideCompletionMessageCard();
+                enableFullFunctionality();
+            }
+        }
+
+        function limitAppFunctionality() {
+            // Add visual indicators and disable certain features for incomplete profiles
+            const body = document.body;
+
+            // Add a banner or overlay indicating limited functionality
+            if (!document.getElementById('limitedAccessBanner')) {
+                const banner = document.createElement('div');
+                banner.id = 'limitedAccessBanner';
+                banner.innerHTML = `
+                    <div style="
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        background: rgba(239, 68, 68, 0.9);
+                        color: white;
+                        text-align: center;
+                        padding: 10px;
+                        z-index: 1000;
+                        font-size: 14px;
+                        border-bottom: 2px solid #dc2626;
+                    ">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Complete your registration to unlock full access to ZimCrowd features
+                    </div>
+                `;
+                body.insertBefore(banner, body.firstChild);
+
+                // Add padding to body to account for banner
+                body.style.paddingTop = '50px';
+            }
+        }
+
+        function enableFullFunctionality() {
+            // Remove limited access banner
+            const banner = document.getElementById('limitedAccessBanner');
+            if (banner) {
+                banner.remove();
+                document.body.style.paddingTop = '';
+            }
+        }
+
+        function hideCompletionMessageCard() {
+            const existingCard = document.getElementById('completionMessageCard');
+            if (existingCard) {
+                existingCard.remove();
+            }
         }
 
         function completeRegistration() {
@@ -5812,15 +5851,8 @@
 
         // Initialize data loading on page load
         window.addEventListener('DOMContentLoaded', function() {
-            // Check if user needs to complete registration
-            const onboardingCompleted = localStorage.getItem('onboardingCompleted') === 'true';
-            const socialSignupCompleted = localStorage.getItem('socialSignupCompleted') === 'true';
-            const profileCompleted = localStorage.getItem('profileCompleted') === 'true';
-
-            // Show completion message for new social auth users who haven't completed profile
-            if (onboardingCompleted && socialSignupCompleted && !profileCompleted) {
-                showCompletionMessageCard();
-            }
+            // Check if user needs to complete comprehensive registration
+            checkRegistrationCompletion();
 
             // Clear the mode parameter from URL if present
             const urlParams = new URLSearchParams(window.location.search);
