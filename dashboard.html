@@ -5791,12 +5791,13 @@
                 position: relative;
                 margin: 20px auto;
                 max-width: 800px;
-                background: linear-gradient(135deg, rgba(56, 231, 123, 0.1), rgba(52, 211, 153, 0.1));
-                border: 1px solid rgba(56, 231, 123, 0.3);
+                background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+                border: 1px solid rgba(239, 68, 68, 0.3);
                 border-radius: 16px;
                 padding: 30px;
                 text-align: center;
                 animation: slideIn 0.5s ease;
+                box-shadow: 0 8px 25px rgba(239, 68, 68, 0.15);
             `;
 
             // Insert at the top of the main content area
@@ -5805,9 +5806,8 @@
         }
 
         function completeRegistration() {
-            // Mark profile as completed and redirect to profile page
-            localStorage.setItem('profileCompleted', 'true');
-            window.location.href = 'profile.html';
+            // Redirect to comprehensive registration flow (profile, employment, payment details)
+            window.location.href = 'post-registration.html';
         }
 
         // Initialize data loading on page load
