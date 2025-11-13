@@ -44,7 +44,7 @@ All tests **PASSED** successfully! Your Resend integration is working correctly.
 
 ### ✅ Environment Variables
 ```
-RESEND_API_KEY=re_J3twgvYc_8YnpY2bWBswovYouPqBWcr4P ✓
+RESEND_API_KEY=re_J3...... ✓
 RESEND_EMAIL_FROM=team@zimcrowd.com ✓
 EMAIL_SERVICE_FROM=resend ✓
 ```

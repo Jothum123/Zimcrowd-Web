@@ -19,15 +19,15 @@ Open `.env` and uncomment these lines:
 **Before:**
 ```bash
 # SendGrid Email Configuration
-#SENDGRID_API_KEY=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
-#SENDGRID_FROM_EMAIL=team@zimcrowd.com
+SENDGRID_API_KEY=your_sendgrid_api_key
+SENDGRID_FROM_EMAIL=your-email@example.com
 ```
 
 **After:**
 ```bash
 # SendGrid Email Configuration
-SENDGRID_API_KEY=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
-SENDGRID_FROM_EMAIL=team@zimcrowd.com
+SENDGRID_API_KEY=your_sendgrid_api_key
+SENDGRID_FROM_EMAIL=your-email@example.com
 ```
 
 ### Step 2: Deploy to Vercel
@@ -39,8 +39,8 @@ Add environment variables in Vercel:
 3. Settings → Environment Variables
 4. Add:
    ```
-   SENDGRID_API_KEY = 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
-   SENDGRID_FROM_EMAIL = team@zimcrowd.com
+   SENDGRID_API_KEY = your_sendgrid_api_key
+   SENDGRID_FROM_EMAIL = your-email@example.com
    ```
 5. Redeploy your application
 
@@ -68,7 +68,7 @@ powershell -File test-backend-otp.ps1 -Email "your-email@gmail.com"
 
 ### 1. Verify Sender Email
 - Go to: https://app.sendgrid.com/settings/sender_auth
-- Verify `team@zimcrowd.com`
+- Verify `your-email@example.com`
 - Click verification link in email
 
 ### 2. Check API Key
@@ -135,8 +135,8 @@ User receives OTP
 code .env
 
 # Remove # from these lines:
-SENDGRID_API_KEY=...
-SENDGRID_FROM_EMAIL=team@zimcrowd.com
+SENDGRID_API_KEY=your_sendgrid_api_key
+SENDGRID_FROM_EMAIL=your-email@example.com
 ```
 
 ### Test Fallback

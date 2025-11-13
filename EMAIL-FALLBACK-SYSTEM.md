@@ -91,16 +91,16 @@ return {
 
 **Resend (Active):**
 ```bash
-RESEND_API_KEY=re_J3twgvYc_8YnpY2bWBswovYouPqBWcr4P
-RESEND_EMAIL_FROM=team@zimcrowd.com
+RESEND_API_KEY=your_resend_api_key
+RESEND_EMAIL_FROM=your-email@example.com
 EMAIL_SERVICE_FROM=resend
 ```
 
 **SendGrid (Disabled - Ready for Activation):**
 ```bash
 # Uncomment to enable fallback
-#SENDGRID_API_KEY=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
-#SENDGRID_FROM_EMAIL=team@zimcrowd.com
+SENDGRID_API_KEY=your_sendgrid_api_key
+SENDGRID_FROM_EMAIL=your-email@example.com
 ```
 
 ### Enabling SendGrid Fallback
@@ -108,8 +108,8 @@ EMAIL_SERVICE_FROM=resend
 **Option 1: Uncomment in .env**
 ```bash
 # Remove the # to activate
-SENDGRID_API_KEY=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
-SENDGRID_FROM_EMAIL=team@zimcrowd.com
+SENDGRID_API_KEY=your_sendgrid_api_key
+SENDGRID_FROM_EMAIL=your-email@example.com
 ```
 
 **Option 2: Add to Vercel Environment Variables**
