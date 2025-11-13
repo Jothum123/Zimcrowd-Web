@@ -2,10 +2,10 @@
 const express = require('express');
 const { supabase } = require('../utils/supabase-auth');
 
-const router = express.Router();
+const socialRouter = express.Router();
 
 // Google OAuth
-router.get('/google', async (req, res) => {
+socialRouter.get('/google', async (req, res) => {
     try {
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
@@ -34,7 +34,7 @@ router.get('/google', async (req, res) => {
 });
 
 // Facebook OAuth
-router.get('/facebook', async (req, res) => {
+socialRouter.get('/facebook', async (req, res) => {
     try {
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'facebook',
@@ -63,7 +63,7 @@ router.get('/facebook', async (req, res) => {
 });
 
 // OAuth callback handler
-router.get('/callback', async (req, res) => {
+socialRouter.get('/callback', async (req, res) => {
     try {
         // Get the session from the URL hash or query params
         const { data, error } = await supabase.auth.getSession();
