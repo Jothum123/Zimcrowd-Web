@@ -483,7 +483,7 @@ router.post('/register-phone', [
 });
 
 // Phone registration - Step 2: Verify OTP and create account
-router.post('/verify-phone-signup', otpVerificationLimiter, [
+router.post('/verify-phone-signup', [
     body('tempToken')
         .notEmpty()
         .withMessage('Temporary token is required'),
