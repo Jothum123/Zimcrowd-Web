@@ -293,6 +293,48 @@
             padding: 4px 0;
         }
 
+        .method-toggle {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 6px;
+            border-radius: 12px;
+        }
+
+        .method-btn {
+            flex: 1;
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .method-btn.active {
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            color: #0f172a;
+            box-shadow: 0 4px 12px rgba(56, 231, 123, 0.3);
+        }
+
+        .method-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .input-group {
+            display: none;
+        }
+
+        .input-group.active {
+            display: block;
+        }
+
         .checkbox-group input[type="checkbox"] {
             margin-top: 3px;
             accent-color: #38e07b;
@@ -693,11 +735,32 @@
                     </div>
                 </div>
 
+                <!-- Method Toggle -->
+                <div class="method-toggle">
+                    <button type="button" class="method-btn active" id="phoneMethodBtn">
+                        <i class="fas fa-mobile-alt"></i> Phone
+                    </button>
+                    <button type="button" class="method-btn" id="emailMethodBtn">
+                        <i class="fas fa-envelope"></i> Email
+                    </button>
+                </div>
+
                 <!-- Phone Number Field -->
-                <div class="form-group">
-                    <label class="form-label">Phone Number <span class="required">*</span></label>
-                    <input type="tel" class="form-input" id="phone" placeholder="+263 77 123 4567" required>
-                    <div class="field-hint">📱 Enter phone number with country code (+263 for Zimbabwe)</div>
+                <div class="input-group active" id="phoneGroup">
+                    <div class="form-group">
+                        <label class="form-label">Phone Number <span class="required">*</span></label>
+                        <input type="tel" class="form-input" id="phone" placeholder="+263 77 123 4567">
+                        <div class="field-hint">📱 Enter phone number with country code (+263 for Zimbabwe)</div>
+                    </div>
+                </div>
+
+                <!-- Email Field -->
+                <div class="input-group" id="emailGroup">
+                    <div class="form-group">
+                        <label class="form-label">Email Address <span class="required">*</span></label>
+                        <input type="email" class="form-input" id="email" placeholder="your@email.com">
+                        <div class="field-hint">📧 We'll send a verification code to this email</div>
+                    </div>
                 </div>
 
                 <div class="form-row">
@@ -756,7 +819,9 @@
                     </label>
                 </div>
 
-                <button type="submit" class="submit-btn" id="signupBtn">📱 Send SMS Verification</button>
+                <button type="submit" class="submit-btn" id="signupBtn">
+                    <span id="submitText"><i class="fas fa-paper-plane"></i> Send Verification Code</span>
+                </button>
             </form>
 
             <!-- Social Login Buttons -->
@@ -917,6 +982,29 @@
             }
         }
 
+        // Method toggle functionality
+        let currentMethod = 'phone';
+        const phoneMethodBtn = document.getElementById('phoneMethodBtn');
+        const emailMethodBtn = document.getElementById('emailMethodBtn');
+        const phoneGroup = document.getElementById('phoneGroup');
+        const emailGroup = document.getElementById('emailGroup');
+
+        phoneMethodBtn.addEventListener('click', function() {
+            currentMethod = 'phone';
+            phoneMethodBtn.classList.add('active');
+            emailMethodBtn.classList.remove('active');
+            phoneGroup.classList.add('active');
+            emailGroup.classList.remove('active');
+        });
+
+        emailMethodBtn.addEventListener('click', function() {
+            currentMethod = 'email';
+            emailMethodBtn.classList.add('active');
+            phoneMethodBtn.classList.remove('active');
+            emailGroup.classList.add('active');
+            phoneGroup.classList.remove('active');
+        });
+
         // Handle signup form submission
         document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -924,6 +1012,7 @@
             const firstName = document.getElementById('firstName').value.trim();
             const lastName = document.getElementById('lastName').value.trim();
             const phone = document.getElementById('phone').value.trim();
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             const country = document.getElementById('country').value;
@@ -931,8 +1020,20 @@
             const termsAccepted = document.getElementById('terms').checked;
 
             // Validation
-            if (!firstName || !lastName || !phone || !password || !confirmPassword || !country || !city) {
+            const identifier = currentMethod === 'phone' ? phone : email;
+            
+            if (!firstName || !lastName || !identifier || !password || !confirmPassword || !country || !city) {
                 showError('Please fill in all required fields');
+                return;
+            }
+
+            if (currentMethod === 'phone' && !phone) {
+                showError('Please enter your phone number');
+                return;
+            }
+
+            if (currentMethod === 'email' && !email) {
+                showError('Please enter your email address');
                 return;
             }
 
@@ -954,29 +1055,60 @@
 
             // Show loading state
             const submitBtn = this.querySelector('.submit-btn');
-            const originalText = submitBtn.textContent;
+            const submitText = document.getElementById('submitText');
+            const originalText = submitText.innerHTML;
 
-            submitBtn.textContent = '📱 Sending SMS...';
+            submitText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
             submitBtn.disabled = true;
 
             try {
-                // Use ZimCrowdAPI client for phone registration
-                const response = await window.ZimCrowdAPI.registerPhone(
-                    firstName,
-                    lastName,
-                    phone,
-                    password
-                );
+                let response;
+                
+                if (currentMethod === 'phone') {
+                    // Use ZimCrowdAPI client for phone registration
+                    response = await window.ZimCrowdAPI.registerPhone(
+                        firstName,
+                        lastName,
+                        phone,
+                        password
+                    );
+                } else {
+                    // Use email registration endpoint
+                    response = await fetch('https://zimcrowd-backend.vercel.app/api/email-auth/register-email', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            firstName,
+                            lastName,
+                            email,
+                            password,
+                            country,
+                            city
+                        })
+                    }).then(res => res.json());
+                }
 
                 if (response.success) {
-                    // Phone verification - redirect to OTP page
+                    // Store verification data
                     localStorage.setItem('tempToken', response.tempToken);
-                    localStorage.setItem('verificationPhone', phone);
-                    localStorage.removeItem('verificationEmail'); // Clear email to avoid conflicts
-                    showSuccess('📱 SMS sent! Redirecting to verification...');
-                    setTimeout(() => {
-                        window.location.href = `verify-otp.html?phone=${encodeURIComponent(phone)}&type=signup&token=${response.tempToken}`;
-                    }, 2000);
+                    
+                    if (currentMethod === 'phone') {
+                        localStorage.setItem('verificationPhone', phone);
+                        localStorage.removeItem('verificationEmail');
+                        showSuccess('📱 SMS sent! Redirecting to verification...');
+                        setTimeout(() => {
+                            window.location.href = `verify-otp.html?phone=${encodeURIComponent(phone)}&type=signup&token=${response.tempToken}`;
+                        }, 2000);
+                    } else {
+                        localStorage.setItem('verificationEmail', email);
+                        localStorage.removeItem('verificationPhone');
+                        showSuccess('📧 Email sent! Redirecting to verification...');
+                        setTimeout(() => {
+                            window.location.href = `verify-otp.html?email=${encodeURIComponent(email)}&type=signup&token=${response.tempToken}`;
+                        }, 2000);
+                    }
                 } else {
                     showError(response.message || 'Failed to send SMS verification');
                 }
@@ -984,7 +1116,7 @@
                 console.error('Registration error:', error);
                 showError(error.message || 'Network error. Please check your connection and try again.');
             } finally {
-                submitBtn.textContent = originalText;
+                submitText.innerHTML = originalText;
                 submitBtn.disabled = false;
             }
         });
