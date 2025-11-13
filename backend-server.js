@@ -160,6 +160,13 @@ app.get('/api/test', (req, res) => {
                 verifyOTP: 'POST /api/auth/verify-otp',
                 resendOTP: 'POST /api/auth/resend-otp'
             },
+            socialAuth: {
+                google: 'GET /api/social-auth/google',
+                facebook: 'GET /api/social-auth/facebook',
+                callback: 'GET /api/social-auth/callback',
+                dataDeletion: 'POST /api/social-auth/data-deletion',
+                dataDeletionStatus: 'GET /api/social-auth/data-deletion-status'
+            },
             phoneAuth: {
                 registerPhone: 'POST /api/phone-auth/register-phone',
                 verifyPhoneSignup: 'POST /api/phone-auth/verify-phone-signup',
@@ -215,6 +222,11 @@ app.use('*', (req, res) => {
             'POST /api/auth/login',
             'POST /api/auth/verify-otp',
             'POST /api/auth/resend-otp',
+            'GET /api/social-auth/google',
+            'GET /api/social-auth/facebook',
+            'GET /api/social-auth/callback',
+            'POST /api/social-auth/data-deletion',
+            'GET /api/social-auth/data-deletion-status',
             'POST /api/phone-auth/register-phone',
             'POST /api/phone-auth/verify-phone-signup',
             'POST /api/phone-auth/login-phone',
