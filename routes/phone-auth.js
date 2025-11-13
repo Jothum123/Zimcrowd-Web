@@ -514,54 +514,39 @@ router.post('/verify-phone-signup', [
         const { firstName, lastName, phone, password, pass } = userData;
         const finalPassword = password || pass; // Handle both old and new format
         
-        // Verify OTP - use Twilio Verify if configured, otherwise fallback to database
+        // Verify OTP - use database verification for testing (skip Twilio)
         let otpVerified = false;
         
-        if (process.env.TWILIO_VERIFY_SERVICE_SID) {
-            // Use Twilio Verify API
-            console.log(`[Verify Signup] Using Twilio Verify API for phone: ${phone}`);
-            const twilioVerification = await verifyOTPWithTwilio(phone, otp);
-            otpVerified = twilioVerification.success;
+        // Always use database verification for now
+        console.log(`[Verify Signup] Using database verification for phone: ${phone}, OTP: ${otp}`);
+        const { data: verification, error: verifyError } = await supabase
+            .from('phone_verifications')
+            .select('*')
+            .eq('phone_number', phone)
+            .eq('otp_code', otp)
+            .eq('purpose', 'signup')
+            .eq('verified', false)
+            .gt('expires_at', new Date().toISOString())
+            .single();
             
-            if (!otpVerified) {
-                console.log(`[Verify Signup] Twilio verification failed: ${twilioVerification.message}`);
-                return res.status(400).json({
-                    success: false,
-                    message: twilioVerification.message || 'Invalid verification code'
-                });
-            }
-        } else {
-            // Fallback to database verification
-            console.log(`[Verify Signup] Using database verification for phone: ${phone}, OTP: ${otp}`);
-            const { data: verification, error: verifyError } = await supabase
-                .from('phone_verifications')
-                .select('*')
-                .eq('phone_number', phone)
-                .eq('otp_code', otp)
-                .eq('purpose', 'signup')
-                .eq('verified', false)
-                .gt('expires_at', new Date().toISOString())
-                .single();
-                
-            console.log(`[Verify Signup] Database query result:`, { data: verification, error: verifyError });
-                
-            if (verifyError || !verification) {
-                console.log(`[Verify Signup] Database verification failed:`, verifyError?.message || 'No matching verification found');
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid or expired verification code'
-                });
-            }
+        console.log(`[Verify Signup] Database query result:`, { data: verification, error: verifyError });
             
-            // Mark OTP as verified
-            await supabase
-                .from('phone_verifications')
-                .update({ verified: true })
-                .eq('id', verification.id);
-            
-            otpVerified = true;
-            console.log(`[Verify Signup] Database verification SUCCESS`);
+        if (verifyError || !verification) {
+            console.log(`[Verify Signup] Database verification failed:`, verifyError?.message || 'No matching verification found');
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired verification code'
+            });
         }
+        
+        // Mark OTP as verified
+        await supabase
+            .from('phone_verifications')
+            .update({ verified: true })
+            .eq('id', verification.id);
+        
+        otpVerified = true;
+        console.log(`[Verify Signup] Database verification SUCCESS`);
         
         // Create user account directly in profiles table (skip Supabase Auth for phone users)
         console.log('[Phone Signup] Creating account for:', { firstName, lastName, phone });
