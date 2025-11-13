@@ -896,23 +896,23 @@
         // Social login functions
         async function loginWithGoogle() {
             try {
-                showSuccess('Redirecting to Google...');
-                // Redirect to our backend OAuth endpoint
-                window.location.href = 'https://zimcrowd-backend.vercel.app/api/social-auth/google';
+                showSuccess('Redirecting to Google signup...');
+                // Redirect to our backend OAuth endpoint with signup mode
+                window.location.href = 'https://zimcrowd-backend.vercel.app/api/social-auth/google?mode=signup';
             } catch (error) {
-                console.error('Google login error:', error);
-                showError('Failed to initiate Google login. Please try again.');
+                console.error('Google signup error:', error);
+                showError('Failed to initiate Google signup. Please try again.');
             }
         }
 
         async function loginWithFacebook() {
             try {
-                showSuccess('Redirecting to Facebook...');
-                // Redirect to our backend OAuth endpoint
-                window.location.href = 'https://zimcrowd-backend.vercel.app/api/social-auth/facebook';
+                showSuccess('Redirecting to Facebook signup...');
+                // Redirect to our backend OAuth endpoint with signup mode
+                window.location.href = 'https://zimcrowd-backend.vercel.app/api/social-auth/facebook?mode=signup';
             } catch (error) {
-                console.error('Facebook login error:', error);
-                showError('Failed to initiate Facebook login. Please try again.');
+                console.error('Facebook signup error:', error);
+                showError('Failed to initiate Facebook signup. Please try again.');
             }
         }
 
