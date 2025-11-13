@@ -19,8 +19,10 @@ try {
     console.log('✅ Phone auth routes loaded');
     var emailAuthRoutes = require('./routes/email-auth');
     console.log('✅ Email auth routes loaded');
-    var profileRoutes = require('./routes/profile');
-    console.log('✅ Profile routes loaded');
+    var dashboardRoutes = require('./routes/dashboard');
+    console.log('✅ Dashboard routes loaded');
+    var socialAuthRoutes = require('./routes/social-auth');
+    console.log('✅ Social auth routes loaded');
     var loansRoutes = require('./routes/loans');
     console.log('✅ Loans routes loaded');
     var investmentsRoutes = require('./routes/investments');
@@ -87,10 +89,22 @@ app.use('/api/auth', authRoutes);
 console.log('✅ Auth routes registered');
 app.use('/api/phone-auth', phoneAuthRoutes);
 console.log('✅ Phone auth routes registered');
+app.use('/api/social-auth', socialAuthRoutes);
+console.log('✅ Social auth routes registered');
 app.use('/api/email-auth', emailAuthRoutes);
 console.log('✅ Email auth routes registered');
 app.use('/api/profile', profileRoutes);
 console.log('✅ Profile routes registered');
+app.use('/api/dashboard', dashboardRoutes);
+console.log('✅ Dashboard routes registered');
+app.get('/terms', (req, res) => {
+    res.sendFile(path.join(__dirname, 'terms.html'));
+});
+console.log('✅ Terms page route registered');
+app.get('/privacy-policy', (req, res) => {
+    res.sendFile(path.join(__dirname, 'privacy.html'));
+});
+console.log('✅ Privacy policy page route registered');
 
 // Root route - serve index.html
 app.get('/', (req, res) => {
@@ -100,6 +114,11 @@ app.get('/', (req, res) => {
 // Login route - serve login.html
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+// Dashboard route - serve dashboard.html (development access)
+app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 app.use('/api/loans', loansRoutes);
 console.log('✅ Loans routes registered at /api/loans-test');
@@ -163,6 +182,9 @@ app.get('/api/test', (req, res) => {
                 forgotPasswordEmail: 'POST /api/email-auth/forgot-password-email',
                 resetPasswordEmail: 'POST /api/email-auth/reset-password-email',
                 resendEmailOTP: 'POST /api/email-auth/resend-email-otp'
+            },
+            dashboard: {
+                overview: 'GET /api/dashboard/overview'
             }
         }
     });
@@ -214,6 +236,7 @@ app.use('*', (req, res) => {
             'POST /api/email-auth/resend-email-otp',
             'GET /api/health',
             'GET /api/test',
+            'GET /api/dashboard/overview',
             'GET /api/profile',
             'PUT /api/profile',
             'PUT /api/profile/complete-onboarding',
