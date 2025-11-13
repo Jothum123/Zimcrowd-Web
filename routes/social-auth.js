@@ -90,8 +90,53 @@ socialRouter.get('/callback', async (req, res) => {
         }
 
         if (data.session) {
-            // User is authenticated, redirect to dashboard
-            res.redirect('/dashboard');
+            // User is authenticated, check if we need to create/update profile
+            const user = data.session.user;
+            const { mode } = req.query; // Get mode from query params
+
+            // Check if profile exists
+            const { data: existingProfile, error: profileError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            if (profileError && profileError.code !== 'PGRST116') { // PGRST116 = no rows returned
+                console.error('Profile check error:', profileError);
+            }
+
+            // If profile doesn't exist and this is a signup, create it
+            if (!existingProfile && mode === 'signup') {
+                console.log(`Creating profile for new social signup user: ${user.id}`);
+                
+                const { error: insertError } = await supabase
+                    .from('profiles')
+                    .insert({
+                        id: user.id,
+                        first_name: user.user_metadata?.first_name || user.user_metadata?.full_name?.split(' ')[0] || '',
+                        last_name: user.user_metadata?.last_name || user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+                        email: user.email,
+                        phone: user.user_metadata?.phone || null,
+                        avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+                        auth_provider: user.app_metadata?.provider || 'unknown',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    });
+
+                if (insertError) {
+                    console.error('Profile creation error:', insertError);
+                    // Continue anyway - profile can be created later
+                } else {
+                    console.log(`Profile created successfully for user: ${user.id}`);
+                }
+            }
+
+            // Redirect to dashboard with mode parameter
+            const redirectUrl = mode === 'signup' 
+                ? `/dashboard.html?mode=signup` 
+                : '/dashboard.html';
+                
+            res.redirect(redirectUrl);
         } else {
             res.redirect('/login?error=no_session');
         }

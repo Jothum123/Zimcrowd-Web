@@ -748,10 +748,21 @@
             // Mark onboarding as completed
             localStorage.setItem('onboardingCompleted', 'true');
             
+            // Check if this is a social auth signup
+            const urlParams = new URLSearchParams(window.location.search);
+            const isSocialSignup = urlParams.get('source') === 'social';
+            
+            if (isSocialSignup) {
+                // Mark social signup as completed to prevent future redirects
+                localStorage.setItem('socialSignupCompleted', 'true');
+                // Mark profile as completed for social users (they don't need phone verification)
+                localStorage.setItem('profileCompleted', 'true');
+            }
+            
             // Check if profile is completed
             const profileCompleted = localStorage.getItem('profileCompleted');
             
-            if (profileCompleted === 'false') {
+            if (profileCompleted === 'false' || !profileCompleted) {
                 // New user - go to dashboard (they'll see the completion prompt there)
                 window.location.href = 'dashboard.html';
             } else {
