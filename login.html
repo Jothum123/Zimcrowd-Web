@@ -1028,7 +1028,7 @@
             try {
                 showSuccess('Redirecting to Google...');
                 // Redirect to our backend OAuth endpoint
-                window.location.href = '/api/social-auth/google';
+                window.location.href = 'https://zimcrowd-backend.vercel.app/api/social-auth/google';
             } catch (error) {
                 console.error('Google login error:', error);
                 showError('Failed to initiate Google login. Please try again.');
@@ -1039,7 +1039,7 @@
             try {
                 showSuccess('Redirecting to Facebook...');
                 // Redirect to our backend OAuth endpoint
-                window.location.href = '/api/social-auth/facebook';
+                window.location.href = 'https://zimcrowd-backend.vercel.app/api/social-auth/facebook';
             } catch (error) {
                 console.error('Facebook login error:', error);
                 showError('Failed to initiate Facebook login. Please try again.');
