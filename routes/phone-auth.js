@@ -1078,7 +1078,7 @@ router.post('/passwordless-login', [
         // Check if phone number exists in profiles
         const { data: profile } = await supabase
             .from('profiles')
-            .select('id, phone')
+            .select('id, phone, email, first_name, last_name')
             .eq('phone', formattedPhone)
             .single();
 
@@ -1112,17 +1112,42 @@ router.post('/passwordless-login', [
             });
         }
 
-        // Send SMS (don't fail if SMS fails - we use database verification as fallback)
-        let smsResult = { success: false, error: 'SMS not attempted' };
-        try {
-            smsResult = await sendSMSOTP(formattedPhone, otp);
-            console.log('Passwordless login SMS result:', smsResult);
-        } catch (error) {
-            console.warn('Passwordless login SMS sending threw exception:', error.message, '- proceeding with database verification only');
-            smsResult = { success: false, error: error.message };
+        // Try to send via email first (free, reliable)
+        let emailResult = { success: false, error: 'No email available' };
+        if (profile.email) {
+            try {
+                console.log(`Sending passwordless login OTP to email: ${profile.email}`);
+                const { sendOTPEmail } = require('../utils/email-service');
+                emailResult = await sendOTPEmail(profile.email, otp);
+                console.log('Passwordless login email result:', emailResult);
+            } catch (error) {
+                console.warn('Passwordless login email sending threw exception:', error.message);
+                emailResult = { success: false, error: error.message };
+            }
         }
 
-        if (!smsResult.success) {
+        // Send SMS as fallback (if configured and email failed)
+        let smsResult = { success: false, error: 'SMS not attempted' };
+        if (!emailResult.success) {
+            try {
+                smsResult = await sendSMSOTP(formattedPhone, otp);
+                console.log('Passwordless login SMS result:', smsResult);
+            } catch (error) {
+                console.warn('Passwordless login SMS sending threw exception:', error.message, '- proceeding with database verification only');
+                smsResult = { success: false, error: error.message };
+            }
+        }
+
+        // Log delivery method
+        if (emailResult.success) {
+            console.log(`Passwordless login OTP delivered via EMAIL to ${profile.email}`);
+        } else if (smsResult.success) {
+            console.log(`Passwordless login OTP delivered via SMS to ${formattedPhone}`);
+        } else {
+            console.log(`Passwordless login OTP stored in database only - check server console for code: ${otp}`);
+        }
+
+        if (!emailResult.success && !smsResult.success) {
             console.log(`Passwordless login SMS failed for phone ${formattedPhone}:`, smsResult.error, '- but continuing with database verification');
         }
 
