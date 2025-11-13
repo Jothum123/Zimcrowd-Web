@@ -581,9 +581,30 @@
 
         <!-- Password Login Form -->
         <form class="login-form" id="passwordLoginForm">
-            <div class="form-group">
-                <label class="form-label">Phone Number</label>
-                <input type="tel" class="form-input" id="phone" placeholder="+263 77 123 4567" required>
+            <!-- Method Toggle -->
+            <div class="method-toggle" style="display: flex; gap: 12px; margin-bottom: 24px; background: rgba(255, 255, 255, 0.05); padding: 6px; border-radius: 12px;">
+                <button type="button" class="method-btn active" id="phoneMethodBtn" style="flex: 1; padding: 12px 20px; background: transparent; border: none; border-radius: 8px; color: rgba(255, 255, 255, 0.6); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; font-family: 'Space Grotesk', sans-serif;">
+                    <i class="fas fa-mobile-alt"></i> Phone
+                </button>
+                <button type="button" class="method-btn" id="emailMethodBtn" style="flex: 1; padding: 12px 20px; background: transparent; border: none; border-radius: 8px; color: rgba(255, 255, 255, 0.6); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; font-family: 'Space Grotesk', sans-serif;">
+                    <i class="fas fa-envelope"></i> Email
+                </button>
+            </div>
+
+            <!-- Phone Input -->
+            <div class="input-group active" id="phoneGroup" style="display: block;">
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" class="form-input" id="phone" placeholder="+263 77 123 4567">
+                </div>
+            </div>
+
+            <!-- Email Input -->
+            <div class="input-group" id="emailGroup" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="email" placeholder="your@email.com">
+                </div>
             </div>
 
             <div class="form-group">
@@ -664,7 +685,7 @@
         </form>
 
         <div class="forgot-password">
-            <a href="phone-password-reset-request.html" class="forgot-link">Forgot your password?</a>
+            <a href="password-reset-request.html" class="forgot-link">Forgot your password?</a>
         </div>
 
         <!-- Social Login Buttons -->
@@ -723,20 +744,50 @@
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
 
+            // Phone/Email toggle functionality
+            let currentAuthMethod = 'phone';
+            const phoneMethodBtn = document.getElementById('phoneMethodBtn');
+            const emailMethodBtn = document.getElementById('emailMethodBtn');
+            const phoneGroup = document.getElementById('phoneGroup');
+            const emailGroup = document.getElementById('emailGroup');
+
+            // Add active state styles
+            const activeStyle = 'background: linear-gradient(135deg, #38e77b, #34d399); color: #0f172a; box-shadow: 0 4px 12px rgba(56, 231, 123, 0.3);';
+            const inactiveStyle = 'background: transparent; color: rgba(255, 255, 255, 0.6);';
+
+            phoneMethodBtn.addEventListener('click', function() {
+                currentAuthMethod = 'phone';
+                phoneMethodBtn.style.cssText += activeStyle;
+                emailMethodBtn.style.cssText += inactiveStyle;
+                phoneGroup.style.display = 'block';
+                emailGroup.style.display = 'none';
+            });
+
+            emailMethodBtn.addEventListener('click', function() {
+                currentAuthMethod = 'email';
+                emailMethodBtn.style.cssText += activeStyle;
+                phoneMethodBtn.style.cssText += inactiveStyle;
+                emailGroup.style.display = 'block';
+                phoneGroup.style.display = 'none';
+            });
+
             // Password login form handler
             passwordLoginForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
 
                 // Get form data
                 const phone = document.getElementById('phone').value.trim();
+                const email = document.getElementById('email').value.trim();
                 const password = document.getElementById('password').value;
                 const rememberMe = document.getElementById('rememberMe').checked;
+
+                const identifier = currentAuthMethod === 'phone' ? phone : email;
 
                 // Basic validation
                 let isValid = true;
 
-                if (!phone) {
-                    showError('Please enter your phone number');
+                if (!identifier) {
+                    showError(currentAuthMethod === 'phone' ? 'Please enter your phone number' : 'Please enter your email address');
                     isValid = false;
                 } else {
                     hideError();
@@ -757,8 +808,24 @@
                 passwordLoginSpinner.style.display = 'inline-block';
 
                 try {
-                    // Use ZimCrowdAPI client for phone login
-                    const response = await window.ZimCrowdAPI.loginPhone(phone, password);
+                    let response;
+                    
+                    if (currentAuthMethod === 'phone') {
+                        // Use ZimCrowdAPI client for phone login
+                        response = await window.ZimCrowdAPI.loginPhone(phone, password);
+                    } else {
+                        // Use email login endpoint
+                        response = await fetch('https://zimcrowd-backend.vercel.app/api/email-auth/login-email', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                email,
+                                password
+                            })
+                        }).then(res => res.json());
+                    }
 
                     if (response.success) {
                         // Store authentication data
