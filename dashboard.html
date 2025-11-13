@@ -5776,7 +5776,22 @@
 
         // Initialize data loading on page load
         window.addEventListener('DOMContentLoaded', function() {
-            // Check if user is authenticated
+            // Check for social auth signup mode
+            const urlParams = new URLSearchParams(window.location.search);
+            const signupMode = urlParams.get('mode') === 'signup';
+            const socialSignupCompleted = localStorage.getItem('socialSignupCompleted') === 'true';
+
+            if (signupMode && !socialSignupCompleted) {
+                // New social signup - redirect to onboarding
+                window.location.href = 'onboarding.html?source=social';
+                return;
+            }
+
+            // Clear the mode parameter from URL after processing
+            if (signupMode) {
+                const newUrl = window.location.pathname + window.location.search.replace(/[?&]mode=signup/, '');
+                window.history.replaceState({}, document.title, newUrl);
+            }
             const authToken = localStorage.getItem('authToken');
             if (authToken) {
                 // User is authenticated, load real data
