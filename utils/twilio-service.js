@@ -1,11 +1,17 @@
 // Twilio SMS Service for ZimCrowd
 const twilio = require('twilio');
 
-// Initialize Twilio client
-const client = twilio(
-    process.env.TWILIO_ACCOUNT_SID,
-    process.env.TWILIO_AUTH_TOKEN
-);
+// Initialize Twilio client with error handling
+let client = null;
+try {
+    client = twilio(
+        process.env.TWILIO_ACCOUNT_SID,
+        process.env.TWILIO_AUTH_TOKEN
+    );
+} catch (error) {
+    console.warn('Failed to initialize Twilio client:', error.message);
+    // Client will be null, functions will handle this gracefully
+}
 
 // Generate 6-digit OTP
 const generateOTP = () => {
@@ -15,6 +21,14 @@ const generateOTP = () => {
 // Send SMS OTP
 const sendSMSOTP = async (phoneNumber, otp) => {
     try {
+        if (!client) {
+            return {
+                success: false,
+                error: 'Twilio client not initialized',
+                message: 'SMS service unavailable'
+            };
+        }
+
         // Use Twilio Verify API if Verify Service SID is available
         if (process.env.TWILIO_VERIFY_SERVICE_SID) {
             const verification = await client.verify.v2
@@ -91,6 +105,14 @@ const sendSMSOTP = async (phoneNumber, otp) => {
 // Send SMS for password reset
 const sendPasswordResetSMS = async (phoneNumber, otp) => {
     try {
+        if (!client) {
+            return {
+                success: false,
+                error: 'Twilio client not initialized',
+                message: 'SMS service unavailable'
+            };
+        }
+
         const messageOptions = {
             body: `Your ZimCrowd password reset code is: ${otp}. This code expires in 10 minutes. If you didn't request this, please ignore.`,
             to: phoneNumber
@@ -205,6 +227,13 @@ const formatPhoneForDisplay = (phoneNumber) => {
 // Verify OTP using Twilio Verify API
 const verifyOTPWithTwilio = async (phoneNumber, otp) => {
     try {
+        if (!client) {
+            return {
+                success: false,
+                error: 'Twilio client not initialized'
+            };
+        }
+
         if (!process.env.TWILIO_VERIFY_SERVICE_SID) {
             return {
                 success: false,
@@ -242,6 +271,14 @@ const verifyOTPWithTwilio = async (phoneNumber, otp) => {
 // Send transactional SMS notifications
 const sendNotificationSMS = async (phoneNumber, message) => {
     try {
+        if (!client) {
+            return {
+                success: false,
+                error: 'Twilio client not initialized',
+                message: 'SMS service unavailable'
+            };
+        }
+
         // Use Messaging Service SID if available, otherwise fallback to phone number
         const messageOptions = {
             body: message,
@@ -277,6 +314,14 @@ const sendNotificationSMS = async (phoneNumber, message) => {
 // Test Twilio connection
 const testTwilioConnection = async () => {
     try {
+        if (!client) {
+            return {
+                success: false,
+                error: 'Twilio client not initialized',
+                message: 'Twilio service unavailable'
+            };
+        }
+
         // Test connection by getting account info
         const account = await client.api.accounts(process.env.TWILIO_ACCOUNT_SID).fetch();
 

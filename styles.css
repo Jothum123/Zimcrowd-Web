@@ -3670,3 +3670,22 @@ p {
         font-size: 24px;
     }
 }
+
+/* Forgot Password Styles */
+.forgot-password {
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.forgot-link {
+    color: #3b82f6;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.forgot-link:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}

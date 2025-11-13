@@ -6,6 +6,7 @@
     <title>Sign Up - ZimCrowd</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/api-client.js"></script>
     <style>
         * {
             margin: 0;
@@ -693,8 +694,8 @@
     <script>
         // API Configuration
         const API_URL = window.location.hostname === 'localhost'
-            ? 'http://localhost:5003'
-            : 'https://zimcrowd-backend-pfzb6c7x3-jojola.vercel.app';
+            ? 'http://localhost:3000/api'
+            : 'https://zimcrowd-backend-pfzb6c7x3-jojola.vercel.app/api';
 
         let currentSignupMethod = 'phone'; // Only SMS signup now
 
@@ -841,39 +842,29 @@
             submitBtn.disabled = true;
 
             try {
-                // Phone registration only
-                const response = await fetch(`${API_URL}/api/phone-auth/register-phone`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        firstName,
-                        lastName,
-                        phone,
-                        password,
-                        country,
-                        city
-                    })
-                });
+                // Use ZimCrowdAPI client for phone registration
+                const response = await window.ZimCrowdAPI.registerPhone(
+                    firstName,
+                    lastName,
+                    phone,
+                    password
+                );
 
-                const data = await response.json();
-
-                if (data.success) {
+                if (response.success) {
                     // Phone verification - redirect to OTP page
-                    localStorage.setItem('tempToken', data.tempToken);
+                    localStorage.setItem('tempToken', response.tempToken);
                     localStorage.setItem('verificationPhone', phone);
                     localStorage.removeItem('verificationEmail'); // Clear email to avoid conflicts
                     showSuccess('📱 SMS sent! Redirecting to verification...');
                     setTimeout(() => {
-                        window.location.href = `verify-otp.html?phone=${encodeURIComponent(phone)}&type=signup&token=${data.tempToken}`;
+                        window.location.href = `verify-otp.html?phone=${encodeURIComponent(phone)}&type=signup&token=${response.tempToken}`;
                     }, 2000);
                 } else {
-                    showError(data.message || 'Failed to send SMS verification');
+                    showError(response.message || 'Failed to send SMS verification');
                 }
             } catch (error) {
                 console.error('Registration error:', error);
-                showError('Network error. Please check your connection and try again.');
+                showError(error.message || 'Network error. Please check your connection and try again.');
             } finally {
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;

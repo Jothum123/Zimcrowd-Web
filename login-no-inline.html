@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' http://localhost:3000 https://zimcrowd-backend-pfzb6c7x3-jojola.vercel.app; img-src 'self' data: https:">
+    <title>Login - ZimCrowd (CSP-Safe)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Login Method Toggle */
+        .login-method-toggle {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .method-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .method-btn.active {
+            background: rgba(56, 224, 123, 0.1);
+            color: #38e07b;
+            border: 1px solid rgba(56, 224, 123, 0.3);
+        }
+
+        .method-btn:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .method-btn.active:hover {
+            color: #4ade80;
+        }
+
+        /* OTP Form Styles */
+        .otp-form {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .otp-request-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            margin-top: 16px;
+            width: 100%;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .otp-request-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .otp-request-btn:hover::before {
+            left: 100%;
+        }
+
+        .otp-request-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .otp-verify-section {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .otp-input {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .otp-hint {
+            display: block;
+            color: rgba(56, 224, 123, 0.8);
+            font-size: 12px;
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        .otp-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-top: 16px;
+        }
+
+        .otp-verify-btn {
+            flex: 1;
+            background: linear-gradient(135deg, #38e07b 0%, #22c55e 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            padding: 16px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .otp-verify-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(56, 224, 123, 0.3);
+        }
+
+        .success-message, .error-message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message {
+            background: rgba(56, 224, 123, 0.1);
+            border: 1px solid rgba(56, 224, 123, 0.3);
+            color: #4ade80;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: rgba(239, 68, 68, 0.9);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <img src="assets/images/Zimcrowd_Dark.png" alt="ZimCrowd" class="login-logo">
+            <h1>Welcome Back</h1>
+            <p class="login-subtitle">Sign in to your ZimCrowd account</p>
+        </div>
+
+        <div id="messageContainer"></div>
+
+        <!-- Login Method Toggle -->
+        <div class="login-method-toggle">
+            <button type="button" class="method-btn active" id="passwordMethod">
+                <i class="fas fa-lock"></i> Password Login
+            </button>
+            <button type="button" class="method-btn" id="otpMethod">
+                <i class="fas fa-mobile-alt"></i> OTP Login
+            </button>
+        </div>
+
+        <!-- Password Login Form -->
+        <form class="login-form" id="passwordLoginForm">
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" class="form-input" id="phone" placeholder="+263 77 123 4567" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <div class="password-input-wrapper">
+                    <input type="password" class="form-input" id="password" placeholder="Enter your password" required>
+                    <button type="button" class="password-toggle" id="passwordToggle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-options">
+                <div class="remember-me">
+                    <input type="checkbox" id="rememberMe" name="rememberMe">
+                    <label for="rememberMe">Remember me</label>
+                </div>
+                <a href="forgot-password-sms.html" class="forgot-password">
+                    <i class="fas fa-key"></i> Reset Password
+                </a>
+            </div>
+
+            <button type="submit" class="login-btn" id="passwordLoginBtn">
+                <span id="passwordLoginText">Sign In</span>
+                <div id="passwordLoginSpinner" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+            </button>
+        </form>
+
+        <!-- OTP Login Form -->
+        <div class="login-form otp-form" id="otpLoginForm">
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" class="form-input" id="otpPhone" placeholder="+263 77 123 4567">
+            </div>
+
+            <!-- OTP Request Section -->
+            <div id="otpRequestSection">
+                <button type="button" class="otp-request-btn" id="requestOTPBtn">
+                    <i class="fas fa-paper-plane"></i> Send Verification Code
+                </button>
+            </div>
+
+            <!-- OTP Verification Section -->
+            <div id="otpVerifySection" class="otp-verify-section">
+                <div class="form-group">
+                    <label class="form-label">Enter 6-digit Code</label>
+                    <input type="text" class="form-input otp-input" id="otpCode" placeholder="000000" maxlength="6">
+                    <small class="otp-hint">Check server console for your OTP code</small>
+                </div>
+
+                <div class="otp-actions">
+                    <button type="button" class="otp-verify-btn" id="verifyOTPBtn">
+                        <span id="otpVerifyText">Verify & Login</span>
+                        <div id="otpVerifySpinner" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
+                    </button>
+                    <button type="button" class="resend-btn" id="resendOTPBtn" style="display: none;">
+                        <i class="fas fa-redo"></i> Resend Code
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="forgot-password">
+            <a href="phone-password-reset-request.html" class="forgot-link">Forgot your password?</a>
+        </div>
+
+        <div class="divider">
+            <span>or</span>
+        </div>
+
+        <div class="signup-prompt">
+            <a href="signup.html" class="signup-link">Create Account</a>
+            <span class="divider-text">or</span>
+            <a href="index.html" class="signup-link">← Back to Home</a>
+        </div>
+    </div>
+
+    <script src="js/api-client.js"></script>
+    <script src="js/login-no-inline.js"></script>
+</body>
+</html>

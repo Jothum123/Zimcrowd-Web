@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css';">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.5.1/css/all.css" crossorigin="anonymous">
     <!-- styles.css removed - it was forcing light mode -->
+    <script src="js/api-client.js"></script>
     <style>
         * {
             margin: 0;
@@ -4066,6 +4067,24 @@
 
             <!-- Profile Tab -->
             <div id="profile-tab" class="tab-content active">
+                <!-- Profile Completion Status -->
+                <div class="loan-card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 15px;">Profile Completion</h3>
+                    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 15px;">
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="color: #94a3b8; font-size: 14px;">Complete your profile to unlock all features</span>
+                                <span style="font-weight: 700; color: var(--color-green);" id="completion-percentage">0%</span>
+                            </div>
+                            <div style="background: #334155; height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div style="height: 100%; background: linear-gradient(90deg, var(--color-green), #34d399); border-radius: 4px; width: 0%; transition: width 0.5s ease;" id="completion-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <span style="padding: 4px 12px; background: rgba(56, 231, 123, 0.1); color: var(--color-green); border-radius: 12px; font-size: 12px;" id="completion-status">Getting Started</span>
+                    </div>
+                </div>
                 <!-- Profile Picture Section -->
                 <div class="loan-card" style="margin-bottom: 20px;">
                     <h3 style="margin-bottom: 20px;">Profile Picture</h3>
@@ -4108,46 +4127,47 @@
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
                         <div>
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">First Name</label>
-                            <input type="text" value="Tendai">
+                            <input type="text" id="firstName" placeholder="Enter first name">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Last Name</label>
-                            <input type="text" value="Moyo">
+                            <input type="text" id="lastName" placeholder="Enter last name">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Email</label>
-                            <input type="email" value="tendai.moyo@email.com">
+                            <input type="email" id="email" placeholder="Enter email address">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Phone</label>
-                            <input type="tel" value="+263 77 123 4567">
+                            <input type="tel" id="phone" placeholder="Enter phone number">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Date of Birth</label>
-                            <input type="date" value="1990-01-15">
+                            <input type="date" id="dateOfBirth">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Country</label>
-                            <select>
-                                <option selected>Zimbabwe</option>
-                                <option>South Africa</option>
-                                <option>Kenya</option>
-                                <option>Nigeria</option>
-                                <option>Ghana</option>
-                                <option>Tanzania</option>
-                                <option>Uganda</option>
-                                <option>Rwanda</option>
-                                <option>Zambia</option>
-                                <option>Botswana</option>
-                                <option>Namibia</option>
-                                <option>Mozambique</option>
-                                <option>Ethiopia</option>
-                                <option>Egypt</option>
-                                <option>Morocco</option>
+                            <select id="country">
+                                <option value="">Select country</option>
+                                <option value="ZW">Zimbabwe</option>
+                                <option value="ZA">South Africa</option>
+                                <option value="KE">Kenya</option>
+                                <option value="NG">Nigeria</option>
+                                <option value="GH">Ghana</option>
+                                <option value="TZ">Tanzania</option>
+                                <option value="UG">Uganda</option>
+                                <option value="RW">Rwanda</option>
+                                <option value="ZM">Zambia</option>
+                                <option value="BW">Botswana</option>
+                                <option value="NA">Namibia</option>
+                                <option value="MZ">Mozambique</option>
+                                <option value="ET">Ethiopia</option>
+                                <option value="EG">Egypt</option>
+                                <option value="MA">Morocco</option>
                             </select>
                         </div>
                     </div>
-                    <button class="btn-primary" style="margin-top: 20px;">Save Changes</button>
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="saveProfileInfo()">Save Changes</button>
                 </div>
 
                 <div class="loan-card" style="margin-top: 20px;">
@@ -5279,6 +5299,503 @@
                 banner.style.display = 'none';
             }
         }
+
+        // ============================================
+        // PROFILE MANAGEMENT FUNCTIONS
+        // ============================================
+
+        // Load user profile data
+        async function loadUserProfile() {
+            try {
+                const authToken = localStorage.getItem('authToken');
+                if (!authToken) {
+                    console.warn('No auth token found, skipping profile load');
+                    return;
+                }
+
+                const response = await fetch('/api/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    populateProfileForm(data.data);
+                    updateProfileCompletion(data.data.profile_completion || 0);
+                } else {
+                    console.warn('Failed to load profile:', data.message);
+                    // Show some default values or prompt to complete profile
+                    showProfileCompletionBanner();
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                // Keep existing mock data if API fails
+            }
+        }
+
+        // Populate profile form with data
+        function populateProfileForm(profile) {
+            document.getElementById('firstName').value = profile.first_name || '';
+            document.getElementById('lastName').value = profile.last_name || '';
+            document.getElementById('email').value = profile.email || '';
+            document.getElementById('phone').value = profile.phone || '';
+            document.getElementById('dateOfBirth').value = profile.date_of_birth || '';
+            document.getElementById('country').value = profile.country || '';
+
+            // Update profile picture if available
+            if (profile.profile_picture_url) {
+                updateProfilePicture(profile.profile_picture_url);
+            }
+
+            // Update initials
+            const firstName = profile.first_name || '';
+            const lastName = profile.last_name || '';
+            const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+            document.getElementById('profile-initials').textContent = initials || 'TM';
+        }
+
+        // Save profile information
+        async function saveProfileInfo() {
+            try {
+                const authToken = localStorage.getItem('authToken');
+                if (!authToken) {
+                    alert('You must be logged in to save profile changes');
+                    return;
+                }
+
+                const profileData = {
+                    first_name: document.getElementById('firstName').value.trim(),
+                    last_name: document.getElementById('lastName').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    phone: document.getElementById('phone').value.trim(),
+                    date_of_birth: document.getElementById('dateOfBirth').value,
+                    country: document.getElementById('country').value
+                };
+
+                // Basic validation
+                if (!profileData.first_name || !profileData.last_name) {
+                    alert('First name and last name are required');
+                    return;
+                }
+
+                const response = await fetch('/api/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(profileData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Profile updated successfully!');
+                    // Reload profile data to reflect changes
+                    loadUserProfile();
+                } else {
+                    alert('Failed to update profile: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error saving profile:', error);
+                alert('Network error. Please try again.');
+            }
+        }
+
+        // Upload profile picture
+        async function saveProfilePicture() {
+            if (!currentProfileImage) {
+                alert('Please select an image first');
+                return;
+            }
+
+            try {
+                const authToken = localStorage.getItem('authToken');
+                if (!authToken) {
+                    alert('You must be logged in to upload profile pictures');
+                    return;
+                }
+
+                // Convert base64 to blob
+                const response = await fetch(currentProfileImage);
+                const blob = await response.blob();
+
+                const formData = new FormData();
+                formData.append('profilePicture', blob, 'profile-picture.jpg');
+
+                const uploadResponse = await fetch('/api/profile/upload-picture', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+
+                const data = await uploadResponse.json();
+
+                if (data.success) {
+                    alert('Profile picture updated successfully!');
+                    // Update the UI with the new image URL
+                    if (data.data && data.data.profile_picture_url) {
+                        updateProfilePicture(data.data.profile_picture_url);
+                    }
+                } else {
+                    alert('Failed to upload profile picture: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error uploading profile picture:', error);
+                alert('Network error. Please try again.');
+            }
+        }
+
+        // Delete profile picture
+        async function removeProfilePicture() {
+            try {
+                const authToken = localStorage.getItem('authToken');
+                if (!authToken) {
+                    alert('You must be logged in to delete profile pictures');
+                    return;
+                }
+
+                const response = await fetch('/api/profile/picture', {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Profile picture removed successfully!');
+                    // Reset to initials
+                    const profileAvatar = document.getElementById('profile-avatar');
+                    const profileInitials = document.getElementById('profile-initials');
+                    const removeIconBtn = document.getElementById('remove-icon-btn');
+
+                    profileAvatar.style.backgroundImage = 'none';
+                    profileInitials.style.display = 'block';
+                    if (removeIconBtn) {
+                        removeIconBtn.style.display = 'none';
+                    }
+
+                    currentProfileImage = null;
+                    document.getElementById('profile-upload').value = '';
+                } else {
+                    alert('Failed to remove profile picture: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error removing profile picture:', error);
+                alert('Network error. Please try again.');
+            }
+        }
+
+        // Update profile completion status
+        function updateProfileCompletion(percentage) {
+            const completionBar = document.getElementById('completion-bar');
+            const completionPercentage = document.getElementById('completion-percentage');
+            const completionStatus = document.getElementById('completion-status');
+
+            if (completionBar && completionPercentage && completionStatus) {
+                // Update progress bar
+                completionBar.style.width = `${percentage}%`;
+
+                // Update percentage text
+                completionPercentage.textContent = `${percentage}%`;
+
+                // Update status badge
+                let statusText, statusColor;
+                if (percentage < 25) {
+                    statusText = 'Getting Started';
+                    statusColor = '#ef4444'; // red
+                } else if (percentage < 50) {
+                    statusText = 'Making Progress';
+                    statusColor = '#f97316'; // orange
+                } else if (percentage < 75) {
+                    statusText = 'Almost There';
+                    statusColor = '#eab308'; // yellow
+                } else if (percentage < 100) {
+                    statusText = 'Nearly Complete';
+                    statusColor = '#22c55e'; // green
+                } else {
+                    statusText = 'Complete';
+                    statusColor = '#38e77b'; // bright green
+                }
+
+                completionStatus.textContent = statusText;
+                completionStatus.style.background = `rgba(${hexToRgb(statusColor)}, 0.1)`;
+                completionStatus.style.color = statusColor;
+            }
+
+            console.log(`Profile completion: ${percentage}%`);
+        }
+
+        // Helper function to convert hex to rgb
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '56, 231, 123';
+        }
+
+        // ============================================
+        // REAL API DATA LOADING FUNCTIONS
+        // ============================================
+
+        // Load user profile data
+        async function loadUserProfile() {
+            try {
+                const response = await window.ZimCrowdAPI.getProfile();
+                updateUserProfileUI(response);
+            } catch (error) {
+                console.error('Failed to load profile:', error);
+                // Keep existing mock data if API fails
+            }
+        }
+
+        // Load dashboard overview data
+        async function loadDashboardOverview() {
+            try {
+                // Load wallet balance
+                const walletResponse = await window.ZimCrowdAPI.getWalletBalance();
+                updateWalletBalance(walletResponse);
+
+                // Load recent loans
+                const loansResponse = await window.ZimCrowdAPI.getLoans(1, 3);
+                updateLoansOverview(loansResponse);
+
+                // Load recent investments
+                const investmentsResponse = await window.ZimCrowdAPI.getInvestments(1, 3);
+                updateInvestmentsOverview(investmentsResponse);
+
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error);
+                // Keep existing mock data if API fails
+            }
+        }
+
+        // Load loans data for loans section
+        async function loadLoansData() {
+            try {
+                const response = await window.ZimCrowdAPI.getLoans();
+                updateLoansSection(response);
+            } catch (error) {
+                console.error('Failed to load loans:', error);
+                // Keep existing mock data if API fails
+            }
+        }
+
+        // Load investments data
+        async function loadInvestmentsData() {
+            try {
+                const portfolioResponse = await window.ZimCrowdAPI.getInvestmentPortfolio();
+                updateInvestmentPortfolio(portfolioResponse);
+            } catch (error) {
+                console.error('Failed to load investments:', error);
+                // Keep existing mock data if API fails
+            }
+        }
+
+        // Load transactions data
+        async function loadTransactionsData() {
+            try {
+                const response = await window.ZimCrowdAPI.getTransactions();
+                updateTransactionsSection(response);
+            } catch (error) {
+                console.error('Failed to load transactions:', error);
+                // Keep existing mock data if API fails
+            }
+        }
+
+        // UI Update Functions
+        function updateUserProfileUI(profileData) {
+            if (!profileData || !profileData.success) return;
+
+            const user = profileData.data;
+            const userInfo = document.querySelector('.user-info');
+            const headerUser = document.querySelector('.header-user');
+
+            // Update sidebar user info
+            if (userInfo) {
+                const userDetails = userInfo.querySelector('.user-details h4');
+                if (userDetails) {
+                    userDetails.textContent = `${user.first_name || 'Test'} ${user.last_name || 'User'}`;
+                }
+
+                // Update avatar with initials
+                const avatar = userInfo.querySelector('.user-avatar');
+                if (avatar) {
+                    const initials = `${(user.first_name || 'T')[0]}${(user.last_name || 'U')[0]}`.toUpperCase();
+                    avatar.textContent = initials;
+                }
+            }
+
+            // Update header user info
+            if (headerUser) {
+                const headerName = headerUser.querySelector('h4');
+                const headerAvatar = headerUser.querySelector('.header-user-avatar');
+
+                if (headerName) {
+                    headerName.textContent = `${user.first_name || 'Test'} ${user.last_name || 'User'}`;
+                }
+
+                if (headerAvatar) {
+                    const initials = `${(user.first_name || 'T')[0]}${(user.last_name || 'U')[0]}`.toUpperCase();
+                    headerAvatar.textContent = initials;
+                }
+            }
+        }
+
+        function updateWalletBalance(walletData) {
+            if (!walletData || !walletData.success) return;
+
+            // Update the featured balance card
+            const balanceCard = document.querySelector('.featured-balance-card h3');
+            if (balanceCard && walletData.data) {
+                const balance = walletData.data.available_balance || 0;
+                balanceCard.textContent = `$${balance.toLocaleString()}`;
+            }
+
+            // Update wallet transactions section
+            const walletTransactions = walletData.data.transactions || [];
+            updateWalletTransactions(walletTransactions);
+        }
+
+        function updateLoansOverview(loansData) {
+            if (!loansData || !loansData.success) return;
+
+            const loans = loansData.data.loans || [];
+
+            // Update stats cards
+            const activeLoansCard = document.querySelector('.stats-grid .stat-card:nth-child(3) h3');
+            if (activeLoansCard) {
+                const activeLoans = loans.filter(loan => loan.status === 'active').length;
+                activeLoansCard.textContent = activeLoans;
+            }
+
+            // Update loans section with real data
+            const loansContainer = document.querySelector('#loans-section .loan-cards');
+            if (loansContainer && loans.length > 0) {
+                loansContainer.innerHTML = loans.map(loan => `
+                    <div class="loan-card">
+                        <div class="loan-header">
+                            <div>
+                                <h4>${loan.loan_type.charAt(0).toUpperCase() + loan.loan_type.slice(1)} Loan</h4>
+                                <span class="loan-status ${loan.status}">${loan.status}</span>
+                            </div>
+                            <div class="loan-amount">$${loan.amount.toLocaleString()}</div>
+                        </div>
+                        <div class="loan-details">
+                            <div class="detail-row">
+                                <span>Monthly Payment</span>
+                                <strong>$${loan.monthly_payment?.toFixed(2) || '0.00'}</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Interest Rate</span>
+                                <strong>${loan.interest_rate}%</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Duration</span>
+                                <strong>${loan.duration_months} months</strong>
+                            </div>
+                        </div>
+                        <div class="loan-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 75%"></div>
+                            </div>
+                            <div class="progress-text">75% completed</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function updateInvestmentsOverview(investmentsData) {
+            if (!investmentsData || !investmentsData.success) return;
+
+            const investments = investmentsData.data.investments || [];
+
+            // Update stats cards
+            const totalInvestedCard = document.querySelector('.stats-grid .stat-card:nth-child(1) h3');
+            if (totalInvestedCard) {
+                const totalInvested = investments.reduce((sum, inv) => sum + parseFloat(inv.amount), 0);
+                totalInvestedCard.textContent = `$${totalInvested.toLocaleString()}`;
+            }
+
+            const activeInvestmentsCard = document.querySelector('.stats-grid .stat-card:nth-child(4) h3');
+            if (activeInvestmentsCard) {
+                activeInvestmentsCard.textContent = investments.length;
+            }
+        }
+
+        function updateWalletTransactions(transactions) {
+            const walletContainer = document.querySelector('#wallet-section .transaction-list');
+            if (!walletContainer || !transactions.length) return;
+
+            walletContainer.innerHTML = transactions.slice(0, 6).map(tx => `
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <div class="transaction-icon ${tx.type === 'deposit' ? 'success' : tx.type === 'withdrawal' ? 'danger' : 'info'}">
+                            <i class="fas fa-${tx.type === 'deposit' ? 'arrow-down' : tx.type === 'withdrawal' ? 'arrow-up' : 'exchange-alt'}"></i>
+                        </div>
+                        <div class="transaction-details">
+                            <h4>${tx.description || tx.type}</h4>
+                            <p>${new Date(tx.created_at).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    <div class="transaction-amount ${tx.type === 'deposit' ? 'positive' : 'negative'}">
+                        ${tx.type === 'deposit' ? '+' : '-'}$${Math.abs(tx.amount).toFixed(2)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateLoansSection(loansData) {
+            if (!loansData || !loansData.success) return;
+
+            const loans = loansData.data.loans || [];
+            // Update loans section with more detailed data
+            console.log('Updating loans section with', loans.length, 'loans');
+        }
+
+        function updateInvestmentPortfolio(portfolioData) {
+            if (!portfolioData || !portfolioData.success) return;
+
+            // Update investment portfolio section
+            console.log('Updating investment portfolio');
+        }
+
+        function updateTransactionsSection(transactionsData) {
+            if (!transactionsData || !transactionsData.success) return;
+
+            const transactions = transactionsData.data.transactions || [];
+            // Update transactions section
+            console.log('Updating transactions section with', transactions.length, 'transactions');
+        }
+
+        // Initialize data loading on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            // Check if user is authenticated
+            const authToken = localStorage.getItem('authToken');
+            if (authToken) {
+                // User is authenticated, load real data
+                window.ZimCrowdAPI.setToken(authToken);
+                console.log('🔄 Loading real data from backend...');
+
+                // Load all dashboard data
+                loadUserProfile(); // Use the new profile loading function
+                loadDashboardOverview();
+                loadLoansData();
+                loadInvestmentsData();
+                loadTransactionsData();
+            } else {
+                console.log('⚠️ No auth token found, showing mock data');
+                // Show login prompt or redirect to login
+                if (confirm('You need to be logged in to view your dashboard. Go to login page?')) {
+                    window.location.href = 'login.html';
+                }
+            }
+        });
     </script>
 
     <!-- Font Awesome Icon Loading Check and Fallback -->

@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="script-src * 'unsafe-inline' 'unsafe-eval'; script-src-attr * 'unsafe-inline'; style-src * 'unsafe-inline'; font-src *; connect-src *; img-src *; media-src *; object-src *; frame-src *; child-src *">
+    <title>Hybrid OTP Authentication - ZimCrowd</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="js/api-client.js"></script>
+    <style>
+        .auth-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auth-header h1 {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .auth-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #38e77b;
+            box-shadow: 0 0 0 2px rgba(56, 231, 123, 0.2);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #38e77b 0%, #22c55e 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(56, 231, 123, 0.3);
+        }
+
+        .auth-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .method-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .method-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.7);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .method-btn.active {
+            border-color: #38e77b;
+            background: rgba(56, 231, 123, 0.1);
+            color: #38e77b;
+        }
+
+        .totp-section, .database-section {
+            display: none;
+        }
+
+        .totp-section.active, .database-section.active {
+            display: block;
+        }
+
+        .qr-code {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .qr-placeholder {
+            width: 150px;
+            height: 150px;
+            background: #f0f0f0;
+            border: 2px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            border-radius: 8px;
+        }
+
+        .manual-code {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            word-break: break-all;
+            margin-top: 10px;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .success-message {
+            background: rgba(56, 231, 123, 0.1);
+            border: 1px solid rgba(56, 231, 123, 0.3);
+            color: #4ade80;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .info-message {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .step {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .step.active {
+            background: #38e77b;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>🔐 Hybrid OTP Authentication</h1>
+            <p class="auth-subtitle">Choose your authentication method</p>
+        </div>
+
+        <!-- Method Selector -->
+        <div class="method-selector">
+            <button class="method-btn active" onclick="selectMethod('database')">
+                <i class="fas fa-database"></i><br>
+                Database OTP
+            </button>
+            <button class="method-btn" onclick="selectMethod('totp')">
+                <i class="fas fa-mobile-alt"></i><br>
+                TOTP App
+            </button>
+        </div>
+
+        <!-- Messages -->
+        <div id="messageContainer"></div>
+
+        <!-- Database OTP Section -->
+        <div class="database-section active">
+            <h3 style="color: white; text-align: center; margin-bottom: 20px;">Database OTP Login</h3>
+
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" class="form-input" id="dbPhone" placeholder="+263 77 123 4567">
+            </div>
+
+            <button class="auth-btn" onclick="requestDatabaseOTP()">
+                <i class="fas fa-paper-plane"></i> Send Verification Code
+            </button>
+
+            <div class="form-group" id="otpInputGroup" style="display: none;">
+                <label class="form-label">Enter 6-digit Code</label>
+                <input type="text" class="form-input" id="dbOTP" placeholder="123456" maxlength="6">
+            </div>
+
+            <button class="auth-btn" id="verifyDbOTP" style="display: none;" onclick="verifyDatabaseOTP()">
+                <i class="fas fa-check"></i> Verify & Login
+            </button>
+        </div>
+
+        <!-- TOTP Section -->
+        <div class="totp-section">
+            <div class="step-indicator">
+                <div class="step active" id="step1"></div>
+                <div class="step" id="step2"></div>
+                <div class="step" id="step3"></div>
+            </div>
+
+            <!-- Step 1: Setup TOTP -->
+            <div id="totpStep1">
+                <h3 style="color: white; text-align: center; margin-bottom: 20px;">Setup TOTP Authentication</h3>
+                <p style="color: rgba(255, 255, 255, 0.7); text-align: center; margin-bottom: 20px;">
+                    First, you need to be logged in to setup TOTP. Use Database OTP to login first.
+                </p>
+                <button class="auth-btn" onclick="selectMethod('database')">
+                    <i class="fas fa-arrow-left"></i> Go to Database Login
+                </button>
+            </div>
+
+            <!-- Step 2: Show QR Code -->
+            <div id="totpStep2" style="display: none;">
+                <h3 style="color: white; text-align: center; margin-bottom: 20px;">Scan QR Code</h3>
+                <p style="color: rgba(255, 255, 255, 0.7); text-align: center; margin-bottom: 20px;">
+                    Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
+                </p>
+
+                <div class="qr-code">
+                    <div class="qr-placeholder">
+                        <i class="fas fa-qrcode fa-3x" style="color: #666;"></i>
+                    </div>
+                    <p style="color: #666; margin: 10px 0 0;">QR Code Placeholder</p>
+                </div>
+
+                <div class="manual-code" id="manualCode" style="display: none;">
+                    Manual Code: <span id="secretCode"></span>
+                </div>
+
+                <button class="auth-btn" onclick="nextTOTPStep()">
+                    <i class="fas fa-arrow-right"></i> Next: Verify Code
+                </button>
+            </div>
+
+            <!-- Step 3: Verify TOTP -->
+            <div id="totpStep3" style="display: none;">
+                <h3 style="color: white; text-align: center; margin-bottom: 20px;">Verify Setup</h3>
+                <p style="color: rgba(255, 255, 255, 0.7); text-align: center; margin-bottom: 20px;">
+                    Enter the 6-digit code from your authenticator app to complete setup.
+                </p>
+
+                <div class="form-group">
+                    <label class="form-label">6-digit Code from App</label>
+                    <input type="text" class="form-input" id="totpCode" placeholder="123456" maxlength="6">
+                </div>
+
+                <button class="auth-btn" onclick="verifyTOTPSetup()">
+                    <i class="fas fa-check-circle"></i> Complete Setup
+                </button>
+
+                <button class="auth-btn" style="background: rgba(255, 255, 255, 0.1); margin-top: 10px;" onclick="prevTOTPStep()">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+            </div>
+
+            <!-- TOTP Login (after setup) -->
+            <div id="totpLogin" style="display: none;">
+                <h3 style="color: white; text-align: center; margin-bottom: 20px;">TOTP Login</h3>
+
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" class="form-input" id="totpPhone" placeholder="+263 77 123 4567">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">6-digit Code from App</label>
+                    <input type="text" class="form-input" id="totpLoginCode" placeholder="123456" maxlength="6">
+                </div>
+
+                <button class="auth-btn" onclick="loginWithTOTP()">
+                    <i class="fas fa-sign-in-alt"></i> Login with TOTP
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMethod = 'database';
+        let tempTOTPKey = null;
+        let isLoggedIn = false;
+
+        function selectMethod(method) {
+            currentMethod = method;
+
+            // Update button states
+            document.querySelectorAll('.method-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Show/hide sections
+            document.querySelectorAll('.database-section, .totp-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            document.querySelector(`.${method}-section`).classList.add('active');
+
+            clearMessages();
+        }
+
+        function showMessage(message, type = 'info') {
+            const container = document.getElementById('messageContainer');
+            container.innerHTML = `<div class="message ${type}-message">${message}</div>`;
+        }
+
+        function clearMessages() {
+            document.getElementById('messageContainer').innerHTML = '';
+        }
+
+        // Database OTP Functions
+        async function requestDatabaseOTP() {
+            const phone = document.getElementById('dbPhone').value.trim();
+            console.log('Requesting OTP for phone:', phone);
+
+            if (!phone) {
+                showMessage('Please enter your phone number', 'error');
+                return;
+            }
+
+            // Check if API is available
+            if (!window.ZimCrowdAPI || !window.ZimCrowdAPI.passwordlessLogin) {
+                showMessage('API client not available. Please refresh the page.', 'error');
+                console.error('ZimCrowdAPI.passwordlessLogin not available');
+                return;
+            }
+
+            try {
+                console.log('Calling ZimCrowdAPI.passwordlessLogin...');
+                const response = await window.ZimCrowdAPI.passwordlessLogin(phone);
+                console.log('API response:', response);
+
+                if (response.success) {
+                    showMessage('Verification code sent! Check the server console for your OTP code.', 'success');
+                    document.getElementById('otpInputGroup').style.display = 'block';
+                    document.getElementById('verifyDbOTP').style.display = 'block';
+                } else {
+                    showMessage(response.message || 'Failed to send code', 'error');
+                }
+            } catch (error) {
+                console.error('Database OTP request error:', error);
+                showMessage('Network error. Please try again. Check console for details.', 'error');
+            }
+        }
+
+        async function verifyDatabaseOTP() {
+            const phone = document.getElementById('dbPhone').value.trim();
+            const otp = document.getElementById('dbOTP').value.trim();
+
+            if (!phone || !otp) {
+                showMessage('Please enter both phone and OTP code', 'error');
+                return;
+            }
+
+            try {
+                const response = await window.ZimCrowdAPI.passwordlessVerify(phone, otp);
+
+                if (response.success) {
+                    showMessage('Login successful! Welcome to ZimCrowd.', 'success');
+                    isLoggedIn = true;
+
+                    // Store auth token
+                    localStorage.setItem('authToken', response.session.access_token);
+                    window.ZimCrowdAPI.setToken(response.session.access_token);
+
+                    // Show TOTP setup option
+                    setTimeout(() => {
+                        if (confirm('Login successful! Would you like to setup TOTP for more secure authentication?')) {
+                            selectMethod('totp');
+                        }
+                    }, 2000);
+                } else {
+                    showMessage(response.message || 'Invalid code', 'error');
+                }
+            } catch (error) {
+                showMessage('Verification failed. Please try again.', 'error');
+                console.error('Database OTP verify error:', error);
+            }
+        }
+
+        // TOTP Functions
+        async function setupTOTP() {
+            if (!isLoggedIn) {
+                showMessage('Please login first using Database OTP to setup TOTP', 'error');
+                return;
+            }
+
+            try {
+                const response = await window.ZimCrowdAPI.setupTOTP();
+
+                if (response.success) {
+                    tempTOTPKey = response.tempKey;
+                    document.getElementById('secretCode').textContent = response.secret;
+                    document.getElementById('manualCode').style.display = 'block';
+
+                    // Move to step 2
+                    showTOTPStep(2);
+                    showMessage('QR code generated! Scan with your authenticator app.', 'success');
+                } else {
+                    showMessage(response.message || 'Failed to setup TOTP', 'error');
+                }
+            } catch (error) {
+                showMessage('Setup failed. Please try again.', 'error');
+                console.error('TOTP setup error:', error);
+            }
+        }
+
+        function nextTOTPStep() {
+            if (!tempTOTPKey) {
+                setupTOTP();
+                return;
+            }
+            showTOTPStep(3);
+        }
+
+        function prevTOTPStep() {
+            showTOTPStep(2);
+        }
+
+        function showTOTPStep(step) {
+            // Hide all steps
+            document.getElementById('totpStep1').style.display = 'none';
+            document.getElementById('totpStep2').style.display = 'none';
+            document.getElementById('totpStep3').style.display = 'none';
+            document.getElementById('totpLogin').style.display = 'none';
+
+            // Update step indicators
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+
+            // Show current step
+            if (step === 1) {
+                document.getElementById('totpStep1').style.display = 'block';
+            } else if (step === 2) {
+                document.getElementById('totpStep2').style.display = 'block';
+            } else if (step === 3) {
+                document.getElementById('totpStep3').style.display = 'block';
+            } else if (step === 4) {
+                document.getElementById('totpLogin').style.display = 'block';
+            }
+        }
+
+        async function verifyTOTPSetup() {
+            const otp = document.getElementById('totpCode').value.trim();
+
+            if (!otp || !tempTOTPKey) {
+                showMessage('Please enter the OTP code', 'error');
+                return;
+            }
+
+            try {
+                const response = await window.ZimCrowdAPI.verifyTOTPSetup(tempTOTPKey, otp);
+
+                if (response.success) {
+                    showMessage('TOTP setup completed! You can now login with your authenticator app.', 'success');
+
+                    // Move to login step
+                    setTimeout(() => {
+                        showTOTPStep(4);
+                        showMessage('TOTP is now enabled for your account! Use the login form below.', 'info');
+                    }, 2000);
+                } else {
+                    showMessage(response.message || 'Setup verification failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Verification failed. Please try again.', 'error');
+                console.error('TOTP verify error:', error);
+            }
+        }
+
+        async function loginWithTOTP() {
+            const phone = document.getElementById('totpPhone').value.trim();
+            const otp = document.getElementById('totpLoginCode').value.trim();
+
+            if (!phone || !otp) {
+                showMessage('Please enter both phone and OTP code', 'error');
+                return;
+            }
+
+            try {
+                const response = await window.ZimCrowdAPI.smartLogin(phone, otp);
+
+                if (response.success) {
+                    showMessage(`Login successful using ${response.user.authMethod}!`, 'success');
+
+                    // Store auth token
+                    localStorage.setItem('authToken', response.session.access_token);
+                    window.ZimCrowdAPI.setToken(response.session.access_token);
+
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 2000);
+                } else {
+                    showMessage(response.message || 'Login failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Login failed. Please try again.', 'error');
+                console.error('TOTP login error:', error);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if API client is loaded
+            if (typeof window.ZimCrowdAPI === 'undefined') {
+                showMessage('Error: API client not loaded. Please refresh the page.', 'error');
+                console.error('ZimCrowdAPI is not defined');
+                return;
+            }
+
+            console.log('ZimCrowdAPI loaded successfully:', window.ZimCrowdAPI);
+
+            // Check if already logged in
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                isLoggedIn = true;
+                window.ZimCrowdAPI.setToken(token);
+
+                // If TOTP is enabled, show login form
+                // For demo, we'll check this when user tries to setup
+            }
+        });
+    </script>
+</body>
+</html>

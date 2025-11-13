@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - ZimCrowd</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .profile-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        .profile-header {
+            background: linear-gradient(135deg, #38e77b 0%, #34d399 100%);
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 30px;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        .profile-avatar-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 8px 24px rgba(56, 231, 123, 0.3);
+            margin: 0 auto 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .profile-name {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .profile-email {
+            font-size: 18px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 2;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .profile-stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #38e77b;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .profile-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .profile-main {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #1f2937;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            background: white;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #38e77b;
+            box-shadow: 0 0 0 3px rgba(56, 231, 123, 0.1);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+        }
+
+        .completion-progress {
+            margin-bottom: 25px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #38e77b, #34d399);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            .profile-content {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-header {
+                padding: 30px 20px;
+            }
+
+            .profile-name {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav style="background: #1e293b; padding: 15px 30px; position: sticky; top: 0; z-index: 100;">
+        <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+            <a href="index.html" style="color: white; text-decoration: none; font-weight: 700; font-size: 24px;">ZimCrowd</a>
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <a href="dashboard.html" style="color: white; text-decoration: none;">Dashboard</a>
+                <a href="login.html" style="color: #ef4444; text-decoration: none;" onclick="logout()">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="profile-container">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="profile-avatar-large" id="profile-avatar-large">
+                <span id="profile-initials-large">TM</span>
+            </div>
+            <h1 class="profile-name" id="profile-name-display">Loading...</h1>
+            <p class="profile-email" id="profile-email-display">Loading...</p>
+        </div>
+
+        <!-- Profile Stats -->
+        <div class="profile-stats">
+            <div class="profile-stat-card">
+                <div class="stat-number" id="loans-count">0</div>
+                <div class="stat-label">Active Loans</div>
+            </div>
+            <div class="profile-stat-card">
+                <div class="stat-number" id="investments-amount">$0</div>
+                <div class="stat-label">Total Investments</div>
+            </div>
+            <div class="profile-stat-card">
+                <div class="stat-number" id="returns-amount">$0</div>
+                <div class="stat-label">Total Returns</div>
+            </div>
+            <div class="profile-stat-card">
+                <div class="stat-number" id="completion-percentage-stat">0%</div>
+                <div class="stat-label">Profile Complete</div>
+            </div>
+        </div>
+
+        <!-- Profile Content -->
+        <div class="profile-content">
+            <!-- Main Content -->
+            <div class="profile-main">
+                <h2 class="section-title">Personal Information</h2>
+
+                <!-- Profile Completion -->
+                <div class="completion-progress">
+                    <div class="progress-label">
+                        <span>Profile Completion</span>
+                        <span id="completion-percentage-display">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="completion-bar-display"></div>
+                    </div>
+                </div>
+
+                <!-- Profile Form -->
+                <form id="profile-form">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" id="firstName" placeholder="Enter first name">
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" id="lastName" placeholder="Enter last name">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" placeholder="Enter email address">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone</label>
+                            <input type="tel" id="phone" placeholder="Enter phone number">
+                        </div>
+                        <div class="form-group">
+                            <label for="dateOfBirth">Date of Birth</label>
+                            <input type="date" id="dateOfBirth">
+                        </div>
+                        <div class="form-group">
+                            <label for="country">Country</label>
+                            <select id="country">
+                                <option value="">Select country</option>
+                                <option value="ZW">Zimbabwe</option>
+                                <option value="ZA">South Africa</option>
+                                <option value="KE">Kenya</option>
+                                <option value="NG">Nigeria</option>
+                                <option value="GH">Ghana</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px;">
+                        <h3 style="margin-bottom: 15px; color: #1f2937;">Address Information</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="street">Street Address</label>
+                                <input type="text" id="street" placeholder="Enter street address">
+                            </div>
+                            <div class="form-group">
+                                <label for="city">City</label>
+                                <input type="text" id="city" placeholder="Enter city">
+                            </div>
+                            <div class="form-group">
+                                <label for="postalCode">Postal Code</label>
+                                <input type="text" id="postalCode" placeholder="Enter postal code">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px; display: flex; gap: 15px;">
+                        <button type="submit" class="btn-save">Save Changes</button>
+                        <button type="button" class="btn-save" style="background: #6b7280;" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="profile-sidebar">
+                <h3 class="section-title">Quick Actions</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn-save" style="width: 100%; text-align: center;" onclick="document.getElementById('profile-upload').click()">
+                        <i class="fas fa-camera"></i> Change Photo
+                    </button>
+                    <button class="btn-save" style="width: 100%; background: #3b82f6; text-align: center;" onclick="window.location.href='dashboard.html'">
+                        <i class="fas fa-tachometer-alt"></i> View Dashboard
+                    </button>
+                    <button class="btn-save" style="width: 100%; background: #f59e0b; text-align: center;" onclick="window.location.href='settings.html'">
+                        <i class="fas fa-cog"></i> Account Settings
+                    </button>
+                </div>
+
+                <input type="file" id="profile-upload" accept="image/*" style="display: none;">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load profile data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserProfile();
+            loadUserStats();
+        });
+
+        // Load user profile data
+        async function loadUserProfile() {
+            try {
+                const authToken = localStorage.getItem('authToken');
+                if (!authToken) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const response = await fetch('/api/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    populateProfilePage(data.data);
+                } else {
+                    console.error('Failed to load profile:', data.message);
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        // Load user statistics
+        async function loadUserStats() {
+            try {
+                const authToken = localStorage.getItem('authToken');
+                if (!authToken) return;
+
+                // Load loans count
+                const loansResponse = await fetch('/api/loans', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (loansResponse.ok) {
+                    const loansData = await loansResponse.json();
+                    if (loansData.success) {
+                        document.getElementById('loans-count').textContent = loansData.data.length;
+                    }
+                }
+
+                // Load investments
+                const investmentsResponse = await fetch('/api/investments', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (investmentsResponse.ok) {
+                    const investmentsData = await investmentsResponse.json();
+                    if (investmentsData.success) {
+                        const totalInvested = investmentsData.data.reduce((sum, inv) => sum + parseFloat(inv.amount), 0);
+                        document.getElementById('investments-amount').textContent = `$${totalInvested.toLocaleString()}`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Populate profile page with data
+        function populateProfilePage(profile) {
+            // Update header
+            document.getElementById('profile-name-display').textContent = `${profile.first_name || 'Test'} ${profile.last_name || 'User'}`;
+            document.getElementById('profile-email-display').textContent = profile.email || 'No email provided';
+
+            // Update avatar
+            const firstName = profile.first_name || 'T';
+            const lastName = profile.last_name || 'U';
+            const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+
+            document.getElementById('profile-initials-large').textContent = initials;
+
+            if (profile.profile_picture_url) {
+                document.getElementById('profile-avatar-large').style.backgroundImage = `url(${profile.profile_picture_url})`;
+                document.getElementById('profile-avatar-large').style.backgroundSize = 'cover';
+                document.getElementById('profile-avatar-large').style.backgroundPosition = 'center';
+                document.getElementById('profile-initials-large').style.display = 'none';
+            }
+
+            // Update form fields
+            document.getElementById('firstName').value = profile.first_name || '';
+            document.getElementById('lastName').value = profile.last_name || '';
+            document.getElementById('email').value = profile.email || '';
+            document.getElementById('phone').value = profile.phone || '';
+            document.getElementById('dateOfBirth').value = profile.date_of_birth || '';
+            document.getElementById('country').value = profile.country || '';
+            document.getElementById('street').value = profile.street || '';
+            document.getElementById('city').value = profile.city || '';
+            document.getElementById('postalCode').value = profile.postal_code || '';
+
+            // Update completion
+            const completionPercentage = profile.profile_completion || 0;
+            document.getElementById('completion-percentage-display').textContent = `${completionPercentage}%`;
+            document.getElementById('completion-bar-display').style.width = `${completionPercentage}%`;
+            document.getElementById('completion-percentage-stat').textContent = `${completionPercentage}%`;
+        }
+
+        // Handle profile form submission
+        document.getElementById('profile-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            try {
+                const authToken = localStorage.getItem('authToken');
+                if (!authToken) {
+                    alert('You must be logged in to save changes');
+                    return;
+                }
+
+                const profileData = {
+                    first_name: document.getElementById('firstName').value.trim(),
+                    last_name: document.getElementById('lastName').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    phone: document.getElementById('phone').value.trim(),
+                    date_of_birth: document.getElementById('dateOfBirth').value,
+                    country: document.getElementById('country').value,
+                    street: document.getElementById('street').value.trim(),
+                    city: document.getElementById('city').value.trim(),
+                    postal_code: document.getElementById('postalCode').value.trim()
+                };
+
+                // Basic validation
+                if (!profileData.first_name || !profileData.last_name) {
+                    alert('First name and last name are required');
+                    return;
+                }
+
+                const response = await fetch('/api/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(profileData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Profile updated successfully!');
+                    // Reload profile data
+                    loadUserProfile();
+                } else {
+                    alert('Failed to update profile: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error saving profile:', error);
+                alert('Network error. Please try again.');
+            }
+        });
+
+        // Handle profile picture upload
+        document.getElementById('profile-upload').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Validate file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB');
+                return;
+            }
+
+            // Validate file type
+            if (!file.type.match('image.*')) {
+                alert('Please upload an image file (JPG, PNG, or GIF)');
+                return;
+            }
+
+            try {
+                const authToken = localStorage.getItem('authToken');
+                if (!authToken) {
+                    alert('You must be logged in to upload profile pictures');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('profilePicture', file);
+
+                const response = await fetch('/api/profile/upload-picture', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Profile picture updated successfully!');
+                    // Update the UI
+                    if (data.data && data.data.profile_picture_url) {
+                        document.getElementById('profile-avatar-large').style.backgroundImage = `url(${data.data.profile_picture_url})`;
+                        document.getElementById('profile-avatar-large').style.backgroundSize = 'cover';
+                        document.getElementById('profile-avatar-large').style.backgroundPosition = 'center';
+                        document.getElementById('profile-initials-large').style.display = 'none';
+                    }
+                } else {
+                    alert('Failed to upload profile picture: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error uploading profile picture:', error);
+                alert('Network error. Please try again.');
+            }
+        });
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

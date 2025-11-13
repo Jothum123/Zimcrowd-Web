@@ -1,8 +1,5 @@
--- ZimCrowd Supabase Database Schema
--- Run these SQL commands in your Supabase SQL Editor
-
--- Note: auth.users already has RLS enabled by default in Supabase
--- No need to modify system tables
+-- ZimCrowd Supabase Database Schema (Tables Only)
+-- Run this first, then run the policies separately
 
 -- Create profiles table
 CREATE TABLE IF NOT EXISTS profiles (
@@ -47,39 +44,6 @@ CREATE TABLE IF NOT EXISTS profiles (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- Enable RLS on profiles
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-
--- Create policies for profiles
-CREATE POLICY "Users can view own profile" ON profiles
-    FOR SELECT USING (auth.uid() = id);
-
-CREATE POLICY "Users can update own profile" ON profiles
-    FOR UPDATE USING (auth.uid() = id);
-
-CREATE POLICY "Users can insert own profile" ON profiles
-    FOR INSERT WITH CHECK (auth.uid() = id);
-
--- Create function to handle new user signup
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO public.profiles (id, email, first_name, last_name, phone)
-    VALUES (
-        NEW.id,
-        NEW.email,
-        NEW.raw_user_meta_data->>'first_name',
-        NEW.raw_user_meta_data->>'last_name',
-        NEW.raw_user_meta_data->>'phone'
-    );
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Note: Trigger on auth.users will be created separately in Supabase dashboard
--- with service role permissions. For now, we'll handle profile creation in our
--- registration endpoint if the trigger isn't set up.
-
 -- Create loans table
 CREATE TABLE IF NOT EXISTS loans (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -97,16 +61,6 @@ CREATE TABLE IF NOT EXISTS loans (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- Enable RLS on loans
-ALTER TABLE loans ENABLE ROW LEVEL SECURITY;
-
--- Create policies for loans
-CREATE POLICY "Users can view own loans" ON loans
-    FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own loans" ON loans
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
-
 -- Create investments table
 CREATE TABLE IF NOT EXISTS investments (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -121,16 +75,6 @@ CREATE TABLE IF NOT EXISTS investments (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- Enable RLS on investments
-ALTER TABLE investments ENABLE ROW LEVEL SECURITY;
-
--- Create policies for investments
-CREATE POLICY "Users can view own investments" ON investments
-    FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own investments" ON investments
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
-
 -- Create transactions table
 CREATE TABLE IF NOT EXISTS transactions (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -142,16 +86,6 @@ CREATE TABLE IF NOT EXISTS transactions (
     balance_after DECIMAL(15,2),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
-
--- Enable RLS on transactions
-ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
-
--- Create policies for transactions
-CREATE POLICY "Users can view own transactions" ON transactions
-    FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "System can insert transactions" ON transactions
-    FOR INSERT WITH CHECK (true);
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS profiles_email_idx ON profiles(email);
@@ -184,20 +118,18 @@ CREATE TRIGGER handle_updated_at_investments
     BEFORE UPDATE ON investments
     FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
 
--- Insert sample data (optional)
--- You can uncomment these to add sample data for testing
-
-/*
-INSERT INTO profiles (id, first_name, last_name, email, onboarding_completed, profile_completed)
-VALUES
-    ('00000000-0000-0000-0000-000000000000', 'John', 'Doe', 'john@example.com', true, true),
-    ('00000000-0000-0000-0000-000000000001', 'Jane', 'Smith', 'jane@example.com', true, false);
-
-INSERT INTO loans (user_id, loan_type, amount, interest_rate, duration_months, status, purpose)
-VALUES
-    ('00000000-0000-0000-0000-000000000000', 'personal', 5000.00, 12.5, 24, 'approved', 'Home improvement');
-
-INSERT INTO investments (user_id, investment_type, amount, expected_return, risk_level, description)
-VALUES
-    ('00000000-0000-0000-0000-000000000000', 'stocks', 10000.00, 8.5, 'medium', 'Tech stocks portfolio');
-*/
+-- Create function to handle new user signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.profiles (id, email, first_name, last_name, phone)
+    VALUES (
+        NEW.id,
+        NEW.email,
+        NEW.raw_user_meta_data->>'first_name',
+        NEW.raw_user_meta_data->>'last_name',
+        NEW.raw_user_meta_data->>'phone'
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
