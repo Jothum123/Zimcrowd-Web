@@ -1640,4 +1640,185 @@ router.post('/dev-generate-test-otp', [
     }
 });
 
+// Debug endpoint for signup verification (REMOVE IN PRODUCTION)
+router.post('/dev-debug-signup', async (req, res) => {
+    try {
+        const { tempToken, otp } = req.body;
+        
+        console.log('[DEBUG] Received request:', { tempToken: tempToken?.substring(0, 20) + '...', otp });
+        
+        // Decode temp user data
+        let userData;
+        try {
+            userData = JSON.parse(Buffer.from(tempToken, 'base64').toString());
+            console.log('[DEBUG] Decoded user data:', userData);
+        } catch (error) {
+            console.log('[DEBUG] Token decode error:', error.message);
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid verification token',
+                debug: error.message
+            });
+        }
+        
+        const { firstName, lastName, phone, password } = userData;
+        
+        // Check OTP in database
+        const { data: verification, error: verifyError } = await supabase
+            .from('phone_verifications')
+            .select('*')
+            .eq('phone_number', phone)
+            .eq('otp_code', otp)
+            .eq('purpose', 'signup')
+            .eq('verified', false)
+            .gt('expires_at', new Date().toISOString())
+            .single();
+            
+        console.log('[DEBUG] OTP verification result:', { data: verification, error: verifyError });
+        
+        if (verifyError || !verification) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired verification code',
+                debug: verifyError?.message || 'No matching verification found'
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: 'Debug verification successful',
+            userData: userData,
+            verification: verification,
+            debug: 'OTP found and valid'
+        });
+        
+    } catch (error) {
+        console.error('[DEBUG] Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Debug verification failed',
+            debug: error.message
+        });
+    }
+});
+
+// Simple test signup without validation (REMOVE IN PRODUCTION)
+router.post('/dev-simple-signup', async (req, res) => {
+    try {
+        console.log('[SIMPLE] Request body:', req.body);
+        
+        const { tempToken, otp } = req.body;
+        
+        if (!tempToken || !otp) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing tempToken or otp'
+            });
+        }
+        
+        // Decode temp user data
+        let userData;
+        try {
+            userData = JSON.parse(Buffer.from(tempToken, 'base64').toString());
+        } catch (error) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid verification token'
+            });
+        }
+        
+        const { firstName, lastName, phone, password } = userData;
+        
+        // Verify OTP in database
+        const { data: verification, error: verifyError } = await supabase
+            .from('phone_verifications')
+            .select('*')
+            .eq('phone_number', phone)
+            .eq('otp_code', otp)
+            .eq('purpose', 'signup')
+            .eq('verified', false)
+            .gt('expires_at', new Date().toISOString())
+            .single();
+            
+        if (verifyError || !verification) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired verification code'
+            });
+        }
+        
+        // Mark OTP as verified
+        await supabase
+            .from('phone_verifications')
+            .update({ verified: true })
+            .eq('id', verification.id);
+        
+        // Generate unique user ID
+        const userId = crypto.randomUUID();
+        
+        // Create profile in database
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+                id: userId,
+                first_name: firstName,
+                last_name: lastName,
+                phone: phone,
+                phone_verified: true,
+                onboarding_completed: false,
+                profile_completed: false,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+            
+        if (profileError) {
+            console.error('[SIMPLE] Profile creation error:', profileError);
+            return res.status(500).json({
+                success: false,
+                message: 'Account creation failed',
+                error: profileError.message
+            });
+        }
+        
+        // Generate JWT token
+        const jwt = require('jsonwebtoken');
+        const token = jwt.sign(
+            { 
+                userId: userId,
+                phone: phone,
+                type: 'phone'
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+        
+        res.status(201).json({
+            success: true,
+            message: 'Account created successfully',
+            user: {
+                id: userId,
+                phone: phone,
+                firstName: firstName,
+                lastName: lastName,
+                verified: true
+            },
+            session: {
+                access_token: token,
+                token_type: 'bearer',
+                expires_in: 604800 // 7 days
+            }
+        });
+        
+    } catch (error) {
+        console.error('[SIMPLE] Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Signup failed',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;
