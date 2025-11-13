@@ -5766,30 +5766,67 @@
             console.log('Updating investment portfolio');
         }
 
-        function updateTransactionsSection(transactionsData) {
-            if (!transactionsData || !transactionsData.success) return;
+        function showCompletionMessageCard() {
+            // Create and show the completion message card
+            const card = document.createElement('div');
+            card.id = 'completionMessageCard';
+            card.className = 'completion-message-card';
+            card.innerHTML = `
+                <div class="completion-card-content">
+                    <div class="completion-icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="completion-text">
+                        <h3>Welcome to ZimCrowd!</h3>
+                        <p>Complete your profile to unlock all features and start borrowing or investing.</p>
+                    </div>
+                    <button class="btn-primary completion-btn" onclick="completeRegistration()">
+                        Complete Registration <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            `;
 
-            const transactions = transactionsData.data.transactions || [];
-            // Update transactions section
-            console.log('Updating transactions section with', transactions.length, 'transactions');
+            // Add styles
+            card.style.cssText = `
+                position: relative;
+                margin: 20px auto;
+                max-width: 800px;
+                background: linear-gradient(135deg, rgba(56, 231, 123, 0.1), rgba(52, 211, 153, 0.1));
+                border: 1px solid rgba(56, 231, 123, 0.3);
+                border-radius: 16px;
+                padding: 30px;
+                text-align: center;
+                animation: slideIn 0.5s ease;
+            `;
+
+            // Insert at the top of the main content area
+            const mainContainer = document.querySelector('.dashboard-container') || document.body;
+            mainContainer.insertBefore(card, mainContainer.firstChild);
+        }
+
+        function completeRegistration() {
+            // Mark profile as completed and redirect to profile page
+            localStorage.setItem('profileCompleted', 'true');
+            window.location.href = 'profile.html';
         }
 
         // Initialize data loading on page load
         window.addEventListener('DOMContentLoaded', function() {
-            // Check for social auth signup mode
-            const urlParams = new URLSearchParams(window.location.search);
-            const signupMode = urlParams.get('mode') === 'signup';
+            // Check if user needs to complete registration
+            const onboardingCompleted = localStorage.getItem('onboardingCompleted') === 'true';
             const socialSignupCompleted = localStorage.getItem('socialSignupCompleted') === 'true';
+            const profileCompleted = localStorage.getItem('profileCompleted') === 'true';
 
-            if (signupMode && !socialSignupCompleted) {
-                // New social signup - redirect to onboarding
-                window.location.href = 'onboarding.html?source=social';
-                return;
+            // Show completion message for new social auth users who haven't completed profile
+            if (onboardingCompleted && socialSignupCompleted && !profileCompleted) {
+                showCompletionMessageCard();
             }
 
-            // Clear the mode parameter from URL after processing
-            if (signupMode) {
-                const newUrl = window.location.pathname + window.location.search.replace(/[?&]mode=signup/, '');
+            // Clear the mode parameter from URL if present
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasMode = urlParams.has('mode');
+            if (hasMode) {
+                const newUrl = window.location.pathname + window.location.search.replace(/[?&]mode=[^&]*/, '');
                 window.history.replaceState({}, document.title, newUrl);
             }
             const authToken = localStorage.getItem('authToken');
@@ -5797,17 +5834,6 @@
                 // User is authenticated, load real data
                 window.ZimCrowdAPI.setToken(authToken);
                 console.log('🔄 Loading real data from backend...');
-
-                // Handle OAuth signup vs login modes
-                const urlParams = new URLSearchParams(window.location.search);
-                const signupMode = urlParams.get('mode') === 'signup';
-
-                if (signupMode) {
-                    console.log('OAuth signup mode detected');
-                    // For signup, redirect to onboarding/profile completion
-                    window.location.href = 'onboarding.html';
-                    return; // Exit early to prevent other logic from running
-                }
 
                 // Load all dashboard data
                 loadUserProfile(); // Use the new profile loading function
