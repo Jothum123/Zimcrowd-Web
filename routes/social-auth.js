@@ -171,7 +171,21 @@ socialRouter.get('/callback', async (req, res) => {
                 }
             }
 
-            // Redirect based on mode
+            // Store social auth data for dashboard profile
+            const socialAuthData = {
+                provider: user.app_metadata?.provider || 'unknown',
+                first_name: userDetails.first_name,
+                last_name: userDetails.last_name,
+                email: userDetails.email,
+                phone: userDetails.phone,
+                avatar_url: userDetails.avatar_url,
+                auth_provider: userDetails.auth_provider,
+                social_id: user.id,
+                created_at: userDetails.created_at,
+                updated_at: userDetails.updated_at
+            };
+
+            // Redirect based on mode with social auth data
             let redirectUrl;
             if (mode === 'signup') {
                 // New signup - go directly to onboarding splash screens
@@ -180,8 +194,31 @@ socialRouter.get('/callback', async (req, res) => {
                 // Existing login - go to dashboard
                 redirectUrl = '/dashboard.html';
             }
-                
-            res.redirect(redirectUrl);
+
+            // Send social auth data to frontend via localStorage script
+            res.send(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Redirecting...</title>
+                    <script>
+                        // Store social auth data in localStorage
+                        localStorage.setItem('socialAuthData', JSON.stringify(${JSON.stringify(socialAuthData).replace(/'/g, "\\'")}));
+                        localStorage.setItem('socialSignupCompleted', 'true');
+                        localStorage.setItem('isAuthenticated', 'true');
+
+                        // Store auth token if available
+                        ${user.access_token ? `localStorage.setItem('authToken', '${user.access_token}');` : ''}
+
+                        // Redirect to destination
+                        window.location.href = '${redirectUrl}';
+                    </script>
+                </head>
+                <body>
+                    <p>Redirecting to ${redirectUrl.includes('signup') || redirectUrl.includes('onboarding') ? 'onboarding' : 'dashboard'}...</p>
+                </body>
+                </html>
+            `);
         } else {
             res.redirect('/login?error=no_session');
         }

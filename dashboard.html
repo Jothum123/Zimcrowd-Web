@@ -4205,13 +4205,76 @@
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Postal Code</label>
                             <input type="text" value="00263">
                         </div>
-                    </div>
-                    <button class="btn-primary" style="margin-top: 20px;">Update Address</button>
-                </div>
-            </div>
 
-            <!-- Security Tab -->
-            <div id="security-tab" class="tab-content">
+                        <div class="form-group">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-input" id="profileEmail" placeholder="your.email@example.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" class="form-input" id="profilePhone" placeholder="+263 77 123 4567">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Date of Birth</label>
+                                <input type="date" class="form-input" id="profileDob">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Gender</label>
+                                <select class="form-select" id="profileGender">
+                                    <option value="">Select Gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                    <option value="prefer-not-to-say">Prefer not to say</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Address</label>
+                            <input type="text" class="form-input" id="profileAddress" placeholder="Your current address">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Bio</label>
+                            <textarea class="form-input" id="profileBio" rows="3" placeholder="Tell us a bit about yourself..."></textarea>
+                        </div>
+
+                        <div style="margin-top: 30px;">
+                            <button type="button" class="btn btn-primary" onclick="saveProfile()">
+                                <i class="fas fa-save"></i> Save Profile Changes
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="resetProfile()" style="margin-left: 10px;">
+                                <i class="fas fa-undo"></i> Reset
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Social Login Info -->
+                <div class="loan-card" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 20px;">Social Login Information</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div style="background: rgba(56, 231, 123, 0.1); padding: 20px; border-radius: 12px; border: 1px solid rgba(56, 231, 123, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <i class="fab fa-google" style="color: #38e77b; font-size: 20px;"></i>
+                                <span style="font-weight: 600; color: #38e77b;">Google Account</span>
+                            </div>
+                            <p id="googleStatus" style="color: #94a3b8; font-size: 14px; margin: 0;">Not connected</p>
+                        </div>
+                        <div style="background: rgba(59, 130, 246, 0.1); padding: 20px; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <i class="fab fa-facebook" style="color: #3b82f6; font-size: 20px;"></i>
+                                <span style="font-weight: 600; color: #3b82f6;">Facebook Account</span>
+                            </div>
+                            <p id="facebookStatus" style="color: #94a3b8; font-size: 14px; margin: 0;">Not connected</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="loan-card">
                     <h3 style="margin-bottom: 20px;">Change Password</h3>
                     <div style="display: flex; flex-direction: column; gap: 20px; max-width: 500px;">
@@ -4888,7 +4951,159 @@
                 }
             }
 
-            return "I'm not sure I understand that. Could you rephrase? I can help with ZimScore, payments, investments, loans, balance, and market insights. What would you like to know? 🤔";
+            return "I'm not sure I understand that. Could you rephrase? I can help with ZimScore, payments, investments, loans, balance, and market insights. What would you like to know? ";
+        }
+
+        // Load user profile data from social auth and localStorage
+        function loadUserProfile() {
+            // Get social auth data from localStorage (set during auth callback)
+            const socialAuthData = JSON.parse(localStorage.getItem('socialAuthData') || '{}');
+
+            // Populate profile fields with social data
+            if (socialAuthData.first_name) {
+                document.getElementById('profileFirstName').value = socialAuthData.first_name;
+            }
+            if (socialAuthData.last_name) {
+                document.getElementById('profileLastName').value = socialAuthData.last_name;
+            }
+            if (socialAuthData.email) {
+                document.getElementById('profileEmail').value = socialAuthData.email;
+            }
+            if (socialAuthData.phone) {
+                document.getElementById('profilePhone').value = socialAuthData.phone;
+            }
+            if (socialAuthData.avatar_url) {
+                updateProfileAvatarFromUrl(socialAuthData.avatar_url);
+            }
+
+            // Load saved profile data from localStorage
+            const savedProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+            if (savedProfile.dob) document.getElementById('profileDob').value = savedProfile.dob;
+            if (savedProfile.gender) document.getElementById('profileGender').value = savedProfile.gender;
+            if (savedProfile.address) document.getElementById('profileAddress').value = savedProfile.address;
+            if (savedProfile.bio) document.getElementById('profileBio').value = savedProfile.bio;
+
+            // Update social login status
+            updateSocialLoginStatus();
+        }
+
+        function updateSocialLoginStatus() {
+            const socialAuthData = JSON.parse(localStorage.getItem('socialAuthData') || '{}');
+
+            if (socialAuthData.provider === 'google') {
+                document.getElementById('googleStatus').textContent = `Connected as ${socialAuthData.email || 'user'}`;
+                document.getElementById('googleStatus').style.color = '#38e77b';
+            } else {
+                document.getElementById('googleStatus').textContent = 'Not connected';
+            }
+
+            if (socialAuthData.provider === 'facebook') {
+                document.getElementById('facebookStatus').textContent = `Connected as ${socialAuthData.email || 'user'}`;
+                document.getElementById('facebookStatus').style.color = '#3b82f6';
+            } else {
+                document.getElementById('facebookStatus').textContent = 'Not connected';
+            }
+        }
+
+        function updateProfileAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const avatarDiv = document.getElementById('profileAvatar');
+                    avatarDiv.style.backgroundImage = `url(${e.target.result})`;
+                    avatarDiv.style.backgroundSize = 'cover';
+                    avatarDiv.style.backgroundPosition = 'center';
+                    avatarDiv.innerHTML = ''; // Remove the icon
+
+                    // Show remove button
+                    document.getElementById('remove-icon-btn').style.display = 'flex';
+
+                    // Save to localStorage
+                    localStorage.setItem('userAvatar', e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateProfileAvatarFromUrl(url) {
+            const avatarDiv = document.getElementById('profileAvatar');
+            avatarDiv.style.backgroundImage = `url(${url})`;
+            avatarDiv.style.backgroundSize = 'cover';
+            avatarDiv.style.backgroundPosition = 'center';
+            avatarDiv.innerHTML = ''; // Remove the icon
+            document.getElementById('remove-icon-btn').style.display = 'flex';
+        }
+
+        function removeProfilePicture() {
+            const avatarDiv = document.getElementById('profileAvatar');
+            avatarDiv.style.backgroundImage = '';
+            avatarDiv.innerHTML = '<span id="profile-initials">TM</span>';
+
+            // Hide remove button
+            document.getElementById('remove-icon-btn').style.display = 'none';
+
+            // Clear from localStorage
+            localStorage.removeItem('userAvatar');
+            document.getElementById('profile-upload').value = '';
+        }
+
+        function saveProfile() {
+            const profileData = {
+                firstName: document.getElementById('profileFirstName').value,
+                lastName: document.getElementById('profileLastName').value,
+                email: document.getElementById('profileEmail').value,
+                phone: document.getElementById('profilePhone').value,
+                dob: document.getElementById('profileDob').value,
+                gender: document.getElementById('profileGender').value,
+                address: document.getElementById('profileAddress').value,
+                bio: document.getElementById('profileBio').value,
+                updatedAt: new Date().toISOString()
+            };
+
+            // Save to localStorage
+            localStorage.setItem('userProfile', JSON.stringify(profileData));
+
+            // Show success message
+            showSuccess('Profile updated successfully!');
+
+            // Update initials if no avatar
+            const avatarDiv = document.getElementById('profileAvatar');
+            if (!avatarDiv.style.backgroundImage) {
+                const initials = (profileData.firstName.charAt(0) + profileData.lastName.charAt(0)).toUpperCase();
+                document.getElementById('profile-initials').textContent = initials;
+            }
+        }
+
+        function resetProfile() {
+            // Reload profile data
+            loadUserProfile();
+            showSuccess('Profile reset to saved data');
+        }
+
+        function showSuccess(message) {
+            // Create and show success notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: rgba(56, 231, 123, 0.9);
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                font-weight: 600;
+                z-index: 10000;
+                animation: slideInRight 0.3s ease;
+            `;
+            notification.textContent = message;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
         }
 
         // Add message to chat
@@ -5851,6 +6066,9 @@
 
         // Initialize data loading on page load
         window.addEventListener('DOMContentLoaded', function() {
+            // Load user profile data from social auth
+            loadUserProfile();
+
             // Check if user needs to complete comprehensive registration
             checkRegistrationCompletion();
 
