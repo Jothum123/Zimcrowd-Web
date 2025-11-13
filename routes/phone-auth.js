@@ -672,6 +672,138 @@ router.post('/verify-phone-signup', otpVerificationLimiter, [
     }
 });
 
+// Test version without rate limiting (REMOVE IN PRODUCTION)
+router.post('/dev-verify-signup-no-limit', [
+    body('tempToken')
+        .notEmpty()
+        .withMessage('Temporary token is required'),
+    body('otp')
+        .isLength({ min: 6, max: 6 })
+        .isNumeric()
+        .withMessage('OTP must be 6 digits'),
+    handleValidationErrors
+], async (req, res) => {
+    console.log('[DEV VERIFY] Called with:', req.body);
+    try {
+        const { tempToken, otp } = req.body;
+        
+        // Decode temp user data
+        let userData;
+        try {
+            userData = JSON.parse(Buffer.from(tempToken, 'base64').toString());
+        } catch (error) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid verification token'
+            });
+        }
+        
+        const { firstName, lastName, phone, password } = userData;
+        
+        // Verify OTP in database
+        const { data: verification, error: verifyError } = await supabase
+            .from('phone_verifications')
+            .select('*')
+            .eq('phone_number', phone)
+            .eq('otp_code', otp)
+            .eq('purpose', 'signup')
+            .eq('verified', false)
+            .gt('expires_at', new Date().toISOString())
+            .single();
+            
+        if (verifyError || !verification) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired verification code'
+            });
+        }
+        
+        // Mark OTP as verified
+        await supabase
+            .from('phone_verifications')
+            .update({ verified: true })
+            .eq('id', verification.id);
+        
+        // Create user in Supabase Auth first
+        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+            phone: phone,
+            password: password,
+            phone_confirm: true
+        });
+        
+        if (authError) {
+            return res.status(500).json({
+                success: false,
+                message: 'Account creation failed',
+                error: authError.message
+            });
+        }
+        
+        const userId = authUser.user.id;
+        
+        // Create profile
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+                id: userId,
+                first_name: firstName,
+                last_name: lastName,
+                phone: phone,
+                onboarding_completed: false,
+                profile_completed: false,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+            
+        if (profileError) {
+            return res.status(500).json({
+                success: false,
+                message: 'Profile creation failed',
+                error: profileError.message
+            });
+        }
+        
+        // Generate JWT token
+        const jwt = require('jsonwebtoken');
+        const token = jwt.sign(
+            { 
+                userId: userId,
+                phone: phone,
+                type: 'phone'
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+        
+        res.status(201).json({
+            success: true,
+            message: 'Account created successfully',
+            user: {
+                id: userId,
+                phone: phone,
+                firstName: firstName,
+                lastName: lastName,
+                verified: true
+            },
+            session: {
+                access_token: token,
+                token_type: 'bearer',
+                expires_in: 604800
+            }
+        });
+        
+    } catch (error) {
+        console.error('[DEV VERIFY] Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Verification failed',
+            error: error.message
+        });
+    }
+});
+
 // Phone login
 router.post('/login-phone', [
     body('phone')
