@@ -6,6 +6,7 @@
     <title>Login - ZimCrowd Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/api-client.js"></script>
     <style>
         * {
             margin: 0;
@@ -291,6 +292,120 @@
             50% { opacity: 0.8; }
         }
 
+        /* Login Method Toggle */
+        .login-method-toggle {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .method-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .method-btn.active {
+            background: rgba(56, 224, 123, 0.1);
+            color: #38e07b;
+            border: 1px solid rgba(56, 224, 123, 0.3);
+        }
+
+        .method-btn:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .method-btn.active:hover {
+            color: #4ade80;
+        }
+
+        /* OTP Form Styles */
+        .otp-form {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .otp-request-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            margin-top: 16px;
+        }
+
+        .otp-request-btn:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        }
+
+        .otp-input, .totp-input {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .otp-hint, .totp-hint {
+            display: block;
+            color: rgba(56, 224, 123, 0.8);
+            font-size: 12px;
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        .otp-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-top: 16px;
+        }
+
+        .otp-verify-btn {
+            flex: 1;
+        }
+
+        .resend-btn {
+            background: transparent;
+            border: 1px solid rgba(56, 224, 123, 0.5);
+            color: rgba(56, 224, 123, 0.8);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .resend-btn:hover {
+            background: rgba(56, 224, 123, 0.1);
+            border-color: #38e07b;
+            color: #4ade80;
+        }
+
+        .totp-login-btn {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            margin-top: 16px;
+        }
+
+        .totp-login-btn:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        }
+
         .divider {
             text-align: center;
             margin: 24px 0;
@@ -388,8 +503,18 @@
 
         <div class="error-message" id="errorMessage"></div>
 
-        <!-- Login Form -->
-        <form class="login-form" id="loginForm">
+        <!-- Login Method Toggle -->
+        <div class="login-method-toggle">
+            <button type="button" class="method-btn active" id="passwordMethod" onclick="switchLoginMethod('password')">
+                <i class="fas fa-lock"></i> Password Login
+            </button>
+            <button type="button" class="method-btn" id="otpMethod" onclick="switchLoginMethod('otp')">
+                <i class="fas fa-mobile-alt"></i> OTP Login
+            </button>
+        </div>
+
+        <!-- Password Login Form -->
+        <form class="login-form" id="passwordLoginForm">
             <div class="form-group">
                 <label class="form-label">Phone Number</label>
                 <input type="tel" class="form-input" id="phone" placeholder="+263 77 123 4567" required>
@@ -415,13 +540,69 @@
                 </a>
             </div>
 
-            <button type="submit" class="login-btn" id="loginBtn">
-                <span id="loginText">Sign In</span>
-                <div id="loginSpinner" style="display: none;">
+            <button type="submit" class="login-btn" id="passwordLoginBtn">
+                <span id="passwordLoginText">Sign In</span>
+                <div id="passwordLoginSpinner" style="display: none;">
                     <i class="fas fa-spinner fa-spin"></i>
                 </div>
             </button>
         </form>
+
+        <!-- OTP Login Form -->
+        <form class="login-form otp-form" id="otpLoginForm" style="display: none;">
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" class="form-input" id="otpPhone" placeholder="+263 77 123 4567" required>
+            </div>
+
+            <!-- OTP Request Section -->
+            <div id="otpRequestSection">
+                <button type="button" class="login-btn otp-request-btn" id="requestOTPBtn" onclick="requestOTP()">
+                    <i class="fas fa-paper-plane"></i> Send Verification Code
+                </button>
+            </div>
+
+            <!-- OTP Verification Section -->
+            <div id="otpVerifySection" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Enter 6-digit Code</label>
+                    <input type="text" class="form-input otp-input" id="otpCode" placeholder="000000" maxlength="6" required>
+                    <small class="otp-hint">Check server console for your OTP code</small>
+                </div>
+
+                <div class="otp-actions">
+                    <button type="submit" class="login-btn otp-verify-btn" id="verifyOTPBtn">
+                        <span id="otpVerifyText">Verify & Login</span>
+                        <div id="otpVerifySpinner" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
+                    </button>
+                    <button type="button" class="resend-btn" id="resendOTPBtn" onclick="requestOTP()" style="display: none;">
+                        <i class="fas fa-redo"></i> Resend Code
+                    </button>
+                </div>
+            </div>
+
+            <!-- TOTP Section (for users with TOTP enabled) -->
+            <div id="totpSection" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Enter TOTP Code</label>
+                    <input type="text" class="form-input totp-input" id="totpCode" placeholder="000000" maxlength="6" required>
+                    <small class="totp-hint">Enter code from your authenticator app</small>
+                </div>
+
+                <button type="button" class="login-btn totp-login-btn" id="totpLoginBtn" onclick="loginWithTOTP()">
+                    <span id="totpLoginText">Login with TOTP</span>
+                    <div id="totpLoginSpinner" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                </button>
+            </div>
+        </form>
+
+        <div class="forgot-password">
+            <a href="phone-password-reset-request.html" class="forgot-link">Forgot your password?</a>
+        </div>
 
         <div class="divider">
             <span>or</span>
@@ -436,18 +617,39 @@
 
     <script>
         // Login Form Handling
+        let currentLoginMethod = 'password';
+
         document.addEventListener('DOMContentLoaded', function() {
-            const loginForm = document.getElementById('loginForm');
-            const loginBtn = document.getElementById('loginBtn');
-            const loginText = document.getElementById('loginText');
-            const loginSpinner = document.getElementById('loginSpinner');
+            const passwordLoginForm = document.getElementById('passwordLoginForm');
+            const otpLoginForm = document.getElementById('otpLoginForm');
+            const passwordLoginBtn = document.getElementById('passwordLoginBtn');
+            const passwordLoginText = document.getElementById('passwordLoginText');
+            const passwordLoginSpinner = document.getElementById('passwordLoginSpinner');
 
-            // API Configuration
-            const API_URL = window.location.hostname === 'localhost'
-                ? 'http://localhost:5003'
-                : 'https://zimcrowd-backend-pfzb6c7x3-jojola.vercel.app';
+            // Check for signup success
+            const signupSuccess = localStorage.getItem('signupSuccess');
+            const userPhone = localStorage.getItem('userPhone');
+            
+            if (signupSuccess === 'true' && userPhone) {
+                // Show success message and pre-fill phone
+                document.getElementById('phone').value = userPhone;
+                showSuccess('Account created successfully! Please login with your phone number and password.');
+                localStorage.removeItem('signupSuccess');
+                localStorage.removeItem('userPhone');
+            }
 
-            loginForm.addEventListener('submit', async function(e) {
+            // Check for password reset success
+            const urlParams = new URLSearchParams(window.location.search);
+            const resetMessage = urlParams.get('message');
+            
+            if (resetMessage === 'password-reset-success') {
+                showSuccess('Password reset successful! Please login with your new password.');
+                // Clear the URL parameter
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
+            // Password login form handler
+            passwordLoginForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
 
                 // Get form data
@@ -475,62 +677,257 @@
                 if (!isValid) return;
 
                 // Show loading state
-                loginBtn.disabled = true;
-                loginText.style.display = 'none';
-                loginSpinner.style.display = 'inline-block';
+                passwordLoginBtn.disabled = true;
+                passwordLoginText.style.display = 'none';
+                passwordLoginSpinner.style.display = 'inline-block';
 
                 try {
-                    // Use phone login endpoint
-                    const endpoint = `${API_URL}/api/phone-auth/login-phone`;
-                    const requestBody = {
-                        phone: phone,
-                        password: password
-                    };
+                    // Use ZimCrowdAPI client for phone login
+                    const response = await window.ZimCrowdAPI.loginPhone(phone, password);
 
-                    const response = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(requestBody)
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success) {
+                    if (response.success) {
                         // Store authentication data
                         localStorage.setItem('isAuthenticated', 'true');
-                        localStorage.setItem('onboardingCompleted', 'true');
-                        localStorage.setItem('authToken', data.session?.access_token || '');
-                        localStorage.setItem('userData', JSON.stringify(data.user || {}));
+                        localStorage.setItem('onboardingCompleted', 'false');
+                        localStorage.setItem('authToken', response.session?.access_token || '');
+                        localStorage.setItem('userData', JSON.stringify(response.user || {}));
 
-                        // Redirect to dashboard
-                        window.location.href = 'dashboard.html';
+                        // Set token in API client for future requests
+                        window.ZimCrowdAPI.setToken(response.session?.access_token || '');
+
+                        // Show success and redirect
+                        showSuccess('Login successful! Redirecting to dashboard...');
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 1500);
                     } else {
                         // Show error
-                        showError(data.message || 'Login failed. Please try again.');
+                        showError(response.message || 'Login failed. Please try again.');
                     }
                 } catch (error) {
                     console.error('Login error:', error);
-                    showError('Network error. Please check your connection and try again.');
+                    showError(error.message || 'Network error. Please check your connection and try again.');
                 } finally {
                     // Reset loading state
-                    loginBtn.disabled = false;
-                    loginText.style.display = 'inline';
-                    loginSpinner.style.display = 'none';
+                    passwordLoginBtn.disabled = false;
+                    passwordLoginText.style.display = 'inline';
+                    passwordLoginSpinner.style.display = 'none';
                 }
             });
 
-            function showError(message) {
-                const errorDiv = document.getElementById('errorMessage');
-                errorDiv.textContent = message;
-                errorDiv.style.display = 'block';
+            // OTP login form handler
+            otpLoginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await verifyOTP();
+            });
+        });
+
+        // Switch between login methods
+        function switchLoginMethod(method) {
+            currentLoginMethod = method;
+            
+            const passwordMethod = document.getElementById('passwordMethod');
+            const otpMethod = document.getElementById('otpMethod');
+            const passwordForm = document.getElementById('passwordLoginForm');
+            const otpForm = document.getElementById('otpLoginForm');
+
+            if (method === 'password') {
+                passwordMethod.classList.add('active');
+                otpMethod.classList.remove('active');
+                passwordForm.style.display = 'block';
+                otpForm.style.display = 'none';
+            } else {
+                passwordMethod.classList.remove('active');
+                otpMethod.classList.add('active');
+                passwordForm.style.display = 'none';
+                otpForm.style.display = 'block';
             }
 
-            function hideError() {
-                document.getElementById('errorMessage').style.display = 'none';
+            // Clear any errors
+            hideError();
+        }
+
+        // Request OTP function
+        async function requestOTP() {
+            const phone = document.getElementById('otpPhone').value.trim();
+            
+            if (!phone) {
+                showError('Please enter your phone number');
+                return;
             }
-        });
+
+            const requestBtn = document.getElementById('requestOTPBtn');
+            const originalText = requestBtn.innerHTML;
+            
+            // Show loading
+            requestBtn.disabled = true;
+            requestBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+            try {
+                const response = await window.ZimCrowdAPI.passwordlessLogin(phone);
+                
+                if (response.success) {
+                    showSuccess('Verification code sent! Check the server console for your OTP code.');
+                    
+                    // Show OTP verification section
+                    document.getElementById('otpRequestSection').style.display = 'none';
+                    document.getElementById('otpVerifySection').style.display = 'block';
+                    document.getElementById('resendOTPBtn').style.display = 'inline-block';
+                    
+                    // Auto-focus OTP input
+                    setTimeout(() => {
+                        document.getElementById('otpCode').focus();
+                    }, 500);
+                } else {
+                    showError(response.message || 'Failed to send code');
+                }
+            } catch (error) {
+                console.error('OTP request error:', error);
+                showError('Network error. Please try again.');
+            } finally {
+                requestBtn.disabled = false;
+                requestBtn.innerHTML = originalText;
+            }
+        }
+
+        // Verify OTP function
+        async function verifyOTP() {
+            const phone = document.getElementById('otpPhone').value.trim();
+            const otp = document.getElementById('otpCode').value.trim();
+            
+            if (!phone || !otp) {
+                showError('Please enter both phone number and OTP code');
+                return;
+            }
+
+            const verifyBtn = document.getElementById('verifyOTPBtn');
+            const verifyText = document.getElementById('otpVerifyText');
+            const verifySpinner = document.getElementById('otpVerifySpinner');
+            
+            // Show loading
+            verifyBtn.disabled = true;
+            verifyText.style.display = 'none';
+            verifySpinner.style.display = 'inline-block';
+
+            try {
+                const response = await window.ZimCrowdAPI.passwordlessVerify(phone, otp);
+                
+                if (response.success) {
+                    // Store authentication data
+                    localStorage.setItem('isAuthenticated', 'true');
+                    localStorage.setItem('onboardingCompleted', 'false');
+                    localStorage.setItem('authToken', response.session?.access_token || '');
+                    localStorage.setItem('userData', JSON.stringify(response.user || {}));
+
+                    // Set token in API client
+                    window.ZimCrowdAPI.setToken(response.session?.access_token || '');
+
+                    // Check if user has TOTP enabled
+                    if (response.user?.totpEnabled) {
+                        // Show TOTP section for additional security
+                        showSuccess('OTP verified! Now enter your TOTP code for complete login.');
+                        document.getElementById('otpVerifySection').style.display = 'none';
+                        document.getElementById('totpSection').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('totpCode').focus();
+                        }, 500);
+                    } else {
+                        // Direct login success
+                        showSuccess('Login successful! Redirecting to dashboard...');
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 1500);
+                    }
+                } else {
+                    showError(response.message || 'Invalid OTP code');
+                }
+            } catch (error) {
+                console.error('OTP verification error:', error);
+                showError('Verification failed. Please try again.');
+            } finally {
+                verifyBtn.disabled = false;
+                verifyText.style.display = 'inline';
+                verifySpinner.style.display = 'none';
+            }
+        }
+
+        // Login with TOTP function
+        async function loginWithTOTP() {
+            const phone = document.getElementById('otpPhone').value.trim();
+            const otp = document.getElementById('totpCode').value.trim();
+            
+            if (!otp) {
+                showError('Please enter your TOTP code');
+                return;
+            }
+
+            const totpBtn = document.getElementById('totpLoginBtn');
+            const totpText = document.getElementById('totpLoginText');
+            const totpSpinner = document.getElementById('totpLoginSpinner');
+            
+            // Show loading
+            totpBtn.disabled = true;
+            totpText.style.display = 'none';
+            totpSpinner.style.display = 'inline-block';
+
+            try {
+                // Use smart login with TOTP
+                const response = await window.ZimCrowdAPI.smartLogin(phone, otp);
+                
+                if (response.success) {
+                    showSuccess('TOTP login successful! Redirecting to dashboard...');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
+                } else {
+                    showError(response.message || 'Invalid TOTP code');
+                }
+            } catch (error) {
+                console.error('TOTP login error:', error);
+                showError('TOTP verification failed. Please try again.');
+            } finally {
+                totpBtn.disabled = false;
+                totpText.style.display = 'inline';
+                totpSpinner.style.display = 'none';
+            }
+        }
+
+        function showSuccess(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success-message';
+            successDiv.textContent = message;
+            successDiv.style.cssText = `
+                background: rgba(56, 224, 123, 0.1);
+                border: 1px solid rgba(56, 224, 123, 0.3);
+                color: #4ade80;
+                padding: 12px 16px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                margin-bottom: 20px;
+                display: block;
+                backdrop-filter: blur(10px);
+            `;
+            
+            const container = errorDiv.parentNode;
+            container.insertBefore(successDiv, errorDiv);
+            errorDiv.style.display = 'none';
+            
+            setTimeout(() => {
+                successDiv.remove();
+            }, 5000);
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
 
         // Password visibility toggle
         function togglePasswordVisibility() {

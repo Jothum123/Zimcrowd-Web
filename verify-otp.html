@@ -12,6 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/api-client.js"></script>
     <style>
         /* CSS Variables */
         :root {
@@ -614,9 +615,9 @@
         // OTP Functionality
         document.addEventListener('DOMContentLoaded', function() {
             // API Configuration
-            const API_URL = window.location.hostname === 'localhost' 
-                ? 'http://localhost:5003'
-                : 'https://zimcrowd-backend-pfzb6c7x3-jojola.vercel.app';
+            const API_URL = window.location.hostname === 'localhost'
+                ? 'http://localhost:3000/api'
+                : 'https://zimcrowd-backend-pfzb6c7x3-jojola.vercel.app/api';
 
             const otpInputs = document.querySelectorAll('.otp-input');
             const otpForm = document.getElementById('otpForm');
@@ -763,68 +764,47 @@
                 verifySpinner.style.display = 'inline-block';
 
                 try {
-                    // Make API call to backend (auto-detect environment)
-                    
-                    // Choose the correct endpoint based on contact type and verification type
-                    let endpoint;
-                    if (contactType === 'email') {
-                        endpoint = `${API_URL}/api/email-auth/verify-email-otp`;
-                    } else if (contactType === 'phone') {
-                        // Use different endpoint for signup vs password reset
-                        endpoint = verificationType === 'reset' 
-                            ? `${API_URL}/api/phone-auth/verify-phone-otp`
-                            : `${API_URL}/api/phone-auth/verify-phone-signup`;
+                    // Use ZimCrowdAPI client for OTP verification
+                    let response;
+                    if (contactType === 'phone' && verificationType === 'signup') {
+                        // Phone signup verification
+                        response = await window.ZimCrowdAPI.verifyPhoneSignup(
+                            localStorage.getItem('tempToken'),
+                            otp
+                        );
+                    } else if (contactType === 'phone' && verificationType === 'reset') {
+                        // Phone password reset verification - need to add this method to API client
+                        response = await window.ZimCrowdAPI.verifyPhoneOTP(contactValue, otp);
                     } else {
-                        endpoint = `${API_URL}/api/auth/verify-otp`;
+                        throw new Error('Unsupported verification type');
                     }
-                    
-                    const response = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(
-                            contactType === 'phone' && verificationType === 'signup'
-                            ? {
-                                tempToken: localStorage.getItem('tempToken'),
-                                otp: otp
-                              }
-                            : {
-                                [contactType === 'email' ? 'email' : contactType === 'phone' ? 'phone' : 'identifier']: contactValue,
-                                otp: otp,
-                                ...(contactType === 'email' ? { type: verificationType } : {}),
-                                ...(contactType === 'phone' ? { purpose: verificationType === 'reset' ? 'password_reset' : 'signup' } : {})
-                              }
-                        )
-                    });
 
-                    const data = await response.json();
-
-                    if (data.success) {
+                    if (response.success) {
                         // Clear localStorage verification data
                         localStorage.removeItem('tempToken');
                         localStorage.removeItem('verificationEmail');
                         localStorage.removeItem('verificationPhone');
 
-                        if (verificationType === 'reset') {
-                            // Password reset - redirect to reset password page with proper parameters
+                        if (verificationType === 'signup') {
+                            // Account created successfully - redirect to login
+                            localStorage.setItem('signupSuccess', 'true');
+                            localStorage.setItem('userPhone', contactValue);
+                            showSuccess('Account created! Redirecting to login...');
+                            setTimeout(() => {
+                                window.location.href = 'login.html';
+                            }, 2000);
+                        } else {
+                            // Password reset - redirect to reset password page
                             const params = new URLSearchParams({
-                                token: data.resetToken || otp,
+                                token: response.resetToken || otp,
                                 type: contactType,
                                 identifier: contactValue
                             });
                             window.location.href = `reset-password.html?${params.toString()}`;
-                        } else {
-                            // First-time user - redirect to onboarding
-                            localStorage.setItem('isAuthenticated', 'true');
-                            localStorage.setItem('onboardingCompleted', 'false');
-                            localStorage.setItem('authToken', data.token || '');
-                            localStorage.setItem('userData', JSON.stringify(data.user || {}));
-                            window.location.href = 'onboarding.html';
                         }
                     } else {
                         // Show error
-                        errorMessage.textContent = data.message || 'Invalid OTP code';
+                        errorMessage.textContent = response.message || 'Invalid OTP code';
                         errorMessage.classList.add('show');
                         verifyBtn.disabled = false;
                         verifyText.style.display = 'inline';
@@ -839,7 +819,7 @@
                     }
                 } catch (error) {
                     console.error('OTP verification error:', error);
-                    errorMessage.textContent = 'Network error. Please try again.';
+                    errorMessage.textContent = error.message || 'Network error. Please try again.';
                     errorMessage.classList.add('show');
                     verifyBtn.disabled = false;
                     verifyText.style.display = 'inline';
@@ -876,40 +856,27 @@
                 resendBtn.textContent = 'Sending...';
 
                 try {
-                    // Choose the correct resend endpoint based on contact type and verification type
-                    let resendEndpoint;
-                    if (contactType === 'email') {
-                        resendEndpoint = `${API_URL}/api/email-auth/resend-email-otp`;
-                    } else if (contactType === 'phone') {
-                        // Use different endpoint for signup vs password reset
-                        resendEndpoint = verificationType === 'reset' 
-                            ? `${API_URL}/api/phone-auth/resend-phone-otp`
-                            : `${API_URL}/api/phone-auth/resend-phone-otp`; // Same endpoint, different purpose
-                    } else {
-                        resendEndpoint = `${API_URL}/api/auth/resend-otp`;
-                    }
-                    
-                    const response = await fetch(resendEndpoint, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(
-                            contactType === 'phone' && verificationType === 'signup'
-                            ? {
+                    // Use ZimCrowdAPI client for resending OTP
+                    let response;
+                    if (contactType === 'phone') {
+                        // For phone resend, we need to call the backend directly since API client doesn't have resend method
+                        const resendEndpoint = `${API_URL}/phone-auth/resend-phone-otp`;
+                        response = await fetch(resendEndpoint, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
                                 phone: contactValue,
-                                purpose: 'signup'
-                              }
-                            : {
-                                [contactType === 'email' ? 'email' : contactType === 'phone' ? 'phone' : 'identifier']: contactValue,
-                                ...(contactType === 'email' ? { type: verificationType } : { purpose: verificationType === 'reset' ? 'password_reset' : 'signup' })
-                              }
-                        )
-                    });
+                                purpose: verificationType === 'reset' ? 'password_reset' : 'signup'
+                            })
+                        });
+                        response = await response.json();
+                    } else {
+                        throw new Error('Resend not implemented for this contact type');
+                    }
 
-                    const data = await response.json();
-
-                    if (data.success) {
+                    if (response.success) {
                         // Show success message
                         resendBtn.textContent = 'Code Sent!';
                         setTimeout(() => {

@@ -1,15 +1,48 @@
 require('dotenv').config();
 require('express-async-errors');
 
+console.log('🚀 Starting ZimCrowd server...');
+
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const path = require('path');
 
+console.log('📦 Loaded dependencies...');
+
 // Import routes
-const authRoutes = require('./routes/auth');
-const phoneAuthRoutes = require('./routes/phone-auth');
-const emailAuthRoutes = require('./routes/email-auth');
+try {
+    console.log('📂 Loading routes...');
+    var authRoutes = require('./routes/auth');
+    console.log('✅ Auth routes loaded');
+    var phoneAuthRoutes = require('./routes/phone-auth');
+    console.log('✅ Phone auth routes loaded');
+    var emailAuthRoutes = require('./routes/email-auth');
+    console.log('✅ Email auth routes loaded');
+    var profileRoutes = require('./routes/profile');
+    console.log('✅ Profile routes loaded');
+    var loansRoutes = require('./routes/loans');
+    console.log('✅ Loans routes loaded');
+    var investmentsRoutes = require('./routes/investments');
+    console.log('✅ Investments routes loaded');
+    var transactionsRoutes = require('./routes/transactions');
+    console.log('✅ Transactions routes loaded');
+    var walletRoutes = require('./routes/wallet');
+    console.log('✅ Wallet routes loaded');
+    var documentsRoutes = require('./routes/documents');
+    console.log('✅ Documents routes loaded');
+    var referralsRoutes = require('./routes/referrals');
+    console.log('✅ Referrals routes loaded');
+    var adminRoutes = require('./routes/admin');
+    console.log('✅ Admin routes loaded');
+    var testRoutes = require('./routes/test');
+    console.log('✅ Test routes loaded');
+    console.log('✅ All routes loaded successfully');
+} catch (error) {
+    console.error('❌ Error loading routes:', error.message);
+    console.error('Stack:', error.stack);
+    process.exit(1);
+}
 
 // Import Supabase utilities
 const { supabase } = require('./utils/supabase-auth');
@@ -39,13 +72,48 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Static files
-app.use(express.static(path.join(__dirname, 'public')));
+// Static files - serve from root directory to access HTML files
+app.use(express.static(path.join(__dirname)));
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
+console.log('🔗 Registering routes...');
 app.use('/api/auth', authRoutes);
+console.log('✅ Auth routes registered');
 app.use('/api/phone-auth', phoneAuthRoutes);
+console.log('✅ Phone auth routes registered');
 app.use('/api/email-auth', emailAuthRoutes);
+console.log('✅ Email auth routes registered');
+app.use('/api/profile', profileRoutes);
+console.log('✅ Profile routes registered');
+
+// Root route - serve index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Login route - serve login.html
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+app.use('/api/loans', loansRoutes);
+console.log('✅ Loans routes registered at /api/loans-test');
+app.use('/api/investments', investmentsRoutes);
+console.log('✅ Investments routes registered');
+app.use('/api/transactions', transactionsRoutes);
+console.log('✅ Transactions routes registered');
+app.use('/api/wallet', walletRoutes);
+console.log('✅ Wallet routes registered');
+app.use('/api/documents', documentsRoutes);
+console.log('✅ Documents routes registered');
+app.use('/api/referrals', referralsRoutes);
+console.log('✅ Referrals routes registered');
+app.use('/api/admin', adminRoutes);
+console.log('✅ Admin routes registered');
+app.use('/api/test', testRoutes);
+console.log('✅ Test routes registered');
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -76,10 +144,15 @@ app.get('/api/test', (req, res) => {
                 registerPhone: 'POST /api/phone-auth/register-phone',
                 verifyPhoneSignup: 'POST /api/phone-auth/verify-phone-signup',
                 loginPhone: 'POST /api/phone-auth/login-phone',
+                passwordlessLogin: 'POST /api/phone-auth/passwordless-login',
+                passwordlessVerify: 'POST /api/phone-auth/passwordless-verify',
                 forgotPasswordPhone: 'POST /api/phone-auth/forgot-password-phone',
                 verifyResetOtp: 'POST /api/phone-auth/verify-reset-otp',
                 resetPasswordPhone: 'POST /api/phone-auth/reset-password-phone',
-                resendPhoneOTP: 'POST /api/phone-auth/resend-phone-otp'
+                resendPhoneOTP: 'POST /api/phone-auth/resend-phone-otp',
+                setupTOTP: 'POST /api/phone-auth/setup-totp',
+                verifyTOTPSetup: 'POST /api/phone-auth/verify-totp-setup',
+                smartLogin: 'POST /api/phone-auth/smart-login'
             },
             emailAuth: {
                 registerEmail: 'POST /api/email-auth/register-email',
@@ -108,9 +181,11 @@ app.use((err, req, res, next) => {
 
 // 404 handler
 app.use('*', (req, res) => {
+    console.log(`❌ 404 - Route not found: ${req.method} ${req.originalUrl}`);
     res.status(404).json({
         success: false,
         message: 'Route not found',
+        requested: `${req.method} ${req.originalUrl}`,
         availableRoutes: [
             'POST /api/auth/register',
             'POST /api/auth/login',
@@ -121,6 +196,11 @@ app.use('*', (req, res) => {
             'POST /api/phone-auth/register-phone',
             'POST /api/phone-auth/verify-phone-signup',
             'POST /api/phone-auth/login-phone',
+            'POST /api/phone-auth/passwordless-login',
+            'POST /api/phone-auth/passwordless-verify',
+            'POST /api/phone-auth/setup-totp',
+            'POST /api/phone-auth/verify-totp-setup',
+            'POST /api/phone-auth/smart-login',
             'POST /api/phone-auth/forgot-password-phone',
             'POST /api/phone-auth/verify-reset-otp',
             'POST /api/phone-auth/reset-password-phone',
@@ -132,7 +212,50 @@ app.use('*', (req, res) => {
             'POST /api/email-auth/reset-password-email',
             'POST /api/email-auth/resend-email-otp',
             'GET /api/health',
-            'GET /api/test'
+            'GET /api/test',
+            'GET /api/profile',
+            'PUT /api/profile',
+            'PUT /api/profile/complete-onboarding',
+            'PUT /api/profile/complete-profile',
+            'GET /api/loans',
+            'GET /api/loans/:id',
+            'POST /api/loans/apply',
+            'PUT /api/loans/:id/pay',
+            'GET /api/loans/types',
+            'GET /api/investments',
+            'GET /api/investments/portfolio',
+            'GET /api/investments/performance',
+            'POST /api/investments',
+            'GET /api/investments/types',
+            'GET /api/transactions',
+            'GET /api/transactions/:id',
+            'GET /api/transactions/summary',
+            'GET /api/transactions/types',
+            'GET /api/wallet/balance',
+            'GET /api/wallet/transactions',
+            'POST /api/wallet/deposit',
+            'POST /api/wallet/withdraw',
+            'GET /api/wallet/payment-methods',
+            'GET /api/documents',
+            'POST /api/documents/upload',
+            'GET /api/documents/:id/download',
+            'DELETE /api/documents/:id',
+            'GET /api/documents/types',
+            'GET /api/referrals/code',
+            'GET /api/referrals/stats',
+            'GET /api/referrals/history',
+            'POST /api/referrals/track',
+            'POST /api/referrals/payout',
+            'GET /api/referrals/leaderboard',
+            'GET /api/referrals/program-info',
+            'GET /api/admin/stats',
+            'GET /api/admin/users',
+            'GET /api/admin/users/:id',
+            'PUT /api/admin/users/:id/status',
+            'GET /api/admin/loans',
+            'PUT /api/admin/loans/:id/approve',
+            'GET /api/admin/transactions',
+            'GET /api/admin/reports/overview'
         ]
     });
 });
@@ -155,12 +278,10 @@ const testSupabaseConnection = async () => {
 
 // Test Twilio connection on startup
 const testTwilioConnectionOnStartup = async () => {
-    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
-        await testTwilioConnection();
-    } else {
-        console.warn('ÔÜá´©Å  Twilio credentials not found - SMS features disabled');
-        console.warn('   Add TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER to enable SMS');
-    }
+    // Skip Twilio connection test in development to prevent server crashes
+    console.warn('ÔÜá´©Å  Twilio connection test skipped in development mode');
+    console.warn('   SMS features will work with database verification only');
+    return;
 };
 
 // Test Email connection on startup
@@ -175,7 +296,7 @@ const testEmailConnectionOnStartup = async () => {
 };
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
     try {
@@ -186,12 +307,14 @@ const startServer = async () => {
 
         app.listen(PORT, () => {
             console.log(`
+
 ÔòöÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòù
 Ôòæ                     ­ƒÜÇ ZimCrowd Supabase API                  Ôòæ
 Ôòæ                                                              Ôòæ
 Ôòæ  Server:    http://localhost:${PORT}                           Ôòæ
 Ôòæ  Environment: ${process.env.NODE_ENV || 'development'}                  Ôòæ
 Ôòæ  Database:  Supabase PostgreSQL                             Ôòæ
+Ôòæ  Timestamp: ${new Date().toISOString()}                      Ôòæ
 Ôòæ                                                              Ôòæ
 Ôòæ  API Endpoints:                                              Ôòæ
 Ôòæ  ÔÇó POST /api/auth/register     - User registration           Ôòæ
