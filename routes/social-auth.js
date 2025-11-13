@@ -109,25 +109,65 @@ socialRouter.get('/callback', async (req, res) => {
             if (!existingProfile && mode === 'signup') {
                 console.log(`Creating profile for new social signup user: ${user.id}`);
                 
+                // Extract comprehensive user details from social provider
+                const userDetails = {
+                    first_name: user.user_metadata?.first_name || 
+                              user.user_metadata?.given_name || 
+                              user.user_metadata?.full_name?.split(' ')[0] || 
+                              user.user_metadata?.name?.split(' ')[0] || '',
+                    
+                    last_name: user.user_metadata?.last_name || 
+                             user.user_metadata?.family_name || 
+                             user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || 
+                             user.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
+                    
+                    email: user.email || user.user_metadata?.email,
+                    
+                    phone: user.user_metadata?.phone || 
+                          user.user_metadata?.phone_number || 
+                          user.user_metadata?.mobile || null,
+                    
+                    avatar_url: user.user_metadata?.avatar_url || 
+                              user.user_metadata?.picture || 
+                              user.user_metadata?.profile_picture || 
+                              user.user_metadata?.image_url || null,
+                    
+                    auth_provider: user.app_metadata?.provider || 'unknown',
+                    
+                    // Additional social profile data
+                    social_id: user.user_metadata?.sub || 
+                             user.user_metadata?.id || 
+                             user.user_metadata?.user_id || null,
+                    
+                    social_profile_url: user.user_metadata?.profile || 
+                                      user.user_metadata?.link || 
+                                      user.user_metadata?.url || null,
+                    
+                    // Basic profile completion status
+                    profile_completed: false, // Will be set to true after comprehensive registration
+                    documents_verified: false,
+                    employment_verified: false,
+                    payment_setup: false,
+                    
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+
                 const { error: insertError } = await supabase
                     .from('profiles')
-                    .insert({
-                        id: user.id,
-                        first_name: user.user_metadata?.first_name || user.user_metadata?.full_name?.split(' ')[0] || '',
-                        last_name: user.user_metadata?.last_name || user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
-                        email: user.email,
-                        phone: user.user_metadata?.phone || null,
-                        avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-                        auth_provider: user.app_metadata?.provider || 'unknown',
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    });
+                    .insert(userDetails);
 
                 if (insertError) {
                     console.error('Profile creation error:', insertError);
                     // Continue anyway - profile can be created later
                 } else {
-                    console.log(`Profile created successfully for user: ${user.id}`);
+                    console.log(`Profile created successfully for user: ${user.id} with provider: ${userDetails.auth_provider}`);
+                    console.log('Captured user details:', {
+                        name: `${userDetails.first_name} ${userDetails.last_name}`,
+                        email: userDetails.email,
+                        provider: userDetails.auth_provider,
+                        hasAvatar: !!userDetails.avatar_url
+                    });
                 }
             }
 
