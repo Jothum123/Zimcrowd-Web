@@ -131,10 +131,15 @@ socialRouter.get('/callback', async (req, res) => {
                 }
             }
 
-            // Redirect to dashboard with mode parameter
-            const redirectUrl = mode === 'signup' 
-                ? `/dashboard.html?mode=signup` 
-                : '/dashboard.html';
+            // Redirect based on mode
+            let redirectUrl;
+            if (mode === 'signup') {
+                // New signup - go directly to onboarding splash screens
+                redirectUrl = '/onboarding.html?source=social';
+            } else {
+                // Existing login - go to dashboard
+                redirectUrl = '/dashboard.html';
+            }
                 
             res.redirect(redirectUrl);
         } else {
