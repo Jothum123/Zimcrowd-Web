@@ -551,7 +551,6 @@ router.post('/verify-phone-signup', [
         // Create user account directly in profiles table (skip Supabase Auth for phone users)
         console.log('[Phone Signup] Creating account for:', { firstName, lastName, phone });
         
-        const bcrypt = require('bcrypt');
         const jwt = require('jsonwebtoken');
         
         // Check if phone number already exists
@@ -587,10 +586,7 @@ router.post('/verify-phone-signup', [
         const userId = authUser.user.id;
         console.log('[Phone Signup] Auth user created:', userId);
         
-        // Hash password for storage
-        const hashedPassword = await bcrypt.hash(finalPassword, 10);
-        
-        // Create profile in database
+        // Create profile in database (skip password hashing for now)
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .insert({
@@ -598,7 +594,6 @@ router.post('/verify-phone-signup', [
                 first_name: firstName,
                 last_name: lastName,
                 phone: phone,
-                password_hash: hashedPassword,
                 onboarding_completed: false,
                 profile_completed: false,
                 created_at: new Date().toISOString(),
