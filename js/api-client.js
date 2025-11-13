@@ -223,6 +223,11 @@ class ZimCrowdAPI {
         return this.request('/wallet/payment-methods');
     }
 
+    // Dashboard methods
+    async getDashboardOverview() {
+        return this.request('/dashboard/overview');
+    }
+
     // Document methods
     async getDocuments() {
         return this.request('/documents');
