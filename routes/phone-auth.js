@@ -58,44 +58,28 @@ function verifyTOTP(secret, code, window = 1) {
 const router = express.Router();
 
 // Rate limiting for phone auth - DISABLED in development mode
-const phoneAuthLimiter = (req, res, next) => {
-    // Skip all rate limiting in development mode
-    if (process.env.NODE_ENV === 'development') {
-        return next();
-    }
-    
-    // In production, apply rate limiting
-    return rateLimit({
-        windowMs: 15 * 60 * 1000, // 15 minutes
-        max: 100, // limit each IP to 100 requests per 15 minutes
-        message: {
-            success: false,
-            message: 'Too many phone authentication attempts, please try again later.'
-        },
-        standardHeaders: true,
-        legacyHeaders: false
-    })(req, res, next);
-};
+const phoneAuthLimiter = process.env.NODE_ENV === 'development' ? (req, res, next) => next() : rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per 15 minutes
+    message: {
+        success: false,
+        message: 'Too many phone authentication attempts, please try again later.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false
+});
 
 // OTP verification limiter - DISABLED in development mode
-const otpVerificationLimiter = (req, res, next) => {
-    // Skip all rate limiting in development mode
-    if (process.env.NODE_ENV === 'development') {
-        return next();
-    }
-    
-    // In production, apply lenient rate limiting for OTP
-    return rateLimit({
-        windowMs: 15 * 60 * 1000, // 15 minutes
-        max: 50, // Allow 50 OTP verification attempts per 15 minutes
-        message: {
-            success: false,
-            message: 'Too many verification attempts. Please try again later.'
-        },
-        standardHeaders: true,
-        legacyHeaders: false
-    })(req, res, next);
-};
+const otpVerificationLimiter = process.env.NODE_ENV === 'development' ? (req, res, next) => next() : rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 50, // Allow 50 OTP verification attempts per 15 minutes
+    message: {
+        success: false,
+        message: 'Too many verification attempts. Please try again later.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false
+});
 
 // Apply rate limiting to all phone auth routes
 router.use(phoneAuthLimiter);
@@ -1152,11 +1136,20 @@ router.post('/passwordless-login', [
         }
 
         // Return success (don't reveal if phone exists)
-        res.status(200).json({
+        // In development, also return the OTP for testing
+        const response = {
             success: true,
             message: 'If your phone number is registered, you will receive a login code',
             phone: formatPhoneForDisplay(formattedPhone)
-        });
+        };
+
+        if (process.env.NODE_ENV !== 'production') {
+            // Add OTP to response in development for testing
+            response.otp = otp;
+            response.development = true;
+        }
+
+        res.status(200).json(response);
 
     } catch (error) {
         console.error('Passwordless login error:', error);
@@ -1265,6 +1258,49 @@ router.post('/passwordless-verify', [
         res.status(500).json({
             success: false,
             message: 'Verification failed. Please try again.'
+        });
+    }
+});
+
+// Development endpoint to get latest OTP (REMOVE IN PRODUCTION)
+router.get('/dev-get-otp/:phone', async (req, res) => {
+    try {
+        const phone = req.params.phone;
+
+        // Validate and format phone number
+        const phoneValidation = isValidPhoneNumber(phone);
+        const formattedPhone = phoneValidation.formatted;
+
+        // Get the latest OTP for this phone
+        const { data: verification, error } = await supabase
+            .from('phone_verifications')
+            .select('otp_code, purpose, created_at')
+            .eq('phone_number', formattedPhone)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (error || !verification) {
+            return res.status(404).json({
+                success: false,
+                message: 'No OTP found for this phone number'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'OTP retrieved for development',
+            phone: formattedPhone,
+            otp: verification.otp_code,
+            purpose: verification.purpose,
+            created_at: verification.created_at
+        });
+
+    } catch (error) {
+        console.error('Dev get OTP error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to retrieve OTP'
         });
     }
 });
