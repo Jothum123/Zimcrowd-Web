@@ -1490,7 +1490,7 @@ router.get('/dev-get-otp/:phone', async (req, res) => {
         // Get the latest OTP for this phone
         const { data: verification, error } = await supabase
             .from('phone_verifications')
-            .select('otp_code, purpose, created_at')
+            .select('otp_code, purpose, created_at, expires_at')
             .eq('phone_number', formattedPhone)
             .order('created_at', { ascending: false })
             .limit(1)
@@ -1503,13 +1503,19 @@ router.get('/dev-get-otp/:phone', async (req, res) => {
             });
         }
 
+        // Check if OTP is expired
+        const isExpired = new Date(verification.expires_at) < new Date();
+
         res.status(200).json({
             success: true,
             message: 'OTP retrieved for development',
             phone: formattedPhone,
             otp: verification.otp_code,
             purpose: verification.purpose,
-            created_at: verification.created_at
+            created_at: verification.created_at,
+            expires_at: verification.expires_at,
+            expired: isExpired,
+            status: isExpired ? 'EXPIRED' : 'VALID'
         });
 
     } catch (error) {
@@ -1517,6 +1523,70 @@ router.get('/dev-get-otp/:phone', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to retrieve OTP'
+        });
+    }
+});
+
+// Development endpoint to generate test OTP (REMOVE IN PRODUCTION)
+router.post('/dev-generate-test-otp', [
+    body('phone')
+        .custom((value) => {
+            const validation = isValidPhoneNumber(value);
+            if (!validation.isValid) {
+                throw new Error('Please provide a valid phone number');
+            }
+            return true;
+        }),
+    body('purpose')
+        .optional()
+        .isIn(['signup', 'password_reset', 'passwordless_login'])
+        .withMessage('Invalid purpose'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { phone, purpose = 'signup' } = req.body;
+        
+        // Validate and format phone number
+        const phoneValidation = isValidPhoneNumber(phone);
+        const formattedPhone = phoneValidation.formatted;
+        
+        // Generate test OTP
+        const otp = generateOTP();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        
+        // Store OTP in database
+        const { error: otpError } = await supabase
+            .from('phone_verifications')
+            .insert({
+                phone_number: formattedPhone,
+                otp_code: otp,
+                purpose: purpose,
+                expires_at: expiresAt.toISOString()
+            });
+            
+        if (otpError) {
+            console.error('Test OTP storage error:', otpError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to generate test OTP'
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: 'Test OTP generated successfully',
+            phone: formatPhoneForDisplay(formattedPhone),
+            otp: otp,
+            purpose: purpose,
+            expires_at: expiresAt.toISOString(),
+            note: 'This is a development-only feature. SMS was not sent.'
+        });
+        
+    } catch (error) {
+        console.error('Generate test OTP error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to generate test OTP'
         });
     }
 });
