@@ -458,7 +458,7 @@ router.post('/register-phone', [
         const tempUserData = {
             firstName,
             lastName,
-            phone: formattedPhone,
+            phone: formattedPhone, // Use formatted phone for consistency
             password // In production, hash this before storing
         };
         
@@ -529,7 +529,10 @@ router.post('/verify-phone-signup', [
             .gt('expires_at', new Date().toISOString())
             .single();
             
-        console.log(`[Verify Signup] Database query result:`, { data: verification, error: verifyError });
+        console.log(`[Verify Signup] Database query result:`, { 
+            data: verification ? { id: verification.id, phone: verification.phone_number, otp: verification.otp_code, verified: verification.verified, expires: verification.expires_at } : null, 
+            error: verifyError 
+        });
             
         if (verifyError || !verification) {
             console.log(`[Verify Signup] Database verification failed:`, verifyError?.message || 'No matching verification found');
