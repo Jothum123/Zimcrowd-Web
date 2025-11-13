@@ -430,6 +430,17 @@
             display: block;
         }
 
+        .success-message {
+            background: rgba(56, 231, 123, 0.15);
+            border: 1px solid rgba(56, 231, 123, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            color: #38e77b;
+            text-align: center;
+            display: none;
+            font-size: 14px;
+        }
+
         @media (max-width: 768px) {
             .otp-card {
                 padding: 30px 25px;
@@ -550,6 +561,10 @@
                 Invalid OTP code. Please try again.
             </div>
 
+            <div class="success-message" id="successMessage">
+                Success!
+            </div>
+
             <form class="otp-form" id="otpForm">
                 <div class="otp-inputs">
                     <input type="text" maxlength="1" class="otp-input" id="otp1" autocomplete="off">
@@ -618,6 +633,37 @@
             const API_URL = window.location.hostname === 'localhost'
                 ? 'http://localhost:3000/api'
                 : 'https://zimcrowd-backend.vercel.app/api';
+
+            // Utility functions for messages
+            function showError(message) {
+                const errorMessage = document.getElementById('errorMessage');
+                const successMessage = document.getElementById('successMessage');
+                successMessage.style.display = 'none';
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 8000);
+            }
+
+            function showSuccess(message) {
+                const errorMessage = document.getElementById('errorMessage');
+                const successMessage = document.getElementById('successMessage');
+                errorMessage.style.display = 'none';
+                successMessage.textContent = message;
+                successMessage.style.display = 'block';
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 5000);
+            }
+
+            function hideError() {
+                document.getElementById('errorMessage').style.display = 'none';
+            }
+
+            function hideSuccess() {
+                document.getElementById('successMessage').style.display = 'none';
+            }
 
             const otpInputs = document.querySelectorAll('.otp-input');
             const otpForm = document.getElementById('otpForm');
