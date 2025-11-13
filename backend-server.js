@@ -153,7 +153,8 @@ app.get('/api/test', (req, res) => {
                 resendPhoneOTP: 'POST /api/phone-auth/resend-phone-otp',
                 setupTOTP: 'POST /api/phone-auth/setup-totp',
                 verifyTOTPSetup: 'POST /api/phone-auth/verify-totp-setup',
-                smartLogin: 'POST /api/phone-auth/smart-login'
+                smartLogin: 'POST /api/phone-auth/smart-login',
+                devGetOtp: 'GET /api/phone-auth/dev-get-otp/:phone'
             },
             emailAuth: {
                 registerEmail: 'POST /api/email-auth/register-email',
@@ -204,6 +205,7 @@ app.use('*', (req, res) => {
             'POST /api/phone-auth/verify-reset-otp',
             'POST /api/phone-auth/reset-password-phone',
             'POST /api/phone-auth/resend-phone-otp',
+            'GET /api/phone-auth/dev-get-otp/:phone',
             'POST /api/email-auth/register-email',
             'POST /api/email-auth/verify-email-signup',
             'POST /api/email-auth/login-email',
