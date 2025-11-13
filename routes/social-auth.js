@@ -13,10 +13,15 @@ const socialRouter = express.Router();
 // Google OAuth
 socialRouter.get('/google', async (req, res) => {
     try {
+        const { mode = 'login' } = req.query; // 'login' or 'signup'
+        const redirectTo = mode === 'signup'
+            ? `https://www.zimcrowd.com/dashboard.html?mode=signup`
+            : `https://www.zimcrowd.com/dashboard.html`;
+
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `https://www.zimcrowd.com/dashboard.html`
+                redirectTo: redirectTo
             }
         });
 
@@ -42,10 +47,15 @@ socialRouter.get('/google', async (req, res) => {
 // Facebook OAuth
 socialRouter.get('/facebook', async (req, res) => {
     try {
+        const { mode = 'login' } = req.query; // 'login' or 'signup'
+        const redirectTo = mode === 'signup'
+            ? `https://www.zimcrowd.com/dashboard.html?mode=signup`
+            : `https://www.zimcrowd.com/dashboard.html`;
+
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'facebook',
             options: {
-                redirectTo: `https://www.zimcrowd.com/dashboard.html`
+                redirectTo: redirectTo
             }
         });
 

@@ -5782,6 +5782,17 @@
                 window.ZimCrowdAPI.setToken(authToken);
                 console.log('🔄 Loading real data from backend...');
 
+                // Handle OAuth signup vs login modes
+                const urlParams = new URLSearchParams(window.location.search);
+                const signupMode = urlParams.get('mode') === 'signup';
+
+                if (signupMode) {
+                    console.log('OAuth signup mode detected');
+                    // For signup, redirect to onboarding/profile completion
+                    window.location.href = 'onboarding.html';
+                    return; // Exit early to prevent other logic from running
+                }
+
                 // Load all dashboard data
                 loadUserProfile(); // Use the new profile loading function
                 loadDashboardOverview();
