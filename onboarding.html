@@ -661,11 +661,16 @@
         // Check if user has completed onboarding
         window.addEventListener('DOMContentLoaded', () => {
             const hasCompletedOnboarding = localStorage.getItem('onboardingCompleted');
-            const isAuthenticated = localStorage.getItem('isAuthenticated');
+            const urlParams = new URLSearchParams(window.location.search);
+            const isSocialSignup = urlParams.get('source') === 'social';
             
-            // Only redirect if onboarding is completed AND user is authenticated
-            if (hasCompletedOnboarding === 'true' && isAuthenticated === 'true') {
-                // Redirect to dashboard
+            // For social signup users, always show onboarding (don't redirect)
+            if (isSocialSignup) {
+                return;
+            }
+            
+            // For regular users, redirect if onboarding completed
+            if (hasCompletedOnboarding === 'true') {
                 window.location.href = 'dashboard.html';
             }
         });
@@ -755,8 +760,8 @@
             if (isSocialSignup) {
                 // Mark social signup as completed to prevent future redirects
                 localStorage.setItem('socialSignupCompleted', 'true');
-                // Mark profile as completed for social users (they don't need phone verification)
-                localStorage.setItem('profileCompleted', 'true');
+                // Don't mark profile as completed - let them complete it via the dashboard card
+                // localStorage.setItem('profileCompleted', 'true');
             }
             
             // Check if profile is completed
