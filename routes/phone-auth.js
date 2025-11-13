@@ -553,6 +553,12 @@ router.post('/verify-phone-signup', otpVerificationLimiter, [
                 });
             }
             
+            // Mark OTP as verified
+            await supabase
+                .from('phone_verifications')
+                .update({ verified: true })
+                .eq('id', verification.id);
+            
             otpVerified = true;
             console.log(`[Verify Signup] Database verification SUCCESS`);
         }
@@ -563,12 +569,55 @@ router.post('/verify-phone-signup', otpVerificationLimiter, [
         const bcrypt = require('bcrypt');
         const jwt = require('jsonwebtoken');
         
-        // TEMP: Use existing auth user ID for testing
-        const userId = 'd7633a4a-9ff8-4618-a8ad-441f15491316'; // Known existing user
-        console.log('[Phone Signup] Using existing userId:', userId);
+        // Check if phone number already exists
+        const { data: existingUser } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('phone', phone)
+            .single();
+            
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: 'Phone number already registered'
+            });
+        }
         
-        // TEMP: Skip profile creation for now
-        console.log('[Phone Signup] Skipping profile creation for testing');
+        // Generate unique user ID
+        const userId = crypto.randomUUID();
+        console.log('[Phone Signup] Generated userId:', userId);
+        
+        // Hash password
+        const hashedPassword = await bcrypt.hash(finalPassword, 10);
+        
+        // Create profile in database
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+                id: userId,
+                first_name: firstName,
+                last_name: lastName,
+                phone: phone,
+                password_hash: hashedPassword,
+                phone_verified: true,
+                onboarding_completed: false,
+                profile_completed: false,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+            
+        if (profileError) {
+            console.error('[Phone Signup] Profile creation error:', profileError);
+            return res.status(500).json({
+                success: false,
+                message: 'Account creation failed. Please try again.',
+                error: profileError.message
+            });
+        }
+        
+        console.log('[Phone Signup] Profile created successfully:', profile.id);
         
         // Generate JWT token
         const token = jwt.sign(
