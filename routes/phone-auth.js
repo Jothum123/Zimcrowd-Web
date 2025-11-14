@@ -801,7 +801,7 @@ router.post('/login-phone', [
 ], async (req, res) => {
     try {
         const { phone, password } = req.body;
-        const bcrypt = require('bcrypt');
+        const bcrypt = require('bcryptjs');
         const jwt = require('jsonwebtoken');
         
         // Validate and format phone number
