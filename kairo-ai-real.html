@@ -548,10 +548,13 @@
         let isTyping = false;
         let conversationHistory = [];
         let userToken = localStorage.getItem('authToken');
+        let demoMode = false;
 
-        // Check if user is logged in
+        // Check if user is logged in - but allow demo mode by default
         if (!userToken) {
-            showLoginPrompt();
+            // Auto-enable demo mode instead of forcing login
+            demoMode = true;
+            useDemoMode();
         }
 
         function showLoginPrompt() {
@@ -572,16 +575,20 @@
         }
 
         function useDemoMode() {
+            demoMode = true;
+            userToken = null;
             document.getElementById('ai-status-text').textContent = 'Demo Mode';
+            document.getElementById('current-provider').textContent = 'Demo AI';
             const messagesContainer = document.getElementById('messages-container');
             messagesContainer.innerHTML = `
-                <div class="welcome-message">
+                <div class="welcome-message" id="welcome-message">
                     <div class="kairo-avatar">K</div>
-                    <h3>Demo Mode Active</h3>
+                    <h3>👋 Hello! I'm Kairo AI</h3>
                     <p>
-                        You're using Kairo AI in demo mode with simulated responses.<br>
-                        For real AI-powered conversations, please log in to your account.<br>
-                        Try the quick actions or ask me anything!
+                        I'm your intelligent financial assistant, ready to help with:<br>
+                        💰 Loans & Credit | 📈 Investments | 💳 Budgeting | ⭐ ZimScore<br><br>
+                        <strong>Demo Mode:</strong> I'm using simulated responses for demonstration.<br>
+                        Try the quick actions or ask me anything about finance!
                     </p>
                 </div>
             `;
@@ -606,7 +613,7 @@
             showTypingIndicator();
             
             try {
-                if (userToken) {
+                if (userToken && !demoMode) {
                     // Real API call
                     const response = await fetch(`${API_BASE_URL}/api/kairo-ai/chat`, {
                         method: 'POST',
@@ -655,18 +662,43 @@
                     setTimeout(() => {
                         hideTypingIndicator();
                         const demoResponse = getDemoResponse(message);
-                        addMessage(demoResponse.text, 'ai', demoResponse.suggestions, { aiProvider: 'demo' });
-                    }, 1500);
+                        addMessage(demoResponse.text, 'ai', demoResponse.suggestions, { aiProvider: 'Demo AI' });
+                        
+                        // Save to history
+                        conversationHistory.push({
+                            user: message,
+                            ai: demoResponse.text,
+                            timestamp: new Date().toISOString()
+                        });
+                    }, 1000 + Math.random() * 1000); // 1-2 second delay
                 }
             } catch (error) {
                 console.error('Error sending message:', error);
                 hideTypingIndicator();
-                addMessage(
-                    "I apologize, but I'm having trouble connecting right now. Please try again in a moment or contact support if the issue persists.",
-                    'ai',
-                    [],
-                    { error: true }
-                );
+                
+                // Switch to demo mode on error
+                if (!demoMode) {
+                    addMessage(
+                        "⚠️ I'm having trouble connecting to the AI backend. Switching to Demo Mode...\n\nYou can still chat with me using simulated responses. For real AI, please ensure you're logged in and the backend is running.",
+                        'ai',
+                        ['Try Demo Mode', 'Retry Connection'],
+                        { error: true }
+                    );
+                    
+                    // Auto-switch to demo mode
+                    setTimeout(() => {
+                        demoMode = true;
+                        document.getElementById('ai-status-text').textContent = 'Demo Mode (Auto)';
+                        document.getElementById('current-provider').textContent = 'Demo AI';
+                    }, 2000);
+                } else {
+                    addMessage(
+                        "I apologize for the confusion. Let me try to help you with that!",
+                        'ai',
+                        [],
+                        { error: false }
+                    );
+                }
             }
         }
 
@@ -674,20 +706,45 @@
         function getDemoResponse(message) {
             const lowerMessage = message.toLowerCase();
             
-            if (lowerMessage.includes('loan')) {
+            if (lowerMessage.includes('loan') || lowerMessage.includes('borrow')) {
                 return {
-                    text: "🏦 **Loan Application Assistance**\n\nI can help you with:\n• Checking loan eligibility\n• Calculating monthly payments\n• Understanding interest rates\n• Improving your ZimScore for better rates\n\nWhat specific aspect would you like to explore?",
-                    suggestions: ['Check eligibility', 'Calculate payments', 'Improve ZimScore']
+                    text: "🏦 **Loan Application Assistance**\n\nI can help you with ZimCrowd loans:\n\n💰 **Personal Loans**: 12-18% APR\n💼 **Business Loans**: 15-22% APR\n🏠 **Asset-backed Loans**: 10-15% APR\n\n✨ Your ZimScore determines your rate - higher scores get better rates!\n\nWhat would you like to know?",
+                    suggestions: ['Check eligibility', 'Calculate payments', 'Improve ZimScore', 'Apply now']
                 };
             } else if (lowerMessage.includes('invest')) {
                 return {
-                    text: "📈 **Investment Opportunities**\n\nBased on your profile, here are some options:\n• Money Market Funds (Low risk, 8-12% returns)\n• Treasury Bills (Government-backed, stable)\n• Equity Funds (Higher risk, 15-25% potential)\n\nWhat's your risk tolerance?",
-                    suggestions: ['Low risk options', 'Medium risk', 'High returns']
+                    text: "📈 **Investment Opportunities**\n\nZimCrowd offers 5 investment products:\n\n💎 **Money Market**: 8-12% annual (Low risk)\n🏛️ **Treasury Bills**: 6-10% annual (Very low risk)\n📊 **Equity Funds**: 12-18% annual (Medium risk)\n🌍 **International Funds**: 10-15% annual (Medium risk)\n⚡ **High-Yield Bonds**: 15-20% annual (Higher risk)\n\nWhat's your risk tolerance?",
+                    suggestions: ['Low risk options', 'Medium risk', 'High returns', 'Portfolio advice']
+                };
+            } else if (lowerMessage.includes('zimscore') || lowerMessage.includes('score') || lowerMessage.includes('credit')) {
+                return {
+                    text: "⭐ **ZimScore Explained**\n\nYour financial health indicator (300-850 range):\n\n✅ **750-850**: Excellent - Best rates available\n✅ **650-749**: Good - Competitive rates\n⚠️ **550-649**: Fair - Standard rates\n❌ **300-549**: Poor - Limited options\n\n**Key Factors:**\n• Payment history (35%)\n• Credit utilization (30%)\n• Credit history length (15%)\n• Credit types (10%)\n• New inquiries (10%)",
+                    suggestions: ['How to improve', 'Check my score', 'ZimScore benefits', 'Credit tips']
+                };
+            } else if (lowerMessage.includes('budget') || lowerMessage.includes('money management') || lowerMessage.includes('save')) {
+                return {
+                    text: "💰 **Smart Budgeting with the 50/30/20 Rule**\n\n🏠 **50% - Needs**: Rent, food, utilities, transport\n🎯 **30% - Wants**: Entertainment, dining, hobbies\n💎 **20% - Savings**: Emergency fund, investments, debt\n\n**Zimbabwe-specific tips:**\n• Keep USD emergency fund (3-6 months)\n• Plan for inflation\n• Diversify income sources\n\nWant a personalized budget plan?",
+                    suggestions: ['Create budget', 'Savings tips', 'Emergency fund', 'Debt management']
+                };
+            } else if (lowerMessage.includes('market') || lowerMessage.includes('trend')) {
+                return {
+                    text: "📊 **Zimbabwe Market Insights**\n\n🏦 **Banking Sector:**\n• Lending rates: 12-25% APR\n• Deposit rates: 5-12% annual\n• USD dominance continues\n\n📈 **Investment Climate:**\n• Stock market showing growth\n• Property market stabilizing\n• Mining sector opportunities\n\n💱 **Economic Indicators:**\n• Inflation moderating\n• USD liquidity improving\n\nWhich sector interests you?",
+                    suggestions: ['Banking opportunities', 'Stock market', 'Property investment', 'Mining sector']
+                };
+            } else if (lowerMessage.includes('hi') || lowerMessage.includes('hello') || lowerMessage.includes('hey')) {
+                return {
+                    text: "👋 **Hello! I'm Kairo, your AI financial assistant!**\n\n🎯 I can help you with:\n• 🏦 Loan applications and advice\n• 📈 Investment opportunities\n• 💰 Budget planning\n• ⭐ ZimScore improvement\n• 📊 Market insights\n\n💡 **Quick tip**: Use the buttons on the left for common questions!\n\nWhat would you like to explore today?",
+                    suggestions: ['Apply for loan', 'Investment options', 'Budget planning', 'Improve ZimScore']
+                };
+            } else if (lowerMessage.includes('help') || lowerMessage.includes('what can you do')) {
+                return {
+                    text: "🤖 **I'm your complete financial assistant!**\n\n🏦 **Loans & Credit:**\n• Eligibility checks\n• Rate calculations\n• Application guidance\n• ZimScore tips\n\n📈 **Investments:**\n• Portfolio recommendations\n• Risk assessment\n• Return calculations\n• Market analysis\n\n💰 **Financial Planning:**\n• Budget creation\n• Savings strategies\n• Debt management\n• Emergency planning\n\nJust ask me anything! 😊",
+                    suggestions: ['Loan guidance', 'Investment advice', 'Budget help', 'Market trends']
                 };
             } else {
                 return {
-                    text: "I'm here to help with your financial needs! I can assist with loans, investments, budgeting, and more. What would you like to know?",
-                    suggestions: ['Loan options', 'Investment advice', 'Budget planning']
+                    text: "🤔 I'm here to help with your financial needs!\n\nI can assist with:\n• 🏦 **Loans** - Applications, rates, eligibility\n• 📈 **Investments** - Options, returns, risk\n• 💰 **Budgeting** - Money management, savings\n• ⭐ **ZimScore** - Credit improvement\n• 📊 **Market insights** - Trends, opportunities\n\nWhat would you like to know more about?",
+                    suggestions: ['Loan options', 'Investment advice', 'Budget planning', 'ZimScore help']
                 };
             }
         }
