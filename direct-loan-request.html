@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZimCrowd Direct - Instant Loan Offer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .offer-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .offer-header {
+            background: linear-gradient(135deg, #38e07b 0%, #2ecc71 100%);
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .offer-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .direct-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .offer-header h1 {
+            color: white;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .offer-header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .offer-body {
+            padding: 40px 30px;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .amount-display {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+            border-radius: 16px;
+            border: 2px solid #e0e7ff;
+        }
+
+        .amount-label {
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .amount-value {
+            font-size: 56px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .amount-subtitle {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .breakdown-section {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .breakdown-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 15px;
+        }
+
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .breakdown-row:last-child {
+            border-bottom: none;
+            padding-top: 15px;
+            margin-top: 5px;
+            border-top: 2px solid #cbd5e1;
+        }
+
+        .breakdown-label {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .breakdown-value {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 16px;
+        }
+
+        .breakdown-row:last-child .breakdown-value {
+            color: #667eea;
+            font-size: 20px;
+        }
+
+        .apr-disclosure {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 30px;
+        }
+
+        .apr-disclosure strong {
+            color: #92400e;
+            font-size: 16px;
+        }
+
+        .apr-disclosure p {
+            color: #78350f;
+            font-size: 13px;
+            margin-top: 5px;
+            line-height: 1.5;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .feature-item {
+            text-align: center;
+            padding: 20px 10px;
+            background: #f8fafc;
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+        .feature-item:hover {
+            background: #f0f4ff;
+            transform: translateY(-2px);
+        }
+
+        .feature-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .feature-text {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .cta-button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .cta-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .expiry-timer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: #fef2f2;
+            border-radius: 8px;
+            border: 1px solid #fecaca;
+        }
+
+        .expiry-timer strong {
+            color: #991b1b;
+            font-size: 14px;
+        }
+
+        .timer-display {
+            font-size: 24px;
+            font-weight: 700;
+            color: #dc2626;
+            margin-top: 5px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            transform: translateX(-5px);
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .error-icon {
+            font-size: 64px;
+            color: #ef4444;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            color: #1e293b;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .error-details {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .amount-value {
+                font-size: 42px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .offer-body {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="dashboard.html" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            Back to Dashboard
+        </a>
+
+        <div class="offer-card">
+            <div class="offer-header">
+                <div class="direct-badge">
+                    <i class="fas fa-bolt"></i>
+                    ZimCrowd Direct
+                </div>
+                <h1>Your Instant Loan Offer</h1>
+                <p>Guaranteed funding in minutes</p>
+            </div>
+
+            <div class="offer-body" id="offer-content">
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p style="color: #64748b;">Preparing your personalized offer...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:3000'
+            : 'https://zimcrowd-backend-dz18dm4h9-jojola.vercel.app';
+
+        let offerData = null;
+        let countdownInterval = null;
+
+        // Get auth token
+        const authToken = localStorage.getItem('authToken');
+
+        if (!authToken) {
+            window.location.href = 'login.html?redirect=direct-loan-request.html';
+        }
+
+        // Load offer on page load
+        document.addEventListener('DOMContentLoaded', loadOffer);
+
+        async function loadOffer() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/direct-loans/create-offer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    offerData = result.data;
+                    displayOffer(offerData);
+                    startCountdown(offerData.expiresAt);
+                } else {
+                    showError(result.message || 'Failed to create offer');
+                }
+            } catch (error) {
+                console.error('Error loading offer:', error);
+                showError('Unable to connect to server. Please try again.');
+            }
+        }
+
+        function displayOffer(offer) {
+            const content = document.getElementById('offer-content');
+            
+            content.innerHTML = `
+                <div class="amount-display">
+                    <div class="amount-label">You Get</div>
+                    <div class="amount-value">$${offer.amount.toLocaleString()}</div>
+                    <div class="amount-subtitle">Instant deposit to your wallet</div>
+                </div>
+
+                <div class="breakdown-section">
+                    <div class="breakdown-title">💰 Loan Breakdown</div>
+                    <div class="breakdown-row">
+                        <span class="breakdown-label">Principal Amount</span>
+                        <span class="breakdown-value">$${offer.amount.toFixed(2)}</span>
+                    </div>
+                    <div class="breakdown-row">
+                        <span class="breakdown-label">Fixed Finance Fee (${offer.feePercentage}%)</span>
+                        <span class="breakdown-value">$${offer.fixedFee.toFixed(2)}</span>
+                    </div>
+                    <div class="breakdown-row">
+                        <span class="breakdown-label">Total Repayment</span>
+                        <span class="breakdown-value">$${offer.totalRepayment.toFixed(2)}</span>
+                    </div>
+                </div>
+
+                <div class="apr-disclosure">
+                    <strong>📊 APR Disclosure: ${offer.apr}%</strong>
+                    <p>This is the Annual Percentage Rate for your ${offer.durationDays}-day loan. 
+                    Due date: ${new Date(offer.dueDate).toLocaleDateString('en-US', { 
+                        month: 'long', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                    })}</p>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <div class="feature-icon">⚡</div>
+                        <div class="feature-text">Instant Approval</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">💰</div>
+                        <div class="feature-text">Funds in Minutes</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🔒</div>
+                        <div class="feature-text">Secure & Safe</div>
+                    </div>
+                </div>
+
+                <button class="cta-button" onclick="acceptOffer()">
+                    <i class="fas fa-check-circle"></i> Accept Offer & Continue
+                </button>
+
+                <div class="expiry-timer">
+                    <strong>⏰ Offer expires in:</strong>
+                    <div class="timer-display" id="countdown">23:59:59</div>
+                </div>
+            `;
+        }
+
+        function startCountdown(expiresAt) {
+            const expiryTime = new Date(expiresAt).getTime();
+
+            countdownInterval = setInterval(() => {
+                const now = new Date().getTime();
+                const distance = expiryTime - now;
+
+                if (distance < 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById('countdown').textContent = 'EXPIRED';
+                    document.querySelector('.cta-button').disabled = true;
+                    document.querySelector('.cta-button').textContent = 'Offer Expired';
+                    return;
+                }
+
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                document.getElementById('countdown').textContent = 
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function acceptOffer() {
+            if (!offerData) return;
+            
+            // Redirect to agreement page with offer ID
+            window.location.href = `direct-loan-agreement.html?offer_id=${offerData.offerId}`;
+        }
+
+        function showError(message) {
+            const content = document.getElementById('offer-content');
+            content.innerHTML = `
+                <div class="error-state">
+                    <div class="error-icon">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="error-message">${message}</div>
+                    <div class="error-details">
+                        This could be because:
+                        <ul style="text-align: left; display: inline-block; margin-top: 10px;">
+                            <li>You don't have a ZimScore yet</li>
+                            <li>You have an active loan</li>
+                            <li>Your account needs verification</li>
+                        </ul>
+                    </div>
+                    <button class="cta-button" onclick="window.location.href='dashboard.html'">
+                        Return to Dashboard
+                    </button>
+                </div>
+            `;
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+        });
+    </script>
+</body>
+</html>

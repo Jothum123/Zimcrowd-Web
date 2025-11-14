@@ -183,6 +183,11 @@ console.log('✅ P2P Primary Market routes registered at /api/p2p/primary');
 app.use('/api/p2p/secondary', p2pSecondaryMarketRoutes);
 console.log('✅ P2P Secondary Market routes registered at /api/p2p/secondary');
 
+// Direct loans routes
+const directLoansRoutes = require('./routes/direct-loans');
+app.use('/api/direct-loans', directLoansRoutes);
+console.log('✅ Direct Loans routes registered at /api/direct-loans');
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({
