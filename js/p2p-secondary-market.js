@@ -113,18 +113,20 @@ class SecondaryMarketApp {
 
     displayListings(listings) {
         const container = document.getElementById('secondaryListings');
+        const emptyState = document.getElementById('emptyState');
+        const loadingState = container.querySelector('.loading-state');
+        
+        // Hide loading state
+        if (loadingState) loadingState.style.display = 'none';
         
         if (!listings || listings.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-inbox fa-3x"></i>
-                    <h3>No Loans Available for Purchase</h3>
-                    <p>Check back later or adjust your filters</p>
-                </div>
-            `;
+            container.style.display = 'none';
+            emptyState.style.display = 'block';
             return;
         }
 
+        container.style.display = 'grid';
+        emptyState.style.display = 'none';
         container.innerHTML = listings.map(listing => this.createListingCard(listing)).join('');
 
         // Add click listeners
