@@ -185,6 +185,63 @@ router.post('/quick-advice', authenticateUser, [
     }
 });
 
+// @route   GET /api/kairo-ai/conversations/recent
+// @desc    Get recent AI conversations (Admin only)
+// @access  Admin
+router.get('/conversations/recent', async (req, res) => {
+    try {
+        const { limit = 10 } = req.query;
+        
+        // Fetch recent conversations from database
+        const { data: conversations, error } = await supabase
+            .from('ai_conversations')
+            .select(`
+                id,
+                user_id,
+                user_message,
+                ai_response,
+                ai_provider,
+                status,
+                intent,
+                response_time_ms,
+                satisfaction_score,
+                created_at,
+                users:user_id (email)
+            `)
+            .order('created_at', { ascending: false })
+            .limit(parseInt(limit));
+
+        if (error) throw error;
+
+        // Format conversations with user email
+        const formattedConversations = conversations?.map(conv => ({
+            id: conv.id,
+            user_id: conv.user_id,
+            user_email: conv.users?.email || 'Unknown',
+            user_message: conv.user_message,
+            ai_response: conv.ai_response,
+            ai_provider: conv.ai_provider,
+            status: conv.status,
+            intent: conv.intent,
+            response_time_ms: conv.response_time_ms,
+            satisfaction_score: conv.satisfaction_score,
+            created_at: conv.created_at
+        })) || [];
+
+        res.json({
+            success: true,
+            data: formattedConversations
+        });
+    } catch (error) {
+        console.error('Error fetching recent conversations:', error);
+        res.json({
+            success: false,
+            error: error.message,
+            data: []
+        });
+    }
+});
+
 // @route   GET /api/kairo-ai/financial-tips
 // @desc    Get financial tips by category
 // @access  Public

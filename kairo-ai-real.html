@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kairo AI Assistant - ZimCrowd</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 1200px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .chat-sidebar {
+            width: 300px;
+            background: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .kairo-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .kairo-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .kairo-info h3 {
+            color: #1a202c;
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .kairo-info p {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .ai-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #e6fffa;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #065f46;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .quick-actions {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .quick-actions h4 {
+            color: #1a202c;
+            font-size: 14px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .action-button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .action-button:hover {
+            background: #667eea;
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .action-button i {
+            margin-right: 8px;
+            width: 20px;
+        }
+
+        /* Chat Area */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h2 {
+            color: #1a202c;
+            font-size: 20px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-button {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f7fafc;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .icon-button:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .message.ai .message-avatar {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px;
+            border-radius: 12px;
+            line-height: 1.6;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.ai .message-content {
+            background: white;
+            color: #1a202c;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .message-time {
+            font-size: 11px;
+            opacity: 0.6;
+            margin-top: 8px;
+        }
+
+        .message-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .suggestion-chip {
+            padding: 6px 12px;
+            background: #f0f4ff;
+            color: #667eea;
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid #667eea;
+        }
+
+        .suggestion-chip:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #cbd5e0;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        #chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: none;
+            max-height: 120px;
+            transition: border-color 0.3s;
+        }
+
+        #chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        #send-button {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        #send-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        #send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #718096;
+        }
+
+        .welcome-message .kairo-avatar {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            font-size: 32px;
+        }
+
+        .welcome-message h3 {
+            color: #1a202c;
+            margin-bottom: 12px;
+        }
+
+        .welcome-message p {
+            line-height: 1.6;
+        }
+
+        .login-prompt {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px;
+            text-align: center;
+        }
+
+        .login-prompt strong {
+            color: #92400e;
+        }
+
+        .login-prompt button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .login-prompt button:hover {
+            background: #d97706;
+        }
+
+        @media (max-width: 768px) {
+            .chat-sidebar {
+                display: none;
+            }
+            
+            .message-content {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Sidebar -->
+        <div class="chat-sidebar">
+            <div class="sidebar-header">
+                <div class="kairo-profile">
+                    <div class="kairo-avatar">K</div>
+                    <div class="kairo-info">
+                        <h3>Kairo AI</h3>
+                        <p>Financial Assistant</p>
+                    </div>
+                </div>
+                <div class="ai-status">
+                    <div class="status-dot"></div>
+                    <span id="ai-status-text">Online & Ready</span>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <h4>Quick Actions</h4>
+                <button class="action-button" onclick="sendQuickMessage('I want to apply for a loan')">
+                    <i class="fas fa-hand-holding-usd"></i> Apply for Loan
+                </button>
+                <button class="action-button" onclick="sendQuickMessage('What investment options do you recommend?')">
+                    <i class="fas fa-chart-line"></i> Investment Options
+                </button>
+                <button class="action-button" onclick="sendQuickMessage('How can I improve my ZimScore?')">
+                    <i class="fas fa-star"></i> Improve ZimScore
+                </button>
+                <button class="action-button" onclick="sendQuickMessage('Help me create a budget')">
+                    <i class="fas fa-wallet"></i> Budget Planning
+                </button>
+                <button class="action-button" onclick="sendQuickMessage('What are the current market trends?')">
+                    <i class="fas fa-chart-bar"></i> Market Insights
+                </button>
+                <button class="action-button" onclick="sendQuickMessage('Tell me about savings strategies')">
+                    <i class="fas fa-piggy-bank"></i> Savings Tips
+                </button>
+                
+                <h4 style="margin-top: 20px;">Settings</h4>
+                <button class="action-button" onclick="viewConversationHistory()">
+                    <i class="fas fa-history"></i> Conversation History
+                </button>
+                <button class="action-button" onclick="clearChat()">
+                    <i class="fas fa-trash"></i> Clear Chat
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="chat-main">
+            <div class="chat-header">
+                <div>
+                    <h2>💬 Chat with Kairo AI</h2>
+                    <p style="font-size: 14px; color: #718096; margin-top: 4px;">
+                        Powered by <span id="current-provider">OpenRouter</span> AI
+                    </p>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-button" onclick="viewConversationHistory()" title="History">
+                        <i class="fas fa-history"></i>
+                    </button>
+                    <button class="icon-button" onclick="clearChat()" title="Clear">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="icon-button" onclick="window.location.href='dashboard.html'" title="Dashboard">
+                        <i class="fas fa-home"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="messages-container" id="messages-container">
+                <div class="welcome-message" id="welcome-message">
+                    <div class="kairo-avatar">K</div>
+                    <h3>Hello! I'm Kairo, your AI financial assistant</h3>
+                    <p>
+                        I'm connected to real AI systems and can provide personalized financial advice!<br>
+                        I can help with loans, investments, budgeting, ZimScore improvement, and more.<br>
+                        Try the quick actions on the left or ask me anything!
+                    </p>
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typing-indicator">
+                <div class="message-avatar" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-weight: 600;">K</div>
+                <div>
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                    <div style="font-size: 12px; color: #718096; margin-top: 4px;">Kairo is thinking...</div>
+                </div>
+            </div>
+
+            <div class="chat-input-container">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="chat-input" 
+                        placeholder="Type your message here..." 
+                        rows="1"
+                        onkeypress="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }"
+                    ></textarea>
+                    <button id="send-button" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:3000'
+            : 'https://zimcrowd-backend-dz18dm4h9-jojola.vercel.app';
+
+        let isTyping = false;
+        let conversationHistory = [];
+        let userToken = localStorage.getItem('authToken');
+
+        // Check if user is logged in
+        if (!userToken) {
+            showLoginPrompt();
+        }
+
+        function showLoginPrompt() {
+            const messagesContainer = document.getElementById('messages-container');
+            messagesContainer.innerHTML = `
+                <div class="login-prompt">
+                    <i class="fas fa-lock" style="font-size: 32px; color: #f59e0b; margin-bottom: 10px;"></i>
+                    <div><strong>Authentication Required</strong></div>
+                    <p style="margin: 10px 0; color: #78350f;">Please log in to use Kairo AI chat with real backend integration.</p>
+                    <button onclick="window.location.href='login.html'">
+                        <i class="fas fa-sign-in-alt"></i> Go to Login
+                    </button>
+                    <button onclick="useDemoMode()" style="background: #718096; margin-left: 10px;">
+                        <i class="fas fa-play"></i> Use Demo Mode
+                    </button>
+                </div>
+            `;
+        }
+
+        function useDemoMode() {
+            document.getElementById('ai-status-text').textContent = 'Demo Mode';
+            const messagesContainer = document.getElementById('messages-container');
+            messagesContainer.innerHTML = `
+                <div class="welcome-message">
+                    <div class="kairo-avatar">K</div>
+                    <h3>Demo Mode Active</h3>
+                    <p>
+                        You're using Kairo AI in demo mode with simulated responses.<br>
+                        For real AI-powered conversations, please log in to your account.<br>
+                        Try the quick actions or ask me anything!
+                    </p>
+                </div>
+            `;
+        }
+
+        // Send message
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (!message || isTyping) return;
+            
+            // Add user message
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // Hide welcome message
+            const welcomeMsg = document.getElementById('welcome-message');
+            if (welcomeMsg) welcomeMsg.style.display = 'none';
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            try {
+                if (userToken) {
+                    // Real API call
+                    const response = await fetch(`${API_BASE_URL}/api/kairo-ai/chat`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${userToken}`
+                        },
+                        body: JSON.stringify({
+                            message: message,
+                            context: {
+                                conversationHistory: conversationHistory.slice(-5)
+                            }
+                        })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        hideTypingIndicator();
+                        addMessage(
+                            data.data.response,
+                            'ai',
+                            data.data.suggestions || [],
+                            {
+                                aiProvider: data.data.aiProvider,
+                                intent: data.data.intent,
+                                fallbackUsed: data.data.fallbackUsed
+                            }
+                        );
+                        
+                        // Update current provider
+                        document.getElementById('current-provider').textContent = 
+                            data.data.aiProvider === 'gemini' ? 'Gemini (Fallback)' : 'OpenRouter';
+                        
+                        // Save to history
+                        conversationHistory.push({
+                            user: message,
+                            ai: data.data.response,
+                            timestamp: new Date().toISOString()
+                        });
+                    } else {
+                        throw new Error(data.message || 'Failed to get response');
+                    }
+                } else {
+                    // Demo mode - simulated response
+                    setTimeout(() => {
+                        hideTypingIndicator();
+                        const demoResponse = getDemoResponse(message);
+                        addMessage(demoResponse.text, 'ai', demoResponse.suggestions, { aiProvider: 'demo' });
+                    }, 1500);
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                hideTypingIndicator();
+                addMessage(
+                    "I apologize, but I'm having trouble connecting right now. Please try again in a moment or contact support if the issue persists.",
+                    'ai',
+                    [],
+                    { error: true }
+                );
+            }
+        }
+
+        // Demo response generator (fallback)
+        function getDemoResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('loan')) {
+                return {
+                    text: "🏦 **Loan Application Assistance**\n\nI can help you with:\n• Checking loan eligibility\n• Calculating monthly payments\n• Understanding interest rates\n• Improving your ZimScore for better rates\n\nWhat specific aspect would you like to explore?",
+                    suggestions: ['Check eligibility', 'Calculate payments', 'Improve ZimScore']
+                };
+            } else if (lowerMessage.includes('invest')) {
+                return {
+                    text: "📈 **Investment Opportunities**\n\nBased on your profile, here are some options:\n• Money Market Funds (Low risk, 8-12% returns)\n• Treasury Bills (Government-backed, stable)\n• Equity Funds (Higher risk, 15-25% potential)\n\nWhat's your risk tolerance?",
+                    suggestions: ['Low risk options', 'Medium risk', 'High returns']
+                };
+            } else {
+                return {
+                    text: "I'm here to help with your financial needs! I can assist with loans, investments, budgeting, and more. What would you like to know?",
+                    suggestions: ['Loan options', 'Investment advice', 'Budget planning']
+                };
+            }
+        }
+
+        // Send quick message
+        function sendQuickMessage(message) {
+            document.getElementById('chat-input').value = message;
+            sendMessage();
+        }
+
+        // Add message to chat
+        function addMessage(content, sender, suggestions = [], metadata = {}) {
+            const messagesContainer = document.getElementById('messages-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = sender === 'user' ? 'U' : 'K';
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            
+            let contentHTML = `<div>${content.replace(/\n/g, '<br>')}</div>`;
+            
+            // Add AI provider info for AI messages
+            if (sender === 'ai' && metadata.aiProvider) {
+                const providerBadge = metadata.fallbackUsed 
+                    ? '<span style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; font-size: 11px;">Fallback Mode</span>'
+                    : '<span style="background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 4px; font-size: 11px;">Primary AI</span>';
+                contentHTML += `<div style="margin-top: 8px; font-size: 11px; opacity: 0.7;">
+                    ${providerBadge} ${metadata.aiProvider}
+                </div>`;
+            }
+            
+            contentHTML += `<div class="message-time">${new Date().toLocaleTimeString()}</div>`;
+            
+            // Add suggestions
+            if (suggestions && suggestions.length > 0) {
+                contentHTML += '<div class="message-suggestions">';
+                suggestions.forEach(suggestion => {
+                    contentHTML += `<span class="suggestion-chip" onclick="sendQuickMessage('${suggestion}')">${suggestion}</span>`;
+                });
+                contentHTML += '</div>';
+            }
+            
+            messageContent.innerHTML = contentHTML;
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(messageContent);
+            messagesContainer.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Show typing indicator
+        function showTypingIndicator() {
+            isTyping = true;
+            document.getElementById('typing-indicator').style.display = 'flex';
+            document.getElementById('send-button').disabled = true;
+            
+            const messagesContainer = document.getElementById('messages-container');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            isTyping = false;
+            document.getElementById('typing-indicator').style.display = 'none';
+            document.getElementById('send-button').disabled = false;
+        }
+
+        // Clear chat
+        function clearChat() {
+            if (confirm('Are you sure you want to clear the chat history?')) {
+                conversationHistory = [];
+                const messagesContainer = document.getElementById('messages-container');
+                messagesContainer.innerHTML = `
+                    <div class="welcome-message" id="welcome-message">
+                        <div class="kairo-avatar">K</div>
+                        <h3>Chat Cleared</h3>
+                        <p>Start a new conversation with Kairo AI!</p>
+                    </div>
+                `;
+            }
+        }
+
+        // View conversation history
+        function viewConversationHistory() {
+            if (conversationHistory.length === 0) {
+                alert('No conversation history yet. Start chatting with Kairo!');
+                return;
+            }
+            
+            const historyText = conversationHistory.map((conv, index) => 
+                `Conversation ${index + 1} (${new Date(conv.timestamp).toLocaleString()}):\nYou: ${conv.user}\nKairo: ${conv.ai}\n`
+            ).join('\n---\n\n');
+            
+            alert('Conversation History:\n\n' + historyText);
+        }
+
+        // Auto-resize textarea
+        document.getElementById('chat-input').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+    </script>
+</body>
+</html>
