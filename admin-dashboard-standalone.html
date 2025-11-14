@@ -6,6 +6,7 @@
     <title>ZimCrowd Admin Dashboard - Standalone Demo</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -1382,13 +1383,276 @@
                 </div>
             </div>
 
+            <!-- Analytics Dashboard Section -->
             <div id="analytics-section" class="dashboard-section">
-                <div class="dashboard-card">
+                <!-- Analytics Stats -->
+                <div class="stats-grid" style="margin-bottom: 30px;">
+                    <div class="stat-card primary">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value">$4.2M</div>
+                                <div class="stat-label">Total Revenue</div>
+                                <div class="stat-change positive">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>+18% this quarter</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon primary">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value">89.2%</div>
+                                <div class="stat-label">Platform Health</div>
+                                <div class="stat-change positive">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>+2.1% this month</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon success">
+                                <i class="fas fa-heartbeat"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value">15.7%</div>
+                                <div class="stat-label">Growth Rate</div>
+                                <div class="stat-change positive">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>+3.2% this quarter</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon warning">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card danger">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value">94.8%</div>
+                                <div class="stat-label">Customer Satisfaction</div>
+                                <div class="stat-change positive">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>+1.5% this month</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon danger">
+                                <i class="fas fa-smile"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row 1 -->
+                <div class="dashboard-grid" style="margin-bottom: 30px;">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3 class="card-title">📈 Revenue Trends (Last 12 Months)</h3>
+                            <div style="display: flex; gap: 10px;">
+                                <select id="revenue-period" style="padding: 6px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px;">
+                                    <option>Last 12 Months</option>
+                                    <option>Last 6 Months</option>
+                                    <option>Last 3 Months</option>
+                                    <option>This Year</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="updateRevenueChart()">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <canvas id="revenueChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3 class="card-title">🥧 Portfolio Distribution</h3>
+                            <div style="display: flex; gap: 10px;">
+                                <select id="portfolio-type" style="padding: 6px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px;">
+                                    <option>By Amount</option>
+                                    <option>By Count</option>
+                                    <option>By Performance</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="updatePortfolioChart()">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <canvas id="portfolioChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row 2 -->
+                <div class="dashboard-grid" style="margin-bottom: 30px;">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3 class="card-title">👥 User Growth & Engagement</h3>
+                            <div style="display: flex; gap: 10px;">
+                                <select id="user-metric" style="padding: 6px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px;">
+                                    <option>New Users</option>
+                                    <option>Active Users</option>
+                                    <option>Verified Users</option>
+                                    <option>Engagement Rate</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="updateUserChart()">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <canvas id="userChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3 class="card-title">📊 ZimScore Distribution</h3>
+                            <div style="display: flex; gap: 10px;">
+                                <select id="zimscore-view" style="padding: 6px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px;">
+                                    <option>Current Distribution</option>
+                                    <option>Trend Over Time</option>
+                                    <option>By Demographics</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="updateZimScoreChart()">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <canvas id="zimscoreChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row 3 -->
+                <div class="dashboard-grid" style="margin-bottom: 30px;">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3 class="card-title">🏦 Loan Performance Analytics</h3>
+                            <div style="display: flex; gap: 10px;">
+                                <select id="loan-metric" style="padding: 6px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px;">
+                                    <option>Approval Rates</option>
+                                    <option>Default Rates</option>
+                                    <option>Loan Volume</option>
+                                    <option>Interest Revenue</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="updateLoanChart()">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <canvas id="loanChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3 class="card-title">📈 Investment Returns</h3>
+                            <div style="display: flex; gap: 10px;">
+                                <select id="investment-view" style="padding: 6px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px;">
+                                    <option>Monthly Returns</option>
+                                    <option>Product Performance</option>
+                                    <option>Risk vs Return</option>
+                                    <option>Benchmark Comparison</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="updateInvestmentChart()">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <canvas id="investmentChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Analytics Section -->
+                <div class="dashboard-card ai-monitoring" style="margin-bottom: 30px;">
                     <div class="card-header">
-                        <h2 class="card-title">📊 Analytics Dashboard</h2>
+                        <h3 class="card-title">🤖 AI System Analytics</h3>
+                        <div style="display: flex; gap: 10px;">
+                            <select id="ai-metric" style="padding: 6px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px; background: rgba(255,255,255,0.9);">
+                                <option>Usage Patterns</option>
+                                <option>Response Times</option>
+                                <option>Success Rates</option>
+                                <option>User Satisfaction</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="updateAIChart()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="card-content">
-                        <p>Analytics dashboard would include business intelligence, financial reports, and performance metrics.</p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                            <div>
+                                <canvas id="aiUsageChart" width="400" height="200"></canvas>
+                            </div>
+                            <div>
+                                <canvas id="aiPerformanceChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Metrics Summary -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">📋 Key Performance Indicators</h3>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-primary" onclick="exportAnalytics()">
+                                <i class="fas fa-download"></i> Export Report
+                            </button>
+                            <button class="btn btn-primary" onclick="scheduleReport()">
+                                <i class="fas fa-calendar"></i> Schedule
+                            </button>
+                            <button class="btn btn-primary" onclick="refreshAllCharts()">
+                                <i class="fas fa-sync-alt"></i> Refresh All
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 24px; font-weight: 700; color: #667eea; margin-bottom: 8px;">$2.4M</div>
+                                <div style="font-size: 14px; color: #718096;">Monthly Loan Volume</div>
+                                <div style="font-size: 12px; color: #10b981; margin-top: 4px;">↗ +15% vs last month</div>
+                            </div>
+                            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 24px; font-weight: 700; color: #10b981; margin-bottom: 8px;">$1.8M</div>
+                                <div style="font-size: 14px; color: #718096;">Investment AUM</div>
+                                <div style="font-size: 12px; color: #10b981; margin-top: 4px;">↗ +22% vs last month</div>
+                            </div>
+                            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 24px; font-weight: 700; color: #f59e0b; margin-bottom: 8px;">687</div>
+                                <div style="font-size: 14px; color: #718096;">Avg ZimScore</div>
+                                <div style="font-size: 12px; color: #10b981; margin-top: 4px;">↗ +3 points this month</div>
+                            </div>
+                            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 24px; font-weight: 700; color: #e53e3e; margin-bottom: 8px;">2.1%</div>
+                                <div style="font-size: 14px; color: #718096;">Default Rate</div>
+                                <div style="font-size: 12px; color: #10b981; margin-top: 4px;">↘ -0.3% vs last month</div>
+                            </div>
+                            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 24px; font-weight: 700; color: #667eea; margin-bottom: 8px;">3,456</div>
+                                <div style="font-size: 14px; color: #718096;">AI Conversations</div>
+                                <div style="font-size: 12px; color: #10b981; margin-top: 4px;">↗ +28% vs last month</div>
+                            </div>
+                            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 24px; font-weight: 700; color: #10b981; margin-bottom: 8px;">94.8%</div>
+                                <div style="font-size: 14px; color: #718096;">Customer Satisfaction</div>
+                                <div style="font-size: 12px; color: #10b981; margin-top: 4px;">↗ +1.2% vs last month</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1434,6 +1698,13 @@
 
             currentSection = sectionName;
             console.log(`Switched to ${sectionName} section`);
+
+            // Initialize charts when analytics section is shown
+            if (sectionName === 'analytics') {
+                setTimeout(() => {
+                    initializeCharts();
+                }, 100); // Small delay to ensure DOM is ready
+            }
         }
 
         // Refresh data (demo)
@@ -1584,6 +1855,433 @@
 
         function marketAnalysis() {
             alert('Demo: Would open market analysis\n\nWould show:\n• Market trends\n• Economic indicators\n• Investment opportunities\n• Risk factors');
+        }
+
+        // Chart.js Variables
+        let revenueChart, portfolioChart, userChart, zimscoreChart, loanChart, investmentChart, aiUsageChart, aiPerformanceChart;
+
+        // Initialize all charts when analytics section is shown
+        function initializeCharts() {
+            if (document.getElementById('analytics-section').classList.contains('active')) {
+                initRevenueChart();
+                initPortfolioChart();
+                initUserChart();
+                initZimScoreChart();
+                initLoanChart();
+                initInvestmentChart();
+                initAICharts();
+            }
+        }
+
+        // Revenue Chart
+        function initRevenueChart() {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Revenue ($)',
+                        data: [280000, 320000, 350000, 380000, 420000, 450000, 480000, 510000, 540000, 580000, 620000, 650000],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Profit ($)',
+                        data: [180000, 210000, 230000, 250000, 280000, 300000, 320000, 340000, 360000, 390000, 420000, 450000],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + (value / 1000) + 'K';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Portfolio Distribution Chart
+        function initPortfolioChart() {
+            const ctx = document.getElementById('portfolioChart').getContext('2d');
+            portfolioChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Personal Loans', 'Business Loans', 'Asset-backed', 'Money Market', 'Equity Funds', 'Treasury Bills'],
+                    datasets: [{
+                        data: [1080000, 840000, 360000, 540000, 720000, 540000],
+                        backgroundColor: [
+                            '#667eea',
+                            '#10b981',
+                            '#f59e0b',
+                            '#e53e3e',
+                            '#8b5cf6',
+                            '#06b6d4'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        }
+                    }
+                }
+            });
+        }
+
+        // User Growth Chart
+        function initUserChart() {
+            const ctx = document.getElementById('userChart').getContext('2d');
+            userChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'New Users',
+                        data: [45, 52, 68, 74, 89, 95, 102, 118, 125, 142, 158, 167],
+                        backgroundColor: '#667eea',
+                        borderRadius: 4
+                    }, {
+                        label: 'Verified Users',
+                        data: [38, 44, 58, 65, 76, 82, 89, 98, 105, 118, 132, 145],
+                        backgroundColor: '#10b981',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // ZimScore Distribution Chart
+        function initZimScoreChart() {
+            const ctx = document.getElementById('zimscoreChart').getContext('2d');
+            zimscoreChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['300-549\n(Poor)', '550-649\n(Fair)', '650-749\n(Good)', '750-850\n(Excellent)'],
+                    datasets: [{
+                        label: 'Number of Users',
+                        data: [89, 234, 456, 468],
+                        backgroundColor: [
+                            '#e53e3e',
+                            '#f59e0b',
+                            '#10b981',
+                            '#667eea'
+                        ],
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Loan Performance Chart
+        function initLoanChart() {
+            const ctx = document.getElementById('loanChart').getContext('2d');
+            loanChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Approval Rate (%)',
+                        data: [78, 82, 85, 87, 89, 91, 88, 90, 92, 89, 91, 93],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Default Rate (%)',
+                        data: [3.2, 2.8, 2.5, 2.3, 2.1, 1.9, 2.2, 2.0, 1.8, 2.1, 1.9, 2.1],
+                        borderColor: '#e53e3e',
+                        backgroundColor: 'rgba(229, 62, 62, 0.1)',
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            min: 70,
+                            max: 100
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            min: 0,
+                            max: 5,
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    }
+                }
+            });
+        }
+
+        // Investment Returns Chart
+        function initInvestmentChart() {
+            const ctx = document.getElementById('investmentChart').getContext('2d');
+            investmentChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Money Market', 'Treasury Bills', 'Equity Funds', 'International Funds', 'High-Yield Bonds'],
+                    datasets: [{
+                        label: 'Current Returns (%)',
+                        data: [10.5, 8.5, 15.2, 12.8, 18.5],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                        pointBackgroundColor: '#667eea'
+                    }, {
+                        label: 'Target Returns (%)',
+                        data: [12, 10, 18, 15, 20],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                        pointBackgroundColor: '#10b981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 25
+                        }
+                    }
+                }
+            });
+        }
+
+        // AI Analytics Charts
+        function initAICharts() {
+            // AI Usage Chart
+            const usageCtx = document.getElementById('aiUsageChart').getContext('2d');
+            aiUsageChart = new Chart(usageCtx, {
+                type: 'line',
+                data: {
+                    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                    datasets: [{
+                        label: 'OpenRouter Requests',
+                        data: [45, 23, 89, 156, 234, 178],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Gemini Fallbacks',
+                        data: [12, 8, 23, 34, 45, 38],
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'AI Usage Patterns (24h)',
+                            color: 'white'
+                        },
+                        legend: {
+                            labels: {
+                                color: 'white'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        y: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        }
+                    }
+                }
+            });
+
+            // AI Performance Chart
+            const perfCtx = document.getElementById('aiPerformanceChart').getContext('2d');
+            aiPerformanceChart = new Chart(perfCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Successful', 'Failed', 'Timeout'],
+                    datasets: [{
+                        data: [94.8, 3.2, 2.0],
+                        backgroundColor: ['#10b981', '#e53e3e', '#f59e0b'],
+                        borderWidth: 2,
+                        borderColor: 'rgba(255,255,255,0.8)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'AI Success Rate',
+                            color: 'white'
+                        },
+                        legend: {
+                            labels: {
+                                color: 'white'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart Update Functions
+        function updateRevenueChart() {
+            if (revenueChart) {
+                // Simulate new data
+                const newData = revenueChart.data.datasets[0].data.map(val => val + (Math.random() - 0.5) * 50000);
+                revenueChart.data.datasets[0].data = newData;
+                revenueChart.update();
+            }
+        }
+
+        function updatePortfolioChart() {
+            if (portfolioChart) {
+                // Simulate portfolio changes
+                const newData = portfolioChart.data.datasets[0].data.map(val => val + (Math.random() - 0.5) * 100000);
+                portfolioChart.data.datasets[0].data = newData;
+                portfolioChart.update();
+            }
+        }
+
+        function updateUserChart() {
+            if (userChart) {
+                // Simulate user growth
+                const newData = userChart.data.datasets[0].data.map(val => val + Math.floor(Math.random() * 10));
+                userChart.data.datasets[0].data = newData;
+                userChart.update();
+            }
+        }
+
+        function updateZimScoreChart() {
+            if (zimscoreChart) {
+                // Simulate ZimScore distribution changes
+                const newData = zimscoreChart.data.datasets[0].data.map(val => val + Math.floor((Math.random() - 0.5) * 20));
+                zimscoreChart.data.datasets[0].data = newData;
+                zimscoreChart.update();
+            }
+        }
+
+        function updateLoanChart() {
+            if (loanChart) {
+                // Simulate loan performance changes
+                const newApprovalData = loanChart.data.datasets[0].data.map(val => val + (Math.random() - 0.5) * 5);
+                const newDefaultData = loanChart.data.datasets[1].data.map(val => Math.max(0, val + (Math.random() - 0.5) * 0.5));
+                loanChart.data.datasets[0].data = newApprovalData;
+                loanChart.data.datasets[1].data = newDefaultData;
+                loanChart.update();
+            }
+        }
+
+        function updateInvestmentChart() {
+            if (investmentChart) {
+                // Simulate investment return changes
+                const newData = investmentChart.data.datasets[0].data.map(val => val + (Math.random() - 0.5) * 2);
+                investmentChart.data.datasets[0].data = newData;
+                investmentChart.update();
+            }
+        }
+
+        function updateAIChart() {
+            if (aiUsageChart && aiPerformanceChart) {
+                // Update AI usage data
+                const newUsageData = aiUsageChart.data.datasets[0].data.map(val => val + Math.floor((Math.random() - 0.5) * 20));
+                aiUsageChart.data.datasets[0].data = newUsageData;
+                aiUsageChart.update();
+
+                // Update AI performance data
+                const total = 100;
+                const successful = 94 + (Math.random() - 0.5) * 2;
+                const failed = 3 + (Math.random() - 0.5) * 1;
+                const timeout = total - successful - failed;
+                aiPerformanceChart.data.datasets[0].data = [successful, failed, timeout];
+                aiPerformanceChart.update();
+            }
+        }
+
+        function refreshAllCharts() {
+            updateRevenueChart();
+            updatePortfolioChart();
+            updateUserChart();
+            updateZimScoreChart();
+            updateLoanChart();
+            updateInvestmentChart();
+            updateAIChart();
+            alert('All charts refreshed with latest data!');
+        }
+
+        // Analytics Export Functions
+        function exportAnalytics() {
+            alert('Demo: Would export comprehensive analytics report\n\nWould include:\n• All chart data in CSV/Excel format\n• Executive summary\n• Trend analysis\n• Recommendations\n• Visual charts as images');
+        }
+
+        function scheduleReport() {
+            alert('Demo: Would open report scheduling interface\n\nWould allow:\n• Daily/Weekly/Monthly reports\n• Email distribution lists\n• Custom report templates\n• Automated delivery');
         }
     </script>
 </body>
