@@ -1,52 +1,111 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { supabase } = require('../utils/supabase-auth');
+const { authenticateUser } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Middleware to verify JWT token and get user
-const authenticateUser = async (req, res, next) => {
-    try {
-        const token = req.headers.authorization?.replace('Bearer ', '');
-
-        if (!token) {
-            return res.status(401).json({
-                success: false,
-                message: 'Access token required'
-            });
-        }
-
-        // Verify JWT token
-        const jwt = require('jsonwebtoken');
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        if (!decoded || !decoded.userId) {
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid token'
-            });
-        }
-
-        // Get user from Supabase auth
-        const { data: { user }, error } = await supabase.auth.getUser(token);
-
-        if (error || !user) {
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid or expired token'
-            });
-        }
-
-        req.user = user;
-        next();
-    } catch (error) {
-        console.error('Authentication error:', error);
-        return res.status(401).json({
-            success: false,
-            message: 'Authentication failed'
-        });
+// Investment Service Class
+class InvestmentService {
+    constructor() {
+        this.INVESTMENT_TYPES = {
+            'peer_lending': {
+                name: 'Peer-to-Peer Lending',
+                minAmount: 100,
+                maxAmount: 50000,
+                expectedReturn: { min: 8, max: 15 },
+                riskLevel: 'medium',
+                term: { min: 3, max: 36 }
+            },
+            'fixed_deposit': {
+                name: 'Fixed Deposit',
+                minAmount: 500,
+                maxAmount: 100000,
+                expectedReturn: { min: 5, max: 8 },
+                riskLevel: 'low',
+                term: { min: 6, max: 60 }
+            },
+            'equity_fund': {
+                name: 'Equity Fund',
+                minAmount: 200,
+                maxAmount: 75000,
+                expectedReturn: { min: 10, max: 20 },
+                riskLevel: 'high',
+                term: { min: 12, max: 120 }
+            }
+        };
     }
-};
+
+    calculateExpectedReturns(amount, type, term) {
+        const investmentType = this.INVESTMENT_TYPES[type];
+        if (!investmentType) throw new Error('Invalid investment type');
+
+        const annualRate = (investmentType.expectedReturn.min + investmentType.expectedReturn.max) / 2;
+        const monthlyRate = annualRate / 100 / 12;
+        
+        const totalReturn = amount * Math.pow(1 + monthlyRate, term);
+        const profit = totalReturn - amount;
+        
+        return {
+            principal: amount,
+            expectedReturn: totalReturn,
+            profit: profit,
+            annualRate: annualRate,
+            monthlyReturn: profit / term
+        };
+    }
+
+    async processInvestment(userId, investmentData) {
+        const { amount, type, term } = investmentData;
+        
+        // Calculate returns
+        const returns = this.calculateExpectedReturns(amount, type, term);
+        
+        // Create investment record
+        const { data: investment, error } = await supabase
+            .from('investments')
+            .insert({
+                user_id: userId,
+                investment_type: type,
+                amount: amount,
+                term_months: term,
+                expected_return: returns.expectedReturn,
+                expected_profit: returns.profit,
+                annual_rate: returns.annualRate,
+                status: 'active',
+                start_date: new Date().toISOString(),
+                maturity_date: new Date(Date.now() + term * 30 * 24 * 60 * 60 * 1000).toISOString()
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        // Deduct from wallet
+        await supabase.rpc('update_wallet_balance', {
+            p_user_id: userId,
+            p_amount: -amount,
+            p_transaction_type: 'debit'
+        });
+
+        // Create transaction record
+        await supabase
+            .from('transactions')
+            .insert({
+                user_id: userId,
+                type: 'investment',
+                amount: -amount,
+                description: `Investment in ${this.INVESTMENT_TYPES[type].name}`,
+                status: 'completed',
+                reference: `INV-${investment.id}`,
+                created_at: new Date().toISOString()
+            });
+
+        return investment;
+    }
+}
+
+const investmentService = new InvestmentService();
 
 // Validation middleware
 const handleValidationErrors = (req, res, next) => {
@@ -60,6 +119,315 @@ const handleValidationErrors = (req, res, next) => {
     }
     next();
 };
+
+// @route   GET /api/investments/types
+// @desc    Get available investment types
+// @access  Public
+router.get('/types', (req, res) => {
+    res.json({
+        success: true,
+        data: investmentService.INVESTMENT_TYPES
+    });
+});
+
+// @route   POST /api/investments/calculate
+// @desc    Calculate investment returns
+// @access  Public
+router.post('/calculate', [
+    body('amount').isFloat({ min: 100 }).withMessage('Amount must be at least $100'),
+    body('type').isIn(['peer_lending', 'fixed_deposit', 'equity_fund']).withMessage('Invalid investment type'),
+    body('term').isInt({ min: 1, max: 120 }).withMessage('Term must be between 1 and 120 months'),
+    handleValidationErrors
+], (req, res) => {
+    try {
+        const { amount, type, term } = req.body;
+        
+        const returns = investmentService.calculateExpectedReturns(amount, type, term);
+        
+        res.json({
+            success: true,
+            data: returns
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// @route   POST /api/investments/invest
+// @desc    Create new investment
+// @access  Private
+router.post('/invest', authenticateUser, [
+    body('amount').isFloat({ min: 100 }).withMessage('Amount must be at least $100'),
+    body('type').isIn(['peer_lending', 'fixed_deposit', 'equity_fund']).withMessage('Invalid investment type'),
+    body('term').isInt({ min: 1, max: 120 }).withMessage('Term must be between 1 and 120 months'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { amount, type, term } = req.body;
+        const userId = req.user.id;
+        
+        // Check wallet balance
+        const { data: wallet } = await supabase
+            .from('wallets')
+            .select('balance')
+            .eq('user_id', userId)
+            .single();
+            
+        if (!wallet || wallet.balance < amount) {
+            return res.status(400).json({
+                success: false,
+                message: 'Insufficient wallet balance'
+            });
+        }
+        
+        // Validate investment type limits
+        const investmentType = investmentService.INVESTMENT_TYPES[type];
+        if (amount < investmentType.minAmount || amount > investmentType.maxAmount) {
+            return res.status(400).json({
+                success: false,
+                message: `Amount must be between $${investmentType.minAmount} and $${investmentType.maxAmount} for ${investmentType.name}`
+            });
+        }
+        
+        if (term < investmentType.term.min || term > investmentType.term.max) {
+            return res.status(400).json({
+                success: false,
+                message: `Term must be between ${investmentType.term.min} and ${investmentType.term.max} months for ${investmentType.name}`
+            });
+        }
+        
+        const investment = await investmentService.processInvestment(userId, { amount, type, term });
+        
+        res.json({
+            success: true,
+            message: 'Investment created successfully',
+            data: investment
+        });
+    } catch (error) {
+        console.error('Investment creation error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to create investment'
+        });
+    }
+});
+
+// @route   GET /api/investments/my-investments
+// @desc    Get user's investments
+// @access  Private
+router.get('/my-investments', authenticateUser, async (req, res) => {
+    try {
+        const { page = 1, limit = 10, status } = req.query;
+        const offset = (page - 1) * limit;
+        
+        let query = supabase
+            .from('investments')
+            .select('*')
+            .eq('user_id', req.user.id)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
+            
+        if (status) {
+            query = query.eq('status', status);
+        }
+        
+        const { data: investments, error } = await query;
+        
+        if (error) throw error;
+        
+        // Calculate current values and progress
+        const enrichedInvestments = investments.map(investment => {
+            const startDate = new Date(investment.start_date);
+            const maturityDate = new Date(investment.maturity_date);
+            const now = new Date();
+            
+            const totalDays = (maturityDate - startDate) / (1000 * 60 * 60 * 24);
+            const elapsedDays = Math.max(0, (now - startDate) / (1000 * 60 * 60 * 24));
+            const progress = Math.min(100, (elapsedDays / totalDays) * 100);
+            
+            const currentValue = investment.amount + (investment.expected_profit * (progress / 100));
+            
+            return {
+                ...investment,
+                progress: Math.round(progress),
+                current_value: Math.round(currentValue * 100) / 100,
+                days_remaining: Math.max(0, Math.ceil(totalDays - elapsedDays))
+            };
+        });
+        
+        res.json({
+            success: true,
+            data: enrichedInvestments,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total: investments.length
+            }
+        });
+    } catch (error) {
+        console.error('Get investments error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch investments'
+        });
+    }
+});
+
+// @route   GET /api/investments/portfolio
+// @desc    Get investment portfolio summary
+// @access  Private
+router.get('/portfolio', authenticateUser, async (req, res) => {
+    try {
+        const { data: investments, error } = await supabase
+            .from('investments')
+            .select('*')
+            .eq('user_id', req.user.id);
+            
+        if (error) throw error;
+        
+        const portfolio = {
+            totalInvested: 0,
+            currentValue: 0,
+            totalReturns: 0,
+            activeInvestments: 0,
+            maturedInvestments: 0,
+            byType: {},
+            monthlyProjectedReturn: 0
+        };
+        
+        investments.forEach(investment => {
+            const startDate = new Date(investment.start_date);
+            const maturityDate = new Date(investment.maturity_date);
+            const now = new Date();
+            
+            const totalDays = (maturityDate - startDate) / (1000 * 60 * 60 * 24);
+            const elapsedDays = Math.max(0, (now - startDate) / (1000 * 60 * 60 * 24));
+            const progress = Math.min(100, (elapsedDays / totalDays) * 100);
+            
+            const currentValue = investment.amount + (investment.expected_profit * (progress / 100));
+            
+            portfolio.totalInvested += investment.amount;
+            portfolio.currentValue += currentValue;
+            
+            if (investment.status === 'active') {
+                portfolio.activeInvestments++;
+                portfolio.monthlyProjectedReturn += investment.expected_profit / investment.term_months;
+            } else if (investment.status === 'matured') {
+                portfolio.maturedInvestments++;
+                portfolio.totalReturns += investment.actual_return || investment.expected_return;
+            }
+            
+            // Group by type
+            if (!portfolio.byType[investment.investment_type]) {
+                portfolio.byType[investment.investment_type] = {
+                    count: 0,
+                    totalAmount: 0,
+                    currentValue: 0
+                };
+            }
+            
+            portfolio.byType[investment.investment_type].count++;
+            portfolio.byType[investment.investment_type].totalAmount += investment.amount;
+            portfolio.byType[investment.investment_type].currentValue += currentValue;
+        });
+        
+        portfolio.totalReturns = portfolio.currentValue - portfolio.totalInvested;
+        portfolio.returnPercentage = portfolio.totalInvested > 0 
+            ? ((portfolio.totalReturns / portfolio.totalInvested) * 100).toFixed(2)
+            : 0;
+        
+        res.json({
+            success: true,
+            data: portfolio
+        });
+    } catch (error) {
+        console.error('Get portfolio error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch portfolio'
+        });
+    }
+});
+
+// @route   PUT /api/investments/:id/withdraw
+// @desc    Withdraw investment (early withdrawal with penalty)
+// @access  Private
+router.put('/:id/withdraw', authenticateUser, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const { data: investment, error } = await supabase
+            .from('investments')
+            .select('*')
+            .eq('id', id)
+            .eq('user_id', req.user.id)
+            .eq('status', 'active')
+            .single();
+            
+        if (error || !investment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Investment not found or already withdrawn'
+            });
+        }
+        
+        // Calculate early withdrawal penalty (10% of principal)
+        const penalty = investment.amount * 0.1;
+        const withdrawalAmount = investment.amount - penalty;
+        
+        // Update investment status
+        await supabase
+            .from('investments')
+            .update({
+                status: 'withdrawn',
+                withdrawn_at: new Date().toISOString(),
+                withdrawal_penalty: penalty,
+                actual_return: withdrawalAmount
+            })
+            .eq('id', id);
+        
+        // Credit wallet
+        await supabase.rpc('update_wallet_balance', {
+            p_user_id: req.user.id,
+            p_amount: withdrawalAmount,
+            p_transaction_type: 'credit'
+        });
+        
+        // Create transaction
+        await supabase
+            .from('transactions')
+            .insert({
+                user_id: req.user.id,
+                type: 'investment_withdrawal',
+                amount: withdrawalAmount,
+                description: `Early withdrawal from ${investment.investment_type} (penalty: $${penalty.toFixed(2)})`,
+                status: 'completed',
+                reference: `WITHDRAW-${id}`,
+                created_at: new Date().toISOString()
+            });
+        
+        res.json({
+            success: true,
+            message: 'Investment withdrawn successfully',
+            data: {
+                withdrawalAmount: withdrawalAmount,
+                penalty: penalty,
+                originalAmount: investment.amount
+            }
+        });
+    } catch (error) {
+        console.error('Investment withdrawal error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to withdraw investment'
+        });
+    }
+});
+
+module.exports = router;
 
 // @route   GET /api/investments
 // @desc    Get user's investments

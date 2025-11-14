@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://zimcrowd-backend.vercel.app;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://zimcrowd-backend.vercel.app http://localhost:3000;">
     <title>Login - ZimCrowd Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/api-config-new.js"></script>
+    <script src="js/api-helper.js"></script>
     <script src="js/api-client.js"></script>
     <style>
         * {
@@ -815,16 +817,7 @@
                         response = await window.ZimCrowdAPI.loginPhone(phone, password);
                     } else {
                         // Use email login endpoint
-                        response = await fetch('https://zimcrowd-backend.vercel.app/api/email-auth/login-email', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                email,
-                                password
-                            })
-                        }).then(res => res.json());
+                        response = await APIHelper.loginWithEmail(email, password);
                     }
 
                     if (response.success) {
@@ -1093,7 +1086,7 @@
             try {
                 showSuccess('Redirecting to Google...');
                 // Redirect to our backend OAuth endpoint with login mode
-                window.location.href = 'https://zimcrowd-backend.vercel.app/api/social-auth/google?mode=login';
+                window.location.href = APIHelper.getGoogleAuthUrl('login');
             } catch (error) {
                 console.error('Google login error:', error);
                 showError('Failed to initiate Google login. Please try again.');
@@ -1104,7 +1097,7 @@
             try {
                 showSuccess('Redirecting to Facebook...');
                 // Redirect to our backend OAuth endpoint with login mode
-                window.location.href = 'https://zimcrowd-backend.vercel.app/api/social-auth/facebook?mode=login';
+                window.location.href = APIHelper.getFacebookAuthUrl('login');
             } catch (error) {
                 console.error('Facebook login error:', error);
                 showError('Failed to initiate Facebook login. Please try again.');

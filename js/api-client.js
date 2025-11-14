@@ -3,10 +3,8 @@
 
 class ZimCrowdAPI {
     constructor() {
-        // Dynamic API URL based on environment
-        this.baseURL = window.location.hostname === 'localhost'
-            ? 'http://localhost:3000/api'
-            : 'https://zimcrowd-backend.vercel.app/api';
+        // Use centralized API configuration
+        this.baseURL = window.API_CONFIG ? window.API_CONFIG.BASE_URL + '/api' : 'http://localhost:3000/api';
 
         console.log('ZimCrowdAPI initialized with baseURL:', this.baseURL);
         this.token = localStorage.getItem('authToken');
