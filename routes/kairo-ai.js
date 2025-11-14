@@ -7,11 +7,11 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { supabase } = require('../utils/supabase-auth');
 const { authenticateUser } = require('../middleware/auth');
-// Use Gemini-powered AI service for enhanced responses
-const GeminiKairoAIService = require('../services/gemini-kairo-ai.service');
+// Use Master AI service with Kairo AI fallback
+const MasterAIService = require('../services/master-ai.service');
 
 const router = express.Router();
-const kairoAI = new GeminiKairoAIService();
+const masterAI = new MasterAIService();
 
 // Validation middleware
 const handleValidationErrors = (req, res, next) => {
@@ -33,7 +33,7 @@ router.get('/', (req, res) => {
     res.json({
         success: true,
         data: {
-            agent: kairoAI.agentProfile,
+            agent: masterAI.kairoAI.agentProfile,
             capabilities: [
                 'Personalized loan recommendations',
                 'Investment portfolio advice',
@@ -50,7 +50,8 @@ router.get('/', (req, res) => {
                 'Context-aware responses',
                 '24/7 availability'
             ],
-            supportedLanguages: kairoAI.agentProfile.languages,
+            supportedLanguages: masterAI.kairoAI.agentProfile.languages,
+            aiSystem: masterAI.getSystemStatus(),
             version: '1.0.0'
         }
     });
@@ -68,8 +69,8 @@ router.post('/chat', authenticateUser, [
         const { message, context = {} } = req.body;
         const userId = req.user.id;
 
-        // Process message with Kairo AI
-        const aiResponse = await kairoAI.processMessage(userId, message, context);
+        // Process message with Master AI (with Kairo fallback)
+        const aiResponse = await masterAI.processMessage(userId, message, context);
 
         if (!aiResponse.success) {
             return res.status(500).json({
@@ -88,9 +89,11 @@ router.post('/chat', authenticateUser, [
                 suggestions: aiResponse.suggestions,
                 timestamp: new Date().toISOString(),
                 agent: {
-                    name: kairoAI.agentProfile.name,
-                    role: kairoAI.agentProfile.role
-                }
+                    name: masterAI.kairoAI.agentProfile.name,
+                    role: masterAI.kairoAI.agentProfile.role
+                },
+                aiProvider: aiResponse.aiProvider,
+                fallbackUsed: aiResponse.fallbackUsed
             }
         });
     } catch (error) {
@@ -110,14 +113,14 @@ router.get('/conversation-history', authenticateUser, async (req, res) => {
         const { limit = 20 } = req.query;
         const userId = req.user.id;
 
-        const history = await kairoAI.getConversationHistory(userId, parseInt(limit));
+        const history = await masterAI.kairoAI.getConversationHistory(userId, parseInt(limit));
 
         res.json({
             success: true,
             data: {
                 conversations: history.conversations,
                 total: history.conversations.length,
-                agent: kairoAI.agentProfile.name
+                agent: masterAI.kairoAI.agentProfile.name
             }
         });
     } catch (error) {
@@ -543,6 +546,71 @@ router.post('/goal-planning', authenticateUser, [
         res.status(500).json({
             success: false,
             message: 'Failed to create goal plan'
+        });
+    }
+});
+
+// @route   GET /api/kairo-ai/system-status
+// @desc    Get AI system status and statistics
+// @access  Private (Admin only)
+router.get('/system-status', authenticateUser, async (req, res) => {
+    try {
+        // Check if user is admin (you can implement admin check here)
+        const systemStatus = masterAI.getSystemStatus();
+        
+        res.json({
+            success: true,
+            data: {
+                systemStatus: systemStatus,
+                timestamp: new Date().toISOString(),
+                uptime: process.uptime(),
+                environment: process.env.NODE_ENV || 'development'
+            }
+        });
+    } catch (error) {
+        console.error('System status error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to get system status'
+        });
+    }
+});
+
+// @route   POST /api/kairo-ai/switch-ai
+// @desc    Switch primary AI provider (Admin only)
+// @access  Private (Admin only)
+router.post('/switch-ai', authenticateUser, [
+    body('provider').isIn(['openai', 'claude', 'custom', 'disable']).withMessage('Invalid AI provider'),
+    body('apiKey').optional().isString().withMessage('API key must be a string'),
+    body('model').optional().isString().withMessage('Model must be a string'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { provider, apiKey, model } = req.body;
+        
+        // TODO: Add admin authentication check here
+        
+        if (provider === 'disable') {
+            masterAI.disablePrimaryAI();
+        } else {
+            await masterAI.switchPrimaryAI(provider, apiKey, model);
+        }
+        
+        const newStatus = masterAI.getSystemStatus();
+        
+        res.json({
+            success: true,
+            message: `AI system switched to ${provider}`,
+            data: {
+                newStatus: newStatus,
+                timestamp: new Date().toISOString()
+            }
+        });
+    } catch (error) {
+        console.error('Switch AI error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to switch AI provider'
         });
     }
 });
