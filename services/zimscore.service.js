@@ -8,10 +8,18 @@ const { supabase } = require('../utils/supabase-auth');
 
 class ZimScoreService {
     constructor() {
-        // Score configuration
+        // Score configuration (SPEC: 30-85 range)
         this.MIN_SCORE = 30;
-        this.MAX_SCORE = 99;  // Updated from 85 to match spec
+        this.MAX_SCORE = 85;  // Specification requirement
         this.DEFAULT_SCORE = 30;
+        
+        // Employment Type Bonuses (Component 2: 0-10 points)
+        this.EMPLOYMENT_BONUS = {
+            government: 10,    // Guaranteed salary, easy deduction at source
+            private: 6,        // Formal employment with payroll
+            business: 3,       // Self-employed but established
+            informal: 0        // Irregular income
+        };
         
         // Score factor weights
         this.WEIGHTS = {
@@ -22,16 +30,14 @@ class ZimScoreService {
             INITIAL_BALANCE_HIGH: 10,     // Avg balance > $200
             INITIAL_BALANCE_MEDIUM: 6,    // Avg balance $50-$200
             INITIAL_BALANCE_LOW: 2,       // Avg balance < $50
-            NO_NSF_EVENTS: 5,             // No insufficient funds
+            NO_NSF_EVENTS: 10,            // No insufficient funds (SPEC: 10 points)
             FEW_NSF_EVENTS: -3,           // 1-3 NSF events
             MANY_NSF_EVENTS: -8,          // 4+ NSF events
             
             // Trust Loop factors (from loan repayment behavior)
             LOAN_REPAID_ON_TIME: 3,       // Each loan repaid on time
             LOAN_REPAID_EARLY: 5,         // Loan repaid before due date
-            LOAN_REPAID_LATE_1_7_DAYS: -2,   // Late by 1-7 days
-            LOAN_REPAID_LATE_8_30_DAYS: -5,  // Late by 8-30 days
-            LOAN_REPAID_LATE_30_PLUS: -10,   // Late by 30+ days
+            LOAN_REPAID_LATE: -5,         // Late payment penalty (SPEC: -5 per, max -20)
             LOAN_DEFAULTED: -15,          // Loan defaulted
             ACTIVE_LOAN_BONUS: 2,         // Has active loan (trust building)
             MULTIPLE_LOANS_BONUS: 5       // Successfully completed 3+ loans
@@ -110,8 +116,29 @@ class ZimScoreService {
                 factors.nsf_events = this.WEIGHTS.MANY_NSF_EVENTS;
             }
 
-            // Clamp score to valid range
-            score = Math.max(this.MIN_SCORE, Math.min(this.MAX_SCORE, score));
+            // Factor 5: Account Tenor (0-5 points) - SPEC REQUIREMENT
+            const accountAgeMonths = financialData.accountAgeMonths || 0;
+            if (accountAgeMonths >= 12) {
+                score += 5;
+                factors.account_tenor = 5;
+            } else if (accountAgeMonths >= 6) {
+                score += 3;
+                factors.account_tenor = 3;
+            } else if (accountAgeMonths >= 3) {
+                score += 1;
+                factors.account_tenor = 1;
+            }
+
+            // Factor 6: Additional Accounts Bonus (0-10 points) - SPEC REQUIREMENT
+            const additionalAccounts = financialData.additionalAccountsCount || 0;
+            const accountBonus = Math.min(additionalAccounts * 2, 10);
+            if (accountBonus > 0) {
+                score += accountBonus;
+                factors.additional_accounts = accountBonus;
+            }
+
+            // Clamp Initial Risk Score to 30-60 range (Component 1)
+            score = Math.max(this.MIN_SCORE, Math.min(60, score));
 
             // Calculate star rating, max loan amount, and reputation level
             const starRating = this.calculateStarRating(score);
