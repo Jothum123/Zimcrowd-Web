@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS loan_installments (
     due_date DATE NOT NULL,
     amount_due DECIMAL(10,2) NOT NULL,
     
+    -- Payment Window (Government employee salary cycle)
+    payment_group TEXT CHECK (payment_group IN ('SAME_MONTH', 'NEXT_MONTH')),
+    
     -- Grace Period (35 days for first payment, 24 hours for others)
     is_first_payment BOOLEAN DEFAULT FALSE,
     grace_period_days INT DEFAULT 0,        -- 35 for first payment
