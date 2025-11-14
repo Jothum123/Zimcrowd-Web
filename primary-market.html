@@ -130,8 +130,9 @@
                 <h1><span class="label label-green">Primary Market</span> - Fund Your Community</h1>
                 <p class="header-subtitle">Browse real loan requests from community members and invest in their future. Every loan you fund helps build stronger local economies.</p>
                 <div class="button-group">
-                    <button class="btn-primary">Start Browsing</button>
-                    <button class="btn-secondary">How It Works</button>
+                    <button class="btn-primary" onclick="document.getElementById('loan-requests').scrollIntoView({behavior: 'smooth'})">Start Browsing</button>
+                    <button class="btn-primary auth-required" id="createListingBtn" style="display: none;">Create Loan Request</button>
+                    <button class="btn-secondary guest-only" onclick="window.location.href='login.html'">Login to Create Listing</button>
                 </div>
             </div>
             <div class="header-image">
@@ -140,6 +141,34 @@
             </div>
         </div>
     </header>
+
+    <!-- Marketplace Stats Section -->
+    <section class="stats-section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 60px 20px; margin-top: -50px;">
+        <div class="container">
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; max-width: 1200px; margin: 0 auto;">
+                <div class="stat-card" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; padding: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">
+                    <div class="stat-icon" style="font-size: 2.5em; margin-bottom: 15px;">📊</div>
+                    <div class="stat-value" id="activeListings" style="font-size: 2.5em; font-weight: 700; color: white; margin-bottom: 10px;">0</div>
+                    <div class="stat-label" style="color: rgba(255,255,255,0.9); font-size: 1.1em;">Active Listings</div>
+                </div>
+                <div class="stat-card" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; padding: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">
+                    <div class="stat-icon" style="font-size: 2.5em; margin-bottom: 15px;">💰</div>
+                    <div class="stat-value" id="totalVolume" style="font-size: 2.5em; font-weight: 700; color: white; margin-bottom: 10px;">$0</div>
+                    <div class="stat-label" style="color: rgba(255,255,255,0.9); font-size: 1.1em;">Total Funded</div>
+                </div>
+                <div class="stat-card" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; padding: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">
+                    <div class="stat-icon" style="font-size: 2.5em; margin-bottom: 15px;">📈</div>
+                    <div class="stat-value" id="avgRate" style="font-size: 2.5em; font-weight: 700; color: white; margin-bottom: 10px;">0%</div>
+                    <div class="stat-label" style="color: rgba(255,255,255,0.9); font-size: 1.1em;">Avg Interest Rate</div>
+                </div>
+                <div class="stat-card" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; padding: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">
+                    <div class="stat-icon" style="font-size: 2.5em; margin-bottom: 15px;">👥</div>
+                    <div class="stat-value" id="totalLenders" style="font-size: 2.5em; font-weight: 700; color: white; margin-bottom: 10px;">0</div>
+                    <div class="stat-label" style="color: rgba(255,255,255,0.9); font-size: 1.1em;">Active Lenders</div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Modern Section Separator -->
     <div class="section-separator">
@@ -168,56 +197,64 @@
 
         <!-- Filters and Search -->
         <div class="filters-section" style="background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; margin-bottom: 40px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+            <h3 style="margin-bottom: 20px; color: var(--color-black);">Filter Loan Requests</h3>
             <div class="filters-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px;">
                 <div class="filter-group">
-                    <label style="font-weight: 600; color: var(--color-black); margin-bottom: 8px; display: block;">Amount Range</label>
-                    <select style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: white;">
-                        <option>All Amounts</option>
-                        <option>$100 - $500</option>
-                        <option>$500 - $1,000</option>
-                        <option>$1,000 - $5,000</option>
-                        <option>$5,000+</option>
-                    </select>
+                    <label style="font-weight: 600; color: var(--color-black); margin-bottom: 8px; display: block;">Min Amount ($)</label>
+                    <input type="number" id="minAmount" placeholder="e.g., 50" min="50" style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: white;">
                 </div>
                 <div class="filter-group">
-                    <label style="font-weight: 600; color: var(--color-black); margin-bottom: 8px; display: block;">Risk Level</label>
-                    <select style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: white;">
-                        <option>All Risk Levels</option>
-                        <option>Low Risk</option>
-                        <option>Medium Risk</option>
-                        <option>High Risk</option>
-                    </select>
+                    <label style="font-weight: 600; color: var(--color-black); margin-bottom: 8px; display: block;">Max Amount ($)</label>
+                    <input type="number" id="maxAmount" placeholder="e.g., 10000" min="50" style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: white;">
                 </div>
                 <div class="filter-group">
-                    <label style="font-weight: 600; color: var(--color-black); margin-bottom: 8px; display: block;">Purpose</label>
-                    <select style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: white;">
-                        <option>All Purposes</option>
-                        <option>Business</option>
-                        <option>Education</option>
-                        <option>Medical</option>
-                        <option>Home Improvement</option>
-                        <option>Emergency</option>
-                    </select>
+                    <label style="font-weight: 600; color: var(--color-black); margin-bottom: 8px; display: block;">Max Interest Rate (%)</label>
+                    <input type="number" id="maxRate" placeholder="e.g., 10" min="0" max="10" step="0.1" style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: white;">
+                    <small style="color: #666; font-size: 0.85em;">Range: 0-10%</small>
                 </div>
                 <div class="filter-group">
-                    <label style="font-weight: 600; color: var(--color-black); margin-bottom: 8px; display: block;">Location</label>
-                    <select style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: white;">
-                        <option>All Locations</option>
-                        <option>Harare</option>
-                        <option>Bulawayo</option>
-                        <option>Mutare</option>
-                        <option>Gweru</option>
+                    <label style="font-weight: 600; color: var(--color-black); margin-bottom: 8px; display: block;">Min Star Rating</label>
+                    <select id="minStars" style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: white;">
+                        <option value="">All Ratings</option>
+                        <option value="1">1+ Stars</option>
+                        <option value="2">2+ Stars</option>
+                        <option value="3">3+ Stars</option>
+                        <option value="4">4+ Stars</option>
+                        <option value="5">5 Stars</option>
                     </select>
                 </div>
             </div>
-            <div class="search-bar" style="display: flex; gap: 15px; align-items: center;">
-                <input type="text" placeholder="Search by borrower name or purpose..." style="flex: 1; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; font-size: 16px;">
-                <button class="btn-primary" style="padding: 15px 30px;">Search</button>
+            <div class="filter-actions" style="display: flex; gap: 15px; align-items: center;">
+                <button id="applyFilters" class="btn-primary" style="padding: 15px 30px;"><i class="fas fa-filter"></i> Apply Filters</button>
+                <button id="clearFilters" class="btn-secondary" style="padding: 15px 30px;"><i class="fas fa-times"></i> Clear</button>
             </div>
         </div>
 
-        <!-- Loan Requests Grid -->
-        <div class="loan-requests-grid">
+        <!-- Loan Requests Grid (Dynamic) -->
+        <div id="loanListings" class="loan-requests-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 30px; margin-bottom: 40px;">
+            <!-- Loan cards will be dynamically inserted here by JavaScript -->
+            <div class="loading-state" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px;">
+                <i class="fas fa-spinner fa-spin fa-3x" style="color: #667eea; margin-bottom: 20px;"></i>
+                <h3>Loading loan listings...</h3>
+                <p style="color: #666;">Please wait while we fetch available loans</p>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" style="display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 40px; padding: 20px; background: rgba(255,255,255,0.9); border-radius: 12px;">
+            <button id="prevPage" class="btn-secondary" style="padding: 12px 24px;" disabled>
+                <i class="fas fa-chevron-left"></i> Previous
+            </button>
+            <span style="font-weight: 600; color: var(--color-black);">
+                Page <span id="currentPage">1</span> of <span id="totalPages">1</span>
+            </span>
+            <button id="nextPage" class="btn-secondary" style="padding: 12px 24px;" disabled>
+                Next <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <!-- Old static cards removed, replaced with dynamic container above -->
+        <div style="display: none;" class="loan-requests-grid-old">
             <div class="loan-request-card">
                 <div class="loan-request-header">
                     <div class="borrower-info">
@@ -756,5 +793,367 @@
             });
         });
     </script>
+
+    <!-- P2P Primary Market JavaScript -->
+    <script src="js/p2p-primary-market.js"></script>
+
+    <!-- Additional Styles for P2P Components -->
+    <style>
+        /* Listing Cards */
+        .listing-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 16px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .listing-card:hover {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            transform: translateY(-4px);
+            border-color: #667eea;
+        }
+
+        .listing-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .borrower-info {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .borrower-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2em;
+        }
+
+        .star-rating {
+            color: #FFD700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.9em;
+        }
+
+        .star-rating i {
+            margin-right: 2px;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-new {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .loan-amount {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #667eea;
+            margin: 15px 0;
+        }
+
+        .loan-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .detail-item i {
+            color: #667eea;
+        }
+
+        .funding-progress {
+            margin: 20px 0;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.5s ease;
+            border-radius: 5px;
+        }
+
+        .progress-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .listing-footer {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .listing-footer .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .listing-footer .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .listing-footer .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .listing-footer .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .listing-footer .btn-secondary:hover {
+            background: #f5f7ff;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 24px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 4px;
+            color: #666;
+            font-size: 0.85em;
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 10001;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast-success {
+            background: #4CAF50;
+        }
+
+        .toast-error {
+            background: #F44336;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #999;
+        }
+
+        .empty-state i {
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        /* Loading State */
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .loading-state i {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .loading-state h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .listing-card {
+                padding: 16px;
+            }
+
+            .loan-details {
+                grid-template-columns: 1fr;
+            }
+
+            .listing-footer {
+                flex-direction: column;
+            }
+
+            .modal-content {
+                margin: 20px;
+            }
+        }
+    </style>
 </body>
 </html>
