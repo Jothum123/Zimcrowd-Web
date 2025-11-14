@@ -48,128 +48,321 @@ const authenticateUser = async (req, res, next) => {
     }
 };
 
-// @route   GET /api/dashboard/overview
-// @desc    Get dashboard overview statistics
+// @route   GET /api/dashboard/profile
+// @desc    Get user profile
 // @access  Private
-router.get('/overview', authenticateUser, async (req, res) => {
+router.get('/profile', authenticateUser, async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // Get loan statistics
-        const { data: loans, error: loansError } = await supabase
-            .from('loans')
-            .select('status, amount, monthly_payment')
-            .eq('user_id', userId);
+        const { data, error } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
 
-        if (loansError) {
-            console.error('Loans query error:', loansError);
-        }
-
-        // Get investment statistics
-        const { data: investments, error: investmentsError } = await supabase
-            .from('investments')
-            .select('amount, expected_return, status')
-            .eq('user_id', userId);
-
-        if (investmentsError) {
-            console.error('Investments query error:', investmentsError);
-        }
-
-        // Get wallet balance (sum of transactions)
-        const { data: transactions, error: transactionsError } = await supabase
-            .from('transactions')
-            .select('amount, type')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false })
-            .limit(50);
-
-        if (transactionsError) {
-            console.error('Transactions query error:', transactionsError);
-        }
-
-        // Calculate wallet balance
-        let walletBalance = 0;
-        if (transactions) {
-            transactions.forEach(transaction => {
-                if (transaction.type === 'deposit' || transaction.type === 'investment_return') {
-                    walletBalance += parseFloat(transaction.amount);
-                } else if (transaction.type === 'withdrawal' || transaction.type === 'loan_payment' || transaction.type === 'fee') {
-                    walletBalance -= parseFloat(transaction.amount);
-                }
-            });
-        }
-
-        // Calculate loan statistics
-        const loanStats = {
-            totalLoans: loans ? loans.length : 0,
-            activeLoans: loans ? loans.filter(loan => loan.status === 'active').length : 0,
-            pendingLoans: loans ? loans.filter(loan => loan.status === 'pending').length : 0,
-            totalLoanAmount: loans ? loans.reduce((sum, loan) => sum + parseFloat(loan.amount), 0) : 0,
-            monthlyPayments: loans ? loans.filter(loan => loan.status === 'active').reduce((sum, loan) => sum + parseFloat(loan.monthly_payment || 0), 0) : 0
-        };
-
-        // Calculate investment statistics
-        const investmentStats = {
-            totalInvestments: investments ? investments.length : 0,
-            activeInvestments: investments ? investments.filter(inv => inv.status === 'active').length : 0,
-            totalInvested: investments ? investments.reduce((sum, inv) => sum + parseFloat(inv.amount), 0) : 0,
-            expectedReturns: investments ? investments.filter(inv => inv.status === 'active').reduce((sum, inv) => sum + (parseFloat(inv.amount) * parseFloat(inv.expected_return || 0) / 100), 0) : 0
-        };
-
-        // Get recent activity (last 5 transactions)
-        const recentActivity = transactions ? transactions.slice(0, 5).map(transaction => ({
-            type: transaction.type,
-            amount: transaction.amount,
-            description: getTransactionDescription(transaction.type),
-            date: new Date().toISOString() // In real app, use transaction.created_at
-        })) : [];
-
-        // Get quick actions data
-        const quickActions = {
-            canApplyForLoan: loanStats.pendingLoans === 0, // Can apply if no pending loans
-            canMakeInvestment: walletBalance > 100, // Minimum investment amount
-            hasActiveLoans: loanStats.activeLoans > 0,
-            hasInvestments: investmentStats.totalInvestments > 0
-        };
+        if (error) throw error;
 
         res.json({
             success: true,
-            data: {
-                user: {
-                    id: req.user.id,
-                    email: req.user.email,
-                    name: `${req.user.user_metadata?.first_name || 'User'} ${req.user.user_metadata?.last_name || ''}`.trim()
-                },
-                wallet: {
-                    balance: walletBalance,
-                    currency: 'USD'
-                },
-                loans: loanStats,
-                investments: investmentStats,
-                recentActivity: recentActivity,
-                quickActions: quickActions
-            }
+            data
         });
-
     } catch (error) {
-        console.error('Dashboard overview error:', error);
+        console.error('Profile error:', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to load dashboard data'
+            message: 'Failed to load profile'
         });
     }
 });
 
-// Helper function to get transaction descriptions
-function getTransactionDescription(type) {
-    const descriptions = {
-        'deposit': 'Funds deposited',
-        'withdrawal': 'Funds withdrawn',
-        'loan_payment': 'Loan payment',
-        'investment_return': 'Investment return',
-        'fee': 'Service fee'
-    };
-    return descriptions[type] || 'Transaction';
-}
+// @route   GET /api/dashboard/wallet
+// @desc    Get wallet balance
+// @access  Private
+router.get('/wallet', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const { data, error } = await supabase
+            .from('wallets')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            data
+        });
+    } catch (error) {
+        console.error('Wallet error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load wallet'
+        });
+    }
+});
+
+// @route   GET /api/dashboard/loans
+// @desc    Get user's loans with pagination
+// @access  Private
+router.get('/loans', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+
+        // Get total count
+        const { count, error: countError } = await supabase
+            .from('loans')
+            .select('*', { count: 'exact', head: true })
+            .eq('borrower_id', userId);
+
+        if (countError) throw countError;
+
+        // Get paginated loans
+        const { data: loans, error } = await supabase
+            .from('loans')
+            .select('*')
+            .eq('borrower_id', userId)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            data: {
+                loans,
+                total: count,
+                page,
+                limit,
+                totalPages: Math.ceil(count / limit)
+            }
+        });
+    } catch (error) {
+        console.error('Loans error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load loans'
+        });
+    }
+});
+
+// @route   GET /api/dashboard/investments
+// @desc    Get user's investments with pagination
+// @access  Private
+router.get('/investments', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+
+        // Get total count
+        const { count, error: countError } = await supabase
+            .from('investments')
+            .select('*', { count: 'exact', head: true })
+            .eq('investor_id', userId);
+
+        if (countError) throw countError;
+
+        // Get paginated investments with loan details
+        const { data: investments, error } = await supabase
+            .from('investment_details')
+            .select('*')
+            .eq('investor_id', userId)
+            .order('invested_at', { ascending: false })
+            .range(offset, offset + limit - 1);
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            data: {
+                investments,
+                total: count,
+                page,
+                limit,
+                totalPages: Math.ceil(count / limit)
+            }
+        });
+    } catch (error) {
+        console.error('Investments error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load investments'
+        });
+    }
+});
+
+// @route   GET /api/dashboard/transactions
+// @desc    Get user's transactions with pagination
+// @access  Private
+router.get('/transactions', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+
+        // Get total count
+        const { count, error: countError } = await supabase
+            .from('transactions')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', userId);
+
+        if (countError) throw countError;
+
+        // Get paginated transactions
+        const { data: transactions, error } = await supabase
+            .from('transactions')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            data: {
+                transactions,
+                total: count,
+                page,
+                limit,
+                totalPages: Math.ceil(count / limit)
+            }
+        });
+    } catch (error) {
+        console.error('Transactions error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load transactions'
+        });
+    }
+});
+
+// @route   GET /api/dashboard/stats
+// @desc    Get user statistics
+// @access  Private
+router.get('/stats', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const { data, error } = await supabase
+            .from('user_statistics')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            data
+        });
+    } catch (error) {
+        console.error('Statistics error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load statistics'
+        });
+    }
+});
+
+// @route   GET /api/dashboard/notifications
+// @desc    Get user notifications
+// @access  Private
+router.get('/notifications', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const unreadOnly = req.query.unread === 'true';
+
+        let query = supabase
+            .from('notifications')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (unreadOnly) {
+            query = query.eq('read', false);
+        }
+
+        const { data: notifications, error } = await query;
+
+        if (error) throw error;
+
+        // Get unread count
+        const { count: unreadCount } = await supabase
+            .from('notifications')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .eq('read', false);
+
+        res.json({
+            success: true,
+            data: {
+                notifications,
+                unread_count: unreadCount || 0,
+                total: notifications.length
+            }
+        });
+    } catch (error) {
+        console.error('Notifications error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load notifications'
+        });
+    }
+});
+
+// @route   GET /api/dashboard/loan-opportunities
+// @desc    Get available loan opportunities for investors
+// @access  Private
+router.get('/loan-opportunities', authenticateUser, async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+
+        // Get total count of pending loans
+        const { count, error: countError } = await supabase
+            .from('loans')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'pending');
+
+        if (countError) throw countError;
+
+        // Get paginated loan opportunities with borrower details
+        const { data: opportunities, error } = await supabase
+            .from('loan_details')
+            .select('*')
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            data: {
+                opportunities,
+                total: count,
+                page,
+                limit,
+                totalPages: Math.ceil(count / limit)
+            }
+        });
+    } catch (error) {
+        console.error('Loan opportunities error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load loan opportunities'
+        });
+    }
+});
 
 module.exports = router;
