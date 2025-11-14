@@ -184,25 +184,33 @@
     <section class="stats-section" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 60px 20px; margin-top: -50px;">
         <div class="container">
             <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; max-width: 1200px; margin: 0 auto;">
-                <div class="stat-card" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; padding: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">
-                    <div class="stat-icon" style="font-size: 2.5em; margin-bottom: 15px;">🔄</div>
-                    <div class="stat-value" id="activeListings" style="font-size: 2.5em; font-weight: 700; color: white; margin-bottom: 10px;">0</div>
-                    <div class="stat-label" style="color: rgba(255,255,255,0.9); font-size: 1.1em;">Active Listings</div>
+                <div class="stat-card" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 20px; padding: 35px; text-align: center; border: 1px solid rgba(255,255,255,0.3); transition: all 0.3s ease;">
+                    <div class="stat-icon" style="width: 70px; height: 70px; margin: 0 auto 20px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-exchange-alt" style="font-size: 2em; color: white;"></i>
+                    </div>
+                    <div class="stat-value" id="activeListings" style="font-size: 2.8em; font-weight: 700; color: white; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">0</div>
+                    <div class="stat-label" style="color: rgba(255,255,255,0.95); font-size: 1.1em; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Active Listings</div>
                 </div>
-                <div class="stat-card" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; padding: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">
-                    <div class="stat-icon" style="font-size: 2.5em; margin-bottom: 15px;">💵</div>
-                    <div class="stat-value" id="totalVolume" style="font-size: 2.5em; font-weight: 700; color: white; margin-bottom: 10px;">$0</div>
-                    <div class="stat-label" style="color: rgba(255,255,255,0.9); font-size: 1.1em;">Total Traded</div>
+                <div class="stat-card" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 20px; padding: 35px; text-align: center; border: 1px solid rgba(255,255,255,0.3); transition: all 0.3s ease;">
+                    <div class="stat-icon" style="width: 70px; height: 70px; margin: 0 auto 20px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-chart-line" style="font-size: 2em; color: white;"></i>
+                    </div>
+                    <div class="stat-value" id="totalVolume" style="font-size: 2.8em; font-weight: 700; color: white; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">$0</div>
+                    <div class="stat-label" style="color: rgba(255,255,255,0.95); font-size: 1.1em; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Total Traded</div>
                 </div>
-                <div class="stat-card" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; padding: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">
-                    <div class="stat-icon" style="font-size: 2.5em; margin-bottom: 15px;">📉</div>
-                    <div class="stat-value" id="avgDiscount" style="font-size: 2.5em; font-weight: 700; color: white; margin-bottom: 10px;">0%</div>
-                    <div class="stat-label" style="color: rgba(255,255,255,0.9); font-size: 1.1em;">Avg Discount</div>
+                <div class="stat-card" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 20px; padding: 35px; text-align: center; border: 1px solid rgba(255,255,255,0.3); transition: all 0.3s ease;">
+                    <div class="stat-icon" style="width: 70px; height: 70px; margin: 0 auto 20px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-tags" style="font-size: 2em; color: white;"></i>
+                    </div>
+                    <div class="stat-value" id="avgDiscount" style="font-size: 2.8em; font-weight: 700; color: white; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">0%</div>
+                    <div class="stat-label" style="color: rgba(255,255,255,0.95); font-size: 1.1em; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Avg Discount</div>
                 </div>
-                <div class="stat-card" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; padding: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">
-                    <div class="stat-icon" style="font-size: 2.5em; margin-bottom: 15px;">🔀</div>
-                    <div class="stat-value" id="totalTransfers" style="font-size: 2.5em; font-weight: 700; color: white; margin-bottom: 10px;">0</div>
-                    <div class="stat-label" style="color: rgba(255,255,255,0.9); font-size: 1.1em;">Total Transfers</div>
+                <div class="stat-card" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 20px; padding: 35px; text-align: center; border: 1px solid rgba(255,255,255,0.3); transition: all 0.3s ease;">
+                    <div class="stat-icon" style="width: 70px; height: 70px; margin: 0 auto 20px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-sync-alt" style="font-size: 2em; color: white;"></i>
+                    </div>
+                    <div class="stat-value" id="totalTransfers" style="font-size: 2.8em; font-weight: 700; color: white; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">0</div>
+                    <div class="stat-label" style="color: rgba(255,255,255,0.95); font-size: 1.1em; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Total Transfers</div>
                 </div>
             </div>
         </div>
@@ -1160,6 +1168,22 @@
             font-size: 1em;
         }
 
+        /* Stat Cards Hover Effects */
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            background: rgba(255,255,255,0.2) !important;
+        }
+
+        .stat-card:hover .stat-icon {
+            transform: scale(1.1);
+            background: rgba(255,255,255,0.3);
+        }
+
+        .stat-icon {
+            transition: all 0.3s ease;
+        }
+
         @media (max-width: 768px) {
             .listing-card {
                 padding: 16px;
@@ -1171,6 +1195,19 @@
 
             .portfolio-summary {
                 grid-template-columns: 1fr;
+            }
+
+            .stat-card {
+                padding: 25px !important;
+            }
+
+            .stat-icon {
+                width: 60px !important;
+                height: 60px !important;
+            }
+
+            .stat-value {
+                font-size: 2.2em !important;
             }
         }
     </style>
