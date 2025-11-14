@@ -4,8 +4,8 @@
  */
 
 const express = require('express');
-const { dbPool } = require('../database');
-const { updateZimScoreInDB } = require('../services/ZimScoreService');
+const { supabase } = require('../utils/supabase-auth');
+const { updateUserScore } = require('../services/ZimScoreService');
 
 const router = express.Router();
 
@@ -35,85 +35,74 @@ router.post('/paynow', async (req, res) => {
         //     return res.status(401).json({ success: false, message: 'Invalid signature' });
         // }
 
-        // Find the repayment record with loan details
-        const repaymentQuery = `
-            SELECT 
-                lr.*,
-                l.borrower_user_id,
-                l.due_date,
-                l.amount_requested
-            FROM loan_repayments lr
-            JOIN loans l ON lr.loan_id = l.loan_id
-            WHERE lr.payment_reference = $1
-        `;
+        // Find the payment transaction
+        const { data: payment, error: paymentError } = await supabase
+            .from('payment_transactions')
+            .select('*')
+            .eq('reference', reference)
+            .single();
         
-        const repaymentResult = await dbPool.query(repaymentQuery, [reference]);
-        
-        if (repaymentResult.rows.length === 0) {
-            console.error('Repayment not found:', reference);
+        if (paymentError || !payment) {
+            console.error('Payment not found:', reference);
             return res.status(404).json({
                 success: false,
                 message: 'Payment reference not found'
             });
         }
-        
-        const repayment = repaymentResult.rows[0];
 
-        // Update repayment status
-        const newStatus = status === 'Paid' ? 'confirmed' : 
+        // Update payment status
+        const newStatus = status === 'Paid' ? 'paid' : 
                          status === 'Cancelled' ? 'failed' : 
                          'pending';
 
-        const updateRepaymentQuery = `
-            UPDATE loan_repayments
-            SET status = $1,
-                paynow_status = $2,
-                paynow_poll_url = $3,
-                confirmed_at = $4
-            WHERE repayment_id = $5
-        `;
-        
-        await dbPool.query(updateRepaymentQuery, [
-            newStatus,
-            status,
-            pollurl,
-            newStatus === 'confirmed' ? new Date().toISOString() : null,
-            repayment.repayment_id
-        ]);
+        const { error: updateError } = await supabase
+            .from('payment_transactions')
+            .update({
+                status: newStatus,
+                paynow_reference: paynowreference,
+                paynow_poll_url: pollurl,
+                paid_at: newStatus === 'paid' ? new Date().toISOString() : null,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', payment.id);
 
-        // If payment confirmed, update loan and trigger ZimScore update
-        if (newStatus === 'confirmed') {
-            console.log('✅ Payment confirmed for loan:', repayment.loan_id);
+        if (updateError) {
+            console.error('Failed to update payment:', updateError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to update payment status'
+            });
+        }
 
-            const dueDate = new Date(repayment.due_date);
-            const repaidDate = new Date();
-            const daysLate = Math.max(0, Math.floor((repaidDate - dueDate) / (1000 * 60 * 60 * 24)));
+        // If payment confirmed, trigger ZimScore update
+        if (newStatus === 'paid') {
+            console.log('✅ Payment confirmed:', payment.reference);
 
-            // Update loan status
-            const updateLoanQuery = `
-                UPDATE loans
-                SET status = $1,
-                    repaid_at = $2
-                WHERE loan_id = $3
-            `;
-            
-            await dbPool.query(updateLoanQuery, [
-                'repaid',
-                repaidDate.toISOString(),
-                repayment.loan_id
-            ]);
+            // Log payment event
+            await supabase
+                .from('payment_logs')
+                .insert({
+                    transaction_id: payment.id,
+                    event_type: 'payment_confirmed',
+                    event_data: { paynow_reference: paynowreference, amount, status }
+                });
 
-            // Trigger ZimScore Trust Loop update
-            // This will recalculate the score based on the new loan status
-            const scoreUpdate = await updateZimScoreInDB(repayment.borrower_user_id);
+            // Trigger ZimScore update if user_id exists
+            if (payment.user_id) {
+                try {
+                    const scoreUpdate = await updateUserScore(payment.user_id, {
+                        paymentHistory: { successful: true, amount: parseFloat(amount) }
+                    });
 
-            if (scoreUpdate.success) {
-                console.log(`✅ ZimScore updated to: ${scoreUpdate.scoreValue}/85 (${scoreUpdate.starRating}⭐)`);
-            } else {
-                console.error('Failed to update ZimScore:', scoreUpdate.error);
+                    if (scoreUpdate.success) {
+                        console.log(`✅ ZimScore updated for user ${payment.user_id}`);
+                    }
+                } catch (scoreError) {
+                    console.error('Failed to update ZimScore:', scoreError);
+                }
             }
 
-            // TODO: Send notification to user about successful payment and score update
+            // TODO: Send notification to user about successful payment
         }
 
         // Acknowledge webhook
@@ -149,17 +138,22 @@ router.post('/loan-funded', async (req, res) => {
         }
 
         // Update loan status
-        const updateQuery = `
-            UPDATE loans
-            SET status = $1,
-                funded_at = NOW()
-            WHERE loan_id = $2
-        `;
-        
-        await dbPool.query(updateQuery, ['funded', loanId]);
+        const { error: loanError } = await supabase
+            .from('loans')
+            .update({
+                status: 'funded',
+                funded_at: new Date().toISOString()
+            })
+            .eq('id', loanId);
+
+        if (loanError) {
+            throw new Error('Failed to update loan status');
+        }
 
         // Trigger ZimScore update
-        const scoreUpdate = await updateZimScoreInDB(userId);
+        const scoreUpdate = await updateUserScore(userId, {
+            loanHistory: { funded: true, amount: 0 }
+        });
 
         res.json({
             success: true,
@@ -193,34 +187,33 @@ router.post('/loan-defaulted', async (req, res) => {
         }
 
         // Get loan details
-        const loanQuery = `
-            SELECT borrower_user_id, amount_requested
-            FROM loans
-            WHERE loan_id = $1
-        `;
-        
-        const loanResult = await dbPool.query(loanQuery, [loanId]);
+        const { data: loan, error: loanError } = await supabase
+            .from('loans')
+            .select('user_id, amount')
+            .eq('id', loanId)
+            .single();
 
-        if (loanResult.rows.length === 0) {
+        if (loanError || !loan) {
             return res.status(404).json({
                 success: false,
                 message: 'Loan not found'
             });
         }
-        
-        const loan = loanResult.rows[0];
 
         // Update loan status
-        const updateQuery = `
-            UPDATE loans
-            SET status = $1
-            WHERE loan_id = $2
-        `;
-        
-        await dbPool.query(updateQuery, ['default', loanId]);
+        const { error: updateError } = await supabase
+            .from('loans')
+            .update({ status: 'defaulted' })
+            .eq('id', loanId);
+
+        if (updateError) {
+            throw new Error('Failed to update loan status');
+        }
 
         // Trigger ZimScore update
-        const scoreUpdate = await updateZimScoreInDB(loan.borrower_user_id);
+        const scoreUpdate = await updateUserScore(loan.user_id, {
+            loanHistory: { defaulted: true, amount: loan.amount }
+        });
 
         res.json({
             success: true,
