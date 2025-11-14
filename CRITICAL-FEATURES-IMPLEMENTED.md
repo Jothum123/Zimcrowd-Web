@@ -22,19 +22,21 @@ this.MAX_SCORE = 99;  // Updated from 85
 
 ---
 
-### **2. Risk Level Classification** ✅
+### **2. Reputation Level Classification** ✅
 
-**New Function:** `getRiskLevel(scoreValue)`
+**New Function:** `getRiskLevel(scoreValue)` (renamed to reputation-based)
 
 ```javascript
-if (scoreValue >= 90) return 'Very Low';    // 90-99
-if (scoreValue >= 80) return 'Low';         // 80-89
-if (scoreValue >= 70) return 'Medium';      // 70-79
-if (scoreValue >= 60) return 'High';        // 60-69
-return 'Very High';                         // Below 60
+if (scoreValue >= 90) return 'Excellent';   // 90-99
+if (scoreValue >= 80) return 'Great';       // 80-89
+if (scoreValue >= 70) return 'Good';        // 70-79
+if (scoreValue >= 60) return 'Fair';        // 60-69
+if (scoreValue >= 50) return 'Building';    // 50-59
+if (scoreValue >= 40) return 'Early';       // 40-49
+return 'New';                               // Below 40
 ```
 
-**Output:** Every score now includes a human-readable risk classification.
+**Output:** Every score now includes a human-readable reputation level.
 
 ---
 
@@ -57,21 +59,22 @@ return 100.00;                         // Very High Risk
 
 ---
 
-### **4. Interest Rate Suggestions** ✅
+### **4. Reputation-Based Loan Limits** ✅
 
-**New Function:** `getSuggestedInterestRate(scoreValue)`
+**Everyone Starts at $50 - Builds Through On-Time Repayments**
 
 ```javascript
-Score 90-99: 3-10%
-Score 80-89: 4-10%
-Score 70-79: 5-10%
-Score 60-69: 6-10%
-Score 50-59: 7-10%
-Score 40-49: 8-10%
-Score <40:   9-10%
+Score 90-99: $1000  (Excellent reputation)
+Score 80-89: $800   (Great reputation)
+Score 70-79: $600   (Good reputation)
+Score 60-69: $400   (Fair reputation)
+Score 50-59: $300   (Building reputation)
+Score 40-49: $200   (Early reputation)
+Score 35-39: $100   (Starting reputation)
+Score <35:   $50    (Cold start - everyone begins here)
 ```
 
-**Impact:** Lenders can now see recommended interest rate ranges based on borrower risk.
+**Impact:** Clear progression path from $50 to $1000 based on repayment behavior.
 
 ---
 
@@ -274,9 +277,9 @@ No NSF:                 +5   (clean record)
 ─────────────────────────
 Total Score:            65/99
 Star Rating:            3.0⭐
-Risk Level:             High
+Reputation Level:       Fair
 Max Loan:               $400
-Interest Rate:          6-10%
+Starting Loan:          $50 (everyone starts here)
 ```
 
 ---
@@ -304,9 +307,9 @@ Multiple Loans (5):    +5   (≥3 loans)
 ─────────────────────────
 New Score:             101 → 99 (capped)
 Star Rating:           5.0⭐
-Risk Level:            Very Low
+Reputation Level:      Excellent
 Max Loan:              $1000
-Interest Rate:         3-10%
+Journey:               $50 → $100 → $200 → $400 → $1000
 ```
 
 ---
@@ -317,37 +320,45 @@ Interest Rate:         3-10%
 ```json
 {
     "success": true,
-    "scoreValue": 65,
-    "starRating": 3.0,
-    "maxLoanAmount": 400.00,
-    "riskLevel": "High",
-    "interestRate": {
-        "min": 6,
-        "max": 10
-    },
+    "scoreValue": 35,
+    "starRating": 1.5,
+    "maxLoanAmount": 50.00,
+    "riskLevel": "New",
     "factors": {
-        "cash_flow_ratio": 15,
-        "initial_balance": 10,
-        "balance_consistency": 5,
-        "nsf_events": 5
-    }
+        "cash_flow_ratio": 5,
+        "initial_balance": 0,
+        "balance_consistency": 0,
+        "nsf_events": 0
+    },
+    "message": "Welcome! Start with $50 and build your reputation through on-time repayments."
 }
 ```
 
-### **Trust Loop Update Response:**
+### **Trust Loop Update Response (After First On-Time Repayment):**
 ```json
 {
     "success": true,
-    "oldScore": 65,
-    "newScore": 99,
-    "scoreChange": 34,
+    "oldScore": 35,
+    "newScore": 38,
+    "scoreChange": 3,
+    "starRating": 1.5,
+    "maxLoanAmount": 100.00,
+    "riskLevel": "Starting",
+    "message": "Great job! Your limit increased to $100. Keep it up!"
+}
+```
+
+### **Experienced Borrower Response:**
+```json
+{
+    "success": true,
+    "oldScore": 85,
+    "newScore": 92,
+    "scoreChange": 7,
     "starRating": 5.0,
     "maxLoanAmount": 1000.00,
-    "riskLevel": "Very Low",
-    "interestRate": {
-        "min": 3,
-        "max": 10
-    }
+    "riskLevel": "Excellent",
+    "message": "Excellent reputation! You've reached the maximum loan limit."
 }
 ```
 
@@ -355,10 +366,16 @@ Interest Rate:         3-10%
 
 ## 🚀 **Deployment Steps**
 
-### **1. Run Database Migration**
+### **1. Run Database Migrations**
 ```sql
 -- In Supabase SQL Editor:
+
+-- Step 1: Add new columns
 -- Copy and paste: database/zimscore-schema-update.sql
+-- Click "Run"
+
+-- Step 2: Remove interest rate columns
+-- Copy and paste: database/remove-interest-rate-columns.sql
 -- Click "Run"
 ```
 
