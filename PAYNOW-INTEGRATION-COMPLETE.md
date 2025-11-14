@@ -146,7 +146,7 @@ async function processLoanRepayment(userId, loanId, amount, currency = 'USD') {
         const user = await getUserDetails(userId);
         
         // Initiate web payment
-        const response = await axios.post('https://zimcrowd-production.up.railway.app/api/payments/initiate/web', {
+        const response = await axios.post('https://your-backend.vercel.app/api/payments/initiate/web', {
             amount,
             reference: `LOAN_REPAY_${loanId}_${Date.now()}`,
             description: `Loan repayment for ${loanId}`,
@@ -179,7 +179,7 @@ async function pollPaymentStatus(pollUrl, reference) {
     
     const interval = setInterval(async () => {
         try {
-            const response = await axios.get(`https://zimcrowd-production.up.railway.app/api/payments/status/${reference}`);
+            const response = await axios.get(`https://your-backend.vercel.app/api/payments/status/${reference}`);
             
             if (response.data.paid) {
                 clearInterval(interval);
@@ -212,7 +212,7 @@ async function processEcoCashPayment(userId, amount, currency = 'USD') {
         const user = await getUserDetails(userId);
         
         // Initiate EcoCash payment
-        const response = await axios.post('https://zimcrowd-production.up.railway.app/api/payments/initiate/mobile', {
+        const response = await axios.post('https://your-backend.vercel.app/api/payments/initiate/mobile', {
             amount,
             reference: `ECO_${Date.now()}`,
             description: 'Zimcrowd Payment',
@@ -248,7 +248,7 @@ async function processOneMoneyPayment(userId, amount, currency = 'USD') {
         const user = await getUserDetails(userId);
         
         // Initiate OneMoney payment
-        const response = await axios.post('https://zimcrowd-production.up.railway.app/api/payments/initiate/mobile', {
+        const response = await axios.post('https://your-backend.vercel.app/api/payments/initiate/mobile', {
             amount,
             reference: `ONE_${Date.now()}`,
             description: 'Zimcrowd Payment',
@@ -281,7 +281,7 @@ async function processOneMoneyPayment(userId, amount, currency = 'USD') {
 ```javascript
 async function checkPaymentStatus(reference) {
     try {
-        const response = await axios.get(`https://zimcrowd-production.up.railway.app/api/payments/status/${reference}`);
+        const response = await axios.get(`https://your-backend.vercel.app/api/payments/status/${reference}`);
         
         console.log('Payment Status:', response.data.status);
         console.log('Paid:', response.data.paid);
@@ -299,7 +299,7 @@ async function checkPaymentStatus(reference) {
 ```javascript
 async function getUserPaymentHistory(userId, limit = 50) {
     try {
-        const response = await axios.get(`https://zimcrowd-production.up.railway.app/api/payments/history/${userId}?limit=${limit}`);
+        const response = await axios.get(`https://your-backend.vercel.app/api/payments/history/${userId}?limit=${limit}`);
         
         console.log('Total Payments:', response.data.count);
         console.log('Transactions:', response.data.transactions);
