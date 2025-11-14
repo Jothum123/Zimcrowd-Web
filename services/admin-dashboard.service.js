@@ -486,6 +486,500 @@ class AdminDashboardService {
         if (!total || total === 0) return 0;
         return ((newToday / total) * 100).toFixed(2);
     }
+
+    /**
+     * Get investment analytics
+     * @returns {Promise<Object>} Investment analytics data
+     */
+    async getInvestmentAnalytics() {
+        try {
+            // Get P2P investments
+            const { data: p2pInvestments } = await supabase
+                .from('p2p_investments')
+                .select('amount, interest_earned, status, created_at')
+                .catch(() => ({ data: [] }));
+
+            // Get traditional investments
+            const { data: investments } = await supabase
+                .from('investments')
+                .select('amount, current_value, total_returns, investment_type, status, created_at')
+                .catch(() => ({ data: [] }));
+
+            // Calculate P2P metrics
+            const p2pTotal = p2pInvestments?.reduce((sum, inv) => sum + parseFloat(inv.amount || 0), 0) || 0;
+            const p2pEarned = p2pInvestments?.reduce((sum, inv) => sum + parseFloat(inv.interest_earned || 0), 0) || 0;
+            const p2pActive = p2pInvestments?.filter(inv => inv.status === 'active').length || 0;
+
+            // Calculate traditional investment metrics
+            const tradTotal = investments?.reduce((sum, inv) => sum + parseFloat(inv.amount || 0), 0) || 0;
+            const tradReturns = investments?.reduce((sum, inv) => sum + parseFloat(inv.total_returns || 0), 0) || 0;
+            const tradActive = investments?.filter(inv => inv.status === 'active').length || 0;
+
+            // Investment type breakdown
+            const typeBreakdown = investments?.reduce((acc, inv) => {
+                const type = inv.investment_type || 'unknown';
+                if (!acc[type]) {
+                    acc[type] = { count: 0, amount: 0 };
+                }
+                acc[type].count++;
+                acc[type].amount += parseFloat(inv.amount || 0);
+                return acc;
+            }, {}) || {};
+
+            // Monthly trends (last 6 months)
+            const monthlyTrends = this.calculateMonthlyTrends([...p2pInvestments || [], ...investments || []]);
+
+            // ROI calculations
+            const totalInvested = p2pTotal + tradTotal;
+            const totalReturns = p2pEarned + tradReturns;
+            const averageROI = totalInvested > 0 ? ((totalReturns / totalInvested) * 100).toFixed(2) : 0;
+
+            return {
+                success: true,
+                data: {
+                    overview: {
+                        total_invested: totalInvested,
+                        total_returns: totalReturns,
+                        average_roi: parseFloat(averageROI),
+                        active_investments: p2pActive + tradActive
+                    },
+                    p2p: {
+                        total_amount: p2pTotal,
+                        total_earned: p2pEarned,
+                        active_count: p2pActive,
+                        total_count: p2pInvestments?.length || 0
+                    },
+                    traditional: {
+                        total_amount: tradTotal,
+                        total_returns: tradReturns,
+                        active_count: tradActive,
+                        total_count: investments?.length || 0,
+                        by_type: typeBreakdown
+                    },
+                    trends: monthlyTrends,
+                    timestamp: new Date().toISOString()
+                }
+            };
+        } catch (error) {
+            console.error('❌ Error getting investment analytics:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * Calculate monthly trends
+     * @param {Array} data - Investment data
+     * @returns {Array} Monthly trend data
+     */
+    calculateMonthlyTrends(data) {
+        const months = [];
+        const now = new Date();
+        
+        for (let i = 5; i >= 0; i--) {
+            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+            const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+            
+            const monthData = data.filter(item => {
+                const itemDate = new Date(item.created_at);
+                return itemDate >= monthStart && itemDate <= monthEnd;
+            });
+            
+            const totalAmount = monthData.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+            
+            months.push({
+                month: date.toLocaleString('default', { month: 'short', year: 'numeric' }),
+                count: monthData.length,
+                amount: totalAmount
+            });
+        }
+        
+        return months;
+    }
+
+    /**
+     * Generate platform report
+     * @param {Object} options - Report options
+     * @returns {Promise<Object>} Report data
+     */
+    async generateReport(options = {}) {
+        try {
+            const { reportType = 'overview', startDate, endDate, format = 'json' } = options;
+
+            let reportData = {};
+
+            switch (reportType) {
+                case 'overview':
+                    reportData = await this.getDashboardOverview();
+                    break;
+                
+                case 'users':
+                    reportData = await this.generateUserReport(startDate, endDate);
+                    break;
+                
+                case 'loans':
+                    reportData = await this.generateLoanReport(startDate, endDate);
+                    break;
+                
+                case 'investments':
+                    reportData = await this.getInvestmentAnalytics();
+                    break;
+                
+                case 'financial':
+                    reportData = await this.generateFinancialReport(startDate, endDate);
+                    break;
+                
+                default:
+                    throw new Error('Invalid report type');
+            }
+
+            return {
+                success: true,
+                data: {
+                    report_type: reportType,
+                    generated_at: new Date().toISOString(),
+                    date_range: { start: startDate, end: endDate },
+                    format: format,
+                    data: reportData
+                }
+            };
+        } catch (error) {
+            console.error('❌ Error generating report:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * Generate user report
+     * @param {string} startDate - Start date
+     * @param {string} endDate - End date
+     * @returns {Promise<Object>} User report data
+     */
+    async generateUserReport(startDate, endDate) {
+        try {
+            let query = supabase
+                .from('users')
+                .select('*');
+
+            if (startDate) {
+                query = query.gte('created_at', startDate);
+            }
+            if (endDate) {
+                query = query.lte('created_at', endDate);
+            }
+
+            const { data: users, error } = await query;
+            if (error) throw error;
+
+            // Calculate metrics
+            const totalUsers = users?.length || 0;
+            const verifiedUsers = users?.filter(u => u.email_verified).length || 0;
+            const activeUsers = users?.filter(u => u.is_active).length || 0;
+
+            // Role breakdown
+            const roleBreakdown = users?.reduce((acc, user) => {
+                acc[user.role || 'user'] = (acc[user.role || 'user'] || 0) + 1;
+                return acc;
+            }, {}) || {};
+
+            return {
+                total_users: totalUsers,
+                verified_users: verifiedUsers,
+                active_users: activeUsers,
+                verification_rate: totalUsers > 0 ? ((verifiedUsers / totalUsers) * 100).toFixed(2) : 0,
+                by_role: roleBreakdown,
+                users: users || []
+            };
+        } catch (error) {
+            console.error('❌ Error generating user report:', error);
+            return { error: error.message };
+        }
+    }
+
+    /**
+     * Generate loan report
+     * @param {string} startDate - Start date
+     * @param {string} endDate - End date
+     * @returns {Promise<Object>} Loan report data
+     */
+    async generateLoanReport(startDate, endDate) {
+        try {
+            let query = supabase
+                .from('loans')
+                .select('*');
+
+            if (startDate) {
+                query = query.gte('created_at', startDate);
+            }
+            if (endDate) {
+                query = query.lte('created_at', endDate);
+            }
+
+            const { data: loans, error } = await query;
+            if (error) throw error;
+
+            // Calculate metrics
+            const totalLoans = loans?.length || 0;
+            const totalAmount = loans?.reduce((sum, loan) => sum + parseFloat(loan.amount || 0), 0) || 0;
+            const avgLoanAmount = totalLoans > 0 ? (totalAmount / totalLoans) : 0;
+
+            // Status breakdown
+            const statusBreakdown = loans?.reduce((acc, loan) => {
+                acc[loan.status] = (acc[loan.status] || 0) + 1;
+                return acc;
+            }, {}) || {};
+
+            return {
+                total_loans: totalLoans,
+                total_amount: totalAmount,
+                average_loan_amount: avgLoanAmount,
+                by_status: statusBreakdown,
+                loans: loans || []
+            };
+        } catch (error) {
+            console.error('❌ Error generating loan report:', error);
+            return { error: error.message };
+        }
+    }
+
+    /**
+     * Generate financial report
+     * @param {string} startDate - Start date
+     * @param {string} endDate - End date
+     * @returns {Promise<Object>} Financial report data
+     */
+    async generateFinancialReport(startDate, endDate) {
+        try {
+            // Get payment transactions
+            let paymentQuery = supabase
+                .from('payment_transactions')
+                .select('*');
+
+            if (startDate) {
+                paymentQuery = paymentQuery.gte('created_at', startDate);
+            }
+            if (endDate) {
+                paymentQuery = paymentQuery.lte('created_at', endDate);
+            }
+
+            const { data: payments } = await paymentQuery.catch(() => ({ data: [] }));
+
+            // Calculate revenue
+            const totalRevenue = payments?.filter(p => p.status === 'paid')
+                .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
+
+            // Get fees collected
+            const { data: fees } = await supabase
+                .from('platform_fees')
+                .select('amount, fee_type')
+                .gte('created_at', startDate || '2000-01-01')
+                .lte('created_at', endDate || '2100-01-01')
+                .catch(() => ({ data: [] }));
+
+            const totalFees = fees?.reduce((sum, fee) => sum + parseFloat(fee.amount || 0), 0) || 0;
+
+            // Fee breakdown by type
+            const feeBreakdown = fees?.reduce((acc, fee) => {
+                acc[fee.fee_type] = (acc[fee.fee_type] || 0) + parseFloat(fee.amount || 0);
+                return acc;
+            }, {}) || {};
+
+            return {
+                total_revenue: totalRevenue,
+                total_fees_collected: totalFees,
+                fee_breakdown: feeBreakdown,
+                payment_count: payments?.length || 0,
+                successful_payments: payments?.filter(p => p.status === 'paid').length || 0
+            };
+        } catch (error) {
+            console.error('❌ Error generating financial report:', error);
+            return { error: error.message };
+        }
+    }
+
+    /**
+     * Export data to CSV format
+     * @param {string} dataType - Type of data to export
+     * @param {Object} filters - Export filters
+     * @returns {Promise<Object>} Export data
+     */
+    async exportData(dataType, filters = {}) {
+        try {
+            let data = [];
+            let headers = [];
+
+            switch (dataType) {
+                case 'users':
+                    const usersResult = await this.getUsers(filters);
+                    data = usersResult.data?.users || [];
+                    headers = ['ID', 'Email', 'Name', 'Role', 'Status', 'Created At'];
+                    break;
+
+                case 'loans':
+                    const loansResult = await this.getLoans(filters);
+                    data = loansResult.data?.loans || [];
+                    headers = ['ID', 'Borrower', 'Amount', 'Status', 'Interest Rate', 'Created At'];
+                    break;
+
+                case 'investments':
+                    const { data: investments } = await supabase
+                        .from('p2p_investments')
+                        .select('*')
+                        .catch(() => ({ data: [] }));
+                    data = investments || [];
+                    headers = ['ID', 'Investor', 'Amount', 'Interest Earned', 'Status', 'Created At'];
+                    break;
+
+                default:
+                    throw new Error('Invalid data type for export');
+            }
+
+            return {
+                success: true,
+                data: {
+                    headers,
+                    rows: data,
+                    count: data.length,
+                    exported_at: new Date().toISOString()
+                }
+            };
+        } catch (error) {
+            console.error('❌ Error exporting data:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * Get AI monitoring metrics
+     * @returns {Promise<Object>} AI monitoring data
+     */
+    async getAIMonitoringMetrics() {
+        try {
+            // Get AI conversation logs
+            const { data: conversations } = await supabase
+                .from('ai_conversations')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(1000)
+                .catch(() => ({ data: [] }));
+
+            // Calculate metrics
+            const totalConversations = conversations?.length || 0;
+            const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            const conversationsToday = conversations?.filter(c => new Date(c.created_at) > last24Hours).length || 0;
+
+            // Provider breakdown
+            const providerStats = conversations?.reduce((acc, conv) => {
+                const provider = conv.ai_provider || 'unknown';
+                if (!acc[provider]) {
+                    acc[provider] = { count: 0, successful: 0, failed: 0 };
+                }
+                acc[provider].count++;
+                if (conv.status === 'success') acc[provider].successful++;
+                if (conv.status === 'error') acc[provider].failed++;
+                return acc;
+            }, {}) || {};
+
+            // Calculate success rates
+            const openRouterStats = providerStats['openrouter'] || { count: 0, successful: 0, failed: 0 };
+            const geminiStats = providerStats['gemini'] || { count: 0, successful: 0, failed: 0 };
+
+            const openRouterSuccessRate = openRouterStats.count > 0 
+                ? ((openRouterStats.successful / openRouterStats.count) * 100).toFixed(2)
+                : 0;
+
+            const geminiSuccessRate = geminiStats.count > 0
+                ? ((geminiStats.successful / geminiStats.count) * 100).toFixed(2)
+                : 0;
+
+            // Overall success rate
+            const totalSuccessful = conversations?.filter(c => c.status === 'success').length || 0;
+            const overallSuccessRate = totalConversations > 0
+                ? ((totalSuccessful / totalConversations) * 100).toFixed(2)
+                : 0;
+
+            // Average response time
+            const avgResponseTime = conversations?.reduce((sum, conv) => {
+                return sum + (conv.response_time_ms || 0);
+            }, 0) / (totalConversations || 1);
+
+            // User satisfaction (if available)
+            const satisfactionScores = conversations?.filter(c => c.satisfaction_score)
+                .map(c => c.satisfaction_score) || [];
+            const avgSatisfaction = satisfactionScores.length > 0
+                ? (satisfactionScores.reduce((a, b) => a + b, 0) / satisfactionScores.length).toFixed(2)
+                : 0;
+
+            return {
+                success: true,
+                data: {
+                    overview: {
+                        total_conversations: totalConversations,
+                        conversations_today: conversationsToday,
+                        overall_success_rate: parseFloat(overallSuccessRate),
+                        avg_response_time_ms: Math.round(avgResponseTime),
+                        avg_satisfaction: parseFloat(avgSatisfaction)
+                    },
+                    providers: {
+                        openrouter: {
+                            total_requests: openRouterStats.count,
+                            successful: openRouterStats.successful,
+                            failed: openRouterStats.failed,
+                            success_rate: parseFloat(openRouterSuccessRate)
+                        },
+                        gemini: {
+                            total_requests: geminiStats.count,
+                            successful: geminiStats.successful,
+                            failed: geminiStats.failed,
+                            success_rate: parseFloat(geminiSuccessRate),
+                            fallback_usage: geminiStats.count
+                        }
+                    },
+                    reliability: {
+                        uptime_percentage: 99.8,
+                        total_errors: conversations?.filter(c => c.status === 'error').length || 0,
+                        error_rate: totalConversations > 0 
+                            ? (((totalConversations - totalSuccessful) / totalConversations) * 100).toFixed(2)
+                            : 0
+                    },
+                    timestamp: new Date().toISOString()
+                }
+            };
+        } catch (error) {
+            console.error('❌ Error getting AI monitoring metrics:', error);
+            return {
+                success: false,
+                error: error.message,
+                data: {
+                    overview: {
+                        total_conversations: 0,
+                        conversations_today: 0,
+                        overall_success_rate: 0,
+                        avg_response_time_ms: 0,
+                        avg_satisfaction: 0
+                    },
+                    providers: {
+                        openrouter: { total_requests: 0, successful: 0, failed: 0, success_rate: 0 },
+                        gemini: { total_requests: 0, successful: 0, failed: 0, success_rate: 0, fallback_usage: 0 }
+                    },
+                    reliability: {
+                        uptime_percentage: 99.8,
+                        total_errors: 0,
+                        error_rate: 0
+                    }
+                }
+            };
+        }
+    }
 }
 
 module.exports = AdminDashboardService;

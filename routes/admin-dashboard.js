@@ -168,4 +168,110 @@ router.get('/activity/recent', authenticateAdmin, async (req, res) => {
     }
 });
 
+/**
+ * GET /api/admin-dashboard/investments/analytics
+ * Get investment analytics
+ */
+router.get('/investments/analytics', authenticateAdmin, async (req, res) => {
+    try {
+        const analytics = await dashboardService.getInvestmentAnalytics();
+        res.json(analytics);
+    } catch (error) {
+        console.error('Error getting investment analytics:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get investment analytics'
+        });
+    }
+});
+
+/**
+ * POST /api/admin-dashboard/reports/generate
+ * Generate platform report
+ */
+router.post('/reports/generate', authenticateAdmin, async (req, res) => {
+    try {
+        const { reportType, startDate, endDate, format } = req.body;
+        const report = await dashboardService.generateReport({
+            reportType,
+            startDate,
+            endDate,
+            format
+        });
+        res.json(report);
+    } catch (error) {
+        console.error('Error generating report:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to generate report'
+        });
+    }
+});
+
+/**
+ * GET /api/admin-dashboard/reports/generate
+ * Generate platform report (GET method for quick access)
+ */
+router.get('/reports/generate', authenticateAdmin, async (req, res) => {
+    try {
+        const { reportType, startDate, endDate, format } = req.query;
+        const report = await dashboardService.generateReport({
+            reportType,
+            startDate,
+            endDate,
+            format
+        });
+        res.json(report);
+    } catch (error) {
+        console.error('Error generating report:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to generate report'
+        });
+    }
+});
+
+/**
+ * GET /api/admin-dashboard/export/:dataType
+ * Export data to CSV/JSON
+ */
+router.get('/export/:dataType', authenticateAdmin, async (req, res) => {
+    try {
+        const { dataType } = req.params;
+        const filters = req.query;
+        const exportData = await dashboardService.exportData(dataType, filters);
+        
+        if (exportData.success) {
+            // Set appropriate headers for download
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Content-Disposition', `attachment; filename="${dataType}-export-${Date.now()}.json"`);
+        }
+        
+        res.json(exportData);
+    } catch (error) {
+        console.error('Error exporting data:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to export data'
+        });
+    }
+});
+
+/**
+ * GET /api/admin-dashboard/ai/monitoring
+ * Get AI system monitoring metrics
+ */
+router.get('/ai/monitoring', authenticateAdmin, async (req, res) => {
+    try {
+        const metrics = await dashboardService.getAIMonitoringMetrics();
+        res.json(metrics);
+    } catch (error) {
+        console.error('Error getting AI monitoring metrics:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get AI monitoring metrics'
+        });
+    }
+});
+
 module.exports = router;
