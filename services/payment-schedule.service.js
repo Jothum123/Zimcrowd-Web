@@ -15,50 +15,115 @@ class PaymentScheduleService {
         // Grace periods
         this.FIRST_PAYMENT_GRACE_DAYS = 35;  // 35 days for first payment
         this.STANDARD_GRACE_HOURS = 24;      // 24 hours for subsequent payments
+        
+        // Payment window cutoff (government employee salary cycle)
+        this.PAYMENT_WINDOW_CUTOFF = 14;     // Day 14 is the cutoff
+    }
+    
+    /**
+     * Calculate first payment date based on application date
+     * Government employee salary cycle logic:
+     * - Apply Days 1-14: First payment end of SAME month
+     * - Apply Days 15-31: First payment end of NEXT month
+     * @param {Date} applicationDate - Loan application date
+     * @returns {Object} First payment details
+     */
+    calculateFirstPaymentDate(applicationDate) {
+        const appDate = new Date(applicationDate);
+        const dayOfMonth = appDate.getDate();
+        
+        let firstPaymentDue;
+        let paymentGroup;
+        
+        if (dayOfMonth >= 1 && dayOfMonth <= this.PAYMENT_WINDOW_CUTOFF) {
+            // SAME_MONTH group: Pay at end of same month
+            paymentGroup = 'SAME_MONTH';
+            firstPaymentDue = new Date(appDate.getFullYear(), appDate.getMonth() + 1, 0);
+        } else {
+            // NEXT_MONTH group: Pay at end of next month
+            paymentGroup = 'NEXT_MONTH';
+            firstPaymentDue = new Date(appDate.getFullYear(), appDate.getMonth() + 2, 0);
+        }
+        
+        // Calculate grace period end (35 days after due date)
+        const gracePeriodEnd = new Date(firstPaymentDue);
+        gracePeriodEnd.setDate(gracePeriodEnd.getDate() + this.FIRST_PAYMENT_GRACE_DAYS);
+        
+        // Calculate days from application to first payment
+        const daysUntilDue = Math.floor((firstPaymentDue - appDate) / (1000 * 60 * 60 * 24));
+        
+        return {
+            applicationDate: appDate.toISOString().split('T')[0],
+            applicationDay: dayOfMonth,
+            paymentGroup,
+            firstPaymentDue: firstPaymentDue.toISOString().split('T')[0],
+            gracePeriodEnd: gracePeriodEnd.toISOString().split('T')[0],
+            daysUntilDue,
+            gracePeriodDays: this.FIRST_PAYMENT_GRACE_DAYS
+        };
     }
     
     /**
      * Create payment schedule for a loan
-     * First payment gets 35-day grace period
+     * Uses government employee salary cycle for first payment
      * @param {Object} params - Schedule parameters
      * @param {string} params.loanId - Loan ID
-     * @param {Date} params.loanStartDate - Loan start/disbursement date
+     * @param {Date} params.applicationDate - Loan application date
      * @param {number} params.loanAmount - Total loan amount
      * @param {number} params.termMonths - Loan term in months
      * @param {number} params.monthlyPayment - Monthly payment amount
      * @returns {Promise<Object>} Created schedule
      */
-    async createPaymentSchedule({ loanId, loanStartDate, loanAmount, termMonths, monthlyPayment }) {
+    async createPaymentSchedule({ loanId, applicationDate, loanAmount, termMonths, monthlyPayment }) {
         try {
             console.log(`📅 Creating payment schedule for loan ${loanId}`);
             
             const installments = [];
-            const startDate = new Date(loanStartDate);
+            const appDate = new Date(applicationDate);
             
-            for (let month = 1; month <= termMonths; month++) {
-                // Calculate due date (same day each month)
-                const dueDate = new Date(startDate);
-                dueDate.setMonth(dueDate.getMonth() + month);
+            // Calculate first payment date using salary cycle logic
+            const firstPayment = this.calculateFirstPaymentDate(appDate);
+            const firstPaymentDate = new Date(firstPayment.firstPaymentDue);
+            
+            console.log(`   Application: ${firstPayment.applicationDate} (Day ${firstPayment.applicationDay})`);
+            console.log(`   Payment Group: ${firstPayment.paymentGroup}`);
+            console.log(`   First Payment: ${firstPayment.firstPaymentDue}`);
+            console.log(`   Grace Until: ${firstPayment.gracePeriodEnd}`);
+            
+            // Create first installment
+            const firstGracePeriodEnd = new Date(firstPayment.gracePeriodEnd);
+            installments.push({
+                loan_id: loanId,
+                installment_number: 1,
+                due_date: firstPayment.firstPaymentDue,
+                amount_due: monthlyPayment,
+                grace_period_end: firstGracePeriodEnd.toISOString(),
+                is_first_payment: true,
+                grace_period_days: this.FIRST_PAYMENT_GRACE_DAYS,
+                grace_period_hours: 0,
+                payment_group: firstPayment.paymentGroup,
+                status: 'pending'
+            });
+            
+            // Create subsequent installments (last day of each month)
+            for (let month = 2; month <= termMonths; month++) {
+                // Subsequent payments: last day of each month
+                const dueDate = new Date(firstPaymentDate.getFullYear(), firstPaymentDate.getMonth() + month, 0);
                 
-                // First payment gets 35-day grace period
-                let gracePeriodEnd;
-                if (month === 1) {
-                    gracePeriodEnd = new Date(dueDate);
-                    gracePeriodEnd.setDate(gracePeriodEnd.getDate() + this.FIRST_PAYMENT_GRACE_DAYS);
-                } else {
-                    gracePeriodEnd = new Date(dueDate);
-                    gracePeriodEnd.setHours(gracePeriodEnd.getHours() + this.STANDARD_GRACE_HOURS);
-                }
+                // 24-hour grace period for subsequent payments
+                const gracePeriodEnd = new Date(dueDate);
+                gracePeriodEnd.setHours(gracePeriodEnd.getHours() + this.STANDARD_GRACE_HOURS);
                 
                 installments.push({
                     loan_id: loanId,
                     installment_number: month,
-                    due_date: dueDate.toISOString().split('T')[0], // Date only
+                    due_date: dueDate.toISOString().split('T')[0],
                     amount_due: monthlyPayment,
                     grace_period_end: gracePeriodEnd.toISOString(),
-                    is_first_payment: month === 1,
-                    grace_period_days: month === 1 ? this.FIRST_PAYMENT_GRACE_DAYS : 0,
-                    grace_period_hours: month === 1 ? 0 : this.STANDARD_GRACE_HOURS,
+                    is_first_payment: false,
+                    grace_period_days: 0,
+                    grace_period_hours: this.STANDARD_GRACE_HOURS,
+                    payment_group: null,
                     status: 'pending'
                 });
             }
