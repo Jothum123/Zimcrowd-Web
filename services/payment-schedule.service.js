@@ -18,17 +18,25 @@ class PaymentScheduleService {
         
         // Payment window cutoff (government employee salary cycle)
         this.PAYMENT_WINDOW_CUTOFF = 14;     // Day 14 is the cutoff
+        
+        // Employment types
+        this.EMPLOYMENT_TYPES = {
+            GOVERNMENT: 'government',        // Uses payment window system
+            PRIVATE: 'private',              // Uses simple 35-day grace
+            BUSINESS: 'business',            // Uses simple 35-day grace
+            INFORMAL: 'informal'             // Uses simple 35-day grace
+        };
     }
     
     /**
-     * Calculate first payment date based on application date
-     * Government employee salary cycle logic:
+     * Calculate first payment date for GOVERNMENT employees
+     * Uses salary cycle logic:
      * - Apply Days 1-14: First payment end of SAME month
      * - Apply Days 15-31: First payment end of NEXT month
      * @param {Date} applicationDate - Loan application date
      * @returns {Object} First payment details
      */
-    calculateFirstPaymentDate(applicationDate) {
+    calculateGovernmentFirstPayment(applicationDate) {
         const appDate = new Date(applicationDate);
         const dayOfMonth = appDate.getDate();
         
@@ -53,6 +61,7 @@ class PaymentScheduleService {
         const daysUntilDue = Math.floor((firstPaymentDue - appDate) / (1000 * 60 * 60 * 24));
         
         return {
+            employmentType: 'government',
             applicationDate: appDate.toISOString().split('T')[0],
             applicationDay: dayOfMonth,
             paymentGroup,
@@ -64,29 +73,74 @@ class PaymentScheduleService {
     }
     
     /**
+     * Calculate first payment date for PRIVATE/BUSINESS/INFORMAL employees
+     * Simple 35-day grace from loan date
+     * @param {Date} applicationDate - Loan application date
+     * @returns {Object} First payment details
+     */
+    calculatePrivateFirstPayment(applicationDate) {
+        const appDate = new Date(applicationDate);
+        
+        // First payment due 35 days after loan
+        const firstPaymentDue = new Date(appDate);
+        firstPaymentDue.setDate(firstPaymentDue.getDate() + this.FIRST_PAYMENT_GRACE_DAYS);
+        
+        // No additional grace period (payment due = grace period end)
+        const gracePeriodEnd = new Date(firstPaymentDue);
+        
+        return {
+            employmentType: 'private',
+            applicationDate: appDate.toISOString().split('T')[0],
+            paymentGroup: null,
+            firstPaymentDue: firstPaymentDue.toISOString().split('T')[0],
+            gracePeriodEnd: gracePeriodEnd.toISOString().split('T')[0],
+            daysUntilDue: this.FIRST_PAYMENT_GRACE_DAYS,
+            gracePeriodDays: this.FIRST_PAYMENT_GRACE_DAYS
+        };
+    }
+    
+    /**
+     * Calculate first payment date based on employment type
+     * @param {Date} applicationDate - Loan application date
+     * @param {string} employmentType - 'government', 'private', 'business', 'informal'
+     * @returns {Object} First payment details
+     */
+    calculateFirstPaymentDate(applicationDate, employmentType = 'private') {
+        if (employmentType === this.EMPLOYMENT_TYPES.GOVERNMENT) {
+            return this.calculateGovernmentFirstPayment(applicationDate);
+        } else {
+            return this.calculatePrivateFirstPayment(applicationDate);
+        }
+    }
+    
+    /**
      * Create payment schedule for a loan
-     * Uses government employee salary cycle for first payment
+     * Uses employment-specific logic for first payment
      * @param {Object} params - Schedule parameters
      * @param {string} params.loanId - Loan ID
      * @param {Date} params.applicationDate - Loan application date
+     * @param {string} params.employmentType - 'government', 'private', 'business', 'informal'
      * @param {number} params.loanAmount - Total loan amount
      * @param {number} params.termMonths - Loan term in months
      * @param {number} params.monthlyPayment - Monthly payment amount
      * @returns {Promise<Object>} Created schedule
      */
-    async createPaymentSchedule({ loanId, applicationDate, loanAmount, termMonths, monthlyPayment }) {
+    async createPaymentSchedule({ loanId, applicationDate, employmentType = 'private', loanAmount, termMonths, monthlyPayment }) {
         try {
             console.log(`📅 Creating payment schedule for loan ${loanId}`);
             
             const installments = [];
             const appDate = new Date(applicationDate);
             
-            // Calculate first payment date using salary cycle logic
-            const firstPayment = this.calculateFirstPaymentDate(appDate);
+            // Calculate first payment date based on employment type
+            const firstPayment = this.calculateFirstPaymentDate(appDate, employmentType);
             const firstPaymentDate = new Date(firstPayment.firstPaymentDue);
             
-            console.log(`   Application: ${firstPayment.applicationDate} (Day ${firstPayment.applicationDay})`);
-            console.log(`   Payment Group: ${firstPayment.paymentGroup}`);
+            console.log(`   Employment Type: ${employmentType}`);
+            console.log(`   Application: ${firstPayment.applicationDate}`);
+            if (firstPayment.paymentGroup) {
+                console.log(`   Payment Group: ${firstPayment.paymentGroup}`);
+            }
             console.log(`   First Payment: ${firstPayment.firstPaymentDue}`);
             console.log(`   Grace Until: ${firstPayment.gracePeriodEnd}`);
             
