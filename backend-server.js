@@ -45,6 +45,8 @@ try {
     console.log('✅ Admin routes loaded');
     var adminDashboardRoutes = require('./routes/admin-dashboard');
     console.log('✅ Admin dashboard routes loaded');
+    var paymentRoutes = require('./routes/payments');
+    console.log('✅ Payment routes loaded');
     var testRoutes = require('./routes/test');
     console.log('✅ Test routes loaded');
     console.log('✅ All routes loaded successfully');
@@ -105,8 +107,8 @@ app.use('/api/profile', profileRoutes);
 console.log('✅ Profile routes registered');
 app.use('/api/dashboard', dashboardRoutes);
 console.log('✅ Dashboard routes registered');
-app.use('/api/zimscore', zimscoreRoutes);
-console.log('✅ ZimScore routes registered');
+// app.use('/api/zimscore', zimscoreRoutes);
+// console.log('✅ ZimScore routes registered');
 app.use('/api/webhooks', paynowWebhookRoutes);
 console.log('✅ Paynow webhook routes registered');
 app.get('/terms', (req, res) => {
@@ -148,6 +150,8 @@ app.use('/api/admin', adminRoutes);
 console.log('✅ Admin routes registered');
 app.use('/api/admin-dashboard', adminDashboardRoutes);
 console.log('✅ Admin dashboard routes registered');
+app.use('/api/payments', paymentRoutes);
+console.log('✅ Payment routes registered');
 app.use('/api/test', testRoutes);
 console.log('✅ Test routes registered');
 
