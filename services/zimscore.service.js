@@ -10,7 +10,7 @@ class ZimScoreService {
     constructor() {
         // Score configuration
         this.MIN_SCORE = 30;
-        this.MAX_SCORE = 85;
+        this.MAX_SCORE = 99;  // Updated from 85 to match spec
         this.DEFAULT_SCORE = 30;
         
         // Score factor weights
@@ -51,17 +51,24 @@ class ZimScoreService {
             let score = this.DEFAULT_SCORE;
             const factors = {};
 
-            // Factor 1: Monthly Income
-            const income = financialData.avgMonthlyIncome || 0;
-            if (income > 500) {
-                score += this.WEIGHTS.INITIAL_INCOME_HIGH;
-                factors.initial_income = this.WEIGHTS.INITIAL_INCOME_HIGH;
-            } else if (income >= 200) {
-                score += this.WEIGHTS.INITIAL_INCOME_MEDIUM;
-                factors.initial_income = this.WEIGHTS.INITIAL_INCOME_MEDIUM;
-            } else if (income > 0) {
-                score += this.WEIGHTS.INITIAL_INCOME_LOW;
-                factors.initial_income = this.WEIGHTS.INITIAL_INCOME_LOW;
+            // Factor 1: Cash Flow Ratio (Primary Factor - SPEC REQUIREMENT)
+            // This replaces simple income check with income/expense ratio
+            const cashFlowRatio = financialData.cashFlowRatio || 0;
+            if (cashFlowRatio >= 1.2) {
+                score += 20; // Strong positive cash flow
+                factors.cash_flow_ratio = 20;
+            } else if (cashFlowRatio >= 1.0) {
+                score += 15; // Healthy cash flow
+                factors.cash_flow_ratio = 15;
+            } else if (cashFlowRatio >= 0.8) {
+                score += 10; // Moderate cash flow
+                factors.cash_flow_ratio = 10;
+            } else if (cashFlowRatio >= 0.6) {
+                score += 5; // Minimal positive cash flow
+                factors.cash_flow_ratio = 5;
+            } else if (cashFlowRatio > 0) {
+                score += 0; // Negative cash flow - no points
+                factors.cash_flow_ratio = 0;
             }
 
             // Factor 2: Average Balance
@@ -77,7 +84,20 @@ class ZimScoreService {
                 factors.initial_balance = this.WEIGHTS.INITIAL_BALANCE_LOW;
             }
 
-            // Factor 3: NSF Events (Non-Sufficient Funds)
+            // Factor 3: Balance Consistency (SPEC REQUIREMENT)
+            const balanceConsistency = financialData.balanceConsistencyScore || 0;
+            if (balanceConsistency >= 7) {
+                score += 5; // High consistency
+                factors.balance_consistency = 5;
+            } else if (balanceConsistency >= 4) {
+                score += 3; // Moderate consistency
+                factors.balance_consistency = 3;
+            } else if (balanceConsistency > 0) {
+                score += 1; // Low consistency
+                factors.balance_consistency = 1;
+            }
+
+            // Factor 4: NSF Events (Non-Sufficient Funds)
             const nsfEvents = financialData.nsfEvents || 0;
             if (nsfEvents === 0) {
                 score += this.WEIGHTS.NO_NSF_EVENTS;
@@ -93,17 +113,22 @@ class ZimScoreService {
             // Clamp score to valid range
             score = Math.max(this.MIN_SCORE, Math.min(this.MAX_SCORE, score));
 
-            // Calculate star rating and max loan amount
+            // Calculate star rating, max loan amount, risk level, and interest rate
             const starRating = this.calculateStarRating(score);
             const maxLoanAmount = this.calculateMaxLoanAmount(score);
+            const riskLevel = this.getRiskLevel(score);
+            const interestRate = this.getSuggestedInterestRate(score);
 
-            console.log(`✅ Cold Start Score: ${score}/85 (${starRating}⭐) - Max Loan: $${maxLoanAmount}`);
+            console.log(`✅ Cold Start Score: ${score}/99 (${starRating}⭐) - Risk: ${riskLevel} - Max Loan: $${maxLoanAmount}`);
 
             // Save to database
             await this.saveZimScore(userId, {
                 scoreValue: score,
                 starRating,
                 maxLoanAmount,
+                riskLevel,
+                interestRateMin: interestRate.min,
+                interestRateMax: interestRate.max,
                 factors,
                 calculationMethod: 'cold_start'
             });
@@ -125,6 +150,8 @@ class ZimScoreService {
                 scoreValue: score,
                 starRating,
                 maxLoanAmount,
+                riskLevel,
+                interestRate,
                 factors
             };
         } catch (error) {
@@ -206,11 +233,49 @@ class ZimScoreService {
                     break;
             }
 
-            // Check for multiple loans bonus
-            const { data: loanStats } = await supabase
-                .rpc('get_user_loan_stats', { p_user_id: userId });
+            // Calculate on-time payment rate and apply tiered bonuses
+            const paymentStats = await this.calculateOnTimePaymentRate(userId);
+            if (paymentStats.hasLoanHistory) {
+                const rate = paymentStats.onTimeRate;
+                let rateBonus = 0;
+                
+                if (rate >= 95) rateBonus = 25;
+                else if (rate >= 90) rateBonus = 20;
+                else if (rate >= 80) rateBonus = 15;
+                else if (rate >= 70) rateBonus = 10;
+                else if (rate >= 60) rateBonus = 5;
+                else rateBonus = -10; // Penalty for <60%
+                
+                // Only apply if not already applied
+                if (!factors.on_time_rate_bonus) {
+                    scoreChange += rateBonus;
+                    factors.on_time_rate_bonus = rateBonus;
+                    factors.on_time_rate = rate;
+                }
+            } else {
+                // No loan history penalty
+                if (!factors.no_loan_history_penalty) {
+                    scoreChange -= 10;
+                    factors.no_loan_history_penalty = -10;
+                }
+            }
 
-            if (loanStats && loanStats[0].repaid_on_time >= 3) {
+            // Progressive borrowing bonus
+            const progressiveBonus = await this.calculateProgressiveBorrowingBonus(userId);
+            if (progressiveBonus > 0 && !factors.progressive_borrowing_bonus) {
+                scoreChange += progressiveBonus;
+                factors.progressive_borrowing_bonus = progressiveBonus;
+            }
+
+            // Platform tenure bonus
+            const tenureBonus = await this.calculatePlatformTenureBonus(userId);
+            if (tenureBonus > 0 && !factors.platform_tenure_bonus) {
+                scoreChange += tenureBonus;
+                factors.platform_tenure_bonus = tenureBonus;
+            }
+
+            // Check for multiple loans bonus (3+ loans)
+            if (paymentStats.totalLoans >= 3) {
                 const multipleLoanBonus = this.WEIGHTS.MULTIPLE_LOANS_BONUS;
                 if (!factors.multiple_loans_bonus) {
                     scoreChange += multipleLoanBonus;
@@ -226,14 +291,19 @@ class ZimScoreService {
 
             const newStarRating = this.calculateStarRating(newScore);
             const newMaxLoanAmount = this.calculateMaxLoanAmount(newScore);
+            const newRiskLevel = this.getRiskLevel(newScore);
+            const newInterestRate = this.getSuggestedInterestRate(newScore);
 
-            console.log(`✅ Score updated: ${currentScore.score_value} -> ${newScore} (${scoreChange >= 0 ? '+' : ''}${scoreChange})`);
+            console.log(`✅ Score updated: ${currentScore.score_value} -> ${newScore} (${scoreChange >= 0 ? '+' : ''}${scoreChange}) - Risk: ${newRiskLevel}`);
 
             // Update in database
             await this.saveZimScore(userId, {
                 scoreValue: newScore,
                 starRating: newStarRating,
                 maxLoanAmount: newMaxLoanAmount,
+                riskLevel: newRiskLevel,
+                interestRateMin: newInterestRate.min,
+                interestRateMax: newInterestRate.max,
                 factors,
                 calculationMethod: 'trust_loop'
             });
@@ -257,7 +327,9 @@ class ZimScoreService {
                 newScore,
                 scoreChange,
                 starRating: newStarRating,
-                maxLoanAmount: newMaxLoanAmount
+                maxLoanAmount: newMaxLoanAmount,
+                riskLevel: newRiskLevel,
+                interestRate: newInterestRate
             };
         } catch (error) {
             console.error('❌ Trust Loop update error:', error);
@@ -270,12 +342,12 @@ class ZimScoreService {
 
     /**
      * Calculate star rating from internal score
-     * @param {number} scoreValue - Internal score (30-85)
+     * @param {number} scoreValue - Internal score (30-99)
      * @returns {number} Star rating (1.0-5.0)
      */
     calculateStarRating(scoreValue) {
-        // Linear mapping: 30 -> 1.0, 85 -> 5.0
-        let starRating = 1.0 + ((scoreValue - 30) / 55) * 4.0;
+        // Linear mapping: 30 -> 1.0, 99 -> 5.0
+        let starRating = 1.0 + ((scoreValue - 30) / 69) * 4.0;
         
         // Round to nearest 0.5
         starRating = Math.round(starRating * 2) / 2;
@@ -286,16 +358,46 @@ class ZimScoreService {
 
     /**
      * Calculate maximum loan amount based on score
-     * @param {number} scoreValue - Internal score (30-85)
+     * @param {number} scoreValue - Internal score (30-99)
      * @returns {number} Max loan amount in USD
      */
     calculateMaxLoanAmount(scoreValue) {
-        // Tiered system
-        if (scoreValue >= 75) return 1000.00;  // Excellent: $1000
-        if (scoreValue >= 65) return 500.00;   // Good: $500
-        if (scoreValue >= 55) return 250.00;   // Fair: $250
-        if (scoreValue >= 45) return 100.00;   // Low: $100
-        return 50.00;                          // Minimum: $50
+        // 7-tier system matching specification
+        if (scoreValue >= 90) return 1000.00;  // Very Low Risk: $1000
+        if (scoreValue >= 80) return 800.00;   // Low Risk: $800
+        if (scoreValue >= 70) return 600.00;   // Medium Risk: $600
+        if (scoreValue >= 60) return 400.00;   // High Risk: $400
+        if (scoreValue >= 50) return 300.00;   // Very High Risk: $300
+        if (scoreValue >= 40) return 200.00;   // Very High Risk: $200
+        return 100.00;                         // Very High Risk: $100
+    }
+
+    /**
+     * Get risk level classification based on score
+     * @param {number} scoreValue - Internal score (30-99)
+     * @returns {string} Risk level
+     */
+    getRiskLevel(scoreValue) {
+        if (scoreValue >= 90) return 'Very Low';
+        if (scoreValue >= 80) return 'Low';
+        if (scoreValue >= 70) return 'Medium';
+        if (scoreValue >= 60) return 'High';
+        return 'Very High';
+    }
+
+    /**
+     * Get suggested interest rate range based on score
+     * @param {number} scoreValue - Internal score (30-99)
+     * @returns {Object} Interest rate range
+     */
+    getSuggestedInterestRate(scoreValue) {
+        if (scoreValue >= 90) return { min: 3, max: 10 };
+        if (scoreValue >= 80) return { min: 4, max: 10 };
+        if (scoreValue >= 70) return { min: 5, max: 10 };
+        if (scoreValue >= 60) return { min: 6, max: 10 };
+        if (scoreValue >= 50) return { min: 7, max: 10 };
+        if (scoreValue >= 40) return { min: 8, max: 10 };
+        return { min: 9, max: 10 };
     }
 
     /**
@@ -310,6 +412,9 @@ class ZimScoreService {
                 score_value: scoreData.scoreValue,
                 star_rating: scoreData.starRating,
                 max_loan_amount: scoreData.maxLoanAmount,
+                risk_level: scoreData.riskLevel,
+                suggested_interest_rate_min: scoreData.interestRateMin,
+                suggested_interest_rate_max: scoreData.interestRateMax,
                 score_factors: scoreData.factors,
                 calculation_method: scoreData.calculationMethod,
                 last_calculated: new Date().toISOString()
@@ -346,6 +451,121 @@ class ZimScoreService {
         if (error) {
             console.error('Error recording score history:', error);
             // Don't throw - history is not critical
+        }
+    }
+
+    /**
+     * Calculate on-time payment rate for a user
+     * @param {string} userId - User ID
+     * @returns {Promise<Object>} Payment statistics
+     */
+    async calculateOnTimePaymentRate(userId) {
+        try {
+            const { data: loans, error } = await supabase
+                .from('zimscore_loans')
+                .select('status, is_on_time, due_date, repaid_at')
+                .eq('borrower_user_id', userId)
+                .in('status', ['repaid']);
+
+            if (error) throw error;
+
+            if (!loans || loans.length === 0) {
+                return {
+                    totalLoans: 0,
+                    onTimeLoans: 0,
+                    lateLoans: 0,
+                    onTimeRate: 0,
+                    hasLoanHistory: false
+                };
+            }
+
+            const onTimeLoans = loans.filter(l => l.is_on_time).length;
+            const lateLoans = loans.length - onTimeLoans;
+            const onTimeRate = (onTimeLoans / loans.length) * 100;
+
+            return {
+                totalLoans: loans.length,
+                onTimeLoans,
+                lateLoans,
+                onTimeRate: Math.round(onTimeRate * 100) / 100,
+                hasLoanHistory: true
+            };
+        } catch (error) {
+            console.error('Error calculating on-time rate:', error);
+            return {
+                totalLoans: 0,
+                onTimeLoans: 0,
+                lateLoans: 0,
+                onTimeRate: 0,
+                hasLoanHistory: false
+            };
+        }
+    }
+
+    /**
+     * Calculate progressive borrowing bonus based on max loan repaid
+     * @param {string} userId - User ID
+     * @returns {Promise<number>} Bonus points
+     */
+    async calculateProgressiveBorrowingBonus(userId) {
+        try {
+            const { data: loans, error } = await supabase
+                .from('zimscore_loans')
+                .select('amount_requested')
+                .eq('borrower_user_id', userId)
+                .eq('status', 'repaid')
+                .order('amount_requested', { ascending: false })
+                .limit(1);
+
+            if (error || !loans || loans.length === 0) {
+                return 0;
+            }
+
+            const maxLoanRepaid = loans[0].amount_requested;
+
+            // Progressive borrowing rewards (spec)
+            if (maxLoanRepaid >= 800) return 10;
+            if (maxLoanRepaid >= 600) return 8;
+            if (maxLoanRepaid >= 400) return 6;
+            if (maxLoanRepaid >= 200) return 4;
+            if (maxLoanRepaid >= 100) return 2;
+            return 0;
+        } catch (error) {
+            console.error('Error calculating progressive borrowing bonus:', error);
+            return 0;
+        }
+    }
+
+    /**
+     * Calculate platform tenure bonus
+     * @param {string} userId - User ID
+     * @returns {Promise<number>} Bonus points
+     */
+    async calculatePlatformTenureBonus(userId) {
+        try {
+            const { data: user, error } = await supabase
+                .from('zimscore_users')
+                .select('created_at')
+                .eq('user_id', userId)
+                .single();
+
+            if (error || !user) {
+                return 0;
+            }
+
+            const createdDate = new Date(user.created_at);
+            const now = new Date();
+            const monthsActive = Math.floor((now - createdDate) / (1000 * 60 * 60 * 24 * 30));
+
+            // Platform tenure rewards (spec)
+            if (monthsActive >= 24) return 4;
+            if (monthsActive >= 12) return 3;
+            if (monthsActive >= 6) return 2;
+            if (monthsActive >= 3) return 1;
+            return 0;
+        } catch (error) {
+            console.error('Error calculating platform tenure bonus:', error);
+            return 0;
         }
     }
 
