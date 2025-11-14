@@ -53,6 +53,10 @@ try {
     console.log('✅ Notification routes loaded');
     var analyticsRoutes = require('./routes/analytics');
     console.log('✅ Analytics routes loaded');
+    var primaryMarketRoutes = require('./routes/primary-market');
+    console.log('✅ Primary market routes loaded');
+    var secondaryMarketRoutes = require('./routes/secondary-market');
+    console.log('✅ Secondary market routes loaded');
     console.log('✅ All routes loaded successfully');
 } catch (error) {
     console.error('❌ Error loading routes:', error.message);
@@ -162,6 +166,10 @@ app.use('/api/notifications', notificationRoutes);
 console.log('✅ Notification routes registered');
 app.use('/api/analytics', analyticsRoutes);
 console.log('✅ Analytics routes registered');
+app.use('/api/primary-market', primaryMarketRoutes);
+console.log('✅ Primary market routes registered');
+app.use('/api/secondary-market', secondaryMarketRoutes);
+console.log('✅ Secondary market routes registered');
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
