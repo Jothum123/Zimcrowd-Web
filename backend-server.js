@@ -49,6 +49,10 @@ try {
     console.log('✅ Payment routes loaded');
     var testRoutes = require('./routes/test');
     console.log('✅ Test routes loaded');
+    var notificationRoutes = require('./routes/notifications');
+    console.log('✅ Notification routes loaded');
+    var analyticsRoutes = require('./routes/analytics');
+    console.log('✅ Analytics routes loaded');
     console.log('✅ All routes loaded successfully');
 } catch (error) {
     console.error('❌ Error loading routes:', error.message);
@@ -154,6 +158,10 @@ app.use('/api/payments', paymentRoutes);
 console.log('✅ Payment routes registered');
 app.use('/api/test', testRoutes);
 console.log('✅ Test routes registered');
+app.use('/api/notifications', notificationRoutes);
+console.log('✅ Notification routes registered');
+app.use('/api/analytics', analyticsRoutes);
+console.log('✅ Analytics routes registered');
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

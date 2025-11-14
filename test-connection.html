@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend-Frontend Connection Test</title>
+    <script src="js/api-config-new.js"></script>
+    <script src="js/api-helper.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .config-info {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔗 Backend-Frontend Connection Test</h1>
+    
+    <div class="test-container">
+        <h2>Configuration Status</h2>
+        <div id="configStatus"></div>
+        <button onclick="checkConfiguration()">Check Configuration</button>
+    </div>
+
+    <div class="test-container">
+        <h2>Backend Health Check</h2>
+        <div id="healthStatus"></div>
+        <button onclick="testHealthEndpoint()">Test Health Endpoint</button>
+    </div>
+
+    <div class="test-container">
+        <h2>API Endpoints Test</h2>
+        <div id="endpointStatus"></div>
+        <button onclick="testEndpoints()">Test All Endpoints</button>
+    </div>
+
+    <div class="test-container">
+        <h2>Authentication Test</h2>
+        <div id="authStatus"></div>
+        <button onclick="testAuthentication()">Test Auth Flow</button>
+    </div>
+
+    <script>
+        function addResult(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const result = document.createElement('div');
+            result.className = `test-result ${type}`;
+            result.innerHTML = message;
+            container.appendChild(result);
+        }
+
+        function clearResults(containerId) {
+            document.getElementById(containerId).innerHTML = '';
+        }
+
+        function checkConfiguration() {
+            clearResults('configStatus');
+            
+            // Check if API_CONFIG is loaded
+            if (window.API_CONFIG) {
+                addResult('configStatus', '✅ API_CONFIG loaded successfully', 'success');
+                addResult('configStatus', `🌐 Environment: ${API_CONFIG.BASE_URL.includes('localhost') ? 'Development' : 'Production'}`, 'info');
+                addResult('configStatus', `🔗 Base URL: ${API_CONFIG.BASE_URL}`, 'info');
+                
+                // Show available endpoints
+                const endpoints = Object.keys(API_CONFIG.ENDPOINTS);
+                addResult('configStatus', `📋 Available Endpoints: ${endpoints.length}`, 'info');
+                
+                const endpointList = document.createElement('pre');
+                endpointList.textContent = endpoints.join('\n');
+                document.getElementById('configStatus').appendChild(endpointList);
+            } else {
+                addResult('configStatus', '❌ API_CONFIG not loaded', 'error');
+            }
+
+            // Check if APIHelper is loaded
+            if (window.APIHelper) {
+                addResult('configStatus', '✅ APIHelper loaded successfully', 'success');
+            } else {
+                addResult('configStatus', '❌ APIHelper not loaded', 'error');
+            }
+        }
+
+        async function testHealthEndpoint() {
+            clearResults('healthStatus');
+            
+            if (!window.API_CONFIG) {
+                addResult('healthStatus', '❌ API_CONFIG not available', 'error');
+                return;
+            }
+
+            const healthUrl = `${API_CONFIG.BASE_URL}/api/health`;
+            addResult('healthStatus', `🔍 Testing: ${healthUrl}`, 'info');
+
+            try {
+                const response = await fetch(healthUrl);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('healthStatus', '✅ Backend is healthy!', 'success');
+                    addResult('healthStatus', `📊 Response: ${JSON.stringify(data, null, 2)}`, 'info');
+                } else {
+                    addResult('healthStatus', `⚠️ Backend responded with status: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addResult('healthStatus', `❌ Connection failed: ${error.message}`, 'error');
+                
+                // Provide troubleshooting info
+                if (error.message.includes('CORS')) {
+                    addResult('healthStatus', '💡 CORS issue detected. Check backend CORS configuration.', 'info');
+                } else if (error.message.includes('fetch')) {
+                    addResult('healthStatus', '💡 Network issue. Check if backend is running.', 'info');
+                }
+            }
+        }
+
+        async function testEndpoints() {
+            clearResults('endpointStatus');
+            
+            if (!window.API_CONFIG) {
+                addResult('endpointStatus', '❌ API_CONFIG not available', 'error');
+                return;
+            }
+
+            const testEndpoints = [
+                'HEALTH',
+                'EMAIL_LOGIN',
+                'PHONE_LOGIN',
+                'EMAIL_REGISTER',
+                'PHONE_REGISTER'
+            ];
+
+            addResult('endpointStatus', `🧪 Testing ${testEndpoints.length} key endpoints...`, 'info');
+
+            for (const endpoint of testEndpoints) {
+                const url = API_CONFIG.getEndpoint(endpoint);
+                if (url) {
+                    addResult('endpointStatus', `✅ ${endpoint}: ${url}`, 'success');
+                } else {
+                    addResult('endpointStatus', `❌ ${endpoint}: Not configured`, 'error');
+                }
+            }
+        }
+
+        async function testAuthentication() {
+            clearResults('authStatus');
+            
+            if (!window.APIHelper) {
+                addResult('authStatus', '❌ APIHelper not available', 'error');
+                return;
+            }
+
+            addResult('authStatus', '🧪 Testing authentication endpoints...', 'info');
+
+            // Test login endpoint accessibility (without credentials)
+            try {
+                const loginUrl = APIHelper.getEndpoint('EMAIL_LOGIN');
+                addResult('authStatus', `🔍 Testing login endpoint: ${loginUrl}`, 'info');
+                
+                const response = await fetch(loginUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'testpassword'
+                    })
+                });
+
+                if (response.status === 400 || response.status === 401) {
+                    addResult('authStatus', '✅ Login endpoint is accessible (returned expected error)', 'success');
+                } else if (response.status === 404) {
+                    addResult('authStatus', '❌ Login endpoint not found', 'error');
+                } else {
+                    addResult('authStatus', `⚠️ Unexpected response: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addResult('authStatus', `❌ Auth test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run configuration check on load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(checkConfiguration, 500);
+        });
+    </script>
+</body>
+</html>

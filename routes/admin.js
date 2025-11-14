@@ -423,7 +423,74 @@ router.put('/loans/:id/approve', authenticateAdmin, [
 
         const newStatus = action === 'approve' ? 'approved' : 'rejected';
 
-        // In production, this would update the loan status and notify the user
+        // Update loan status in database
+        const { data: loan, error } = await supabase
+            .from('loans')
+            .update({
+                status: newStatus,
+                approved_by: req.user.id,
+                approved_at: new Date().toISOString(),
+                approval_reason: reason || null
+            })
+            .eq('id', id)
+            .eq('status', 'pending')
+            .select('*, profiles!inner(first_name, last_name, email)')
+            .single();
+
+        if (error || !loan) {
+            return res.status(400).json({
+                success: false,
+                message: 'Loan not found or already processed'
+            });
+        }
+
+        // If approved, create wallet transaction for disbursement
+        if (action === 'approve') {
+            const { error: transactionError } = await supabase
+                .from('transactions')
+                .insert({
+                    user_id: loan.user_id,
+                    type: 'loan_disbursement',
+                    amount: loan.amount,
+                    description: `Loan disbursement - ${loan.loan_type} loan`,
+                    status: 'completed',
+                    reference: `LOAN-${loan.id}`,
+                    created_at: new Date().toISOString()
+                });
+
+            if (transactionError) {
+                console.error('Transaction creation error:', transactionError);
+            }
+
+            // Update wallet balance
+            const { error: walletError } = await supabase.rpc('update_wallet_balance', {
+                p_user_id: loan.user_id,
+                p_amount: loan.amount,
+                p_transaction_type: 'credit'
+            });
+
+            if (walletError) {
+                console.error('Wallet update error:', walletError);
+            }
+        }
+
+        // Send notification (you can implement email/SMS here)
+        const { error: notificationError } = await supabase
+            .from('notifications')
+            .insert({
+                user_id: loan.user_id,
+                type: action === 'approve' ? 'loan_approved' : 'loan_rejected',
+                title: `Loan Application ${action === 'approve' ? 'Approved' : 'Rejected'}`,
+                message: action === 'approve' 
+                    ? `Your ${loan.loan_type} loan of $${loan.amount} has been approved and funds have been disbursed to your wallet.`
+                    : `Your ${loan.loan_type} loan application has been rejected. ${reason || 'Please contact support for more information.'}`,
+                is_read: false,
+                created_at: new Date().toISOString()
+            });
+
+        if (notificationError) {
+            console.error('Notification creation error:', notificationError);
+        }
 
         const updateResult = {
             loan_id: id,
@@ -431,7 +498,9 @@ router.put('/loans/:id/approve', authenticateAdmin, [
             new_status: newStatus,
             approved_by: req.user.id,
             approved_at: new Date().toISOString(),
-            reason: reason || null
+            reason: reason || null,
+            user_name: `${loan.profiles.first_name} ${loan.profiles.last_name}`,
+            amount: loan.amount
         };
 
         res.json({

@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://zimcrowd-backend.vercel.app;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://zimcrowd-backend.vercel.app http://localhost:3000;">
     <title>Sign Up - ZimCrowd</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/api-config-new.js"></script>
+    <script src="js/api-helper.js"></script>
     <script src="js/api-client.js"></script>
     <style>
         * {
@@ -852,10 +854,8 @@
     </div>
 
     <script>
-        // API Configuration
-        const API_URL = window.location.hostname === 'localhost'
-            ? 'http://localhost:3000/api'
-            : 'https://zimcrowd-backend-pfzb6c7x3-jojola.vercel.app/api';
+        // API Configuration - Use centralized config
+        const API_URL = window.API_CONFIG ? window.API_CONFIG.BASE_URL + '/api' : 'http://localhost:3000/api';
 
         let currentSignupMethod = 'phone'; // Only SMS signup now
 
@@ -964,7 +964,7 @@
             try {
                 showSuccess('Redirecting to Google signup...');
                 // Redirect to our backend OAuth endpoint with signup mode
-                window.location.href = 'https://zimcrowd-backend.vercel.app/api/social-auth/google?mode=signup';
+                window.location.href = APIHelper.getGoogleAuthUrl('signup');
             } catch (error) {
                 console.error('Google signup error:', error);
                 showError('Failed to initiate Google signup. Please try again.');
@@ -975,7 +975,7 @@
             try {
                 showSuccess('Redirecting to Facebook signup...');
                 // Redirect to our backend OAuth endpoint with signup mode
-                window.location.href = 'https://zimcrowd-backend.vercel.app/api/social-auth/facebook?mode=signup';
+                window.location.href = APIHelper.getFacebookAuthUrl('signup');
             } catch (error) {
                 console.error('Facebook signup error:', error);
                 showError('Failed to initiate Facebook signup. Please try again.');
@@ -1074,20 +1074,7 @@
                     );
                 } else {
                     // Use email registration endpoint
-                    response = await fetch('https://zimcrowd-backend.vercel.app/api/email-auth/register-email', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            firstName,
-                            lastName,
-                            email,
-                            password,
-                            country,
-                            city
-                        })
-                    }).then(res => res.json());
+                    response = await APIHelper.registerWithEmail(firstName, lastName, email, password);
                 }
 
                 if (response.success) {
