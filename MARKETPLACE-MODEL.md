@@ -4,9 +4,10 @@
 
 ZimCrowd operates as a **peer-to-peer lending marketplace** where:
 
-1. **Borrowers** request loans and **select their own interest rate** (3-10% per month)
+1. **Borrowers** request loans and **select their own interest rate** (0-10% per month)
 2. **Lenders** browse available loan requests and choose which ones to fund
 3. **ZimScore** helps lenders assess borrower reputation and risk
+4. **0% option** allows for interest-free loans (charitable/community lending)
 
 ---
 
@@ -14,22 +15,34 @@ ZimCrowd operates as a **peer-to-peer lending marketplace** where:
 
 ### **User-Selected Rates**
 
-**Borrowers choose their monthly interest rate between 3-10%**
+**Borrowers choose their monthly interest rate between 0-10%**
 
 ```
-Minimum: 3% per month (36% APR)
+Minimum: 0% per month (0% APR - Interest-free!)
 Maximum: 10% per month (120% APR)
 ```
 
+**💡 0% Interest Option:**
+- Enables charitable/community lending
+- Borrowers repay only the principal
+- Great for family/friends or social impact lending
+- Still builds ZimScore reputation
+
 ### **How Borrowers Choose**
 
-**Lower Rate (3-5%):**
+**Interest-Free (0%):**
+- ✅ No interest cost!
+- ✅ Only repay principal
+- ⚠️ Limited lender pool (charitable only)
+- 💡 Best for: Community/family lending
+
+**Lower Rate (1-3%):**
 - ✅ More attractive to lenders
 - ✅ Lower total repayment
 - ⚠️ May take longer to get funded
 - 💡 Best for: Excellent reputation (90+ score)
 
-**Medium Rate (5-7%):**
+**Medium Rate (4-6%):**
 - ✅ Balanced approach
 - ✅ Reasonable funding time
 - ✅ Competitive repayment
@@ -60,6 +73,15 @@ Duration: 30 days
 Interest Rate: 8% per month (selected by borrower)
 Total Interest: $4.00
 Total Repayment: $54.00
+```
+
+**Alternative: Interest-Free Option**
+```
+Amount: $50
+Duration: 30 days
+Interest Rate: 0% per month (interest-free!)
+Total Interest: $0.00
+Total Repayment: $50.00
 ```
 
 **Lender View:**
@@ -159,15 +181,20 @@ Risk: Very Low
 
 #### **If You're New (Score <40):**
 ```
-Recommended Rate: 7-10%
+Recommended Rate: 6-10%
 Why: Compensates lenders for higher risk
-Strategy: Start with higher rate to get funded quickly
+Strategy: Start with moderate-high rate to get funded
 Goal: Build reputation, then lower rates on future loans
+
+Alternative: 0% (interest-free)
+Why: Seek charitable/community lenders
+Strategy: May take longer, but zero cost
+Goal: Build reputation without interest burden
 ```
 
 #### **If You're Building (Score 40-69):**
 ```
-Recommended Rate: 5-7%
+Recommended Rate: 3-6%
 Why: Balanced between cost and funding speed
 Strategy: Competitive rate that attracts lenders
 Goal: Maintain on-time payments to reach excellent tier
@@ -175,10 +202,15 @@ Goal: Maintain on-time payments to reach excellent tier
 
 #### **If You're Excellent (Score 70+):**
 ```
-Recommended Rate: 3-5%
+Recommended Rate: 0-3%
 Why: Your reputation speaks for itself
-Strategy: Offer lower rates, still get funded quickly
+Strategy: Offer low/zero rates, still get funded quickly
 Goal: Minimize borrowing costs while maintaining reputation
+
+Best Option: 0% (interest-free)
+Why: Excellent reputation = access to charitable lenders
+Strategy: Zero cost borrowing for trusted members
+Goal: Build community while saving money
 ```
 
 ---
@@ -188,19 +220,25 @@ Goal: Minimize borrowing costs while maintaining reputation
 #### **Risk vs. Return Matrix:**
 
 ```
+Charitable Lending:
+- Score: Any
+- Rate: 0%
+- Strategy: Social impact, community support
+- Return: Reputation, goodwill, platform growth
+
 High Risk, High Return:
 - Score: <40
-- Rate: 8-10%
+- Rate: 7-10%
 - Strategy: Small amounts, diversify across many loans
 
 Medium Risk, Medium Return:
 - Score: 40-69
-- Rate: 5-7%
+- Rate: 3-6%
 - Strategy: Moderate amounts, balanced portfolio
 
 Low Risk, Lower Return:
 - Score: 70+
-- Rate: 3-5%
+- Rate: 0-3%
 - Strategy: Larger amounts, stable returns
 ```
 
@@ -235,7 +273,9 @@ How long do you need it?
 Duration: [30 days ▼]
 
 What interest rate will you offer?
-Rate: [____]% per month (3-10%)
+Rate: [____]% per month (0-10%)
+
+💡 Tip: 0% = Interest-free (charitable lending)
 
 💡 Tip: Higher rates get funded faster!
 Lower rates save you money!
@@ -287,7 +327,8 @@ Funds will be in your account within 24 hours.
 💰 Available Loan Requests
 
 Filter by:
-Rate: [3-10%] ▼
+Rate: [0-10%] ▼
+☑️ Show interest-free (0%) only
 Amount: [All] ▼
 Reputation: [All] ▼
 Sort by: [Highest Rate] ▼
@@ -372,6 +413,7 @@ ROI: 5% in 30 days
 Interest = Principal × (Rate / 100) × Months
 
 Examples:
+$100 @ 0% for 1 month = $100 × 0.00 × 1 = $0 (interest-free!)
 $100 @ 5% for 1 month = $100 × 0.05 × 1 = $5
 $200 @ 6% for 1 month = $200 × 0.06 × 1 = $12
 $500 @ 4% for 2 months = $500 × 0.04 × 2 = $40
@@ -383,6 +425,7 @@ $500 @ 4% for 2 months = $500 × 0.04 × 2 = $40
 Total Repayment = Principal + Interest
 
 Examples:
+$100 loan @ 0% = $100 + $0 = $100 (interest-free!)
 $100 loan @ 5% = $100 + $5 = $105
 $200 loan @ 6% = $200 + $12 = $212
 $500 loan @ 4% (2 months) = $500 + $40 = $540
@@ -394,6 +437,7 @@ $500 loan @ 4% (2 months) = $500 + $40 = $540
 APR = Monthly Rate × 12
 
 Examples:
+0% per month = 0% APR (interest-free!)
 3% per month = 36% APR
 5% per month = 60% APR
 10% per month = 120% APR
@@ -410,7 +454,7 @@ zimscore_loans:
 - loan_id
 - borrower_user_id
 - amount_requested
-- interest_rate_monthly (3-10%)  ← User selected
+- interest_rate_monthly (0-10%)  ← User selected
 - loan_duration_days
 - total_interest_amount          ← Auto-calculated
 - total_repayment_amount         ← Auto-calculated
@@ -450,7 +494,7 @@ Body:
 {
   "amount": 200,
   "duration_days": 30,
-  "interest_rate_monthly": 6,  // User selected (3-10)
+  "interest_rate_monthly": 6,  // User selected (0-10, 0=interest-free)
   "purpose": "Business inventory"
 }
 
@@ -470,7 +514,7 @@ Response:
 ### **Browse Marketplace**
 
 ```javascript
-GET /api/loans/marketplace?min_rate=5&max_rate=8&reputation=Good
+GET /api/loans/marketplace?min_rate=0&max_rate=8&reputation=Good&interest_free=true
 
 Response:
 {
@@ -520,7 +564,8 @@ Response:
 
 ## 📝 **Summary**
 
-✅ **Borrowers select their own rate** (3-10% per month)
+✅ **Borrowers select their own rate** (0-10% per month)
+✅ **0% option available** for interest-free loans
 ✅ **Marketplace model** - lenders choose which loans to fund
 ✅ **ZimScore helps lenders** assess risk and reputation
 ✅ **Automatic calculations** - interest and repayment amounts

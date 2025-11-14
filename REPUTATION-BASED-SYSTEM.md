@@ -7,9 +7,10 @@
 ### **How It Works:**
 
 1. **Reputation-Based Limits:** Your ZimScore determines your maximum loan amount ($50 to $1000)
-2. **User-Selected Interest:** You choose your own interest rate (3-10% per month)
-3. **Marketplace Model:** Lenders browse requests and fund loans they like
-4. **Build Trust:** On-time repayments increase your score and unlock higher limits
+2. **User-Selected Interest:** You choose your own interest rate (0-10% per month)
+3. **0% Interest Option:** Interest-free loans available for charitable/community lending
+4. **Marketplace Model:** Lenders browse requests and fund loans they like
+5. **Build Trust:** On-time repayments increase your score and unlock higher limits
 
 ---
 
