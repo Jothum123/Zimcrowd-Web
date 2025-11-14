@@ -21,8 +21,9 @@ try {
     console.log('✅ Email auth routes loaded');
     var dashboardRoutes = require('./routes/dashboard');
     console.log('✅ Dashboard routes loaded');
-    var zimscoreRoutes = require('./routes/zimscore');
-    console.log('✅ ZimScore routes loaded');
+    // DISABLED: Missing KycService and ZimScoreService
+    // var zimscoreRoutes = require('./routes/zimscore');
+    // console.log('✅ ZimScore routes loaded');
     var paynowWebhookRoutes = require('./routes/paynow-webhook');
     console.log('✅ Paynow webhook routes loaded');
     var socialAuthRoutes = require('./routes/social-auth');
