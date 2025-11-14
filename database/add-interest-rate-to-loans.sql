@@ -1,6 +1,7 @@
 -- Add Interest Rate to Loan Requests
--- Users select their own interest rate between 3-10% per month
+-- Users select their own interest rate between 0-10% per month
 -- This creates a marketplace where lenders choose which rates to fund
+-- 0% allows for interest-free loans (charitable lending)
 
 -- ============================================
 -- 1. Add interest_rate_monthly column to loans
@@ -9,7 +10,7 @@
 ALTER TABLE zimscore_loans
 ADD COLUMN IF NOT EXISTS interest_rate_monthly DECIMAL(5,2) NOT NULL DEFAULT 10.00;
 
-COMMENT ON COLUMN zimscore_loans.interest_rate_monthly IS 'Monthly interest rate selected by borrower (3-10%)';
+COMMENT ON COLUMN zimscore_loans.interest_rate_monthly IS 'Monthly interest rate selected by borrower (0-10%, 0% for interest-free loans)';
 
 -- ============================================
 -- 2. Add validation constraint
@@ -20,7 +21,7 @@ DROP CONSTRAINT IF EXISTS check_interest_rate_range;
 
 ALTER TABLE zimscore_loans
 ADD CONSTRAINT check_interest_rate_range 
-CHECK (interest_rate_monthly >= 3.00 AND interest_rate_monthly <= 10.00);
+CHECK (interest_rate_monthly >= 0.00 AND interest_rate_monthly <= 10.00);
 
 -- ============================================
 -- 3. Add total_interest_amount column
@@ -162,8 +163,8 @@ WHERE table_name = 'zimscore_loans'
 DO $$
 BEGIN
     RAISE NOTICE '✅ Interest rate system added successfully!';
-    RAISE NOTICE '💰 Users can now select rates between 3-10%% per month';
+    RAISE NOTICE '💰 Users can now select rates between 0-10%% per month (0%% = interest-free)';
     RAISE NOTICE '📊 Marketplace view created for lenders';
     RAISE NOTICE '🔢 Auto-calculation of interest and repayment amounts';
-    RAISE NOTICE '🎯 Validation ensures rates stay within 3-10%% range';
+    RAISE NOTICE '🎯 Validation ensures rates stay within 0-10%% range';
 END $$;
