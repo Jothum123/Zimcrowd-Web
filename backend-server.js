@@ -43,6 +43,8 @@ try {
     console.log('✅ Referrals routes loaded');
     var adminRoutes = require('./routes/admin');
     console.log('✅ Admin routes loaded');
+    var adminDashboardRoutes = require('./routes/admin-dashboard');
+    console.log('✅ Admin dashboard routes loaded');
     var testRoutes = require('./routes/test');
     console.log('✅ Test routes loaded');
     console.log('✅ All routes loaded successfully');
@@ -144,6 +146,8 @@ app.use('/api/referrals', referralsRoutes);
 console.log('✅ Referrals routes registered');
 app.use('/api/admin', adminRoutes);
 console.log('✅ Admin routes registered');
+app.use('/api/admin-dashboard', adminDashboardRoutes);
+console.log('✅ Admin dashboard routes registered');
 app.use('/api/test', testRoutes);
 console.log('✅ Test routes registered');
 
