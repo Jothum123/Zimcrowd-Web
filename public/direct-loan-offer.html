@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Guaranteed Offer | ZimCrowd Direct</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .direct-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #38e07b 0%, #2bc866 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(56, 224, 123, 0.3);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: #666;
+            font-weight: 400;
+        }
+
+        /* Main Offer Card */
+        .offer-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        }
+
+        .amount-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .amount-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .amount-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .amount-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .operator {
+            font-size: 24px;
+            color: #ccc;
+            font-weight: 700;
+        }
+
+        .total-row {
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .total-row .amount-value {
+            color: #38e07b;
+            font-size: 42px;
+        }
+
+        .due-date {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .due-date-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .due-date-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        /* Selling Points */
+        .selling-points {
+            margin-bottom: 25px;
+        }
+
+        .selling-point {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .selling-point-icon {
+            font-size: 24px;
+        }
+
+        .selling-point-text {
+            flex: 1;
+        }
+
+        .selling-point-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 2px;
+        }
+
+        .selling-point-desc {
+            font-size: 13px;
+            color: #666;
+        }
+
+        /* CTA Button */
+        .cta-button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #38e07b 0%, #2bc866 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(56, 224, 123, 0.4);
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(56, 224, 123, 0.5);
+        }
+
+        .cta-button:active {
+            transform: translateY(0);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            line-height: 1.6;
+        }
+
+        /* APR Disclosure */
+        .apr-disclosure {
+            text-align: center;
+            padding: 12px;
+            background: #fff3cd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .apr-disclosure-text {
+            font-size: 13px;
+            color: #856404;
+            font-weight: 600;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #38e07b;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Loading State -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading your guaranteed offer...</p>
+        </div>
+
+        <!-- Offer Content (Hidden initially) -->
+        <div id="offerContent" style="display: none;">
+            <!-- Header -->
+            <div class="header">
+                <div class="direct-badge">🚀 ZimCrowd Direct</div>
+                <h1>Your Guaranteed Offer is Ready</h1>
+                <p>Skip the wait. Get funds sent directly from ZimCrowd.</p>
+            </div>
+
+            <!-- Main Offer Card -->
+            <div class="offer-card">
+                <div class="amount-breakdown">
+                    <!-- Principal Amount -->
+                    <div class="amount-item">
+                        <div class="amount-label">Loan Amount</div>
+                        <div class="amount-row">
+                            <div class="amount-value" id="principalAmount">$100.00</div>
+                        </div>
+                    </div>
+
+                    <div class="operator">+</div>
+
+                    <!-- Fixed Fee -->
+                    <div class="amount-item">
+                        <div class="amount-label">Fixed Finance Fee</div>
+                        <div class="amount-row">
+                            <div class="amount-value" id="fixedFee">$8.00</div>
+                        </div>
+                    </div>
+
+                    <div class="operator">=</div>
+
+                    <!-- Total Repayment -->
+                    <div class="amount-item total-row">
+                        <div class="amount-label">Total Repayment</div>
+                        <div class="amount-row">
+                            <div class="amount-value" id="totalRepayment">$108.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Due Date -->
+                <div class="due-date">
+                    <div class="due-date-label">Due Date</div>
+                    <div class="due-date-value" id="dueDate">December 14, 2025</div>
+                </div>
+            </div>
+
+            <!-- APR Disclosure -->
+            <div class="apr-disclosure">
+                <div class="apr-disclosure-text">
+                    APR: <span id="aprValue">292%</span>
+                </div>
+            </div>
+
+            <!-- Selling Points -->
+            <div class="selling-points">
+                <div class="selling-point">
+                    <div class="selling-point-icon">✅</div>
+                    <div class="selling-point-text">
+                        <div class="selling-point-title">Guaranteed Funding</div>
+                        <div class="selling-point-desc">No waiting for lenders to approve you</div>
+                    </div>
+                </div>
+
+                <div class="selling-point">
+                    <div class="selling-point-icon">⚡</div>
+                    <div class="selling-point-text">
+                        <div class="selling-point-title">Instant Disbursement</div>
+                        <div class="selling-point-desc">Funds sent to your account in minutes</div>
+                    </div>
+                </div>
+
+                <div class="selling-point">
+                    <div class="selling-point-icon">🔒</div>
+                    <div class="selling-point-text">
+                        <div class="selling-point-title">One Fixed Fee</div>
+                        <div class="selling-point-desc">No variable tips or hidden costs</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA Button -->
+            <button class="cta-button" onclick="proceedToAgreement()">
+                View & Accept Offer
+            </button>
+
+            <!-- Footer -->
+            <div class="footer">
+                This is a direct loan from ZimCrowd Capital and may require a formal credit check.
+                <br>Offer expires in <span id="expiryTime">24 hours</span>.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get offer ID from URL or create new offer
+        const urlParams = new URLSearchParams(window.location.search);
+        const offerId = urlParams.get('offer_id');
+
+        async function loadOffer() {
+            try {
+                // Get user ID from session
+                const userId = localStorage.getItem('userId');
+                if (!userId) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                let offerData;
+
+                if (offerId) {
+                    // Load existing offer
+                    const response = await fetch(`/api/direct-loans/offers/${offerId}`);
+                    offerData = await response.json();
+                } else {
+                    // Create new offer
+                    const response = await fetch('/api/direct-loans/create-offer', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId })
+                    });
+                    offerData = await response.json();
+                }
+
+                if (offerData.success) {
+                    displayOffer(offerData.offer);
+                } else {
+                    alert('Error loading offer: ' + offerData.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to load offer. Please try again.');
+            }
+        }
+
+        function displayOffer(offer) {
+            // Update amounts
+            document.getElementById('principalAmount').textContent = `$${offer.principalAmount.toFixed(2)}`;
+            document.getElementById('fixedFee').textContent = `$${offer.fixedFinanceFee.toFixed(2)}`;
+            document.getElementById('totalRepayment').textContent = `$${offer.totalRepayment.toFixed(2)}`;
+            document.getElementById('aprValue').textContent = `${offer.apr}%`;
+
+            // Calculate and display due date
+            const dueDate = new Date();
+            dueDate.setDate(dueDate.getDate() + offer.durationDays);
+            document.getElementById('dueDate').textContent = dueDate.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            // Store offer ID for next step
+            localStorage.setItem('currentOfferId', offer.offerId);
+
+            // Hide loading, show content
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('offerContent').style.display = 'block';
+
+            // Start expiry countdown
+            startExpiryCountdown(offer.expiresAt);
+        }
+
+        function startExpiryCountdown(expiresAt) {
+            const expiryDate = new Date(expiresAt);
+            
+            function updateCountdown() {
+                const now = new Date();
+                const diff = expiryDate - now;
+                
+                if (diff <= 0) {
+                    document.getElementById('expiryTime').textContent = 'EXPIRED';
+                    return;
+                }
+                
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                
+                document.getElementById('expiryTime').textContent = `${hours}h ${minutes}m`;
+            }
+            
+            updateCountdown();
+            setInterval(updateCountdown, 60000); // Update every minute
+        }
+
+        function proceedToAgreement() {
+            const offerId = localStorage.getItem('currentOfferId');
+            window.location.href = `/direct-loan-agreement.html?offer_id=${offerId}`;
+        }
+
+        // Load offer on page load
+        window.addEventListener('DOMContentLoaded', loadOffer);
+    </script>
+</body>
+</html>
