@@ -7,10 +7,11 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { supabase } = require('../utils/supabase-auth');
 const { authenticateUser } = require('../middleware/auth');
-const KairoAIService = require('../services/kairo-ai.service');
+// Use Gemini-powered AI service for enhanced responses
+const GeminiKairoAIService = require('../services/gemini-kairo-ai.service');
 
 const router = express.Router();
-const kairoAI = new KairoAIService();
+const kairoAI = new GeminiKairoAIService();
 
 // Validation middleware
 const handleValidationErrors = (req, res, next) => {
