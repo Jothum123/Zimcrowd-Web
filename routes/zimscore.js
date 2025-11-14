@@ -5,7 +5,7 @@
 
 const express = require('express');
 const multer = require('multer');
-const { dbPool } = require('../database');
+const { supabase } = require('../utils/supabase-auth');
 const KycService = require('../services/KycService');
 const { getUserScore, getPublicStarRating } = require('../services/ZimScoreService');
 
