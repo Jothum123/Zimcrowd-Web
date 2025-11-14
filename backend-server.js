@@ -332,10 +332,22 @@ const testSupabaseConnection = async () => {
 
 // Test Twilio connection on startup
 const testTwilioConnectionOnStartup = async () => {
-    // Skip Twilio connection test in development to prevent server crashes
-    console.warn('ÔÜá´©Å  Twilio connection test skipped in development mode');
-    console.warn('   SMS features will work with database verification only');
-    return;
+    const twilioConfigured = process.env.TWILIO_ACCOUNT_SID && 
+                            process.env.TWILIO_AUTH_TOKEN && 
+                            process.env.TWILIO_VERIFY_SERVICE_SID;
+    
+    if (twilioConfigured) {
+        try {
+            await testTwilioConnection();
+            console.log('📱 Twilio connection successful - SMS features enabled');
+        } catch (error) {
+            console.warn('⚠️  Twilio connection failed:', error.message);
+            console.warn('   SMS features will work with database verification only');
+        }
+    } else {
+        console.warn('⚠️  Twilio credentials not found - SMS features disabled');
+        console.warn('   Add TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_VERIFY_SERVICE_SID to enable SMS');
+    }
 };
 
 // Test Email connection on startup
