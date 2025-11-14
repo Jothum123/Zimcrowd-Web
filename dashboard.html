@@ -2670,6 +2670,27 @@
                 </div>
             </div>
 
+            <!-- Direct Loan CTA -->
+            <div style="margin: 30px 0; padding: 25px; background: linear-gradient(135deg, #38e07b 0%, #2ecc71 100%); border-radius: 16px; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; right: 0; width: 200px; height: 200px; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); border-radius: 50%;"></div>
+                <div style="position: relative; z-index: 1;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <i class="fas fa-bolt" style="color: white; font-size: 24px;"></i>
+                        <span style="background: rgba(255,255,255,0.3); padding: 4px 12px; border-radius: 12px; color: white; font-size: 12px; font-weight: 600;">ZimCrowd Direct</span>
+                    </div>
+                    <h3 style="color: white; font-size: 24px; margin-bottom: 8px;">Need Instant Funding?</h3>
+                    <p style="color: rgba(255,255,255,0.9); margin-bottom: 20px;">Get guaranteed approval and funds in minutes with ZimCrowd Direct loans</p>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <button onclick="window.location.href='direct-loan-request.html'" style="padding: 12px 24px; background: white; color: #2ecc71; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                            <i class="fas fa-rocket"></i> Get Instant Loan
+                        </button>
+                        <button onclick="showDirectLoanInfo()" style="padding: 12px 24px; background: rgba(255,255,255,0.2); color: white; border: 2px solid white; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; backdrop-filter: blur(10px);">
+                            <i class="fas fa-info-circle"></i> Learn More
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="tabs">
                 <button class="tab-btn active" onclick="switchTab('active')">Active Loans (5)</button>
                 <button class="tab-btn" onclick="switchTab('completed')">Completed (12)</button>
@@ -4855,6 +4876,37 @@
             
             event.target.classList.add('active');
             document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // Show direct loan information
+        function showDirectLoanInfo() {
+            alert(`🚀 ZimCrowd Direct - Instant Funding
+
+✅ GUARANTEED APPROVAL
+• Get approved instantly based on your ZimScore
+• No waiting for lenders
+• Funds directly from ZimCrowd Capital
+
+⚡ INSTANT DISBURSEMENT
+• Funds in your wallet within minutes
+• No delays or waiting periods
+• Available 24/7
+
+💰 TRANSPARENT PRICING
+• Fixed fees (5-12% based on ZimScore)
+• No hidden charges
+• Clear APR disclosure
+
+📊 FLEXIBLE TERMS
+• 7, 14, or 30-day repayment options
+• Early repayment available
+• Build your ZimScore with on-time payments
+
+How it works:
+1. Click "Get Instant Loan"
+2. Review your personalized offer
+3. Sign agreement electronically
+4. Receive funds instantly!`);
         }
 
         // Theme toggle
