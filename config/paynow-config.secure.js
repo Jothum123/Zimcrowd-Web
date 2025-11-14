@@ -18,8 +18,8 @@ function getRequiredEnv(key, description) {
 const PayNowConfig = {
     // USD Integration
     usd: {
-        integrationId: getRequiredEnv('EXPO_PUBLIC_PAYNOW_USD_INTEGRATION_ID', 'PayNow USD Integration ID'),
-        integrationKey: getRequiredEnv('EXPO_PUBLIC_PAYNOW_USD_INTEGRATION_KEY', 'PayNow USD Integration Key'),
+        integrationId: getRequiredEnv('PAYNOW_USD_INTEGRATION_ID', 'PayNow USD Integration ID'),
+        integrationKey: getRequiredEnv('PAYNOW_USD_INTEGRATION_KEY', 'PayNow USD Integration Key'),
         currency: 'USD',
         limits: {
             min: 1,
@@ -29,8 +29,8 @@ const PayNowConfig = {
 
     // ZWG Integration
     zwg: {
-        integrationId: getRequiredEnv('EXPO_PUBLIC_PAYNOW_ZWG_INTEGRATION_ID', 'PayNow ZWG Integration ID'),
-        integrationKey: getRequiredEnv('EXPO_PUBLIC_PAYNOW_ZWG_INTEGRATION_KEY', 'PayNow ZWG Integration Key'),
+        integrationId: getRequiredEnv('PAYNOW_ZWG_INTEGRATION_ID', 'PayNow ZWG Integration ID'),
+        integrationKey: getRequiredEnv('PAYNOW_ZWG_INTEGRATION_KEY', 'PayNow ZWG Integration Key'),
         currency: 'ZWG',
         limits: {
             min: 200,
@@ -40,17 +40,17 @@ const PayNowConfig = {
 
     // URLs and Endpoints
     urls: {
-        resultUrl: getRequiredEnv('EXPO_PUBLIC_PAYNOW_RESULT_URL', 'PayNow Result URL'),
-        returnUrl: getRequiredEnv('EXPO_PUBLIC_PAYNOW_RETURN_URL', 'PayNow Return URL'),
+        resultUrl: getRequiredEnv('PAYNOW_RESULT_URL', 'PayNow Result URL'),
+        returnUrl: getRequiredEnv('PAYNOW_RETURN_URL', 'PayNow Return URL'),
         paynowBase: 'https://www.paynow.co.zw'
     },
 
     // Operational Settings
     settings: {
-        testMode: process.env.EXPO_PUBLIC_PAYNOW_TEST_MODE === 'true',
-        merchantEmail: process.env.EXPO_PUBLIC_PAYNOW_MERCHANT_EMAIL || 'noreply@zimcrowd.co.zw',
-        environment: process.env.EXPO_PUBLIC_ENVIRONMENT || 'production',
-        defaultCurrency: process.env.EXPO_PUBLIC_DEFAULT_CURRENCY || 'USD'
+        testMode: process.env.PAYNOW_TEST_MODE === 'true',
+        merchantEmail: process.env.PAYNOW_MERCHANT_EMAIL || 'noreply@zimcrowd.co.zw',
+        environment: process.env.ENVIRONMENT || 'production',
+        defaultCurrency: process.env.DEFAULT_CURRENCY || 'USD'
     },
 
     // Payment Methods
