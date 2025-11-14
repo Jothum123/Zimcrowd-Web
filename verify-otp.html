@@ -819,10 +819,36 @@
                             otp
                         );
                     } else if (contactType === 'phone' && verificationType === 'reset') {
-                        // Phone password reset verification - need to add this method to API client
+                        // Phone password reset verification
                         response = await window.ZimCrowdAPI.verifyPhoneOTP(contactValue, otp);
+                    } else if (contactType === 'email' && verificationType === 'signup') {
+                        // Email signup verification
+                        const tempToken = localStorage.getItem('tempToken');
+                        response = await fetch('https://zimcrowd-backend.vercel.app/api/email-auth/verify-email-signup', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                tempToken: tempToken,
+                                otp: otp
+                            })
+                        }).then(res => res.json());
+                    } else if (contactType === 'email' && verificationType === 'reset') {
+                        // Email password reset verification
+                        response = await fetch('https://zimcrowd-backend.vercel.app/api/email-auth/verify-email-otp', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                email: contactValue,
+                                otp: otp,
+                                type: 'reset'
+                            })
+                        }).then(res => res.json());
                     } else {
-                        throw new Error('Unsupported verification type');
+                        throw new Error('Unsupported verification type: ' + contactType + ' / ' + verificationType);
                     }
 
                     if (response.success) {
@@ -834,7 +860,11 @@
                         if (verificationType === 'signup') {
                             // Account created successfully - redirect to login
                             localStorage.setItem('signupSuccess', 'true');
-                            localStorage.setItem('userPhone', contactValue);
+                            if (contactType === 'phone') {
+                                localStorage.setItem('userPhone', contactValue);
+                            } else {
+                                localStorage.setItem('userEmail', contactValue);
+                            }
                             showSuccess('Account created! Redirecting to login...');
                             setTimeout(() => {
                                 window.location.href = 'login.html';
