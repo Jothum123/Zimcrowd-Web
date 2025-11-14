@@ -4,7 +4,12 @@
 
 **Everyone starts at $50. Build your reputation through on-time repayments to unlock higher loan limits.**
 
-No interest rate calculations. No complex risk assessments. Just pure reputation building through responsible borrowing behavior.
+### **How It Works:**
+
+1. **Reputation-Based Limits:** Your ZimScore determines your maximum loan amount ($50 to $1000)
+2. **User-Selected Interest:** You choose your own interest rate (3-10% per month)
+3. **Marketplace Model:** Lenders browse requests and fund loans they like
+4. **Build Trust:** On-time repayments increase your score and unlock higher limits
 
 ---
 
