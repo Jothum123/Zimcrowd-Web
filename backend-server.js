@@ -59,6 +59,10 @@ try {
     console.log('✅ Secondary market routes loaded');
     var kairoAIRoutes = require('./routes/kairo-ai');
     console.log('✅ Kairo AI routes loaded');
+    var p2pPrimaryMarketRoutes = require('./routes/p2p-primary-market');
+    console.log('✅ P2P Primary Market routes loaded');
+    var p2pSecondaryMarketRoutes = require('./routes/p2p-secondary-market');
+    console.log('✅ P2P Secondary Market routes loaded');
     console.log('✅ All routes loaded successfully');
 } catch (error) {
     console.error('❌ Error loading routes:', error.message);
@@ -174,6 +178,10 @@ app.use('/api/secondary-market', secondaryMarketRoutes);
 console.log('✅ Secondary market routes registered');
 app.use('/api/kairo-ai', kairoAIRoutes);
 console.log('✅ Kairo AI routes registered');
+app.use('/api/p2p/primary', p2pPrimaryMarketRoutes);
+console.log('✅ P2P Primary Market routes registered at /api/p2p/primary');
+app.use('/api/p2p/secondary', p2pSecondaryMarketRoutes);
+console.log('✅ P2P Secondary Market routes registered at /api/p2p/secondary');
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

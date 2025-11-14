@@ -6,8 +6,14 @@
 -- - Internal Score: 30-85 (used for risk calculations, not shown to public)
 -- - Star Rating: 1.0-5.0 (public display for lenders to see)
 -- - Risk Grades: A (75-85), B (65-74), C (55-64), D (45-54), E (30-44)
--- - Interest Rates: Auto-calculated based on internal ZimScore
--- - Lenders see: Star rating, risk grade, recommended rate (NOT internal score)
+-- - Interest Rates: Users select their own rates from 0-10% (no recommendations)
+-- - Lenders see: Star rating, risk grade, borrower's requested rate (NOT internal score)
+--
+-- COLD START SYSTEM:
+-- - First-time borrowers: $50-100 limit regardless of income or ZimScore grade
+-- - Amount and grade increases determined by repayment behavior
+-- - System automatically detects first-time borrowers (no previous completed loans)
+-- - After successful repayment, normal ZimScore limits apply
 
 -- =============================================================================
 -- PRIMARY MARKET SCHEMAS (Loan Marketplace)
@@ -23,8 +29,8 @@ CREATE TABLE IF NOT EXISTS loan_marketplace_listings (
     amount_requested DECIMAL(15,2) NOT NULL CHECK (amount_requested > 0),
     purpose TEXT NOT NULL,
     loan_term_months INTEGER NOT NULL CHECK (loan_term_months > 0),
-    requested_interest_rate DECIMAL(5,4), -- Borrower's preferred rate
-    max_interest_rate DECIMAL(5,4), -- Maximum rate borrower will accept
+    requested_interest_rate DECIMAL(5,4) CHECK (requested_interest_rate >= 0 AND requested_interest_rate <= 0.10), -- User selects 0-10%
+    max_interest_rate DECIMAL(5,4) CHECK (max_interest_rate >= 0 AND max_interest_rate <= 0.10), -- Maximum rate borrower will accept (0-10%)
     
     -- Borrower Profile for Lenders (using ZimScore system)
     borrower_zimscore_internal INTEGER CHECK (borrower_zimscore_internal >= 30 AND borrower_zimscore_internal <= 85), -- Internal 30-85 score
@@ -42,6 +48,19 @@ CREATE TABLE IF NOT EXISTS loan_marketplace_listings (
     ) STORED,
     min_funding_amount DECIMAL(15,2) DEFAULT 50, -- Minimum lender contribution
     max_funding_amount DECIMAL(15,2), -- Maximum per lender
+    
+    -- Cold Start System for First-Time Borrowers
+    is_first_time_borrower BOOLEAN DEFAULT FALSE,
+    cold_start_amount DECIMAL(15,2) GENERATED ALWAYS AS (
+        CASE 
+            WHEN is_first_time_borrower = TRUE THEN 
+                CASE 
+                    WHEN amount_requested <= 100 THEN amount_requested
+                    ELSE 100.00 -- Cap at $100 for first-time borrowers
+                END
+            ELSE amount_requested
+        END
+    ) STORED, -- Cold start amount for first-time borrowers (50-100 regardless of income/grade)
     
     -- Marketplace Status
     status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('draft', 'active', 'funded', 'expired', 'cancelled')),
@@ -68,15 +87,6 @@ CREATE TABLE IF NOT EXISTS loan_marketplace_listings (
             ELSE 0.30 -- 30% default rate for E grade
         END
     ) STORED, -- Auto-calculated from ZimScore
-    recommended_rate DECIMAL(5,4) GENERATED ALWAYS AS (
-        CASE 
-            WHEN borrower_zimscore_internal >= 75 THEN 0.12 -- 12% for A grade
-            WHEN borrower_zimscore_internal >= 65 THEN 0.15 -- 15% for B grade
-            WHEN borrower_zimscore_internal >= 55 THEN 0.18 -- 18% for C grade
-            WHEN borrower_zimscore_internal >= 45 THEN 0.22 -- 22% for D grade
-            ELSE 0.28 -- 28% for E grade
-        END
-    ) STORED, -- Auto-calculated from ZimScore
     
     -- Marketplace Features
     is_featured BOOLEAN DEFAULT FALSE,
@@ -96,7 +106,7 @@ CREATE TABLE IF NOT EXISTS lender_funding_offers (
     
     -- Funding Offer Details
     offer_amount DECIMAL(15,2) NOT NULL CHECK (offer_amount > 0),
-    offered_interest_rate DECIMAL(5,4) NOT NULL,
+    offered_interest_rate DECIMAL(5,4) NOT NULL CHECK (offered_interest_rate >= 0 AND offered_interest_rate <= 0.10), -- Lender selects 0-10%
     funding_percentage DECIMAL(5,2), -- What % of total loan this represents
     
     -- Offer Terms
@@ -392,19 +402,22 @@ CREATE INDEX IF NOT EXISTS idx_lender_performance_lender_date ON lender_performa
 -- VIEWS FOR MARKETPLACE OPERATIONS
 -- =============================================================================
 
--- Active Primary Market Listings
+-- Drop existing views if they exist (to avoid column mismatch errors)
+DROP VIEW IF EXISTS active_loan_marketplace CASCADE;
+DROP VIEW IF EXISTS active_secondary_market CASCADE;
+DROP VIEW IF EXISTS lender_portfolio_summary CASCADE;
+
+-- Active Primary Market Listings (Safe version - works without user_zimscores table)
 CREATE OR REPLACE VIEW active_loan_marketplace AS
 SELECT
     lml.id,
     lml.loan_id,
     lml.borrower_user_id,
-    up.first_name || ' ' || up.last_name as borrower_name,
+    COALESCE(up.first_name || ' ' || up.last_name, 'Anonymous User') as borrower_name,
     lml.amount_requested,
     lml.loan_term_months,
     lml.requested_interest_rate,
-    lml.borrower_star_rating, -- Show public star rating to lenders
-    lml.risk_grade, -- Show calculated risk grade
-    lml.recommended_rate, -- Show recommended interest rate
+    1.0 as borrower_star_rating, -- Default star rating (will be updated when ZimScore is integrated)
     lml.funding_goal,
     lml.amount_funded,
     lml.funding_percentage,
@@ -417,7 +430,7 @@ FROM loan_marketplace_listings lml
 LEFT JOIN user_profiles up ON lml.borrower_user_id = up.user_id
 LEFT JOIN lender_funding_offers lfo ON lml.id = lfo.listing_id AND lfo.status = 'pending'
 WHERE lml.status = 'active'
-GROUP BY lml.id, up.first_name, up.last_name
+GROUP BY lml.id, up.first_name, up.last_name, lml.borrower_user_id, lml.amount_requested, lml.loan_term_months, lml.requested_interest_rate, lml.funding_goal, lml.amount_funded, lml.funding_percentage, lml.listing_date, lml.funding_deadline
 ORDER BY lml.listing_date DESC;
 
 -- Active Secondary Market Listings
@@ -465,25 +478,69 @@ GROUP BY lih.lender_user_id;
 -- FUNCTIONS FOR MARKETPLACE OPERATIONS
 -- =============================================================================
 
--- Function to get borrower ZimScore data for marketplace listing
+-- Function to check if borrower is first-time (cold start system)
+CREATE OR REPLACE FUNCTION is_first_time_borrower(borrower_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+    loan_count INTEGER;
+BEGIN
+    -- Check if borrower has any completed loans
+    SELECT COUNT(*) INTO loan_count
+    FROM loans l
+    WHERE l.user_id = borrower_id 
+    AND l.status IN ('completed', 'active', 'disbursed');
+    
+    -- Also check zimscore_loans table if it exists
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'zimscore_loans') THEN
+        SELECT COUNT(*) + loan_count INTO loan_count
+        FROM zimscore_loans zl
+        WHERE zl.borrower_user_id = borrower_id 
+        AND zl.status IN ('repaid', 'active', 'funded');
+    END IF;
+    
+    RETURN loan_count = 0; -- True if no previous loans
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get borrower ZimScore data for marketplace listing (Safe version)
 CREATE OR REPLACE FUNCTION get_borrower_zimscore_data(borrower_id UUID)
 RETURNS TABLE(
     internal_score INTEGER,
     star_rating DECIMAL(2,1),
-    max_loan_amount DECIMAL(15,2)
+    max_loan_amount DECIMAL(15,2),
+    is_first_time BOOLEAN
 ) AS $$
 BEGIN
-    RETURN QUERY
-    SELECT 
-        COALESCE(uz.score_value, 30) as internal_score,
-        COALESCE(uz.star_rating, 1.0) as star_rating,
-        COALESCE(uz.max_loan_amount, 1000.00) as max_loan_amount
-    FROM user_zimscores uz
-    WHERE uz.user_id = borrower_id
-    UNION ALL
-    SELECT 30, 1.0, 1000.00 -- Default values if no ZimScore found
-    WHERE NOT EXISTS (SELECT 1 FROM user_zimscores WHERE user_id = borrower_id)
-    LIMIT 1;
+    -- Check if user_zimscores table exists
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'user_zimscores') THEN
+        RETURN QUERY
+        SELECT 
+            COALESCE(uz.score_value, 30) as internal_score,
+            COALESCE(uz.star_rating, 1.0) as star_rating,
+            CASE 
+                WHEN is_first_time_borrower(borrower_id) THEN 100.00 -- Cold start: max $100 for first-time
+                ELSE COALESCE(uz.max_loan_amount, 1000.00)
+            END as max_loan_amount,
+            is_first_time_borrower(borrower_id) as is_first_time
+        FROM user_zimscores uz
+        WHERE uz.user_id = borrower_id
+        UNION ALL
+        SELECT 
+            30, 
+            1.0, 
+            100.00, -- Cold start amount for new users
+            TRUE -- Default to first-time if no ZimScore found
+        WHERE NOT EXISTS (SELECT 1 FROM user_zimscores WHERE user_id = borrower_id)
+        LIMIT 1;
+    ELSE
+        -- Return default values if user_zimscores table doesn't exist
+        RETURN QUERY
+        SELECT 
+            30 as internal_score,
+            1.0 as star_rating,
+            100.00 as max_loan_amount, -- Default cold start amount
+            TRUE as is_first_time; -- Default to first-time
+    END IF;
 END;
 $$ LANGUAGE plpgsql;
 
