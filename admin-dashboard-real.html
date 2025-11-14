@@ -845,12 +845,91 @@
             </div>
 
             <div id="investments-section" class="dashboard-section">
-                <div class="dashboard-card">
+                <!-- Investment Stats -->
+                <div class="stats-grid" style="margin-bottom: 30px;">
+                    <div class="stat-card primary">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="invTotalInvested">$0</div>
+                                <div class="stat-label">Total Invested</div>
+                            </div>
+                            <div class="stat-icon primary">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="invTotalReturns">$0</div>
+                                <div class="stat-label">Total Returns</div>
+                            </div>
+                            <div class="stat-icon success">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="invAverageROI">0%</div>
+                                <div class="stat-label">Average ROI</div>
+                            </div>
+                            <div class="stat-icon warning">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card danger">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="invActiveCount">0</div>
+                                <div class="stat-label">Active Investments</div>
+                            </div>
+                            <div class="stat-icon danger">
+                                <i class="fas fa-chart-pie"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Investment Analytics -->
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h2 class="card-title">P2P Investments</h2>
+                            <button class="btn btn-primary" onclick="loadInvestmentAnalytics()">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="card-content">
+                            <div id="p2pInvestmentsContainer" class="loading">
+                                <div class="spinner"></div>
+                                <p>Loading P2P investments...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Traditional Investments</h2>
+                        </div>
+                        <div class="card-content">
+                            <div id="traditionalInvestmentsContainer" class="loading">
+                                <div class="spinner"></div>
+                                <p>Loading traditional investments...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Trends Chart -->
+                <div class="dashboard-card" style="margin-top: 20px;">
                     <div class="card-header">
-                        <h2 class="card-title">Investments Overview</h2>
+                        <h2 class="card-title">Investment Trends (Last 6 Months)</h2>
                     </div>
                     <div class="card-content">
-                        <p>Investment analytics and management tools would be displayed here.</p>
+                        <canvas id="investmentTrendsChart" style="max-height: 300px;"></canvas>
                     </div>
                 </div>
             </div>
@@ -867,12 +946,70 @@
             </div>
 
             <div id="reports-section" class="dashboard-section">
-                <div class="dashboard-card">
+                <!-- Report Generation -->
+                <div class="dashboard-card" style="margin-bottom: 20px;">
                     <div class="card-header">
-                        <h2 class="card-title">Reports & Exports</h2>
+                        <h2 class="card-title">Generate Reports</h2>
                     </div>
                     <div class="card-content">
-                        <p>Generate and download various reports from the platform.</p>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Report Type</label>
+                                <select id="reportType" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                                    <option value="overview">Platform Overview</option>
+                                    <option value="users">User Report</option>
+                                    <option value="loans">Loan Report</option>
+                                    <option value="investments">Investment Report</option>
+                                    <option value="financial">Financial Report</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Start Date</label>
+                                <input type="date" id="reportStartDate" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">End Date</label>
+                                <input type="date" id="reportEndDate" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                            </div>
+                        </div>
+                        <div style="margin-top: 20px; display: flex; gap: 10px;">
+                            <button class="btn btn-primary" onclick="generateReport()">
+                                <i class="fas fa-file-alt"></i> Generate Report
+                            </button>
+                            <button class="btn btn-primary" onclick="downloadReport()">
+                                <i class="fas fa-download"></i> Download JSON
+                            </button>
+                        </div>
+                        <div id="reportPreview" style="margin-top: 20px; padding: 20px; background: #f7fafc; border-radius: 8px; display: none;">
+                            <h3 style="margin-bottom: 10px;">Report Preview</h3>
+                            <pre id="reportData" style="background: white; padding: 15px; border-radius: 6px; overflow-x: auto; max-height: 400px;"></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Export -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Export Data</h2>
+                    </div>
+                    <div class="card-content">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <button class="btn btn-primary" onclick="exportDataType('users')">
+                                <i class="fas fa-users"></i> Export Users
+                            </button>
+                            <button class="btn btn-primary" onclick="exportDataType('loans')">
+                                <i class="fas fa-hand-holding-usd"></i> Export Loans
+                            </button>
+                            <button class="btn btn-primary" onclick="exportDataType('investments')">
+                                <i class="fas fa-chart-pie"></i> Export Investments
+                            </button>
+                            <button class="btn btn-primary" onclick="exportAllData()">
+                                <i class="fas fa-database"></i> Export All Data
+                            </button>
+                        </div>
+                        <div id="exportStatus" style="margin-top: 15px; padding: 10px; background: #e6fffa; border-radius: 6px; display: none;">
+                            <p style="margin: 0; color: #065f46;"><i class="fas fa-check-circle"></i> <span id="exportMessage"></span></p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -924,7 +1061,13 @@
                     loadLoans();
                     break;
                 case 'investments':
-                    // loadInvestments();
+                    loadInvestmentAnalytics();
+                    break;
+                case 'ai-monitoring':
+                    loadAIMonitoring();
+                    break;
+                case 'reports':
+                    // Reports section is static UI
                     break;
                 case 'analytics':
                     loadAnalytics();
@@ -1232,6 +1375,258 @@
 
         function generateUserReport() {
             alert('User report generation would create detailed analytics');
+        }
+
+        // Investment Analytics Functions
+        let currentReportData = null;
+
+        async function loadInvestmentAnalytics() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin-dashboard/investments/analytics`, {
+                    headers: {
+                        'x-admin-key': ADMIN_API_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    displayInvestmentAnalytics(result.data);
+                }
+            } catch (error) {
+                console.error('Error loading investment analytics:', error);
+                document.getElementById('p2pInvestmentsContainer').innerHTML = `
+                    <p style="color: #718096;">Unable to load investment analytics</p>
+                `;
+            }
+        }
+
+        function displayInvestmentAnalytics(data) {
+            // Update stats
+            document.getElementById('invTotalInvested').textContent = `$${data.overview.total_invested?.toLocaleString() || 0}`;
+            document.getElementById('invTotalReturns').textContent = `$${data.overview.total_returns?.toLocaleString() || 0}`;
+            document.getElementById('invAverageROI').textContent = `${data.overview.average_roi || 0}%`;
+            document.getElementById('invActiveCount').textContent = data.overview.active_investments || 0;
+
+            // Display P2P investments
+            const p2pHTML = `
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    <div>
+                        <div style="font-size: 24px; font-weight: 700; color: #667eea;">$${data.p2p.total_amount?.toLocaleString() || 0}</div>
+                        <div style="color: #718096; font-size: 14px;">Total Amount</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 24px; font-weight: 700; color: #10b981;">$${data.p2p.total_earned?.toLocaleString() || 0}</div>
+                        <div style="color: #718096; font-size: 14px;">Total Earned</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 24px; font-weight: 700;">${data.p2p.active_count || 0}</div>
+                        <div style="color: #718096; font-size: 14px;">Active</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 24px; font-weight: 700;">${data.p2p.total_count || 0}</div>
+                        <div style="color: #718096; font-size: 14px;">Total</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('p2pInvestmentsContainer').innerHTML = p2pHTML;
+
+            // Display traditional investments
+            const tradHTML = `
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <div style="font-size: 24px; font-weight: 700; color: #667eea;">$${data.traditional.total_amount?.toLocaleString() || 0}</div>
+                        <div style="color: #718096; font-size: 14px;">Total Amount</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 24px; font-weight: 700; color: #10b981;">$${data.traditional.total_returns?.toLocaleString() || 0}</div>
+                        <div style="color: #718096; font-size: 14px;">Total Returns</div>
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <h4 style="margin-bottom: 10px;">By Type</h4>
+                    ${Object.entries(data.traditional.by_type || {}).map(([type, stats]) => `
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+                            <span style="text-transform: capitalize;">${type.replace('_', ' ')}</span>
+                            <span style="font-weight: 600;">$${stats.amount?.toLocaleString() || 0} (${stats.count})</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            document.getElementById('traditionalInvestmentsContainer').innerHTML = tradHTML;
+
+            // Display trends chart
+            if (typeof Chart !== 'undefined' && data.trends) {
+                const ctx = document.getElementById('investmentTrendsChart');
+                if (ctx) {
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.trends.map(t => t.month),
+                            datasets: [{
+                                label: 'Investment Amount',
+                                data: data.trends.map(t => t.amount),
+                                borderColor: '#667eea',
+                                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }, {
+                                label: 'Investment Count',
+                                data: data.trends.map(t => t.count),
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                yAxisID: 'y1'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            interaction: {
+                                mode: 'index',
+                                intersect: false
+                            },
+                            scales: {
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left'
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    grid: {
+                                        drawOnChartArea: false
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        // AI Monitoring Functions
+        async function loadAIMonitoring() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin-dashboard/ai/monitoring`, {
+                    headers: {
+                        'x-admin-key': ADMIN_API_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    displayAIMonitoring(result.data);
+                }
+            } catch (error) {
+                console.error('Error loading AI monitoring:', error);
+            }
+        }
+
+        function displayAIMonitoring(data) {
+            // Update AI metrics in overview section
+            document.getElementById('aiSuccessRate').textContent = `${data.overview.overall_success_rate || 0}%`;
+            document.getElementById('aiRequests').textContent = data.providers.openrouter.total_requests || 0;
+            document.getElementById('aiFallbacks').textContent = data.providers.gemini.fallback_usage || 0;
+            document.getElementById('aiReliability').textContent = `${data.reliability.uptime_percentage || 0}%`;
+        }
+
+        // Report Generation Functions
+        async function generateReport() {
+            const reportType = document.getElementById('reportType').value;
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+
+            try {
+                const url = new URL(`${API_BASE_URL}/api/admin-dashboard/reports/generate`);
+                url.searchParams.append('reportType', reportType);
+                if (startDate) url.searchParams.append('startDate', startDate);
+                if (endDate) url.searchParams.append('endDate', endDate);
+
+                const response = await fetch(url, {
+                    headers: {
+                        'x-admin-key': ADMIN_API_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    currentReportData = result.data;
+                    document.getElementById('reportData').textContent = JSON.stringify(result.data, null, 2);
+                    document.getElementById('reportPreview').style.display = 'block';
+                } else {
+                    alert('Failed to generate report: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error generating report:', error);
+                alert('Failed to generate report');
+            }
+        }
+
+        function downloadReport() {
+            if (!currentReportData) {
+                alert('Please generate a report first');
+                return;
+            }
+
+            const dataStr = JSON.stringify(currentReportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${currentReportData.report_type}-report-${Date.now()}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Data Export Functions
+        async function exportDataType(dataType) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin-dashboard/export/${dataType}`, {
+                    headers: {
+                        'x-admin-key': ADMIN_API_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    // Download the data
+                    const dataStr = JSON.stringify(result.data, null, 2);
+                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(dataBlob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `${dataType}-export-${Date.now()}.json`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+
+                    // Show success message
+                    document.getElementById('exportMessage').textContent = `Successfully exported ${result.data.count} ${dataType} records`;
+                    document.getElementById('exportStatus').style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById('exportStatus').style.display = 'none';
+                    }, 5000);
+                } else {
+                    alert('Failed to export data: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error exporting data:', error);
+                alert('Failed to export data');
+            }
+        }
+
+        async function exportAllData() {
+            const types = ['users', 'loans', 'investments'];
+            for (const type of types) {
+                await exportDataType(type);
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Delay between exports
+            }
         }
 
         // Error handling
