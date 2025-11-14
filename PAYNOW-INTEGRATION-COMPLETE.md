@@ -93,22 +93,22 @@ Complete PayNow payment gateway integration with multi-currency support (USD/ZWG
 Configure your `.env` file with:
 ```bash
 # USD Integration
-EXPO_PUBLIC_PAYNOW_USD_INTEGRATION_ID=your_usd_integration_id
-EXPO_PUBLIC_PAYNOW_USD_INTEGRATION_KEY=your_usd_integration_key
+PAYNOW_USD_INTEGRATION_ID=your_usd_integration_id
+PAYNOW_USD_INTEGRATION_KEY=your_usd_integration_key
 
 # ZWG Integration
-EXPO_PUBLIC_PAYNOW_ZWG_INTEGRATION_ID=your_zwg_integration_id
-EXPO_PUBLIC_PAYNOW_ZWG_INTEGRATION_KEY=your_zwg_integration_key
+PAYNOW_ZWG_INTEGRATION_ID=your_zwg_integration_id
+PAYNOW_ZWG_INTEGRATION_KEY=your_zwg_integration_key
 
 # URLs
-EXPO_PUBLIC_PAYNOW_RESULT_URL=https://your-domain.com/api/paynow/result
-EXPO_PUBLIC_PAYNOW_RETURN_URL=https://your-domain.com/payment/return
+PAYNOW_RESULT_URL=https://your-domain.com/api/paynow/result
+PAYNOW_RETURN_URL=https://your-domain.com/payment/return
 
 # Settings
-EXPO_PUBLIC_PAYNOW_TEST_MODE=false
-EXPO_PUBLIC_PAYNOW_MERCHANT_EMAIL=your-email@domain.com
-EXPO_PUBLIC_DEFAULT_CURRENCY=USD
-EXPO_PUBLIC_ENVIRONMENT=production
+PAYNOW_TEST_MODE=false
+PAYNOW_MERCHANT_EMAIL=your-email@domain.com
+DEFAULT_CURRENCY=USD
+ENVIRONMENT=production
 ```
 
 ### **2. Install Dependencies**
