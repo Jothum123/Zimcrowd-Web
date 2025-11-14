@@ -145,7 +145,7 @@ class ZimScoreService {
             const maxLoanAmount = this.calculateMaxLoanAmount(score);
             const riskLevel = this.getRiskLevel(score);
 
-            console.log(`✅ Cold Start Score: ${score}/99 (${starRating}⭐) - Reputation: ${riskLevel} - Max Loan: $${maxLoanAmount}`);
+            console.log(`✅ Cold Start Score: ${score}/85 (${starRating}⭐) - Risk Level: ${riskLevel} - Max Loan: $${maxLoanAmount}`);
 
             // Save to database
             await this.saveZimScore(userId, {
@@ -230,15 +230,14 @@ class ZimScoreService {
                     break;
 
                 case 'LOAN_REPAID_LATE':
-                    const daysLate = loanEvent.daysLate || 0;
-                    if (daysLate <= 7) {
-                        scoreChange = this.WEIGHTS.LOAN_REPAID_LATE_1_7_DAYS;
-                    } else if (daysLate <= 30) {
-                        scoreChange = this.WEIGHTS.LOAN_REPAID_LATE_8_30_DAYS;
-                    } else {
-                        scoreChange = this.WEIGHTS.LOAN_REPAID_LATE_30_PLUS;
+                    // SPEC: -5 points per late payment (max -20 total)
+                    scoreChange = this.WEIGHTS.LOAN_REPAID_LATE;
+                    const currentLatePenalty = factors.late_payments || 0;
+                    // Cap total late payment penalty at -20
+                    if (currentLatePenalty > -20) {
+                        factors.late_payments = Math.max(currentLatePenalty + scoreChange, -20);
                     }
-                    factors.late_payments = (factors.late_payments || 0) + scoreChange;
+                    const daysLate = loanEvent.daysLate || 0;
                     changeReason = `loan_repaid_late_${daysLate}_days`;
                     break;
 
@@ -361,12 +360,12 @@ class ZimScoreService {
 
     /**
      * Calculate star rating from internal score
-     * @param {number} scoreValue - Internal score (30-99)
+     * @param {number} scoreValue - Internal score (30-85)
      * @returns {number} Star rating (1.0-5.0)
      */
     calculateStarRating(scoreValue) {
-        // Linear mapping: 30 -> 1.0, 99 -> 5.0
-        let starRating = 1.0 + ((scoreValue - 30) / 69) * 4.0;
+        // Linear mapping: 30 -> 1.0, 85 -> 5.0 (SPEC REQUIREMENT)
+        let starRating = 1.0 + ((scoreValue - 30) / 55) * 4.0;
         
         // Round to nearest 0.5
         starRating = Math.round(starRating * 2) / 2;
@@ -377,35 +376,34 @@ class ZimScoreService {
 
     /**
      * Calculate maximum loan amount based on score
-     * Reputation-based system: Everyone starts at $50, builds up through on-time repayments
-     * @param {number} scoreValue - Internal score (30-99)
+     * SPEC: 30-85 range with 6-tier system
+     * @param {number} scoreValue - Internal score (30-85)
      * @returns {number} Max loan amount in USD
      */
     calculateMaxLoanAmount(scoreValue) {
-        // Reputation-based tier system
-        if (scoreValue >= 90) return 1000.00;  // Excellent reputation
-        if (scoreValue >= 80) return 800.00;   // Great reputation
-        if (scoreValue >= 70) return 600.00;   // Good reputation
-        if (scoreValue >= 60) return 400.00;   // Fair reputation
-        if (scoreValue >= 50) return 300.00;   // Building reputation
-        if (scoreValue >= 40) return 200.00;   // Early reputation
-        if (scoreValue >= 35) return 100.00;   // Starting reputation
-        return 50.00;                          // Cold start - everyone starts here
+        // SPECIFICATION-COMPLIANT TIER SYSTEM (30-85 range)
+        if (scoreValue >= 80) return 1000.00;  // Very Low Risk (80-85)
+        if (scoreValue >= 70) return 800.00;   // Low Risk (70-79)
+        if (scoreValue >= 60) return 600.00;   // Medium Risk (60-69)
+        if (scoreValue >= 50) return 400.00;   // High Risk (50-59)
+        if (scoreValue >= 40) return 300.00;   // Very High Risk (40-49)
+        return 100.00;                         // Building Credit (30-39)
     }
 
     /**
-     * Get reputation level classification based on score
-     * @param {number} scoreValue - Internal score (30-99)
-     * @returns {string} Reputation level
+     * Get risk level classification based on score
+     * SPEC: 30-85 range with standardized risk level names
+     * @param {number} scoreValue - Internal score (30-85)
+     * @returns {string} Risk level
      */
     getRiskLevel(scoreValue) {
-        if (scoreValue >= 90) return 'Excellent';
-        if (scoreValue >= 80) return 'Great';
-        if (scoreValue >= 70) return 'Good';
-        if (scoreValue >= 60) return 'Fair';
-        if (scoreValue >= 50) return 'Building';
-        if (scoreValue >= 40) return 'Early';
-        return 'New';
+        // SPECIFICATION-COMPLIANT RISK LEVELS (30-85 range)
+        if (scoreValue >= 80) return 'Very Low Risk';    // 80-85
+        if (scoreValue >= 70) return 'Low Risk';         // 70-79
+        if (scoreValue >= 60) return 'Medium Risk';      // 60-69
+        if (scoreValue >= 50) return 'High Risk';        // 50-59
+        if (scoreValue >= 40) return 'Very High Risk';   // 40-49
+        return 'Building Credit';                        // 30-39
     }
 
     /**
