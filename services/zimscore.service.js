@@ -113,13 +113,12 @@ class ZimScoreService {
             // Clamp score to valid range
             score = Math.max(this.MIN_SCORE, Math.min(this.MAX_SCORE, score));
 
-            // Calculate star rating, max loan amount, risk level, and interest rate
+            // Calculate star rating, max loan amount, and reputation level
             const starRating = this.calculateStarRating(score);
             const maxLoanAmount = this.calculateMaxLoanAmount(score);
             const riskLevel = this.getRiskLevel(score);
-            const interestRate = this.getSuggestedInterestRate(score);
 
-            console.log(`✅ Cold Start Score: ${score}/99 (${starRating}⭐) - Risk: ${riskLevel} - Max Loan: $${maxLoanAmount}`);
+            console.log(`✅ Cold Start Score: ${score}/99 (${starRating}⭐) - Reputation: ${riskLevel} - Max Loan: $${maxLoanAmount}`);
 
             // Save to database
             await this.saveZimScore(userId, {
@@ -127,8 +126,6 @@ class ZimScoreService {
                 starRating,
                 maxLoanAmount,
                 riskLevel,
-                interestRateMin: interestRate.min,
-                interestRateMax: interestRate.max,
                 factors,
                 calculationMethod: 'cold_start'
             });
@@ -151,7 +148,6 @@ class ZimScoreService {
                 starRating,
                 maxLoanAmount,
                 riskLevel,
-                interestRate,
                 factors
             };
         } catch (error) {
@@ -292,9 +288,8 @@ class ZimScoreService {
             const newStarRating = this.calculateStarRating(newScore);
             const newMaxLoanAmount = this.calculateMaxLoanAmount(newScore);
             const newRiskLevel = this.getRiskLevel(newScore);
-            const newInterestRate = this.getSuggestedInterestRate(newScore);
 
-            console.log(`✅ Score updated: ${currentScore.score_value} -> ${newScore} (${scoreChange >= 0 ? '+' : ''}${scoreChange}) - Risk: ${newRiskLevel}`);
+            console.log(`✅ Score updated: ${currentScore.score_value} -> ${newScore} (${scoreChange >= 0 ? '+' : ''}${scoreChange}) - Reputation: ${newRiskLevel}`);
 
             // Update in database
             await this.saveZimScore(userId, {
@@ -302,8 +297,6 @@ class ZimScoreService {
                 starRating: newStarRating,
                 maxLoanAmount: newMaxLoanAmount,
                 riskLevel: newRiskLevel,
-                interestRateMin: newInterestRate.min,
-                interestRateMax: newInterestRate.max,
                 factors,
                 calculationMethod: 'trust_loop'
             });
@@ -328,8 +321,7 @@ class ZimScoreService {
                 scoreChange,
                 starRating: newStarRating,
                 maxLoanAmount: newMaxLoanAmount,
-                riskLevel: newRiskLevel,
-                interestRate: newInterestRate
+                riskLevel: newRiskLevel
             };
         } catch (error) {
             console.error('❌ Trust Loop update error:', error);
@@ -358,46 +350,35 @@ class ZimScoreService {
 
     /**
      * Calculate maximum loan amount based on score
+     * Reputation-based system: Everyone starts at $50, builds up through on-time repayments
      * @param {number} scoreValue - Internal score (30-99)
      * @returns {number} Max loan amount in USD
      */
     calculateMaxLoanAmount(scoreValue) {
-        // 7-tier system matching specification
-        if (scoreValue >= 90) return 1000.00;  // Very Low Risk: $1000
-        if (scoreValue >= 80) return 800.00;   // Low Risk: $800
-        if (scoreValue >= 70) return 600.00;   // Medium Risk: $600
-        if (scoreValue >= 60) return 400.00;   // High Risk: $400
-        if (scoreValue >= 50) return 300.00;   // Very High Risk: $300
-        if (scoreValue >= 40) return 200.00;   // Very High Risk: $200
-        return 100.00;                         // Very High Risk: $100
+        // Reputation-based tier system
+        if (scoreValue >= 90) return 1000.00;  // Excellent reputation
+        if (scoreValue >= 80) return 800.00;   // Great reputation
+        if (scoreValue >= 70) return 600.00;   // Good reputation
+        if (scoreValue >= 60) return 400.00;   // Fair reputation
+        if (scoreValue >= 50) return 300.00;   // Building reputation
+        if (scoreValue >= 40) return 200.00;   // Early reputation
+        if (scoreValue >= 35) return 100.00;   // Starting reputation
+        return 50.00;                          // Cold start - everyone starts here
     }
 
     /**
-     * Get risk level classification based on score
+     * Get reputation level classification based on score
      * @param {number} scoreValue - Internal score (30-99)
-     * @returns {string} Risk level
+     * @returns {string} Reputation level
      */
     getRiskLevel(scoreValue) {
-        if (scoreValue >= 90) return 'Very Low';
-        if (scoreValue >= 80) return 'Low';
-        if (scoreValue >= 70) return 'Medium';
-        if (scoreValue >= 60) return 'High';
-        return 'Very High';
-    }
-
-    /**
-     * Get suggested interest rate range based on score
-     * @param {number} scoreValue - Internal score (30-99)
-     * @returns {Object} Interest rate range
-     */
-    getSuggestedInterestRate(scoreValue) {
-        if (scoreValue >= 90) return { min: 3, max: 10 };
-        if (scoreValue >= 80) return { min: 4, max: 10 };
-        if (scoreValue >= 70) return { min: 5, max: 10 };
-        if (scoreValue >= 60) return { min: 6, max: 10 };
-        if (scoreValue >= 50) return { min: 7, max: 10 };
-        if (scoreValue >= 40) return { min: 8, max: 10 };
-        return { min: 9, max: 10 };
+        if (scoreValue >= 90) return 'Excellent';
+        if (scoreValue >= 80) return 'Great';
+        if (scoreValue >= 70) return 'Good';
+        if (scoreValue >= 60) return 'Fair';
+        if (scoreValue >= 50) return 'Building';
+        if (scoreValue >= 40) return 'Early';
+        return 'New';
     }
 
     /**
@@ -413,8 +394,6 @@ class ZimScoreService {
                 star_rating: scoreData.starRating,
                 max_loan_amount: scoreData.maxLoanAmount,
                 risk_level: scoreData.riskLevel,
-                suggested_interest_rate_min: scoreData.interestRateMin,
-                suggested_interest_rate_max: scoreData.interestRateMax,
                 score_factors: scoreData.factors,
                 calculation_method: scoreData.calculationMethod,
                 last_calculated: new Date().toISOString()
