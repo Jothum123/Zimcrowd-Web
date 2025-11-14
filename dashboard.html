@@ -4789,6 +4789,108 @@
     </div>
 
     <script>
+        // ============================================
+        // API CONFIGURATION & UTILITY
+        // ============================================
+        const API_BASE_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:3000'
+            : 'https://zimcrowd-backend-dz18dm4h9-jojola.vercel.app';
+
+        // ZimCrowd API Utility
+        window.ZimCrowdAPI = {
+            token: null,
+            
+            setToken(token) {
+                this.token = token;
+            },
+            
+            async request(endpoint, options = {}) {
+                const headers = {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                };
+                
+                if (this.token) {
+                    headers['Authorization'] = `Bearer ${this.token}`;
+                }
+                
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    ...options,
+                    headers
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'API request failed');
+                }
+                
+                return data;
+            },
+            
+            // Profile APIs
+            async getProfile() {
+                return this.request('/api/profile');
+            },
+            
+            // Dashboard APIs
+            async getDashboardOverview() {
+                return this.request('/api/dashboard/overview');
+            },
+            
+            // Wallet APIs
+            async getWalletBalance() {
+                return this.request('/api/wallet/balance');
+            },
+            
+            async getWalletTransactions(page = 1, limit = 10) {
+                return this.request(`/api/wallet/transactions?page=${page}&limit=${limit}`);
+            },
+            
+            // Loans APIs
+            async getLoans(page = 1, limit = 10) {
+                return this.request(`/api/loans/my-loans?page=${page}&limit=${limit}`);
+            },
+            
+            async getLoanStats() {
+                return this.request('/api/loans/stats');
+            },
+            
+            // Investments APIs
+            async getInvestments(page = 1, limit = 10) {
+                return this.request(`/api/investments/my-investments?page=${page}&limit=${limit}`);
+            },
+            
+            async getInvestmentPortfolio() {
+                return this.request('/api/investments/portfolio');
+            },
+            
+            async getInvestmentStats() {
+                return this.request('/api/investments/stats');
+            },
+            
+            // Transactions APIs
+            async getTransactions(page = 1, limit = 10) {
+                return this.request(`/api/transactions?page=${page}&limit=${limit}`);
+            },
+            
+            // ZimScore API
+            async getZimScore() {
+                return this.request('/api/zimscore');
+            },
+            
+            // Notifications API
+            async getNotifications() {
+                return this.request('/api/notifications');
+            },
+            
+            async markNotificationRead(notificationId) {
+                return this.request(`/api/notifications/${notificationId}/read`, {
+                    method: 'PUT'
+                });
+            }
+        };
+
         // Mobile Menu Toggle
         const mobileMenuToggle = document.getElementById('mobileMenuToggle');
         const sidebar = document.getElementById('sidebar');
@@ -5919,83 +6021,236 @@ How it works:
         function updateWalletBalance(walletData) {
             if (!walletData || !walletData.success) return;
 
-            // Update the featured balance card
-            const balanceCard = document.querySelector('.featured-balance-card h3');
-            if (balanceCard && walletData.data) {
-                const balance = walletData.data.available_balance || 0;
-                balanceCard.textContent = `$${balance.toLocaleString()}`;
+            const data = walletData.data;
+            
+            // Update overview section stats
+            const statsCards = document.querySelectorAll('#overview-section .stats-grid .stat-card h3');
+            if (statsCards.length >= 1) {
+                // Total Balance
+                const totalBalance = (data.wallet1_balance || 0) + (data.wallet2_balance || 0);
+                statsCards[0].textContent = `$${totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             }
 
-            // Update wallet transactions section
-            const walletTransactions = walletData.data.transactions || [];
-            updateWalletTransactions(walletTransactions);
+            // Update wallet section balances
+            const wallet1Balance = document.querySelector('#wallet-section .stat-card:nth-child(1) h3');
+            const wallet2Balance = document.querySelector('#wallet-section .stat-card:nth-child(2) h3');
+            
+            if (wallet1Balance) {
+                wallet1Balance.textContent = `$${(data.wallet1_balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            }
+            
+            if (wallet2Balance) {
+                wallet2Balance.textContent = `$${(data.wallet2_balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            }
+
+            console.log('✅ Wallet balance updated:', data);
         }
 
         function updateLoansOverview(loansData) {
             if (!loansData || !loansData.success) return;
 
             const loans = loansData.data.loans || [];
+            const stats = loansData.data.stats || {};
 
-            // Update stats cards
-            const activeLoansCard = document.querySelector('.stats-grid .stat-card:nth-child(3) h3');
-            if (activeLoansCard) {
-                const activeLoans = loans.filter(loan => loan.status === 'active').length;
-                activeLoansCard.textContent = activeLoans;
+            // Update overview section stats
+            const statsCards = document.querySelectorAll('#overview-section .stats-grid .stat-card h3');
+            if (statsCards.length >= 2) {
+                // Total Loans (index 1)
+                statsCards[1].textContent = `$${(stats.total_borrowed || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            }
+            if (statsCards.length >= 4) {
+                // Active Loans count (index 3)
+                statsCards[3].textContent = stats.active_loans || 0;
             }
 
-            // Update loans section with real data
-            const loansContainer = document.querySelector('#loans-section .loan-cards');
-            if (loansContainer && loans.length > 0) {
-                loansContainer.innerHTML = loans.map(loan => `
-                    <div class="loan-card">
-                        <div class="loan-header">
-                            <div>
-                                <h4>${loan.loan_type.charAt(0).toUpperCase() + loan.loan_type.slice(1)} Loan</h4>
-                                <span class="loan-status ${loan.status}">${loan.status}</span>
-                            </div>
-                            <div class="loan-amount">$${loan.amount.toLocaleString()}</div>
-                        </div>
-                        <div class="loan-details">
-                            <div class="detail-row">
-                                <span>Monthly Payment</span>
-                                <strong>$${loan.monthly_payment?.toFixed(2) || '0.00'}</strong>
-                            </div>
-                            <div class="detail-row">
-                                <span>Interest Rate</span>
-                                <strong>${loan.interest_rate}%</strong>
-                            </div>
-                            <div class="detail-row">
-                                <span>Duration</span>
-                                <strong>${loan.duration_months} months</strong>
-                            </div>
-                        </div>
-                        <div class="loan-progress">
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 75%"></div>
-                            </div>
-                            <div class="progress-text">75% completed</div>
-                        </div>
-                    </div>
-                `).join('');
+            // Update loans section stats
+            const loanStatsCards = document.querySelectorAll('#loans-section .stats-grid .stat-card h3');
+            if (loanStatsCards.length >= 4) {
+                loanStatsCards[0].textContent = `$${(stats.total_borrowed || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+                loanStatsCards[1].textContent = `${stats.average_duration || 0} Months`;
+                loanStatsCards[2].textContent = `${stats.average_interest_rate || 0}%`;
+                loanStatsCards[3].textContent = `${stats.active_loans || 0} Active`;
             }
+
+            console.log('✅ Loans overview updated:', stats);
+        }
+
+        function updateLoansSection(loansData) {
+            if (!loansData || !loansData.success) return;
+
+            const loans = loansData.data.loans || [];
+            
+            // Update active loans tab
+            const activeTab = document.querySelector('#active-tab');
+            if (activeTab && loans.length > 0) {
+                const activeLoans = loans.filter(loan => loan.status === 'active' || loan.status === 'disbursed');
+                
+                if (activeLoans.length > 0) {
+                    activeTab.innerHTML = activeLoans.map(loan => {
+                        const paidPercentage = loan.amount_paid ? ((loan.amount_paid / loan.amount) * 100).toFixed(0) : 0;
+                        
+                        return `
+                        <div class="loan-card">
+                            <div class="loan-header">
+                                <div>
+                                    <h4>${loan.loan_type ? loan.loan_type.charAt(0).toUpperCase() + loan.loan_type.slice(1) : 'Personal'} Loan</h4>
+                                    <span class="loan-status">${loan.status}</span>
+                                </div>
+                                <div class="loan-amount">$${parseFloat(loan.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                            </div>
+                            <div class="loan-details">
+                                <div class="detail-row">
+                                    <span>Monthly Payment</span>
+                                    <strong>$${(loan.amount / (loan.duration_months || 12)).toFixed(2)}</strong>
+                                </div>
+                                <div class="detail-row">
+                                    <span>Interest Rate</span>
+                                    <strong>${loan.interest_rate || 0}%</strong>
+                                </div>
+                                <div class="detail-row">
+                                    <span>Term</span>
+                                    <strong>${loan.duration_months || 12} months</strong>
+                                </div>
+                                <div class="detail-row">
+                                    <span>Next Payment</span>
+                                    <strong>${loan.next_payment_date ? new Date(loan.next_payment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}</strong>
+                                </div>
+                            </div>
+                            <div class="loan-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${paidPercentage}%"></div>
+                                </div>
+                                <div class="progress-text">${paidPercentage}% paid off</div>
+                            </div>
+                        </div>
+                    `}).join('');
+                } else {
+                    activeTab.innerHTML = '<p style="text-align: center; color: #94a3b8; padding: 40px;">No active loans</p>';
+                }
+            }
+
+            // Update tab counts
+            const activeBtn = document.querySelector('.tab-btn:nth-child(1)');
+            if (activeBtn) {
+                const activeCount = loans.filter(l => l.status === 'active' || l.status === 'disbursed').length;
+                activeBtn.textContent = `Active Loans (${activeCount})`;
+            }
+
+            const completedBtn = document.querySelector('.tab-btn:nth-child(2)');
+            if (completedBtn) {
+                const completedCount = loans.filter(l => l.status === 'completed' || l.status === 'paid').length;
+                completedBtn.textContent = `Completed (${completedCount})`;
+            }
+
+            console.log('✅ Loans section updated with', loans.length, 'loans');
         }
 
         function updateInvestmentsOverview(investmentsData) {
             if (!investmentsData || !investmentsData.success) return;
 
             const investments = investmentsData.data.investments || [];
+            const stats = investmentsData.data.stats || {};
 
-            // Update stats cards
-            const totalInvestedCard = document.querySelector('.stats-grid .stat-card:nth-child(1) h3');
-            if (totalInvestedCard) {
-                const totalInvested = investments.reduce((sum, inv) => sum + parseFloat(inv.amount), 0);
-                totalInvestedCard.textContent = `$${totalInvested.toLocaleString()}`;
+            // Update overview section stats
+            const statsCards = document.querySelectorAll('#overview-section .stats-grid .stat-card h3');
+            if (statsCards.length >= 3) {
+                // Investments (index 2)
+                statsCards[2].textContent = `$${(stats.total_invested || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
             }
 
-            const activeInvestmentsCard = document.querySelector('.stats-grid .stat-card:nth-child(4) h3');
-            if (activeInvestmentsCard) {
-                activeInvestmentsCard.textContent = investments.length;
+            console.log('✅ Investments overview updated:', stats);
+        }
+
+        function updateInvestmentPortfolio(portfolioData) {
+            if (!portfolioData || !portfolioData.success) return;
+
+            const data = portfolioData.data;
+            const investments = data.investments || [];
+
+            // Update investments section stats
+            const investStatsCards = document.querySelectorAll('#investments-section .stats-grid .stat-card h3');
+            if (investStatsCards.length >= 4) {
+                investStatsCards[0].textContent = `$${(data.total_invested || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+                investStatsCards[1].textContent = `$${(data.total_returns || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+                investStatsCards[2].textContent = `${(data.roi || 0).toFixed(1)}%`;
+                investStatsCards[3].textContent = `${data.active_investments || 0} Active`;
             }
+
+            // Update active investments tab
+            const activeInvestTab = document.querySelector('#active-investments-tab');
+            if (activeInvestTab && investments.length > 0) {
+                const activeInvestments = investments.filter(inv => inv.status === 'active');
+                
+                if (activeInvestments.length > 0) {
+                    activeInvestTab.innerHTML = activeInvestments.map(inv => `
+                        <div class="loan-card">
+                            <div class="loan-header">
+                                <div>
+                                    <h4>Investment #${inv.investment_id?.substring(0, 8) || 'N/A'}</h4>
+                                    <span class="loan-status">${inv.status}</span>
+                                </div>
+                                <div class="loan-amount">$${parseFloat(inv.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                            </div>
+                            <div class="loan-details">
+                                <div class="detail-row">
+                                    <span>Expected Return</span>
+                                    <strong>$${(inv.expected_return || 0).toFixed(2)}</strong>
+                                </div>
+                                <div class="detail-row">
+                                    <span>Interest Rate</span>
+                                    <strong>${inv.interest_rate || 0}%</strong>
+                                </div>
+                                <div class="detail-row">
+                                    <span>Duration</span>
+                                    <strong>${inv.duration_months || 0} months</strong>
+                                </div>
+                                <div class="detail-row">
+                                    <span>Next Return</span>
+                                    <strong>${inv.next_return_date ? new Date(inv.next_return_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A'}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    activeInvestTab.innerHTML = '<p style="text-align: center; color: #94a3b8; padding: 40px;">No active investments</p>';
+                }
+            }
+
+            console.log('✅ Investment portfolio updated with', investments.length, 'investments');
+        }
+
+        function updateTransactionsSection(transactionsData) {
+            if (!transactionsData || !transactionsData.success) return;
+
+            const transactions = transactionsData.data.transactions || [];
+
+            // Update wallet transactions
+            const walletTransactionsContainer = document.querySelector('#wallet-section .transaction-list');
+            if (walletTransactionsContainer && transactions.length > 0) {
+                walletTransactionsContainer.innerHTML = transactions.slice(0, 10).map(tx => {
+                    const isCredit = tx.transaction_type === 'deposit' || tx.transaction_type === 'credit';
+                    const icon = isCredit ? 'arrow-down' : 'arrow-up';
+                    const iconClass = isCredit ? 'success' : 'danger';
+                    
+                    return `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="width: 50px; height: 50px; background: rgba(${isCredit ? '56, 231, 123' : '239, 68, 68'}, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-${icon}" style="color: ${isCredit ? '#38e77b' : '#ef4444'};"></i>
+                            </div>
+                            <div>
+                                <h4 style="margin-bottom: 5px;">${tx.description || tx.transaction_type}</h4>
+                                <p style="color: #94a3b8; font-size: 14px;">${new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="loan-amount" style="font-size: 20px; color: ${isCredit ? '#38e77b' : '#ef4444'};">${isCredit ? '+' : '-'}$${parseFloat(tx.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                        </div>
+                    </div>
+                `}).join('');
+            }
+
+            console.log('✅ Transactions updated with', transactions.length, 'transactions');
         }
 
         function updateWalletTransactions(transactions) {
