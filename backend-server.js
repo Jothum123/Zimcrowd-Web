@@ -57,6 +57,8 @@ try {
     console.log('✅ Primary market routes loaded');
     var secondaryMarketRoutes = require('./routes/secondary-market');
     console.log('✅ Secondary market routes loaded');
+    var kairoAIRoutes = require('./routes/kairo-ai');
+    console.log('✅ Kairo AI routes loaded');
     console.log('✅ All routes loaded successfully');
 } catch (error) {
     console.error('❌ Error loading routes:', error.message);
@@ -170,6 +172,8 @@ app.use('/api/primary-market', primaryMarketRoutes);
 console.log('✅ Primary market routes registered');
 app.use('/api/secondary-market', secondaryMarketRoutes);
 console.log('✅ Secondary market routes registered');
+app.use('/api/kairo-ai', kairoAIRoutes);
+console.log('✅ Kairo AI routes registered');
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
