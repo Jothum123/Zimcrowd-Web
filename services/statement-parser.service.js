@@ -65,6 +65,8 @@ class StatementParserService {
         console.log(`✅ Parsed ${transactions.length} transactions`);
         console.log(`   Avg Monthly Income: $${metrics.avgMonthlyIncome.toFixed(2)}`);
         console.log(`   Avg Ending Balance: $${metrics.avgEndingBalance.toFixed(2)}`);
+        console.log(`   Cash Flow Ratio: ${metrics.cashFlowRatio}`);
+        console.log(`   Balance Consistency: ${metrics.balanceConsistencyScore}/10`);
         console.log(`   NSF Events: ${metrics.nsfEvents}`);
 
         return {
@@ -80,7 +82,9 @@ class StatementParserService {
                 totalDebits: metrics.totalDebits,
                 transactionCount: transactions.length,
                 largestDeposit: metrics.largestDeposit,
-                largestWithdrawal: metrics.largestWithdrawal
+                largestWithdrawal: metrics.largestWithdrawal,
+                cashFlowRatio: metrics.cashFlowRatio,
+                balanceConsistencyScore: metrics.balanceConsistencyScore
             }
         };
     }
@@ -114,6 +118,8 @@ class StatementParserService {
         console.log(`✅ Parsed ${transactions.length} EcoCash transactions`);
         console.log(`   Avg Monthly Income: $${metrics.avgMonthlyIncome.toFixed(2)}`);
         console.log(`   Avg Ending Balance: $${metrics.avgEndingBalance.toFixed(2)}`);
+        console.log(`   Cash Flow Ratio: ${metrics.cashFlowRatio}`);
+        console.log(`   Balance Consistency: ${metrics.balanceConsistencyScore}/10`);
 
         return {
             success: true,
@@ -128,7 +134,9 @@ class StatementParserService {
                 totalDebits: metrics.totalDebits,
                 transactionCount: transactions.length,
                 largestDeposit: metrics.largestDeposit,
-                largestWithdrawal: metrics.largestWithdrawal
+                largestWithdrawal: metrics.largestWithdrawal,
+                cashFlowRatio: metrics.cashFlowRatio,
+                balanceConsistencyScore: metrics.balanceConsistencyScore
             }
         };
     }
@@ -244,7 +252,9 @@ class StatementParserService {
                 totalCredits: 0,
                 totalDebits: 0,
                 largestDeposit: 0,
-                largestWithdrawal: 0
+                largestWithdrawal: 0,
+                cashFlowRatio: 0,
+                balanceConsistencyScore: 0
             };
         }
 
@@ -252,9 +262,12 @@ class StatementParserService {
         const credits = transactions.filter(t => t.type === 'credit');
         const totalCredits = credits.reduce((sum, t) => sum + t.amount, 0);
         
-        // Calculate total debits
+        // Calculate total debits (expenses)
         const debits = transactions.filter(t => t.type === 'debit');
         const totalDebits = debits.reduce((sum, t) => sum + t.amount, 0);
+        
+        // Calculate cash flow ratio (income / expenses) - CRITICAL SPEC REQUIREMENT
+        const cashFlowRatio = totalDebits > 0 ? totalCredits / totalDebits : 0;
         
         // Calculate average monthly income (assuming 3-month statement)
         const avgMonthlyIncome = totalCredits / 3;
@@ -264,6 +277,21 @@ class StatementParserService {
         const avgEndingBalance = balances.length > 0
             ? balances.reduce((sum, b) => sum + b, 0) / balances.length
             : 0;
+        
+        // Calculate balance consistency score (0-10)
+        // Lower variance = higher consistency
+        let balanceConsistencyScore = 0;
+        if (balances.length > 1) {
+            const mean = avgEndingBalance;
+            const variance = balances.reduce((sum, b) => sum + Math.pow(b - mean, 2), 0) / balances.length;
+            const stdDev = Math.sqrt(variance);
+            const coefficientOfVariation = mean > 0 ? (stdDev / mean) : 1;
+            
+            // Convert to 0-10 scale (lower CV = higher score)
+            // CV < 0.3 = excellent (10), CV > 1.0 = poor (0)
+            balanceConsistencyScore = Math.max(0, Math.min(10, 10 - (coefficientOfVariation * 10)));
+            balanceConsistencyScore = Math.round(balanceConsistencyScore);
+        }
         
         // Count NSF (Non-Sufficient Funds) events
         // Negative balances or very low balances
@@ -284,7 +312,9 @@ class StatementParserService {
             totalCredits,
             totalDebits,
             largestDeposit,
-            largestWithdrawal
+            largestWithdrawal,
+            cashFlowRatio: Math.round(cashFlowRatio * 100) / 100,
+            balanceConsistencyScore
         };
     }
 
