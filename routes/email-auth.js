@@ -159,6 +159,15 @@ router.post('/register-email', [
     }
 });
 
+// GET endpoint for verification status (for redirects/callbacks)
+router.get('/verify-email-signup', async (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'Email verification endpoint',
+        note: 'Use POST method with tempToken and otp to verify email'
+    });
+});
+
 // Email registration - Step 2: Verify OTP and create account
 router.post('/verify-email-signup', [
     body('tempToken')
