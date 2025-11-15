@@ -7,8 +7,9 @@
   "scripts": {
     "start": "node backend-server.js",
     "dev": "nodemon backend-server.js",
-    "api": "node api-server.js",
-    "api:dev": "nodemon api-server.js",
+    "api": "node api-server-minimal.js",
+    "api:dev": "nodemon api-server-minimal.js",
+    "api:full": "node api-server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
