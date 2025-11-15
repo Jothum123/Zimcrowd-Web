@@ -2615,22 +2615,37 @@
                 </div>
             </div>
 
-            <h2 style="margin-bottom: 20px;">Quick Actions</h2>
-            <div class="quick-actions">
-                <div class="action-card">
-                    <i class="fas fa-hand-holding-usd"></i>
-                    <h3>Fund Loans</h3>
-                    <p>Invest in borrowers</p>
+            <!-- Primary Market Section -->
+            <div style="margin: 40px 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0;">📊 Primary Market - New Loan Opportunities</h2>
+                    <a href="primary-market.html" style="color: #38e77b; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 5px;">
+                        View All <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
-                <div class="action-card">
-                    <i class="fas fa-money-bill-wave"></i>
-                    <h3>Withdraw</h3>
-                    <p>Transfer to bank</p>
+                <div id="primaryMarketLoans" class="portfolio-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                    <!-- Primary market loans will be loaded here -->
+                    <div style="text-align: center; padding: 40px; grid-column: 1 / -1;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: #38e77b;"></i>
+                        <p style="margin-top: 10px; color: #94a3b8;">Loading investment opportunities...</p>
+                    </div>
                 </div>
-                <div class="action-card">
-                    <i class="fas fa-file-chart-line"></i>
-                    <h3>View Reports</h3>
-                    <p>Track performance</p>
+            </div>
+
+            <!-- Secondary Market Section -->
+            <div style="margin: 40px 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0;">🔄 Secondary Market - Trade Existing Investments</h2>
+                    <a href="secondary-market.html" style="color: #38e77b; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 5px;">
+                        View All <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div id="secondaryMarketLoans" class="portfolio-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                    <!-- Secondary market loans will be loaded here -->
+                    <div style="text-align: center; padding: 40px; grid-column: 1 / -1;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: #38e77b;"></i>
+                        <p style="margin-top: 10px; color: #94a3b8;">Loading trading opportunities...</p>
+                    </div>
                 </div>
             </div>
         </section>
@@ -4913,6 +4928,24 @@
                 return this.request('/api/zimscore');
             },
             
+            // Primary Market API
+            async getPrimaryMarketLoans(page = 1, limit = 6) {
+                return this.request(`/api/p2p-primary-market/available-loans?page=${page}&limit=${limit}`);
+            },
+            
+            async getPrimaryMarketStats() {
+                return this.request('/api/primary-market');
+            },
+            
+            // Secondary Market API
+            async getSecondaryMarketLoans(page = 1, limit = 6) {
+                return this.request(`/api/p2p-secondary-market/listings?page=${page}&limit=${limit}`);
+            },
+            
+            async getSecondaryMarketStats() {
+                return this.request('/api/secondary-market');
+            },
+            
             // Notifications API
             async getNotifications() {
                 return this.request('/api/notifications');
@@ -5859,6 +5892,163 @@ How it works:
         // END WALLET FUNCTIONS
         // ============================================
 
+        // ============================================
+        // MARKET DISPLAY FUNCTIONS
+        // ============================================
+
+        // Update Primary Market UI
+        function updatePrimaryMarketUI(loans) {
+            const container = document.getElementById('primaryMarketLoans');
+            if (!container) return;
+            
+            if (!loans || loans.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #94a3b8; padding: 40px; grid-column: 1 / -1;">No investment opportunities available at the moment</p>';
+                return;
+            }
+            
+            container.innerHTML = loans.map(loan => {
+                const riskColor = loan.risk_rating === 'low' ? '#38e77b' : loan.risk_rating === 'medium' ? '#f59e0b' : '#ef4444';
+                const riskLabel = loan.risk_rating ? loan.risk_rating.toUpperCase() : 'MEDIUM';
+                
+                return `
+                    <div class="portfolio-card" style="cursor: pointer;" onclick="window.location.href='primary-market.html'">
+                        <div class="card-header">
+                            <div class="borrower-info">
+                                <div class="borrower-avatar">${loan.borrower_name ? loan.borrower_name[0].toUpperCase() : 'B'}</div>
+                                <div class="borrower-details">
+                                    <div class="borrower-name">${loan.borrower_name || 'Borrower'}</div>
+                                    <div class="borrower-purpose">${loan.purpose || 'Personal Loan'}</div>
+                                    <span class="risk-badge ${loan.risk_rating || 'medium'}" style="background: rgba(${riskColor === '#38e77b' ? '56, 231, 123' : riskColor === '#f59e0b' ? '245, 158, 11' : '239, 68, 68'}, 0.1); color: ${riskColor};">
+                                        ${riskLabel} RISK
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="card-metrics">
+                                <div class="metric-item">
+                                    <span class="metric-label">Loan Amount</span>
+                                    <span class="metric-value">$${parseFloat(loan.amount || 0).toLocaleString()}</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Interest Rate</span>
+                                    <span class="metric-value returns-positive">${parseFloat(loan.interest_rate || 0).toFixed(1)}% APR</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Term</span>
+                                    <span class="metric-value">${loan.term || 12} months</span>
+                                </div>
+                            </div>
+
+                            <div class="card-progress">
+                                <div class="progress-info">
+                                    <span>Funded</span>
+                                    <span>${loan.funded_percentage || 0}%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${loan.funded_percentage || 0}%; background: ${riskColor};"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-actions">
+                            <button class="btn-primary" style="width: 100%; padding: 10px;" onclick="event.stopPropagation(); window.location.href='primary-market.html'">
+                                <i class="fas fa-hand-holding-usd"></i> Invest Now
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update Secondary Market UI
+        function updateSecondaryMarketUI(listings) {
+            const container = document.getElementById('secondaryMarketLoans');
+            if (!container) return;
+            
+            if (!listings || listings.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #94a3b8; padding: 40px; grid-column: 1 / -1;">No trading opportunities available at the moment</p>';
+                return;
+            }
+            
+            container.innerHTML = listings.map(listing => {
+                const discount = listing.discount_percentage || 0;
+                const discountColor = discount > 0 ? '#38e77b' : '#94a3b8';
+                const remainingValue = listing.remaining_principal || listing.asking_price || 0;
+                
+                return `
+                    <div class="portfolio-card" style="cursor: pointer;" onclick="window.location.href='secondary-market.html'">
+                        <div class="card-header">
+                            <div class="borrower-info">
+                                <div class="borrower-avatar">${listing.seller_name ? listing.seller_name[0].toUpperCase() : 'S'}</div>
+                                <div class="borrower-details">
+                                    <div class="borrower-name">${listing.loan_purpose || 'Investment Opportunity'}</div>
+                                    <div class="borrower-purpose">Seller: ${listing.seller_name || 'Anonymous'}</div>
+                                    ${discount > 0 ? `<span class="risk-badge low" style="background: rgba(56, 231, 123, 0.1); color: #38e77b;">
+                                        ${discount}% DISCOUNT
+                                    </span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="card-metrics">
+                                <div class="metric-item">
+                                    <span class="metric-label">Asking Price</span>
+                                    <span class="metric-value">$${parseFloat(listing.asking_price || 0).toLocaleString()}</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Original Value</span>
+                                    <span class="metric-value">$${parseFloat(listing.original_investment || listing.asking_price || 0).toLocaleString()}</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Interest Rate</span>
+                                    <span class="metric-value returns-positive">${parseFloat(listing.interest_rate || 0).toFixed(1)}% APR</span>
+                                </div>
+                            </div>
+
+                            <div class="card-progress">
+                                <div class="progress-info">
+                                    <span>Remaining Term</span>
+                                    <span>${listing.remaining_term || listing.term || 0} months</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${((listing.term - (listing.remaining_term || 0)) / listing.term * 100) || 50}%; background: #3b82f6;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-actions">
+                            <button class="btn-primary" style="width: 100%; padding: 10px; background: #3b82f6;" onclick="event.stopPropagation(); window.location.href='secondary-market.html'">
+                                <i class="fas fa-exchange-alt"></i> Buy Investment
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Show Market Error
+        function showMarketError(containerId, message) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; grid-column: 1 / -1;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #ef4444; margin-bottom: 15px;"></i>
+                    <p style="color: #94a3b8; font-size: 16px;">${message}</p>
+                    <button onclick="location.reload()" style="margin-top: 15px; padding: 10px 20px; background: #38e77b; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                        <i class="fas fa-redo"></i> Retry
+                    </button>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // END MARKET DISPLAY FUNCTIONS
+        // ============================================
+
         // Pagination System
         const paginationState = {
             transactions: { currentPage: 1, totalPages: 5, itemsPerPage: 6, totalItems: 30 },
@@ -6436,9 +6626,47 @@ How it works:
                 const investmentsResponse = await window.ZimCrowdAPI.getInvestments(1, 3);
                 updateInvestmentsOverview(investmentsResponse);
 
+                // Load primary market opportunities
+                loadPrimaryMarketLoans();
+
+                // Load secondary market opportunities
+                loadSecondaryMarketLoans();
+
             } catch (error) {
                 console.error('Failed to load dashboard data:', error);
                 // Keep existing mock data if API fails
+            }
+        }
+
+        // Load Primary Market Loans
+        async function loadPrimaryMarketLoans() {
+            try {
+                const response = await window.ZimCrowdAPI.getPrimaryMarketLoans(1, 6);
+                
+                if (response.success && response.data && response.data.loans) {
+                    updatePrimaryMarketUI(response.data.loans);
+                } else {
+                    showMarketError('primaryMarketLoans', 'No investment opportunities available');
+                }
+            } catch (error) {
+                console.error('Failed to load primary market:', error);
+                showMarketError('primaryMarketLoans', 'Failed to load opportunities');
+            }
+        }
+
+        // Load Secondary Market Loans
+        async function loadSecondaryMarketLoans() {
+            try {
+                const response = await window.ZimCrowdAPI.getSecondaryMarketLoans(1, 6);
+                
+                if (response.success && response.data && response.data.listings) {
+                    updateSecondaryMarketUI(response.data.listings);
+                } else {
+                    showMarketError('secondaryMarketLoans', 'No trading opportunities available');
+                }
+            } catch (error) {
+                console.error('Failed to load secondary market:', error);
+                showMarketError('secondaryMarketLoans', 'Failed to load opportunities');
             }
         }
 
