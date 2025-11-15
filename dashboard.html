@@ -4888,6 +4888,48 @@
                 return this.request(`/api/notifications/${notificationId}/read`, {
                     method: 'PUT'
                 });
+            },
+            
+            // Referrals API
+            async getReferralStats() {
+                return this.request('/api/referrals/stats');
+            },
+            
+            async getReferralCode() {
+                return this.request('/api/referrals/code');
+            },
+            
+            async getReferrals(page = 1, limit = 10) {
+                return this.request(`/api/referrals/my-referrals?page=${page}&limit=${limit}`);
+            },
+            
+            // Settings APIs
+            async updateProfile(data) {
+                return this.request('/api/profile/update', {
+                    method: 'PUT',
+                    body: JSON.stringify(data)
+                });
+            },
+            
+            async changePassword(oldPassword, newPassword) {
+                return this.request('/api/profile/change-password', {
+                    method: 'POST',
+                    body: JSON.stringify({ oldPassword, newPassword })
+                });
+            },
+            
+            async updateNotificationSettings(settings) {
+                return this.request('/api/profile/notification-settings', {
+                    method: 'PUT',
+                    body: JSON.stringify(settings)
+                });
+            },
+            
+            // Logout
+            async logout() {
+                return this.request('/api/auth/logout', {
+                    method: 'POST'
+                });
             }
         };
 
@@ -5356,12 +5398,54 @@ How it works:
 
         // Copy Referral Code
         function copyReferralCode() {
-            const code = 'ZCRWD-JOHN-2024';
+            const codeElement = document.querySelector('#referrals-section .loan-card span[style*="font-size: 24px"]');
+            const code = codeElement?.getAttribute('data-code') || codeElement?.textContent || 'LOADING...';
+            
             navigator.clipboard.writeText(code).then(() => {
                 // Show success message
                 alert('Referral code copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy referral code');
             });
         }
+
+        // Logout functionality
+        async function handleLogout() {
+            if (!confirm('Are you sure you want to logout?')) {
+                return;
+            }
+
+            try {
+                // Call logout API
+                await window.ZimCrowdAPI.logout();
+                
+                // Clear local storage
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('user');
+                
+                // Redirect to login
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                
+                // Even if API fails, clear local data and redirect
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Attach logout to button
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutBtn = document.querySelector('.logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    handleLogout();
+                });
+            }
+        });
 
         // Pagination System
         const paginationState = {
@@ -6253,6 +6337,167 @@ How it works:
             console.log('✅ Transactions updated with', transactions.length, 'transactions');
         }
 
+        // Load referrals data
+        async function loadReferralsData() {
+            try {
+                const [statsResponse, codeResponse, referralsResponse] = await Promise.all([
+                    window.ZimCrowdAPI.getReferralStats(),
+                    window.ZimCrowdAPI.getReferralCode(),
+                    window.ZimCrowdAPI.getReferrals(1, 10)
+                ]);
+
+                updateReferralsSection(statsResponse, codeResponse, referralsResponse);
+            } catch (error) {
+                console.error('Failed to load referrals:', error);
+            }
+        }
+
+        function updateReferralsSection(statsData, codeData, referralsData) {
+            if (!statsData || !statsData.success) return;
+
+            const stats = statsData.data;
+            const code = codeData?.data?.referral_code || 'LOADING...';
+            const referrals = referralsData?.data?.referrals || [];
+
+            // Update stats cards
+            const referralStatsCards = document.querySelectorAll('#referrals-section .stats-grid .stat-card h3');
+            if (referralStatsCards.length >= 3) {
+                referralStatsCards[0].textContent = stats.total_referrals || 0;
+                referralStatsCards[1].textContent = `$${(stats.total_earnings || 0).toFixed(2)}`;
+                referralStatsCards[2].textContent = stats.active_referrals || 0;
+            }
+
+            // Update referral code
+            const codeElement = document.querySelector('#referrals-section .loan-card span[style*="font-size: 24px"]');
+            if (codeElement) {
+                codeElement.textContent = code;
+                codeElement.setAttribute('data-code', code);
+            }
+
+            // Update referrals table
+            const referralsTable = document.querySelector('#referrals-section table tbody');
+            if (referralsTable && referrals.length > 0) {
+                referralsTable.innerHTML = referrals.map(ref => `
+                    <tr style="border-bottom: 1px solid #334155;">
+                        <td style="padding: 16px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 40px; height: 40px; background: rgba(56, 231, 123, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    <span style="font-weight: 600; color: #38e77b;">${ref.referred_user_name ? ref.referred_user_name.charAt(0).toUpperCase() : 'U'}</span>
+                                </div>
+                                <div>
+                                    <h4 style="margin-bottom: 3px;">${ref.referred_user_name || 'Anonymous User'}</h4>
+                                    <p style="color: #94a3b8; font-size: 13px;">${ref.referred_user_email || 'N/A'}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding: 16px;">${new Date(ref.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                        <td style="padding: 16px;">
+                            <span style="padding: 4px 12px; background: rgba(${ref.status === 'active' ? '56, 231, 123' : '245, 158, 11'}, 0.1); color: ${ref.status === 'active' ? '#38e77b' : '#f59e0b'}; border-radius: 12px; font-size: 12px; text-transform: capitalize;">
+                                ${ref.status || 'pending'}
+                            </span>
+                        </td>
+                        <td style="padding: 16px; color: #38e77b; font-weight: 600;">$${(ref.reward_earned || 0).toFixed(2)}</td>
+                    </tr>
+                `).join('');
+            }
+
+            console.log('✅ Referrals section updated with', referrals.length, 'referrals');
+        }
+
+        // Load notifications
+        async function loadNotifications() {
+            try {
+                const response = await window.ZimCrowdAPI.getNotifications();
+                updateNotifications(response);
+            } catch (error) {
+                console.error('Failed to load notifications:', error);
+            }
+        }
+
+        function updateNotifications(notificationsData) {
+            if (!notificationsData || !notificationsData.success) return;
+
+            const notifications = notificationsData.data.notifications || [];
+            const notificationsList = document.querySelector('#notification-panel .notification-list');
+
+            if (notificationsList && notifications.length > 0) {
+                notificationsList.innerHTML = notifications.slice(0, 5).map(notif => {
+                    const iconMap = {
+                        'loan': 'fa-hand-holding-usd',
+                        'investment': 'fa-chart-line',
+                        'payment': 'fa-credit-card',
+                        'wallet': 'fa-wallet',
+                        'security': 'fa-shield-alt',
+                        'default': 'fa-bell'
+                    };
+
+                    const colorMap = {
+                        'success': 'success',
+                        'warning': 'warning',
+                        'danger': 'danger',
+                        'info': 'info'
+                    };
+
+                    const icon = iconMap[notif.type] || iconMap.default;
+                    const color = colorMap[notif.priority] || 'info';
+
+                    return `
+                    <div class="notification-item ${notif.is_read ? 'read' : ''}" onclick="markAsRead(this, '${notif.notification_id}')">
+                        <div class="notification-icon ${color}">
+                            <i class="fas ${icon}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">${notif.title}</div>
+                            <div class="notification-message">${notif.message}</div>
+                            <div class="notification-time">${getTimeAgo(notif.created_at)}</div>
+                        </div>
+                    </div>
+                `}).join('');
+            }
+
+            // Update notification count badge
+            const unreadCount = notifications.filter(n => !n.is_read).length;
+            const badge = document.querySelector('#notification-btn .notification-badge');
+            if (badge) {
+                badge.textContent = unreadCount;
+                badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+            }
+
+            console.log('✅ Notifications updated:', unreadCount, 'unread');
+        }
+
+        // Helper function to get time ago
+        function getTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+            if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        // Mark notification as read
+        async function markAsRead(element, notificationId) {
+            try {
+                await window.ZimCrowdAPI.markNotificationRead(notificationId);
+                element.classList.add('read');
+                
+                // Update badge count
+                const badge = document.querySelector('#notification-btn .notification-badge');
+                if (badge) {
+                    const currentCount = parseInt(badge.textContent) || 0;
+                    const newCount = Math.max(0, currentCount - 1);
+                    badge.textContent = newCount;
+                    badge.style.display = newCount > 0 ? 'flex' : 'none';
+                }
+            } catch (error) {
+                console.error('Failed to mark notification as read:', error);
+            }
+        }
+
         function updateWalletTransactions(transactions) {
             const walletContainer = document.querySelector('#wallet-section .transaction-list');
             if (!walletContainer || !transactions.length) return;
@@ -6400,6 +6645,8 @@ How it works:
                 loadLoansData();
                 loadInvestmentsData();
                 loadTransactionsData();
+                loadReferralsData();
+                loadNotifications();
             } else {
                 console.log('⚠️ No auth token found, showing mock data');
                 // Show login prompt or redirect to login
