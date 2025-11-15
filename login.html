@@ -714,6 +714,69 @@
     </div>
 
     <script>
+        // API Configuration
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:3000'
+            : 'https://zimcrowd-backend-dz18dm4h9-jojola.vercel.app';
+
+        // API Utility
+        window.ZimCrowdAPI = {
+            token: null,
+            
+            setToken(token) {
+                this.token = token;
+            },
+            
+            async request(endpoint, options = {}) {
+                const headers = {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                };
+                
+                if (this.token) {
+                    headers['Authorization'] = `Bearer ${this.token}`;
+                }
+                
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    ...options,
+                    headers
+                });
+                
+                return response.json();
+            },
+            
+            // Passwordless login
+            async passwordlessLogin(phone) {
+                return this.request('/api/phone-auth/passwordless-login', {
+                    method: 'POST',
+                    body: JSON.stringify({ phone })
+                });
+            },
+            
+            async passwordlessVerify(phone, otp) {
+                return this.request('/api/phone-auth/verify-passwordless', {
+                    method: 'POST',
+                    body: JSON.stringify({ phone, otp })
+                });
+            },
+            
+            // Phone login
+            async phoneLogin(phone, password) {
+                return this.request('/api/phone-auth/login-phone', {
+                    method: 'POST',
+                    body: JSON.stringify({ phone, password })
+                });
+            },
+            
+            // Email login
+            async emailLogin(email, password) {
+                return this.request('/api/email-auth/login-email', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password })
+                });
+            }
+        };
+
         // Login Form Handling
         let currentLoginMethod = 'password';
 
