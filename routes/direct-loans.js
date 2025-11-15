@@ -4,19 +4,7 @@ const { body, validationResult } = require('express-validator');
 const directLoanService = require('../services/direct-loan.service');
 
 // Middleware to authenticate user
-const authenticateUser = require('../middleware/auth');
-
-// Validation error handler
-const handleValidationErrors = (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({
-            success: false,
-            errors: errors.array()
-        });
-    }
-    next();
-};
+const { authenticateUser } = require('../middleware/auth');
 
 // @route   POST /api/direct-loans/create-offer
 // @desc    Create or get pending direct loan offer
@@ -90,11 +78,19 @@ router.get('/offers/:offerId', authenticateUser, async (req, res) => {
 // @route   POST /api/direct-loans/accept-offer
 // @desc    Accept loan offer with e-signature
 // @access  Private
-router.post('/accept-offer', authenticateUser, [
+router.post('/accept-offer', 
+    authenticateUser,
     body('offerId').isUUID().withMessage('Valid offer ID required'),
     body('signatureName').trim().notEmpty().withMessage('Signature name required'),
-    handleValidationErrors
-], async (req, res) => {
+    async (req, res) => {
+    // Validate request
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            success: false,
+            errors: errors.array()
+        });
+    }
     try {
         const userId = req.user.id;
         const { offerId, signatureName } = req.body;
@@ -122,10 +118,18 @@ router.post('/accept-offer', authenticateUser, [
 // @route   POST /api/direct-loans/disburse
 // @desc    Disburse loan funds (Admin or automated)
 // @access  Private
-router.post('/disburse', authenticateUser, [
+router.post('/disburse', 
+    authenticateUser,
     body('directLoanId').isUUID().withMessage('Valid loan ID required'),
-    handleValidationErrors
-], async (req, res) => {
+    async (req, res) => {
+    // Validate request
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            success: false,
+            errors: errors.array()
+        });
+    }
     try {
         const { directLoanId } = req.body;
 
@@ -175,13 +179,21 @@ router.get('/my-loans', authenticateUser, async (req, res) => {
 // @route   POST /api/direct-loans/repayment
 // @desc    Record loan repayment
 // @access  Private
-router.post('/repayment', authenticateUser, [
+router.post('/repayment', 
+    authenticateUser,
     body('directLoanId').isUUID().withMessage('Valid loan ID required'),
     body('amount').isFloat({ min: 0.01 }).withMessage('Valid amount required'),
     body('paymentMethod').isIn(['paynow', 'ecocash', 'bank_transfer']).withMessage('Valid payment method required'),
     body('transactionReference').trim().notEmpty().withMessage('Transaction reference required'),
-    handleValidationErrors
-], async (req, res) => {
+    async (req, res) => {
+    // Validate request
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            success: false,
+            errors: errors.array()
+        });
+    }
     try {
         const userId = req.user.id;
         const { directLoanId, amount, paymentMethod, transactionReference } = req.body;
