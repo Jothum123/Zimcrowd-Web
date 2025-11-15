@@ -20,9 +20,21 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
-CREATE INDEX IF NOT EXISTS idx_users_active ON users(is_active);
+-- Create indexes for users table
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_users_email') THEN
+        CREATE INDEX idx_users_email ON users(email);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_users_role') THEN
+        CREATE INDEX idx_users_role ON users(role);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_users_active') THEN
+        CREATE INDEX idx_users_active ON users(is_active);
+    END IF;
+END $$;
 
 -- =====================================================
 -- 2. CREATE WALLETS TABLE
@@ -40,7 +52,13 @@ CREATE TABLE IF NOT EXISTS wallets (
     UNIQUE(user_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_wallets_user ON wallets(user_id);
+-- Create indexes for wallets table
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_wallets_user') THEN
+        CREATE INDEX idx_wallets_user ON wallets(user_id);
+    END IF;
+END $$;
 
 -- =====================================================
 -- 3. CREATE TRANSACTIONS TABLE
@@ -61,10 +79,25 @@ CREATE TABLE IF NOT EXISTS transactions (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id);
-CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(type);
-CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_transactions_reference ON transactions(reference);
+-- Create indexes for transactions table
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_transactions_user') THEN
+        CREATE INDEX idx_transactions_user ON transactions(user_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_transactions_type') THEN
+        CREATE INDEX idx_transactions_type ON transactions(type);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_transactions_date') THEN
+        CREATE INDEX idx_transactions_date ON transactions(created_at DESC);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_transactions_reference') THEN
+        CREATE INDEX idx_transactions_reference ON transactions(reference);
+    END IF;
+END $$;
 
 -- Transaction Types:
 -- 'credit', 'debit', 'loan_disbursement', 'loan_repayment', 
@@ -98,9 +131,21 @@ CREATE TABLE IF NOT EXISTS loans (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_loans_user ON loans(user_id);
-CREATE INDEX IF NOT EXISTS idx_loans_status ON loans(status);
-CREATE INDEX IF NOT EXISTS idx_loans_created ON loans(created_at DESC);
+-- Create indexes for loans table
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_loans_user') THEN
+        CREATE INDEX idx_loans_user ON loans(user_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_loans_status') THEN
+        CREATE INDEX idx_loans_status ON loans(status);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_loans_created') THEN
+        CREATE INDEX idx_loans_created ON loans(created_at DESC);
+    END IF;
+END $$;
 
 -- Loan Status:
 -- 'pending', 'approved', 'funding', 'active', 'late', 'defaulted', 'completed', 'rejected'
@@ -124,9 +169,21 @@ CREATE TABLE IF NOT EXISTS investments (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_investments_user ON investments(user_id);
-CREATE INDEX IF NOT EXISTS idx_investments_loan ON investments(loan_id);
-CREATE INDEX IF NOT EXISTS idx_investments_status ON investments(status);
+-- Create indexes for investments table
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_investments_user') THEN
+        CREATE INDEX idx_investments_user ON investments(user_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_investments_loan') THEN
+        CREATE INDEX idx_investments_loan ON investments(loan_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_investments_status') THEN
+        CREATE INDEX idx_investments_status ON investments(status);
+    END IF;
+END $$;
 
 -- Investment Status:
 -- 'active', 'completed', 'defaulted', 'sold'
@@ -151,9 +208,21 @@ CREATE TABLE IF NOT EXISTS loan_installments (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_installments_loan ON loan_installments(loan_id);
-CREATE INDEX IF NOT EXISTS idx_installments_due_date ON loan_installments(due_date);
-CREATE INDEX IF NOT EXISTS idx_installments_status ON loan_installments(status);
+-- Create indexes for loan_installments table
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_installments_loan') THEN
+        CREATE INDEX idx_installments_loan ON loan_installments(loan_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_installments_due_date') THEN
+        CREATE INDEX idx_installments_due_date ON loan_installments(due_date);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_installments_status') THEN
+        CREATE INDEX idx_installments_status ON loan_installments(status);
+    END IF;
+END $$;
 
 -- Installment Status:
 -- 'pending', 'paid', 'overdue', 'partial'
@@ -176,9 +245,21 @@ CREATE TABLE IF NOT EXISTS notifications (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(user_id, is_read);
-CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at DESC);
+-- Create indexes for notifications table
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_notifications_user') THEN
+        CREATE INDEX idx_notifications_user ON notifications(user_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_notifications_read') THEN
+        CREATE INDEX idx_notifications_read ON notifications(user_id, is_read);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_notifications_created') THEN
+        CREATE INDEX idx_notifications_created ON notifications(created_at DESC);
+    END IF;
+END $$;
 
 -- Notification Types:
 -- 'loan_approved', 'loan_rejected', 'payment_due', 'payment_received',
@@ -203,9 +284,21 @@ CREATE TABLE IF NOT EXISTS secondary_market_listings (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_secondary_market_investment ON secondary_market_listings(investment_id);
-CREATE INDEX IF NOT EXISTS idx_secondary_market_seller ON secondary_market_listings(seller_id);
-CREATE INDEX IF NOT EXISTS idx_secondary_market_status ON secondary_market_listings(status);
+-- Create indexes for secondary_market_listings table
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_secondary_market_investment') THEN
+        CREATE INDEX idx_secondary_market_investment ON secondary_market_listings(investment_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_secondary_market_seller') THEN
+        CREATE INDEX idx_secondary_market_seller ON secondary_market_listings(seller_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_secondary_market_status') THEN
+        CREATE INDEX idx_secondary_market_status ON secondary_market_listings(status);
+    END IF;
+END $$;
 
 -- =====================================================
 -- 9. CREATE FUNCTION TO UPDATE TIMESTAMPS
