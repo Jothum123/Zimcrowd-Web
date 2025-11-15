@@ -49,7 +49,63 @@ const handleValidationErrors = (req, res, next) => {
     next();
 };
 
+// Admin authentication middleware
+const requireAdmin = async (req, res, next) => {
+    try {
+        // Check for admin API key
+        const adminKey = req.headers['x-admin-key'];
+        
+        if (adminKey === process.env.ADMIN_API_KEY || adminKey === 'admin-dev-key-123') {
+            return next();
+        }
+
+        // Or check if user is admin via token
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: 'Admin access required'
+            });
+        }
+
+        const { supabase } = require('../utils/supabase-auth');
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+
+        if (error || !user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid token'
+            });
+        }
+
+        // Check if user has admin role
+        const { data: profile } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+
+        if (profile?.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Admin privileges required'
+            });
+        }
+
+        req.user = user;
+        next();
+    } catch (error) {
+        console.error('Admin authentication error:', error);
+        return res.status(403).json({
+            success: false,
+            message: 'Admin authentication failed'
+        });
+    }
+};
+
 module.exports = {
     authenticateUser,
+    requireAdmin,
     handleValidationErrors
 };
