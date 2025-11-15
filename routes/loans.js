@@ -11,7 +11,7 @@ const zimScoreService = new ZimScoreService();
 const feeCalculator = new FeeCalculatorService();
 const paymentSchedule = new PaymentScheduleService();
 
-console.log('🔄 Loading enhanced loans routes...');
+console.log('🔄 Loading enhanced loans routes with fee integration...');
 
 // Validation middleware
 const handleValidationErrors = (req, res, next) => {
@@ -400,6 +400,171 @@ router.put('/:id/cancel', authenticateUser, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to cancel loan application'
+        });
+    }
+});
+
+/**
+ * @route   POST /api/loans/request
+ * @desc    Create new loan request with fee calculations
+ * @access  Private
+ */
+router.post('/request', [
+    authenticateUser,
+    body('amount').isFloat({ min: 100 }).withMessage('Amount must be at least $100'),
+    body('term').isInt({ min: 1, max: 60 }).withMessage('Term must be between 1 and 60 months'),
+    body('rate').isFloat({ min: 1, max: 50 }).withMessage('Interest rate must be between 1% and 50%'),
+    body('purpose').notEmpty().withMessage('Purpose is required'),
+    body('description').optional(),
+    body('e_signature').notEmpty().withMessage('Electronic signature is required'),
+    body('agreed_to_fees').isBoolean().withMessage('Fee agreement is required'),
+    body('agreed_to_terms').isBoolean().withMessage('Terms agreement is required'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { amount, term, rate, purpose, description, e_signature, agreed_to_fees, agreed_to_terms } = req.body;
+
+        // Validate agreements
+        if (!agreed_to_fees || !agreed_to_terms) {
+            return res.status(400).json({
+                success: false,
+                message: 'You must agree to all fees and terms to proceed'
+            });
+        }
+
+        // Validate e-signature
+        if (!e_signature || e_signature.length < 2) {
+            return res.status(400).json({
+                success: false,
+                message: 'Valid electronic signature required'
+            });
+        }
+
+        // Calculate all fees
+        const SERVICE_FEE_PERCENT = 10;
+        const INSURANCE_FEE_PERCENT = 3;
+        const TENURE_FEE_PERCENT = 1;
+        const COLLECTION_FEE_PERCENT = 5;
+
+        // Upfront fees
+        const serviceFee = amount * (SERVICE_FEE_PERCENT / 100);
+        const insuranceFee = amount * (INSURANCE_FEE_PERCENT / 100);
+        const totalUpfrontFees = serviceFee + insuranceFee;
+        const netAmount = amount - totalUpfrontFees;
+
+        // Monthly payment calculation
+        const monthlyRate = rate / 100 / 12;
+        const baseMonthlyPayment = amount * (monthlyRate * Math.pow(1 + monthlyRate, term)) / (Math.pow(1 + monthlyRate, term) - 1);
+        
+        // Monthly fees
+        const tenureFeeMonthly = amount * (TENURE_FEE_PERCENT / 100);
+        const collectionFeeMonthly = baseMonthlyPayment * (COLLECTION_FEE_PERCENT / 100);
+        const totalMonthlyPayment = baseMonthlyPayment + tenureFeeMonthly + collectionFeeMonthly;
+
+        // Total calculations
+        const totalTenureFees = tenureFeeMonthly * term;
+        const totalCollectionFees = collectionFeeMonthly * term;
+        const totalPlatformFees = totalUpfrontFees + totalTenureFees + totalCollectionFees;
+        const totalRepayment = totalMonthlyPayment * term;
+        const totalInterest = (baseMonthlyPayment * term) - amount;
+
+        // Get user's ZimScore
+        const zimScore = await zimScoreService.calculateZimScore(req.user.id);
+
+        // Create loan record
+        const { data: loan, error: loanError } = await supabase
+            .from('loans')
+            .insert({
+                user_id: req.user.id,
+                amount: amount,
+                term: term,
+                interest_rate: rate,
+                purpose: purpose,
+                description: description || null,
+                status: 'pending',
+                zimscore: zimScore.score,
+                risk_rating: zimScore.score >= 700 ? 'low' : zimScore.score >= 600 ? 'medium' : 'high',
+                // Fee details
+                service_fee: serviceFee,
+                insurance_fee: insuranceFee,
+                total_upfront_fees: totalUpfrontFees,
+                net_amount: netAmount,
+                tenure_fee_monthly: tenureFeeMonthly,
+                collection_fee_monthly: collectionFeeMonthly,
+                total_monthly_payment: totalMonthlyPayment,
+                base_monthly_payment: baseMonthlyPayment,
+                total_platform_fees: totalPlatformFees,
+                total_repayment: totalRepayment,
+                total_interest: totalInterest,
+                // Agreement details
+                e_signature: e_signature,
+                agreed_to_fees: agreed_to_fees,
+                agreed_to_terms: agreed_to_terms,
+                signature_date: new Date().toISOString(),
+                signature_ip: req.ip,
+                created_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+        if (loanError) {
+            console.error('Loan creation error:', loanError);
+            throw loanError;
+        }
+
+        // Create loan agreement record
+        const { error: agreementError } = await supabase
+            .from('loan_agreements')
+            .insert({
+                loan_id: loan.id,
+                user_id: req.user.id,
+                agreement_type: 'borrower',
+                e_signature: e_signature,
+                signature_date: new Date().toISOString(),
+                signature_ip: req.ip,
+                agreed_to_fees: agreed_to_fees,
+                agreed_to_terms: agreed_to_terms,
+                agreement_version: '1.0',
+                created_at: new Date().toISOString()
+            });
+
+        if (agreementError) {
+            console.error('Agreement creation error:', agreementError);
+        }
+
+        res.status(201).json({
+            success: true,
+            message: 'Loan request submitted successfully',
+            data: {
+                loan: loan,
+                fee_breakdown: {
+                    requested_amount: amount,
+                    upfront_fees: {
+                        service_fee: serviceFee,
+                        insurance_fee: insuranceFee,
+                        total: totalUpfrontFees
+                    },
+                    net_amount: netAmount,
+                    monthly_fees: {
+                        tenure_fee: tenureFeeMonthly,
+                        collection_fee: collectionFeeMonthly
+                    },
+                    payments: {
+                        base_monthly: baseMonthlyPayment,
+                        total_monthly: totalMonthlyPayment,
+                        total_repayment: totalRepayment,
+                        total_interest: totalInterest
+                    },
+                    total_platform_fees: totalPlatformFees
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Loan request error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to submit loan request',
+            error: error.message
         });
     }
 });

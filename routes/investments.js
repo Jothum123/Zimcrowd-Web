@@ -820,4 +820,161 @@ router.get('/types', async (req, res) => {
     }
 });
 
+/**
+ * @route   POST /api/investments/create
+ * @desc    Create P2P loan investment with lender fees
+ * @access  Private
+ */
+router.post('/create', [
+    authenticateUser,
+    body('loan_id').notEmpty().withMessage('Loan ID is required'),
+    body('amount').isFloat({ min: 10 }).withMessage('Investment amount must be at least $10'),
+    body('agreed_to_fees').isBoolean().withMessage('Fee agreement is required')
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Validation failed',
+                errors: errors.array()
+            });
+        }
+
+        const { loan_id, amount, agreed_to_fees } = req.body;
+
+        // Validate fee agreement
+        if (!agreed_to_fees) {
+            return res.status(400).json({
+                success: false,
+                message: 'You must agree to lender fees to proceed'
+            });
+        }
+
+        // Get loan details
+        const { data: loan, error: loanError } = await supabase
+            .from('loans')
+            .select('*')
+            .eq('id', loan_id)
+            .eq('status', 'pending')
+            .single();
+
+        if (loanError || !loan) {
+            return res.status(404).json({
+                success: false,
+                message: 'Loan not found or not available for investment'
+            });
+        }
+
+        // Check if user has sufficient balance
+        const { data: wallet } = await supabase
+            .from('wallets')
+            .select('balance')
+            .eq('user_id', req.user.id)
+            .single();
+
+        if (!wallet || wallet.balance < amount) {
+            return res.status(400).json({
+                success: false,
+                message: 'Insufficient wallet balance'
+            });
+        }
+
+        // Calculate lender fees
+        const SERVICE_FEE_PERCENT = 10;
+        const INSURANCE_FEE_PERCENT = 3;
+        const COLLECTION_FEE_PERCENT = 5;
+
+        // Upfront fees
+        const serviceFee = amount * (SERVICE_FEE_PERCENT / 100);
+        const insuranceFee = amount * (INSURANCE_FEE_PERCENT / 100);
+        const totalUpfrontFees = serviceFee + insuranceFee;
+        const netInvestment = amount - totalUpfrontFees;
+
+        // Monthly return calculations
+        const investmentProportion = netInvestment / loan.amount;
+        const grossMonthlyReturn = loan.total_monthly_payment * investmentProportion;
+        const collectionFeeMonthly = grossMonthlyReturn * (COLLECTION_FEE_PERCENT / 100);
+        const netMonthlyReturn = grossMonthlyReturn - collectionFeeMonthly;
+
+        // Total calculations
+        const totalGrossReturns = grossMonthlyReturn * loan.term;
+        const totalCollectionFees = collectionFeeMonthly * loan.term;
+        const totalNetReturns = netMonthlyReturn * loan.term;
+        const totalFees = totalUpfrontFees + totalCollectionFees;
+
+        // Create investment record
+        const { data: investment, error: investmentError } = await supabase
+            .from('loan_investments')
+            .insert({
+                loan_id: loan_id,
+                investor_id: req.user.id,
+                investment_amount: amount,
+                service_fee: serviceFee,
+                insurance_fee: insuranceFee,
+                total_upfront_fees: totalUpfrontFees,
+                net_investment: netInvestment,
+                collection_fee_percent: COLLECTION_FEE_PERCENT,
+                collection_fee_monthly: collectionFeeMonthly,
+                gross_monthly_return: grossMonthlyReturn,
+                net_monthly_return: netMonthlyReturn,
+                total_gross_returns: totalGrossReturns,
+                total_collection_fees: totalCollectionFees,
+                total_net_returns: totalNetReturns,
+                total_fees: totalFees,
+                investment_proportion: investmentProportion,
+                status: 'active',
+                agreed_to_fees: agreed_to_fees,
+                created_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+        if (investmentError) {
+            console.error('Investment creation error:', investmentError);
+            throw investmentError;
+        }
+
+        // Deduct from investor's wallet
+        const { error: walletError } = await supabase
+            .from('wallets')
+            .update({ 
+                balance: wallet.balance - amount,
+                updated_at: new Date().toISOString()
+            })
+            .eq('user_id', req.user.id);
+
+        if (walletError) throw walletError;
+
+        // Create transaction and agreement records
+        await supabase.from('transactions').insert({
+            user_id: req.user.id,
+            type: 'investment',
+            amount: -amount,
+            description: `P2P Loan Investment - Loan #${loan_id}`,
+            status: 'completed',
+            reference: `INV-${investment.id}`,
+            created_at: new Date().toISOString()
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Investment created successfully. You will receive 5% of any late fees collected.',
+            data: {
+                investment: investment,
+                fee_breakdown: {
+                    investment_amount: amount,
+                    upfront_fees: { service_fee: serviceFee, insurance_fee: insuranceFee, total: totalUpfrontFees },
+                    net_investment: netInvestment,
+                    monthly_returns: { gross_return: grossMonthlyReturn, collection_fee: collectionFeeMonthly, net_return: netMonthlyReturn },
+                    total_fees: totalFees
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Investment creation error:', error);
+        res.status(500).json({ success: false, message: 'Failed to create investment', error: error.message });
+    }
+});
+
 module.exports = router;
