@@ -2943,28 +2943,28 @@
                     <div class="stat-icon" style="background: rgba(255, 255, 255, 0.2);">
                         <i class="fas fa-wallet" style="color: white;"></i>
                     </div>
-                    <h3>$2,450.00</h3>
+                    <h3 id="walletAvailableBalance">$0.00</h3>
                     <p>Available Balance</p>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1);">
                         <i class="fas fa-clock" style="color: #f59e0b;"></i>
                     </div>
-                    <h3>$1,200.00</h3>
+                    <h3 id="walletPending">$0.00</h3>
                     <p>Pending</p>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(59, 130, 246, 0.1);">
                         <i class="fas fa-receipt" style="color: #3b82f6;"></i>
                     </div>
-                    <h3>$5,680.00</h3>
+                    <h3 id="walletTotalTransactions">$0.00</h3>
                     <p>Total Transactions</p>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(168, 85, 247, 0.1);">
                         <i class="fas fa-calendar-check" style="color: #a855f7;"></i>
                     </div>
-                    <h3>$850.00</h3>
+                    <h3 id="walletThisMonth">$0.00</h3>
                     <p>This Month</p>
                 </div>
             </div>
@@ -2994,7 +2994,7 @@
             </div>
 
             <h3 style="margin: 40px 0 20px;">Recent Transactions</h3>
-            <div class="transaction-list" style="display: flex; flex-direction: column; gap: 15px;">
+            <div id="walletRecentTransactions" class="transaction-list" style="display: flex; flex-direction: column; gap: 15px;">
                 <div class="loan-card">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 15px;">
@@ -3085,28 +3085,28 @@
                     <div class="stat-icon" style="background: rgba(56, 231, 123, 0.1);">
                         <i class="fas fa-chart-line" style="color: #38e77b;"></i>
                     </div>
-                    <h3>$8,200</h3>
+                    <h3 id="portfolioTotalInvested">$0</h3>
                     <p>Total Invested</p>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(59, 130, 246, 0.1);">
                         <i class="fas fa-arrow-trend-up" style="color: #3b82f6;"></i>
                     </div>
-                    <h3>12.5%</h3>
+                    <h3 id="portfolioAvgReturn">0%</h3>
                     <p>Average Return</p>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1);">
                         <i class="fas fa-briefcase" style="color: #f59e0b;"></i>
                     </div>
-                    <h3>8</h3>
+                    <h3 id="portfolioActiveCount">0</h3>
                     <p>Active Investments</p>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(168, 85, 247, 0.1);">
                         <i class="fas fa-coins" style="color: #a855f7;"></i>
                     </div>
-                    <h3>$1,025</h3>
+                    <h3 id="portfolioTotalReturns">$0</h3>
                     <p>Total Returns</p>
                 </div>
             </div>
@@ -3118,20 +3118,20 @@
                     <div class="table-stats">
                         <span class="stat-item">
                             <i class="fas fa-chart-line"></i>
-                            <span>$8,200.00 Total Invested</span>
+                            <span id="portfolioHeaderInvested">$0.00 Total Invested</span>
                         </span>
                         <span class="stat-item">
                             <i class="fas fa-trending-up"></i>
-                            <span>$1,640.00 Total Returns</span>
+                            <span id="portfolioHeaderReturns">$0.00 Total Returns</span>
                         </span>
                         <span class="stat-item">
                             <i class="fas fa-percentage"></i>
-                            <span>20.0% Avg. Return</span>
+                            <span id="portfolioHeaderAvgReturn">0% Avg. Return</span>
                         </span>
                     </div>
                 </div>
 
-                <div class="portfolio-cards">
+                <div id="portfolioCardsContainer" class="portfolio-cards">
                     <!-- Tendai M. - Education Loan -->
                     <div class="portfolio-card">
                         <div class="card-header">
@@ -5072,6 +5072,8 @@
                 // Load section-specific data
                 if (section === 'loans') {
                     loadLoansData();
+                } else if (section === 'wallet') {
+                    loadWalletData();
                 } else if (section === 'investments') {
                     loadInvestmentsData();
                 } else if (section === 'transactions') {
@@ -6894,26 +6896,102 @@ How it works:
             document.getElementById(tabName + '-tab').classList.add('active');
         }
 
+        // Load Wallet Data
+        async function loadWalletData() {
+            try {
+                const statsResponse = await window.ZimCrowdAPI.getWalletStats();
+                if (statsResponse.success) {
+                    updateWalletStats(statsResponse.data);
+                }
+                const transactionsResponse = await window.ZimCrowdAPI.getWalletTransactions(1, 5);
+                if (transactionsResponse.success) {
+                    updateWalletTransactions(transactionsResponse.data);
+                }
+            } catch (error) {
+                console.error('Failed to load wallet:', error);
+            }
+        }
+
+        function updateWalletStats(stats) {
+            document.getElementById('walletAvailableBalance').textContent = `$${parseFloat(stats.available_balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('walletPending').textContent = `$${parseFloat(stats.pending_balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('walletTotalTransactions').textContent = `$${parseFloat(stats.total_transactions_amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('walletThisMonth').textContent = `$${parseFloat(stats.this_month_amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        }
+
+        function updateWalletTransactions(transactions) {
+            const container = document.getElementById('walletRecentTransactions');
+            if (!container || !transactions || transactions.length === 0) return;
+            
+            container.innerHTML = transactions.map(txn => {
+                const isCredit = ['deposit', 'credit', 'loan_disbursement', 'investment_return'].includes(txn.type);
+                const icon = isCredit ? 'fa-arrow-down' : 'fa-arrow-up';
+                const color = isCredit ? '#38e77b' : '#ef4444';
+                const prefix = isCredit ? '+' : '-';
+                const date = new Date(txn.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                
+                return `<div class="loan-card"><div style="display: flex; justify-content: space-between; align-items: center;"><div style="display: flex; align-items: center; gap: 15px;"><div style="width: 50px; height: 50px; background: rgba(${isCredit ? '56, 231, 123' : '239, 68, 68'}, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="fas ${icon}" style="color: ${color};"></i></div><div><h4 style="margin-bottom: 5px;">${txn.description || 'Transaction'}</h4><p style="color: #94a3b8; font-size: 14px;">${date}</p></div></div><div style="text-align: right;"><div class="loan-amount" style="font-size: 20px; color: ${color};">${prefix}$${parseFloat(txn.amount).toLocaleString()}</div></div></div></div>`;
+            }).join('');
+        }
+
         // Load investments data
         async function loadInvestmentsData() {
             try {
                 const portfolioResponse = await window.ZimCrowdAPI.getInvestmentPortfolio();
-                updateInvestmentPortfolio(portfolioResponse);
+                if (portfolioResponse.success) {
+                    updateInvestmentPortfolio(portfolioResponse.data);
+                }
+                const investmentsResponse = await window.ZimCrowdAPI.getInvestments(1, 20);
+                if (investmentsResponse.success) {
+                    updateInvestmentsList(investmentsResponse.data);
+                }
             } catch (error) {
                 console.error('Failed to load investments:', error);
-                // Keep existing mock data if API fails
             }
+        }
+
+        function updateInvestmentPortfolio(data) {
+            if (!data) return;
+            document.getElementById('portfolioTotalInvested').textContent = `$${parseFloat(data.total_invested || 0).toLocaleString()}`;
+            document.getElementById('portfolioAvgReturn').textContent = `${parseFloat(data.average_return || 0).toFixed(1)}%`;
+            document.getElementById('portfolioActiveCount').textContent = data.active_count || 0;
+            document.getElementById('portfolioTotalReturns').textContent = `$${parseFloat(data.total_returns || 0).toLocaleString()}`;
+            document.getElementById('portfolioHeaderInvested').textContent = `$${parseFloat(data.total_invested || 0).toLocaleString('en-US', {minimumFractionDigits: 2})} Total Invested`;
+            document.getElementById('portfolioHeaderReturns').textContent = `$${parseFloat(data.total_returns || 0).toLocaleString('en-US', {minimumFractionDigits: 2})} Total Returns`;
+            document.getElementById('portfolioHeaderAvgReturn').textContent = `${parseFloat(data.average_return || 0).toFixed(1)}% Avg. Return`;
+        }
+
+        function updateInvestmentsList(investments) {
+            const container = document.getElementById('portfolioCardsContainer');
+            if (!container || !investments || investments.length === 0) return;
+            
+            container.innerHTML = investments.map(inv => {
+                const initial = (inv.borrower_name || 'U').charAt(0).toUpperCase();
+                const riskClass = inv.risk_rating === 'low' ? 'low' : inv.risk_rating === 'high' ? 'high' : 'medium';
+                const progress = inv.progress_percentage || 0;
+                const returns = inv.returns_amount || 0;
+                const returnsPercent = inv.returns_percentage || 0;
+                const returnsClass = returns >= 0 ? 'returns-positive' : 'returns-negative';
+                
+                return `<div class="portfolio-card"><div class="card-header"><div class="borrower-info"><div class="borrower-avatar">${initial}</div><div class="borrower-details"><div class="borrower-name">${inv.borrower_name || 'Anonymous'}</div><div class="borrower-purpose">${inv.loan_purpose || 'Loan'}</div><span class="risk-badge ${riskClass}">${generateStarRating(inv.zimscore || 3.5)}</span></div></div></div><div class="card-body"><div class="card-metrics"><div class="metric-item"><span class="metric-label">Principal</span><span class="metric-value">$${parseFloat(inv.amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div><div class="metric-item"><span class="metric-label">Returns</span><span class="metric-value ${returnsClass}">+$${parseFloat(returns).toLocaleString('en-US', {minimumFractionDigits: 2})} (${returnsPercent.toFixed(1)}%)</span></div><div class="metric-item"><span class="metric-label">Monthly Return</span><span class="metric-value">$${parseFloat(inv.monthly_return || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div></div><div class="card-progress"><div class="progress-info"><span>Progress</span><span>${progress}%</span></div><div class="progress-bar"><div class="progress-fill" style="width: ${progress}%"></div></div></div></div></div>`;
+            }).join('');
         }
 
         // Load transactions data
         async function loadTransactionsData() {
             try {
                 const response = await window.ZimCrowdAPI.getTransactions();
-                updateTransactionsSection(response);
+                if (response.success) {
+                    updateTransactionsSection(response.data);
+                }
             } catch (error) {
                 console.error('Failed to load transactions:', error);
-                // Keep existing mock data if API fails
             }
+        }
+
+        function updateTransactionsSection(transactions) {
+            // Will implement transaction section update
+            console.log('Transactions loaded:', transactions);
         }
 
         // UI Update Functions
