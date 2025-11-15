@@ -8264,6 +8264,9 @@ How it works:
             const totalTenureFees = monthlyFee * term;
             const totalFees = upfrontFee + totalTenureFees;
             
+            // Net amount after upfront fee
+            const netAmount = amount - upfrontFee;
+            
             // Loan calculations
             const monthlyRate = rate / 100 / 12;
             const monthlyPayment = amount * (monthlyRate * Math.pow(1 + monthlyRate, term)) / (Math.pow(1 + monthlyRate, term) - 1);
@@ -8271,8 +8274,11 @@ How it works:
             const totalInterest = totalRepayment - amount;
             
             // Update UI
-            document.getElementById('upfrontFee').textContent = `$${upfrontFee.toFixed(2)}`;
-            document.getElementById('monthlyFee').textContent = `$${monthlyFee.toFixed(2)}`;
+            document.getElementById('requestedAmount').textContent = `$${amount.toFixed(2)}`;
+            document.getElementById('upfrontFee').textContent = `-$${upfrontFee.toFixed(2)}`;
+            document.getElementById('netAmountReceived').textContent = `$${netAmount.toFixed(2)}`;
+            document.getElementById('netAmountReceivedDuplicate').textContent = `$${netAmount.toFixed(2)}`;
+            document.getElementById('monthlyFee').textContent = `$${monthlyFee.toFixed(2)}/month`;
             document.getElementById('totalTenureFees').textContent = `$${totalTenureFees.toFixed(2)}`;
             document.getElementById('totalPlatformFees').textContent = `$${totalFees.toFixed(2)}`;
             document.getElementById('monthlyPayment').textContent = `$${monthlyPayment.toFixed(2)}`;
@@ -8287,16 +8293,28 @@ How it works:
                 rate: parseFloat(document.getElementById('loanRate')?.value),
                 purpose: document.getElementById('loanPurpose')?.value,
                 description: document.getElementById('loanDescription')?.value,
-                agreed_to_fees: document.getElementById('agreeToFees')?.checked
+                agreed_to_fees: document.getElementById('agreeToFees')?.checked,
+                agreed_to_terms: document.getElementById('agreeToTerms')?.checked,
+                e_signature: document.getElementById('eSignature')?.value
             };
+            
+            if (!loanData.amount || !loanData.term || !loanData.purpose) {
+                alert('Please fill in all required fields');
+                return;
+            }
             
             if (!loanData.agreed_to_fees) {
                 alert('Please agree to the platform fees to continue');
                 return;
             }
             
-            if (!loanData.amount || !loanData.term || !loanData.purpose) {
-                alert('Please fill in all required fields');
+            if (!loanData.agreed_to_terms) {
+                alert('Please read and agree to the Terms & Conditions and Loan Agreement');
+                return;
+            }
+            
+            if (!loanData.e_signature || loanData.e_signature.trim().length < 2) {
+                alert('Please provide your electronic signature (full name)');
                 return;
             }
             
@@ -8305,6 +8323,12 @@ How it works:
                 if (response.success) {
                     alert('Loan request submitted successfully! It will appear in the primary market for investors.');
                     closeLoanRequestModal();
+                    // Reset form
+                    document.getElementById('loanAmount').value = '';
+                    document.getElementById('loanDescription').value = '';
+                    document.getElementById('agreeToFees').checked = false;
+                    document.getElementById('agreeToTerms').checked = false;
+                    document.getElementById('eSignature').value = '';
                     loadLoansData(); // Refresh loans
                 } else {
                     alert('Failed to submit loan request: ' + (response.message || 'Unknown error'));
@@ -8405,25 +8429,42 @@ How it works:
                     <textarea id="loanDescription" rows="3" placeholder="Describe how you'll use the loan..." style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white;"></textarea>
                 </div>
                 
+                <!-- Net Amount You'll Receive -->
+                <div style="background: linear-gradient(135deg, rgba(56, 231, 123, 0.2), rgba(52, 211, 153, 0.1)); border: 2px solid #38e77b; border-radius: 12px; padding: 25px; text-align: center;">
+                    <p style="color: #94a3b8; font-size: 14px; margin-bottom: 8px;">Amount You'll Receive After Upfront Fee</p>
+                    <h2 id="netAmountReceived" style="color: #38e77b; font-size: 36px; font-weight: 700; margin: 0;">$0.00</h2>
+                    <p style="color: #64748b; font-size: 12px; margin-top: 8px;">This is the actual amount deposited to your wallet</p>
+                </div>
+                
                 <!-- Platform Fees Section -->
                 <div style="background: rgba(56, 231, 123, 0.1); border: 1px solid rgba(56, 231, 123, 0.3); border-radius: 12px; padding: 20px;">
-                    <h3 style="color: #38e77b; margin-bottom: 15px;">Platform Fees</h3>
+                    <h3 style="color: #38e77b; margin-bottom: 15px;">Platform Fees Breakdown</h3>
                     <div style="display: grid; gap: 10px;">
                         <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #94a3b8;">Requested Amount:</span>
+                            <strong id="requestedAmount" style="color: #e2e8f0;">$0.00</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
                             <span style="color: #94a3b8;">Upfront Fee (2.5%):</span>
-                            <strong id="upfrontFee" style="color: #38e77b;">$0.00</strong>
+                            <strong id="upfrontFee" style="color: #ef4444;">-$0.00</strong>
                         </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="color: #94a3b8;">Monthly Fee (0.5%):</span>
-                            <strong id="monthlyFee" style="color: #38e77b;">$0.00</strong>
+                        <div style="border-top: 1px solid rgba(56, 231, 123, 0.3); padding-top: 10px; margin-top: 5px; display: flex; justify-content: space-between;">
+                            <span style="color: #e2e8f0; font-weight: 600;">Net Amount Received:</span>
+                            <strong style="color: #38e77b; font-size: 18px;" id="netAmountReceivedDuplicate">$0.00</strong>
                         </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="color: #94a3b8;">Total Tenure Fees:</span>
-                            <strong id="totalTenureFees" style="color: #38e77b;">$0.00</strong>
+                        <div style="border-top: 1px solid rgba(56, 231, 123, 0.2); padding-top: 10px; margin-top: 10px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="color: #94a3b8;">Monthly Fee (0.5%):</span>
+                                <strong id="monthlyFee" style="color: #f59e0b;">$0.00/month</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #94a3b8;">Total Tenure Fees:</span>
+                                <strong id="totalTenureFees" style="color: #f59e0b;">$0.00</strong>
+                            </div>
                         </div>
                         <div style="border-top: 1px solid rgba(56, 231, 123, 0.3); padding-top: 10px; margin-top: 5px; display: flex; justify-content: space-between;">
                             <span style="color: #e2e8f0; font-weight: 600;">Total Platform Fees:</span>
-                            <strong id="totalPlatformFees" style="color: #38e77b; font-size: 18px;">$0.00</strong>
+                            <strong id="totalPlatformFees" style="color: #ef4444; font-size: 18px;">$0.00</strong>
                         </div>
                     </div>
                 </div>
@@ -8447,6 +8488,50 @@ How it works:
                     </div>
                 </div>
                 
+                <!-- Terms & Conditions -->
+                <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 20px;">
+                    <h3 style="color: #3b82f6; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-file-contract"></i> Terms & Conditions and Loan Agreement
+                    </h3>
+                    <div style="max-height: 200px; overflow-y: auto; background: rgba(15, 23, 42, 0.5); padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; line-height: 1.6;">
+                        <p style="color: #e2e8f0; margin-bottom: 10px;"><strong>LOAN AGREEMENT</strong></p>
+                        <p style="color: #94a3b8; margin-bottom: 10px;">By submitting this loan request, you agree to the following terms:</p>
+                        
+                        <p style="color: #e2e8f0; margin-bottom: 5px;"><strong>1. Loan Terms</strong></p>
+                        <p style="color: #94a3b8; margin-bottom: 10px;">• You will receive the net amount after the upfront fee is deducted<br>• Monthly payments must be made on time to avoid penalties<br>• The loan will be funded through peer-to-peer investors on our platform</p>
+                        
+                        <p style="color: #e2e8f0; margin-bottom: 5px;"><strong>2. Platform Fees</strong></p>
+                        <p style="color: #94a3b8; margin-bottom: 10px;">• Upfront Fee: 2.5% of loan amount (deducted before disbursement)<br>• Monthly Fee: 0.5% of loan amount (added to monthly payment)<br>• Fees are non-refundable</p>
+                        
+                        <p style="color: #e2e8f0; margin-bottom: 5px;"><strong>3. Repayment Obligations</strong></p>
+                        <p style="color: #94a3b8; margin-bottom: 10px;">• You must repay the full loan amount plus interest<br>• Late payments may incur penalties and affect your ZimScore<br>• Early repayment is allowed without penalties</p>
+                        
+                        <p style="color: #e2e8f0; margin-bottom: 5px;"><strong>4. Default and Consequences</strong></p>
+                        <p style="color: #94a3b8; margin-bottom: 10px;">• Failure to repay may result in legal action<br>• Your ZimScore will be negatively affected<br>• Collection fees may apply</p>
+                        
+                        <p style="color: #e2e8f0; margin-bottom: 5px;"><strong>5. Data and Privacy</strong></p>
+                        <p style="color: #94a3b8; margin-bottom: 10px;">• Your loan request will be visible to investors<br>• Personal information is protected per our Privacy Policy<br>• Credit checks may be performed</p>
+                        
+                        <p style="color: #e2e8f0; margin-bottom: 5px;"><strong>6. Electronic Signature</strong></p>
+                        <p style="color: #94a3b8;">By providing your electronic signature below, you acknowledge that you have read, understood, and agree to be legally bound by this agreement.</p>
+                    </div>
+                    
+                    <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; margin-bottom: 15px;">
+                        <input type="checkbox" id="agreeToTerms" style="width: 20px; height: 20px; margin-top: 2px;">
+                        <span style="color: #e2e8f0; font-size: 14px;">I have read and agree to the Terms & Conditions and Loan Agreement above. I understand this is a legally binding contract.</span>
+                    </label>
+                    
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">
+                            <i class="fas fa-signature"></i> Electronic Signature (Full Legal Name)
+                        </label>
+                        <input type="text" id="eSignature" placeholder="Type your full name as signature" style="width: 100%; padding: 12px; background: #0f172a; border: 2px solid #3b82f6; border-radius: 8px; color: white; font-family: 'Brush Script MT', cursive; font-size: 18px;">
+                        <p style="color: #64748b; font-size: 12px; margin-top: 5px;">
+                            <i class="fas fa-info-circle"></i> By typing your name, you are providing a legally binding electronic signature
+                        </p>
+                    </div>
+                </div>
+                
                 <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 15px;">
                     <label style="display: flex; align-items: start; gap: 10px; cursor: pointer;">
                         <input type="checkbox" id="agreeToFees" style="width: 20px; height: 20px; margin-top: 2px;">
@@ -8456,7 +8541,9 @@ How it works:
                 
                 <div style="display: flex; gap: 10px; justify-content: flex-end;">
                     <button onclick="closeLoanRequestModal()" class="btn-secondary">Cancel</button>
-                    <button onclick="submitLoanRequest()" class="btn-primary">Submit Loan Request</button>
+                    <button onclick="submitLoanRequest()" class="btn-primary" style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-check-circle"></i> Submit Loan Request
+                    </button>
                 </div>
             </div>
         </div>
