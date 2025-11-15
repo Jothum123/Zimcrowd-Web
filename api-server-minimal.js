@@ -150,8 +150,8 @@ app.use((err, req, res, next) => {
 // START SERVER
 // =====================================================
 
-// Railway provides PORT, fallback to API_PORT or 3001
-const PORT = process.env.PORT || process.env.API_PORT || 3001;
+// Use API_PORT first (for local dev), then PORT (for Railway/Render), then default 3001
+const PORT = process.env.API_PORT || process.env.PORT || 3001;
 
 app.listen(PORT, () => {
     console.log('\n' + '='.repeat(60));
