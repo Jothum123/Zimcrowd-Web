@@ -273,25 +273,33 @@ END $$;
 -- 8. CREATE INDEXES (SAFE - ONLY IF COLUMNS EXIST)
 -- =====================================================
 
--- Users indexes
+-- Users indexes (only create if columns exist)
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_users_email') THEN
         CREATE INDEX idx_users_email ON users(email);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_users_role') THEN
-        CREATE INDEX idx_users_role ON users(role);
+    
+    -- Only create role index if role column exists
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'role') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_users_role') THEN
+            CREATE INDEX idx_users_role ON users(role);
+        END IF;
     END IF;
 END $$;
 
--- Transactions indexes
+-- Transactions indexes (only create if columns exist)
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_transactions_user') THEN
         CREATE INDEX idx_transactions_user ON transactions(user_id);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_transactions_reference') THEN
-        CREATE INDEX idx_transactions_reference ON transactions(reference);
+    
+    -- Only create reference index if column exists
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'transactions' AND column_name = 'reference') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_transactions_reference') THEN
+            CREATE INDEX idx_transactions_reference ON transactions(reference);
+        END IF;
     END IF;
 END $$;
 
@@ -306,15 +314,19 @@ BEGIN
     END IF;
 END $$;
 
--- Investments indexes
+-- Investments indexes (only create if columns exist)
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_investments_user') THEN
         CREATE INDEX idx_investments_user ON investments(user_id);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_investments_loan') THEN
-        CREATE INDEX idx_investments_loan ON investments(loan_id);
-        RAISE NOTICE '✓ Created index on investments.loan_id';
+    
+    -- Only create loan_id index if column exists
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'investments' AND column_name = 'loan_id') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_investments_loan') THEN
+            CREATE INDEX idx_investments_loan ON investments(loan_id);
+            RAISE NOTICE '✓ Created index on investments.loan_id';
+        END IF;
     END IF;
 END $$;
 
