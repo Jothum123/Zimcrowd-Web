@@ -2,11 +2,31 @@ const { createClient } = require('@supabase/supabase-js');
 const jwt = require('jsonwebtoken');
 const validator = require('validator');
 
-// Initialize Supabase client
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
-);
+// Initialize Supabase client with error handling
+let supabase;
+try {
+    if (!process.env.SUPABASE_URL) {
+        throw new Error('SUPABASE_URL is not set in environment variables');
+    }
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.SUPABASE_ANON_KEY) {
+        throw new Error('SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY is not set in environment variables');
+    }
+    
+    supabase = createClient(
+        process.env.SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+    );
+    console.log('✅ Supabase client initialized successfully');
+} catch (error) {
+    console.error('❌ Supabase initialization failed:', error.message);
+    console.log('⚠️  Routes requiring Supabase will not function');
+    // Create a dummy client that throws helpful errors
+    supabase = new Proxy({}, {
+        get: () => {
+            throw new Error('Supabase client not initialized. Check environment variables.');
+        }
+    });
+}
 
 // Generate JWT Token (for additional security layer)
 const generateToken = (userId, expiresIn = '24h') => {

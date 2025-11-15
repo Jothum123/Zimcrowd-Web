@@ -32,15 +32,21 @@ app.use((req, res, next) => {
 
 function loadRoute(routePath, routeName) {
     try {
-        if (fs.existsSync(path.join(__dirname, routePath))) {
+        const fullPath = path.join(__dirname, routePath + '.js');
+        if (fs.existsSync(fullPath)) {
+            const route = require(routePath);
             console.log(`✅ Loading route: ${routeName}`);
-            return require(routePath);
+            return route;
         } else {
             console.log(`⚠️  Skipping route: ${routeName} (file not found)`);
             return null;
         }
     } catch (error) {
-        console.log(`❌ Error loading route: ${routeName} - ${error.message}`);
+        console.log(`❌ Error loading route: ${routeName}`);
+        console.log(`   Error: ${error.message}`);
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`   Path: ${routePath}`);
+        }
         return null;
     }
 }
