@@ -125,6 +125,80 @@ router.get('/stats', authenticateUser, async (req, res) => {
     }
 });
 
+// @route   GET /api/referrals/my-referrals
+// @desc    Get user's referrals
+// @access  Private
+router.get('/my-referrals', authenticateUser, async (req, res) => {
+    try {
+        const { page = 1, limit = 20 } = req.query;
+        const offset = (page - 1) * limit;
+
+        // Mock data - in production this would query referrals table
+        const mockReferrals = [
+            {
+                id: 1,
+                name: 'Jane Smith',
+                email: 'jane.smith@example.com',
+                avatar: 'JS',
+                status: 'active',
+                joined_date: '2024-10-15',
+                loans_count: 3,
+                earnings: 75.00
+            },
+            {
+                id: 2,
+                name: 'Michael Brown',
+                email: 'michael.brown@example.com',
+                avatar: 'MB',
+                status: 'active',
+                joined_date: '2024-10-20',
+                loans_count: 2,
+                earnings: 50.00
+            },
+            {
+                id: 3,
+                name: 'Sarah Wilson',
+                email: 'sarah.wilson@example.com',
+                avatar: 'SW',
+                status: 'active',
+                joined_date: '2024-11-01',
+                loans_count: 1,
+                earnings: 25.00
+            },
+            {
+                id: 4,
+                name: 'David Lee',
+                email: 'david.lee@example.com',
+                avatar: 'DL',
+                status: 'pending',
+                joined_date: '2024-11-10',
+                loans_count: 0,
+                earnings: 0
+            }
+        ];
+
+        // Apply pagination
+        const paginatedReferrals = mockReferrals.slice(offset, offset + parseInt(limit));
+
+        res.json({
+            success: true,
+            data: paginatedReferrals,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total: mockReferrals.length,
+                pages: Math.ceil(mockReferrals.length / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Get my referrals error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+});
+
 // @route   GET /api/referrals/history
 // @desc    Get referral history
 // @access  Private

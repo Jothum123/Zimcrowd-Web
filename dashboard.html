@@ -3897,7 +3897,7 @@
                 <div class="stat-card">
                     <div style="display: flex; align-items: center; gap: 20px;">
                         <div style="flex: 1;">
-                            <h3 style="font-size: 32px; font-weight: 700; margin-bottom: 5px;">12</h3>
+                            <h3 id="refTotalReferrals" style="font-size: 32px; font-weight: 700; margin-bottom: 5px;">0</h3>
                             <p style="color: #94a3b8;">Total Referrals</p>
                         </div>
                         <div style="width: 60px; height: 60px; background: rgba(56, 231, 123, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -3908,7 +3908,7 @@
                 <div class="stat-card">
                     <div style="display: flex; align-items: center; gap: 20px;">
                         <div style="flex: 1;">
-                            <h3 style="font-size: 32px; font-weight: 700; margin-bottom: 5px;">$250</h3>
+                            <h3 id="refTotalEarnings" style="font-size: 32px; font-weight: 700; margin-bottom: 5px;">$0</h3>
                             <p style="color: #94a3b8;">Total Earnings</p>
                         </div>
                         <div style="width: 60px; height: 60px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -3919,7 +3919,7 @@
                 <div class="stat-card">
                     <div style="display: flex; align-items: center; gap: 20px;">
                         <div style="flex: 1;">
-                            <h3 style="font-size: 32px; font-weight: 700; margin-bottom: 5px;">5</h3>
+                            <h3 id="refActiveLoans" style="font-size: 32px; font-weight: 700; margin-bottom: 5px;">0</h3>
                             <p style="color: #94a3b8;">Active Loans</p>
                         </div>
                         <div style="width: 60px; height: 60px; background: rgba(168, 85, 247, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -3937,29 +3937,29 @@
                         <p style="color: #94a3b8; margin-bottom: 15px;">Share your unique code and earn rewards when friends join Zimcrowd!</p>
                         <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 20px;">
                             <div style="flex: 1; padding: 16px 20px; background: #0f172a; border: 2px solid #334155; border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
-                                <span style="font-size: 24px; font-weight: 700; letter-spacing: 2px; color: #38e77b;">ZCRWD-JOHN-2024</span>
+                                <span id="referralCodeDisplay" style="font-size: 24px; font-weight: 700; letter-spacing: 2px; color: #38e77b;">Loading...</span>
                                 <button onclick="copyReferralCode()" style="background: rgba(56, 231, 123, 0.1); border: none; padding: 10px 20px; border-radius: 8px; color: #38e77b; cursor: pointer; font-weight: 600;">
                                     <i class="fas fa-copy"></i> Copy
                                 </button>
                             </div>
                         </div>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button class="btn-primary" style="flex: 1; min-width: 150px;">
+                            <button id="shareWhatsApp" class="btn-primary" style="flex: 1; min-width: 150px;">
                                 <i class="fab fa-whatsapp"></i> Share on WhatsApp
                             </button>
-                            <button class="btn-secondary" style="flex: 1; min-width: 150px;">
+                            <button id="shareFacebook" class="btn-secondary" style="flex: 1; min-width: 150px;">
                                 <i class="fab fa-facebook"></i> Share on Facebook
                             </button>
-                            <button class="btn-secondary" style="flex: 1; min-width: 150px;">
+                            <button id="shareTwitter" class="btn-secondary" style="flex: 1; min-width: 150px;">
                                 <i class="fab fa-twitter"></i> Share on Twitter
                             </button>
-                            <button class="btn-secondary" style="flex: 1; min-width: 150px;">
+                            <button id="shareEmail" class="btn-secondary" style="flex: 1; min-width: 150px;">
                                 <i class="fas fa-envelope"></i> Share via Email
                             </button>
                         </div>
                     </div>
                     <div style="text-align: center;">
-                        <div style="width: 200px; height: 200px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                        <div id="referralQRCode" style="width: 200px; height: 200px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; padding: 20px;">
                             <div>
                                 <div style="width: 160px; height: 160px; background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
                                     <i class="fas fa-qrcode" style="font-size: 100px; color: #1e293b;"></i>
@@ -4020,23 +4020,8 @@
                                 <th style="padding: 12px; text-align: left; color: #94a3b8; font-size: 13px;">Earnings</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr style="border-bottom: 1px solid #334155;">
-                                <td style="padding: 16px;">
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #38e77b, #34d399); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">JS</div>
-                                        <span>Jane Smith</span>
-                                    </div>
-                                </td>
-                                <td style="padding: 16px;">2024-10-15</td>
-                                <td style="padding: 16px;">
-                                    <span style="padding: 4px 12px; background: rgba(56, 231, 123, 0.1); color: #38e77b; border-radius: 12px; font-size: 12px; font-weight: 600;">
-                                        <i class="fas fa-check-circle"></i> Active
-                                    </span>
-                                </td>
-                                <td style="padding: 16px;">3 loans</td>
-                                <td style="padding: 16px; color: #38e77b; font-weight: 600;">$75</td>
-                            </tr>
+                        <tbody id="referralHistoryTable">
+                            <!-- Referrals will be loaded here dynamically -->
                             <tr style="border-bottom: 1px solid #334155;">
                                 <td style="padding: 16px;">
                                     <div style="display: flex; align-items: center; gap: 10px;">
@@ -5078,6 +5063,8 @@
                     loadInvestmentsData();
                 } else if (section === 'transactions') {
                     loadTransactionsData();
+                } else if (section === 'referrals') {
+                    loadReferralsData();
                 }
             });
         });
@@ -6974,6 +6961,109 @@ How it works:
                 const returnsClass = returns >= 0 ? 'returns-positive' : 'returns-negative';
                 
                 return `<div class="portfolio-card"><div class="card-header"><div class="borrower-info"><div class="borrower-avatar">${initial}</div><div class="borrower-details"><div class="borrower-name">${inv.borrower_name || 'Anonymous'}</div><div class="borrower-purpose">${inv.loan_purpose || 'Loan'}</div><span class="risk-badge ${riskClass}">${generateStarRating(inv.zimscore || 3.5)}</span></div></div></div><div class="card-body"><div class="card-metrics"><div class="metric-item"><span class="metric-label">Principal</span><span class="metric-value">$${parseFloat(inv.amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div><div class="metric-item"><span class="metric-label">Returns</span><span class="metric-value ${returnsClass}">+$${parseFloat(returns).toLocaleString('en-US', {minimumFractionDigits: 2})} (${returnsPercent.toFixed(1)}%)</span></div><div class="metric-item"><span class="metric-label">Monthly Return</span><span class="metric-value">$${parseFloat(inv.monthly_return || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div></div><div class="card-progress"><div class="progress-info"><span>Progress</span><span>${progress}%</span></div><div class="progress-bar"><div class="progress-fill" style="width: ${progress}%"></div></div></div></div></div>`;
+            }).join('');
+        }
+
+        // Load Referrals Data
+        async function loadReferralsData() {
+            try {
+                const statsResponse = await window.ZimCrowdAPI.getReferralStats();
+                if (statsResponse.success) {
+                    updateReferralStats(statsResponse.data);
+                }
+                
+                const codeResponse = await window.ZimCrowdAPI.getReferralCode();
+                if (codeResponse.success) {
+                    updateReferralCode(codeResponse.data);
+                }
+                
+                const historyResponse = await window.ZimCrowdAPI.getReferrals(1, 10);
+                if (historyResponse.success) {
+                    updateReferralHistory(historyResponse.data);
+                }
+            } catch (error) {
+                console.error('Failed to load referrals:', error);
+            }
+        }
+
+        function updateReferralStats(stats) {
+            document.getElementById('refTotalReferrals').textContent = stats.total_referrals || 0;
+            document.getElementById('refTotalEarnings').textContent = `$${parseFloat(stats.total_earnings || 0).toLocaleString()}`;
+            document.getElementById('refActiveLoans').textContent = stats.active_loans_from_referrals || 0;
+        }
+
+        function updateReferralCode(data) {
+            const code = data.referral_code;
+            const shareUrl = data.share_url;
+            const qrUrl = data.qr_code_url;
+            
+            document.getElementById('referralCodeDisplay').textContent = code;
+            
+            // Update QR code
+            const qrContainer = document.getElementById('referralQRCode');
+            qrContainer.innerHTML = `<img src="${qrUrl}" alt="Referral QR Code" style="width: 100%; height: 100%; border-radius: 12px;">`;
+            
+            // Setup share buttons
+            document.getElementById('shareWhatsApp').onclick = () => {
+                window.open(`https://wa.me/?text=Join ZimCrowd and get instant loans! Use my referral code: ${code} - ${shareUrl}`, '_blank');
+            };
+            
+            document.getElementById('shareFacebook').onclick = () => {
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
+            };
+            
+            document.getElementById('shareTwitter').onclick = () => {
+                window.open(`https://twitter.com/intent/tweet?text=Join ZimCrowd with my referral code ${code}&url=${encodeURIComponent(shareUrl)}`, '_blank');
+            };
+            
+            document.getElementById('shareEmail').onclick = () => {
+                window.location.href = `mailto:?subject=Join ZimCrowd&body=Join ZimCrowd and get instant loans! Use my referral code: ${code} - ${shareUrl}`;
+            };
+            
+            // Store code for copy function
+            window.currentReferralCode = code;
+        }
+
+        function copyReferralCode() {
+            const code = window.currentReferralCode || document.getElementById('referralCodeDisplay').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Referral code copied to clipboard!');
+            });
+        }
+
+        function updateReferralHistory(referrals) {
+            const tbody = document.getElementById('referralHistoryTable');
+            if (!tbody || !referrals || referrals.length === 0) {
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="padding: 40px; text-align: center; color: #94a3b8;">No referrals yet. Start sharing your code!</td></tr>';
+                }
+                return;
+            }
+            
+            tbody.innerHTML = referrals.map(ref => {
+                const statusColor = ref.status === 'active' ? '#38e77b' : '#f59e0b';
+                const statusBg = ref.status === 'active' ? 'rgba(56, 231, 123, 0.1)' : 'rgba(245, 158, 11, 0.1)';
+                const statusText = ref.status === 'active' ? 'Active' : 'Pending';
+                const statusIcon = ref.status === 'active' ? 'fa-check-circle' : 'fa-clock';
+                
+                return `
+                    <tr style="border-bottom: 1px solid #334155;">
+                        <td style="padding: 16px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #38e77b, #34d399); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">${ref.avatar || ref.name.substring(0, 2).toUpperCase()}</div>
+                                <span>${ref.name}</span>
+                            </div>
+                        </td>
+                        <td style="padding: 16px;">${ref.joined_date}</td>
+                        <td style="padding: 16px;">
+                            <span style="padding: 4px 12px; background: ${statusBg}; color: ${statusColor}; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                <i class="fas ${statusIcon}"></i> ${statusText}
+                            </span>
+                        </td>
+                        <td style="padding: 16px;">${ref.loans_count} ${ref.loans_count === 1 ? 'loan' : 'loans'}</td>
+                        <td style="padding: 16px; color: #38e77b; font-weight: 600;">$${parseFloat(ref.earnings || 0).toLocaleString()}</td>
+                    </tr>
+                `;
             }).join('');
         }
 
