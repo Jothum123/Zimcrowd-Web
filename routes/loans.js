@@ -230,6 +230,52 @@ router.post('/apply', authenticateUser, [
     }
 });
 
+// @route   GET /api/loans/stats
+// @desc    Get user's loan statistics
+// @access  Private
+router.get('/stats', authenticateUser, async (req, res) => {
+    try {
+        const { data: loans, error } = await supabase
+            .from('loans')
+            .select('*')
+            .eq('user_id', req.user.id);
+            
+        if (error) throw error;
+        
+        const activeLoans = loans?.filter(loan => loan.status === 'active') || [];
+        const completedLoans = loans?.filter(loan => loan.status === 'completed') || [];
+        const pendingLoans = loans?.filter(loan => loan.status === 'pending') || [];
+        
+        // Calculate totals
+        const totalLoanAmount = activeLoans.reduce((sum, loan) => sum + (parseFloat(loan.amount) || 0), 0);
+        const averageTerm = activeLoans.length > 0
+            ? activeLoans.reduce((sum, loan) => sum + (parseInt(loan.term) || 0), 0) / activeLoans.length
+            : 0;
+        const averageInterest = activeLoans.length > 0
+            ? activeLoans.reduce((sum, loan) => sum + (parseFloat(loan.interest_rate) || 0), 0) / activeLoans.length
+            : 0;
+        
+        res.json({
+            success: true,
+            data: {
+                totalLoanAmount: totalLoanAmount.toFixed(2),
+                averageTerm: Math.round(averageTerm),
+                averageInterest: averageInterest.toFixed(1),
+                activeLoansCount: activeLoans.length,
+                completedLoansCount: completedLoans.length,
+                pendingLoansCount: pendingLoans.length,
+                totalLoansCount: loans?.length || 0
+            }
+        });
+    } catch (error) {
+        console.error('Get loan stats error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch loan statistics'
+        });
+    }
+});
+
 // @route   GET /api/loans/my-loans
 // @desc    Get user's loans
 // @access  Private
