@@ -2,7 +2,7 @@
   "name": "zimcrowd-backend",
   "version": "1.0.0",
   "description": "ZimCrowd Backend API Server",
-  "main": "backend-server.js",
+  "main": "api-server-minimal.js",
   "type": "commonjs",
   "scripts": {
     "start": "node api-server-minimal.js",
