@@ -395,7 +395,7 @@ router.post('/transfer', authenticateUser, [
         }
 
         // Create deposit transaction for recipient
-        const { data: recipientTx, error: recipientError } = await supabase
+        const { data: recipientTx, error: recipientTxError } = await supabase
             .from('transactions')
             .insert({
                 user_id: recipient_id,
@@ -408,8 +408,8 @@ router.post('/transfer', authenticateUser, [
             .select('*')
             .single();
 
-        if (recipientError) {
-            console.error('Recipient transaction error:', recipientError);
+        if (recipientTxError) {
+            console.error('Recipient transaction error:', recipientTxError);
             // Rollback sender transaction
             await supabase
                 .from('transactions')
