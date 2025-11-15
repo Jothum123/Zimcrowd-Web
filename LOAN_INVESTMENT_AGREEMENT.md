@@ -185,10 +185,28 @@ Default occurs when:
 5. Investors notified of status
 
 ### 7.3 Recovery Distribution
-- Collection costs deducted first
-- Platform fees deducted second
-- Remaining amount distributed to lenders proportionally
-- No guarantee of recovery
+
+**Recovery Fee Structure:**
+- **Recovery Fee:** 30% of successfully collected amount
+- **Charged To:** Lenders (deducted from recovered amount)
+- **Paid To:** Recovery companies
+- **Only Charged:** If recovery is successful
+
+**Distribution Process:**
+1. Recovery company collects amount from defaulted borrower
+2. Recovery fee deducted (30% of collected amount)
+3. Remaining 70% distributed to lenders proportionally
+4. No guarantee of recovery
+
+**Example:**
+```
+Amount Collected: $2,000
+Recovery Fee (30%): -$600
+Net to Lenders: $1,400
+Your Share (20%): $280
+```
+
+**Important:** If no amount is recovered, no recovery fee is charged, but you also receive nothing.
 
 ---
 

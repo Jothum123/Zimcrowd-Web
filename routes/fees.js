@@ -241,6 +241,64 @@ router.post('/calculate-deal-fee', authenticateUser, async (req, res) => {
 });
 
 /**
+ * Calculate Recovery Fee
+ * POST /api/fees/calculate-recovery-fee
+ */
+router.post('/calculate-recovery-fee', authenticateUser, async (req, res) => {
+    try {
+        const { collected_amount, lender_investment, total_loan_amount } = req.body;
+
+        if (!collected_amount || !lender_investment || !total_loan_amount) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required parameters'
+            });
+        }
+
+        const RECOVERY_FEE_PERCENT = 30; // 30%
+
+        // Calculate recovery fee
+        const recoveryFee = collected_amount * (RECOVERY_FEE_PERCENT / 100);
+        const netDistribution = collected_amount - recoveryFee;
+
+        // Calculate lender's share
+        const lenderProportion = lender_investment / total_loan_amount;
+        const lenderShareGross = collected_amount * lenderProportion;
+        const lenderRecoveryFee = lenderShareGross * (RECOVERY_FEE_PERCENT / 100);
+        const lenderNetRecovery = lenderShareGross - lenderRecoveryFee;
+
+        // Calculate loss
+        const lenderLoss = lender_investment - lenderNetRecovery;
+        const lossPercentage = (lenderLoss / lender_investment) * 100;
+
+        res.json({
+            success: true,
+            data: {
+                collected_amount: collected_amount,
+                recovery_fee: recoveryFee,
+                recovery_fee_percent: RECOVERY_FEE_PERCENT,
+                net_distribution: netDistribution,
+                lender_details: {
+                    investment: lender_investment,
+                    proportion: lenderProportion,
+                    share_gross: lenderShareGross,
+                    recovery_fee: lenderRecoveryFee,
+                    net_recovery: lenderNetRecovery,
+                    loss: lenderLoss,
+                    loss_percentage: lossPercentage
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Calculate recovery fee error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to calculate recovery fee'
+        });
+    }
+});
+
+/**
  * Get Fee Structure
  * GET /api/fees/structure
  */
@@ -276,6 +334,9 @@ router.get('/structure', async (req, res) => {
                 },
                 lender_benefits: {
                     late_fee_share: { percent: 5, description: 'Share of late fees collected from borrower' }
+                },
+                default_fees: {
+                    recovery_fee: { percent: 30, description: 'Deducted from recovered amount, paid to recovery companies, charged to lenders' }
                 }
             }
         });

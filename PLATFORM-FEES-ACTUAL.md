@@ -21,13 +21,15 @@ Our platform operates on a **ZERO PLATFORM FEE** model for P2P loans, with fees 
 - ❌ Late Fee (10% total, $50 min) - **NOT charged**
 
 ### **Lender Fees - NOT IMPLEMENTED:**
-- ❌ Service Fee (10% upfront) - **NOT charged**
-- ❌ Insurance Fee (3% upfront) - **NOT charged**
-- ❌ Collection Fee (1.5% of returns) - **NOT charged**
-- ❌ Tenure Fee (1% of investment) - **NOT charged**
-- ❌ Deal Fee (10% secondary market) - **NOT charged**
+-Service Fee (10% upfront) 
+-Insurance Fee (3% upfront) 
+-Collection Fee (5% of returns) 
+-Deal Fee (2% of deal amount -secondary market) 
 
----
+# Lender Benefits 
+-5 % late fees
+
+
 
 ## ✅ What We ACTUALLY Charge
 
