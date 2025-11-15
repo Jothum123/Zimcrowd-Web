@@ -8255,33 +8255,54 @@ How it works:
             const term = parseInt(document.getElementById('loanTerm')?.value) || 12;
             const rate = parseFloat(document.getElementById('loanRate')?.value) || 12;
             
-            // Platform fees
-            const upfrontFeePercent = 2.5; // 2.5% upfront
-            const monthlyFeePercent = 0.5; // 0.5% monthly
+            // Platform fees - ACTUAL FEE STRUCTURE
+            const serviceFeePercent = 10; // 10% upfront
+            const insuranceFeePercent = 3; // 3% upfront
+            const tenureFeePercent = 1; // 1% monthly
+            const collectionFeePercent = 5; // 5% of each payment
             
-            const upfrontFee = amount * (upfrontFeePercent / 100);
-            const monthlyFee = amount * (monthlyFeePercent / 100);
-            const totalTenureFees = monthlyFee * term;
-            const totalFees = upfrontFee + totalTenureFees;
+            // Upfront fees
+            const serviceFee = amount * (serviceFeePercent / 100);
+            const insuranceFee = amount * (insuranceFeePercent / 100);
+            const totalUpfrontFees = serviceFee + insuranceFee;
             
-            // Net amount after upfront fee
-            const netAmount = amount - upfrontFee;
+            // Net amount after upfront fees
+            const netAmount = amount - totalUpfrontFees;
             
-            // Loan calculations
+            // Loan calculations (on original amount)
             const monthlyRate = rate / 100 / 12;
-            const monthlyPayment = amount * (monthlyRate * Math.pow(1 + monthlyRate, term)) / (Math.pow(1 + monthlyRate, term) - 1);
-            const totalRepayment = monthlyPayment * term;
-            const totalInterest = totalRepayment - amount;
+            const baseMonthlyPayment = amount * (monthlyRate * Math.pow(1 + monthlyRate, term)) / (Math.pow(1 + monthlyRate, term) - 1);
+            
+            // Tenure fees (monthly)
+            const tenureFeeMonthly = amount * (tenureFeePercent / 100);
+            const totalTenureFees = tenureFeeMonthly * term;
+            
+            // Collection fee (5% of each payment)
+            const collectionFeeMonthly = baseMonthlyPayment * (collectionFeePercent / 100);
+            const totalCollectionFees = collectionFeeMonthly * term;
+            
+            // Total monthly payment including all fees
+            const totalMonthlyPayment = baseMonthlyPayment + tenureFeeMonthly + collectionFeeMonthly;
+            
+            // Total calculations
+            const totalRepayment = totalMonthlyPayment * term;
+            const totalInterest = (baseMonthlyPayment * term) - amount;
+            const totalAllFees = totalUpfrontFees + totalTenureFees + totalCollectionFees;
             
             // Update UI
             document.getElementById('requestedAmount').textContent = `$${amount.toFixed(2)}`;
-            document.getElementById('upfrontFee').textContent = `-$${upfrontFee.toFixed(2)}`;
+            document.getElementById('serviceFee').textContent = `-$${serviceFee.toFixed(2)}`;
+            document.getElementById('insuranceFee').textContent = `-$${insuranceFee.toFixed(2)}`;
+            document.getElementById('totalUpfrontFees').textContent = `-$${totalUpfrontFees.toFixed(2)}`;
             document.getElementById('netAmountReceived').textContent = `$${netAmount.toFixed(2)}`;
             document.getElementById('netAmountReceivedDuplicate').textContent = `$${netAmount.toFixed(2)}`;
-            document.getElementById('monthlyFee').textContent = `$${monthlyFee.toFixed(2)}/month`;
+            document.getElementById('tenureFeeMonthly').textContent = `$${tenureFeeMonthly.toFixed(2)}/month`;
             document.getElementById('totalTenureFees').textContent = `$${totalTenureFees.toFixed(2)}`;
-            document.getElementById('totalPlatformFees').textContent = `$${totalFees.toFixed(2)}`;
-            document.getElementById('monthlyPayment').textContent = `$${monthlyPayment.toFixed(2)}`;
+            document.getElementById('collectionFeeMonthly').textContent = `$${collectionFeeMonthly.toFixed(2)}/month`;
+            document.getElementById('totalCollectionFees').textContent = `$${totalCollectionFees.toFixed(2)}`;
+            document.getElementById('totalPlatformFees').textContent = `$${totalAllFees.toFixed(2)}`;
+            document.getElementById('monthlyPayment').textContent = `$${totalMonthlyPayment.toFixed(2)}`;
+            document.getElementById('baseMonthlyPayment').textContent = `$${baseMonthlyPayment.toFixed(2)}`;
             document.getElementById('totalRepayment').textContent = `$${totalRepayment.toFixed(2)}`;
             document.getElementById('totalInterest').textContent = `$${totalInterest.toFixed(2)}`;
         }
@@ -8444,27 +8465,55 @@ How it works:
                             <span style="color: #94a3b8;">Requested Amount:</span>
                             <strong id="requestedAmount" style="color: #e2e8f0;">$0.00</strong>
                         </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="color: #94a3b8;">Upfront Fee (2.5%):</span>
-                            <strong id="upfrontFee" style="color: #ef4444;">-$0.00</strong>
+                        
+                        <!-- Upfront Fees -->
+                        <div style="background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px; margin-top: 5px;">
+                            <p style="color: #ef4444; font-weight: 600; margin-bottom: 8px;">Upfront Fees (Deducted Before Disbursement):</p>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span style="color: #94a3b8;">Service Fee (10%):</span>
+                                <strong id="serviceFee" style="color: #ef4444;">-$0.00</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #94a3b8;">Insurance Fee (3%):</span>
+                                <strong id="insuranceFee" style="color: #ef4444;">-$0.00</strong>
+                            </div>
+                            <div style="border-top: 1px solid rgba(239, 68, 68, 0.3); padding-top: 8px; margin-top: 8px; display: flex; justify-content: space-between;">
+                                <span style="color: #e2e8f0; font-weight: 600;">Total Upfront Fees:</span>
+                                <strong id="totalUpfrontFees" style="color: #ef4444; font-size: 16px;">-$0.00</strong>
+                            </div>
                         </div>
+                        
                         <div style="border-top: 1px solid rgba(56, 231, 123, 0.3); padding-top: 10px; margin-top: 5px; display: flex; justify-content: space-between;">
                             <span style="color: #e2e8f0; font-weight: 600;">Net Amount Received:</span>
                             <strong style="color: #38e77b; font-size: 18px;" id="netAmountReceivedDuplicate">$0.00</strong>
                         </div>
-                        <div style="border-top: 1px solid rgba(56, 231, 123, 0.2); padding-top: 10px; margin-top: 10px;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                <span style="color: #94a3b8;">Monthly Fee (0.5%):</span>
-                                <strong id="monthlyFee" style="color: #f59e0b;">$0.00/month</strong>
+                        
+                        <!-- Ongoing Fees -->
+                        <div style="background: rgba(245, 158, 11, 0.1); padding: 10px; border-radius: 8px; margin-top: 10px;">
+                            <p style="color: #f59e0b; font-weight: 600; margin-bottom: 8px;">Ongoing Fees (Added to Monthly Payment):</p>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span style="color: #94a3b8;">Tenure Fee (1% monthly):</span>
+                                <strong id="tenureFeeMonthly" style="color: #f59e0b;">$0.00/month</strong>
                             </div>
-                            <div style="display: flex; justify-content: space-between;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                                 <span style="color: #94a3b8;">Total Tenure Fees:</span>
                                 <strong id="totalTenureFees" style="color: #f59e0b;">$0.00</strong>
                             </div>
+                            <div style="border-top: 1px solid rgba(245, 158, 11, 0.3); padding-top: 8px; margin-top: 8px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span style="color: #94a3b8;">Collection Fee (5% of payment):</span>
+                                    <strong id="collectionFeeMonthly" style="color: #f59e0b;">$0.00/month</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #94a3b8;">Total Collection Fees:</span>
+                                    <strong id="totalCollectionFees" style="color: #f59e0b;">$0.00</strong>
+                                </div>
+                            </div>
                         </div>
-                        <div style="border-top: 1px solid rgba(56, 231, 123, 0.3); padding-top: 10px; margin-top: 5px; display: flex; justify-content: space-between;">
-                            <span style="color: #e2e8f0; font-weight: 600;">Total Platform Fees:</span>
-                            <strong id="totalPlatformFees" style="color: #ef4444; font-size: 18px;">$0.00</strong>
+                        
+                        <div style="border-top: 2px solid rgba(56, 231, 123, 0.3); padding-top: 10px; margin-top: 10px; display: flex; justify-content: space-between;">
+                            <span style="color: #e2e8f0; font-weight: 700; font-size: 16px;">Total All Platform Fees:</span>
+                            <strong id="totalPlatformFees" style="color: #ef4444; font-size: 20px;">$0.00</strong>
                         </div>
                     </div>
                 </div>
@@ -8474,15 +8523,19 @@ How it works:
                     <h3 style="color: #3b82f6; margin-bottom: 15px;">Loan Summary</h3>
                     <div style="display: grid; gap: 10px;">
                         <div style="display: flex; justify-content: space-between;">
-                            <span style="color: #94a3b8;">Monthly Payment:</span>
-                            <strong id="monthlyPayment" style="color: #3b82f6;">$0.00</strong>
+                            <span style="color: #94a3b8;">Base Monthly Payment (Principal + Interest):</span>
+                            <strong id="baseMonthlyPayment" style="color: #3b82f6;">$0.00</strong>
                         </div>
-                        <div style="display: flex; justify-content: space-between;">
+                        <div style="border-top: 1px solid rgba(59, 130, 246, 0.3); padding-top: 8px; margin-top: 5px; display: flex; justify-content: space-between;">
+                            <span style="color: #e2e8f0; font-weight: 600;">Total Monthly Payment (Including Fees):</span>
+                            <strong id="monthlyPayment" style="color: #3b82f6; font-size: 18px;">$0.00</strong>
+                        </div>
+                        <div style="border-top: 1px solid rgba(59, 130, 246, 0.2); padding-top: 8px; margin-top: 8px; display: flex; justify-content: space-between;">
                             <span style="color: #94a3b8;">Total Interest:</span>
                             <strong id="totalInterest" style="color: #3b82f6;">$0.00</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between;">
-                            <span style="color: #94a3b8;">Total Repayment:</span>
+                            <span style="color: #94a3b8;">Total Repayment (All Payments):</span>
                             <strong id="totalRepayment" style="color: #3b82f6;">$0.00</strong>
                         </div>
                     </div>
@@ -8501,7 +8554,7 @@ How it works:
                         <p style="color: #94a3b8; margin-bottom: 10px;">• You will receive the net amount after the upfront fee is deducted<br>• Monthly payments must be made on time to avoid penalties<br>• The loan will be funded through peer-to-peer investors on our platform</p>
                         
                         <p style="color: #e2e8f0; margin-bottom: 5px;"><strong>2. Platform Fees</strong></p>
-                        <p style="color: #94a3b8; margin-bottom: 10px;">• Upfront Fee: 2.5% of loan amount (deducted before disbursement)<br>• Monthly Fee: 0.5% of loan amount (added to monthly payment)<br>• Fees are non-refundable</p>
+                        <p style="color: #94a3b8; margin-bottom: 10px;">• Service Fee: 10% of loan amount (deducted before disbursement)<br>• Insurance Fee: 3% of loan amount (deducted before disbursement)<br>• Tenure Fee: 1% of loan amount monthly (added to monthly payment)<br>• Collection Fee: 5% of each payment (added to monthly payment)<br>• Late Fee: 10% of remaining balance, minimum $50 (charged on late payments)<br>• All fees are non-refundable</p>
                         
                         <p style="color: #e2e8f0; margin-bottom: 5px;"><strong>3. Repayment Obligations</strong></p>
                         <p style="color: #94a3b8; margin-bottom: 10px;">• You must repay the full loan amount plus interest<br>• Late payments may incur penalties and affect your ZimScore<br>• Early repayment is allowed without penalties</p>
@@ -8535,7 +8588,7 @@ How it works:
                 <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 15px;">
                     <label style="display: flex; align-items: start; gap: 10px; cursor: pointer;">
                         <input type="checkbox" id="agreeToFees" style="width: 20px; height: 20px; margin-top: 2px;">
-                        <span style="color: #e2e8f0; font-size: 14px;">I understand and agree to the platform fees (2.5% upfront + 0.5% monthly) and confirm that my loan request will be listed on the primary market for peer-to-peer funding.</span>
+                        <span style="color: #e2e8f0; font-size: 14px;">I understand and agree to the platform fees: <strong>Service Fee (10%), Insurance Fee (3%), Tenure Fee (1% monthly), Collection Fee (5% of payment), and Late Fee (10% of balance, $50 min)</strong>. I confirm that my loan request will be listed on the primary market for peer-to-peer funding.</span>
                     </label>
                 </div>
                 
