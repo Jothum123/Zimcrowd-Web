@@ -442,7 +442,7 @@ router.post('/request', [
 
         // Calculate all fees
         const SERVICE_FEE_PERCENT = 10;
-        const INSURANCE_FEE_PERCENT = 3;
+        const INSURANCE_FEE_PERCENT = 5;
         const TENURE_FEE_PERCENT = 1;
         const COLLECTION_FEE_PERCENT = 5;
 

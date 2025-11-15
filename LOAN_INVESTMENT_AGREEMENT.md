@@ -39,9 +39,12 @@ The Investor agrees to invest the amount specified above in the Borrower's loan 
 
 ### 2.2 Upfront Fees (Deducted Before Investment)
 - **Service Fee**: 10% of investment amount = $[Calculated]
-- **Insurance Fee**: 3% of investment amount = $[Calculated]
-- **Total Upfront Fees**: 13% = $[Calculated]
+- **Insurance Fee**: 5% of investment amount = $[Calculated]
+- **Total Upfront Fees**: 15% = $[Calculated]
 - **Net Investment**: $[Investment - Upfront Fees]
+
+> **🛡️ Insurance Protection Guarantee**  
+> Your 5% insurance fee provides comprehensive protection for your investment. In the event the borrower's loan becomes late (1+ days overdue), you will **automatically receive 90% of your outstanding investment proceeds** within 24-48 hours. This automatic payout ensures immediate liquidity, protects your capital, and eliminates the uncertainty of payment delays. No claims process required—the payout is processed automatically by our system.
 
 ### 2.3 Ongoing Fees
 - **Collection Fee**: 5% of monthly returns
@@ -253,8 +256,10 @@ Your Share (20%): $280
 | Fee | Rate | Amount |
 |-----|------|--------|
 | Service Fee | 10% | $[Calculated] |
-| Insurance Fee | 3% | $[Calculated] |
-| **Total** | **13%** | **$[Calculated]** |
+| Insurance Fee | 5% | $[Calculated] |
+| **Total** | **15%** | **$[Calculated]** |
+
+**Insurance Benefit:** Automatic 90% payout within 24-48 hours if loan becomes late.
 
 ### Ongoing Fees (Monthly)
 | Fee | Rate | Frequency |

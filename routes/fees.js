@@ -25,7 +25,7 @@ router.post('/calculate-borrower', authenticateUser, async (req, res) => {
 
         // Borrower fee structure
         const SERVICE_FEE_PERCENT = 10; // 10%
-        const INSURANCE_FEE_PERCENT = 3; // 3%
+        const INSURANCE_FEE_PERCENT = 5; // 5%
         const TENURE_FEE_PERCENT = 1; // 1% monthly
         const COLLECTION_FEE_PERCENT = 5; // 5% of payment
 
@@ -105,7 +105,7 @@ router.post('/calculate-lender', authenticateUser, async (req, res) => {
 
         // Lender fee structure
         const SERVICE_FEE_PERCENT = 10; // 10%
-        const INSURANCE_FEE_PERCENT = 3; // 3%
+        const INSURANCE_FEE_PERCENT = 5; // 5%
         const COLLECTION_FEE_PERCENT = 5; // 5% of returns
 
         // Upfront fees
@@ -310,7 +310,7 @@ router.get('/structure', async (req, res) => {
                 borrower_fees: {
                     upfront: {
                         service_fee: { percent: 10, description: 'Deducted before disbursement' },
-                        insurance_fee: { percent: 3, description: 'Deducted before disbursement' }
+                        insurance_fee: { percent: 5, description: 'Deducted before disbursement - Provides 90% automatic payout protection when loan becomes late' }
                     },
                     monthly: {
                         tenure_fee: { percent: 1, description: 'Percentage of loan amount, added to monthly payment' },
@@ -323,7 +323,7 @@ router.get('/structure', async (req, res) => {
                 lender_fees: {
                     upfront: {
                         service_fee: { percent: 10, description: 'Deducted before investment' },
-                        insurance_fee: { percent: 3, description: 'Deducted before investment' }
+                        insurance_fee: { percent: 5, description: 'Deducted before investment - Provides 90% automatic payout protection when loan becomes late' }
                     },
                     ongoing: {
                         collection_fee: { percent: 5, description: 'Deducted from monthly returns, continues with investment' }
