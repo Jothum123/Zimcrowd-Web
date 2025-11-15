@@ -1,0 +1,439 @@
+<!-- ACCOUNT STATUS UI COMPONENTS -->
+<!-- Add this to dashboard.html -->
+
+<style>
+    /* Account Status Badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-active {
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-pending {
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .status-arrears {
+        background: rgba(249, 115, 22, 0.15);
+        color: #f97316;
+        border: 1px solid rgba(249, 115, 22, 0.3);
+    }
+
+    .status-suspended {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .status-restricted {
+        background: rgba(168, 85, 247, 0.15);
+        color: #a855f7;
+        border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .status-under-review {
+        background: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    /* Account Status Banner */
+    .account-status-banner {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .account-status-banner.warning {
+        border-color: #f59e0b;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(15, 23, 42, 0.9) 100%);
+    }
+
+    .account-status-banner.danger {
+        border-color: #ef4444;
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(15, 23, 42, 0.9) 100%);
+    }
+
+    /* Flag Badge */
+    .flag-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        margin: 2px;
+    }
+
+    .flag-critical {
+        background: #7f1d1d;
+        color: #fca5a5;
+    }
+
+    .flag-high {
+        background: #7c2d12;
+        color: #fdba74;
+    }
+
+    .flag-medium {
+        background: #713f12;
+        color: #fde047;
+    }
+
+    .flag-low {
+        background: #14532d;
+        color: #86efac;
+    }
+
+    /* Restriction Badge */
+    .restriction-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        background: rgba(168, 85, 247, 0.1);
+        border: 1px solid rgba(168, 85, 247, 0.3);
+        border-radius: 6px;
+        color: #a855f7;
+        font-size: 13px;
+        margin: 4px;
+    }
+
+    /* Arrears Alert */
+    .arrears-alert {
+        background: rgba(249, 115, 22, 0.1);
+        border: 1px solid rgba(249, 115, 22, 0.3);
+        border-radius: 8px;
+        padding: 15px;
+        margin: 10px 0;
+    }
+
+    .arrears-amount {
+        font-size: 24px;
+        font-weight: 700;
+        color: #f97316;
+    }
+
+    /* KYC Status */
+    .kyc-status-card {
+        background: rgba(15, 23, 42, 0.5);
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 10px 0;
+    }
+
+    .kyc-verified {
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    .kyc-pending {
+        border-color: #f59e0b;
+        background: rgba(245, 158, 11, 0.05);
+    }
+
+    .kyc-rejected {
+        border-color: #ef4444;
+        background: rgba(239, 68, 68, 0.05);
+    }
+</style>
+
+<!-- Account Status Banner (Add to top of dashboard) -->
+<div id="accountStatusBanner" style="display: none;"></div>
+
+<!-- Account Status Widget (Add to sidebar or header) -->
+<div class="account-status-widget" style="padding: 15px; background: rgba(15, 23, 42, 0.5); border-radius: 8px; margin: 10px 0;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+        <span style="color: #94a3b8; font-size: 13px;">Account Status</span>
+        <span id="accountStatusBadge"></span>
+    </div>
+    <div id="accountStatusDetails" style="font-size: 12px; color: #64748b;"></div>
+    <div id="accountFlags" style="margin-top: 10px;"></div>
+    <div id="accountRestrictions" style="margin-top: 10px;"></div>
+</div>
+
+<script>
+    // Account Status Management
+    class AccountStatusManager {
+        constructor() {
+            this.currentStatus = null;
+            this.init();
+        }
+
+        async init() {
+            await this.loadAccountStatus();
+            this.updateUI();
+            // Check status every 5 minutes
+            setInterval(() => this.loadAccountStatus(), 5 * 60 * 1000);
+        }
+
+        async loadAccountStatus() {
+            try {
+                const response = await window.ZimCrowdAPI.getAccountStatus();
+                if (response.success) {
+                    this.currentStatus = response.data;
+                    this.updateUI();
+                }
+            } catch (error) {
+                console.error('Failed to load account status:', error);
+            }
+        }
+
+        updateUI() {
+            if (!this.currentStatus) return;
+
+            this.updateStatusBadge();
+            this.updateStatusBanner();
+            this.updateStatusDetails();
+            this.updateFlags();
+            this.updateRestrictions();
+            this.checkAccessPermissions();
+        }
+
+        updateStatusBadge() {
+            const badge = document.getElementById('accountStatusBadge');
+            if (!badge) return;
+
+            const status = this.currentStatus.user.account_status;
+            const statusConfig = {
+                'active': { icon: 'check-circle', class: 'status-active', text: 'Active' },
+                'pending_verification': { icon: 'clock', class: 'status-pending', text: 'Pending' },
+                'arrears': { icon: 'exclamation-triangle', class: 'status-arrears', text: 'Arrears' },
+                'suspended': { icon: 'ban', class: 'status-suspended', text: 'Suspended' },
+                'restricted': { icon: 'lock', class: 'status-restricted', text: 'Restricted' },
+                'under_review': { icon: 'search', class: 'status-under-review', text: 'Under Review' }
+            };
+
+            const config = statusConfig[status] || statusConfig['pending_verification'];
+            badge.innerHTML = `
+                <span class="status-badge ${config.class}">
+                    <i class="fas fa-${config.icon}"></i> ${config.text}
+                </span>
+            `;
+        }
+
+        updateStatusBanner() {
+            const banner = document.getElementById('accountStatusBanner');
+            if (!banner) return;
+
+            const status = this.currentStatus.user.account_status;
+            const flags = this.currentStatus.flags;
+            const arrears = this.currentStatus.arrears;
+
+            // Show banner for non-active statuses or if there are issues
+            if (status !== 'active' || flags.length > 0 || arrears.length > 0) {
+                let bannerClass = '';
+                let icon = 'info-circle';
+                let message = '';
+                let actionButton = '';
+
+                if (status === 'pending_verification') {
+                    bannerClass = 'warning';
+                    icon = 'clock';
+                    message = 'Your account is pending verification. Complete your KYC to unlock all features.';
+                    actionButton = '<button onclick="showKYCModal()" class="btn-primary" style="padding: 8px 16px; font-size: 13px;">Complete KYC</button>';
+                } else if (status === 'arrears') {
+                    bannerClass = 'danger';
+                    icon = 'exclamation-triangle';
+                    const totalOverdue = arrears.reduce((sum, a) => sum + parseFloat(a.amount_overdue), 0);
+                    message = `You have overdue payments totaling $${totalOverdue.toFixed(2)}. Please make payment immediately to restore full access.`;
+                    actionButton = '<button onclick="showPaymentModal()" class="btn-primary" style="padding: 8px 16px; font-size: 13px;">Make Payment</button>';
+                } else if (status === 'suspended') {
+                    bannerClass = 'danger';
+                    icon = 'ban';
+                    message = 'Your account has been suspended. Please contact support for assistance.';
+                    actionButton = '<button onclick="contactSupport()" class="btn-secondary" style="padding: 8px 16px; font-size: 13px;">Contact Support</button>';
+                } else if (status === 'restricted') {
+                    bannerClass = 'warning';
+                    icon = 'lock';
+                    message = 'Your account has limited functionality. ' + (this.currentStatus.user.status_reason || 'Please contact support.');
+                    actionButton = '<button onclick="contactSupport()" class="btn-secondary" style="padding: 8px 16px; font-size: 13px;">Contact Support</button>';
+                }
+
+                banner.innerHTML = `
+                    <div class="account-status-banner ${bannerClass}">
+                        <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
+                            <i class="fas fa-${icon}" style="font-size: 24px; color: ${bannerClass === 'danger' ? '#ef4444' : '#f59e0b'};"></i>
+                            <div>
+                                <div style="font-weight: 600; color: #e2e8f0; margin-bottom: 4px;">Account Status: ${status.replace('_', ' ').toUpperCase()}</div>
+                                <div style="color: #94a3b8; font-size: 14px;">${message}</div>
+                            </div>
+                        </div>
+                        <div>
+                            ${actionButton}
+                        </div>
+                    </div>
+                `;
+                banner.style.display = 'block';
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        updateStatusDetails() {
+            const details = document.getElementById('accountStatusDetails');
+            if (!details) return;
+
+            const kyc = this.currentStatus.user.kyc_status;
+            const lastActivity = this.currentStatus.user.last_activity_at;
+
+            let kycText = '';
+            if (kyc === 'verified') {
+                kycText = '<span style="color: #10b981;"><i class="fas fa-check-circle"></i> KYC Verified</span>';
+            } else if (kyc === 'submitted' || kyc === 'under_review') {
+                kycText = '<span style="color: #f59e0b;"><i class="fas fa-clock"></i> KYC Under Review</span>';
+            } else {
+                kycText = '<span style="color: #ef4444;"><i class="fas fa-times-circle"></i> KYC Not Completed</span>';
+            }
+
+            details.innerHTML = `
+                <div style="margin-bottom: 5px;">${kycText}</div>
+                ${this.currentStatus.user.status_reason ? `<div style="color: #64748b; font-size: 11px; margin-top: 5px;">${this.currentStatus.user.status_reason}</div>` : ''}
+            `;
+        }
+
+        updateFlags() {
+            const flagsContainer = document.getElementById('accountFlags');
+            if (!flagsContainer) return;
+
+            const flags = this.currentStatus.flags;
+            if (flags.length === 0) {
+                flagsContainer.innerHTML = '';
+                return;
+            }
+
+            const flagsHTML = flags.map(flag => {
+                const severityClass = `flag-${flag.severity}`;
+                return `<span class="flag-badge ${severityClass}" title="${flag.reason}">
+                    <i class="fas fa-flag"></i> ${flag.flag_type.replace('_', ' ')}
+                </span>`;
+            }).join('');
+
+            flagsContainer.innerHTML = `
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #334155;">
+                    <div style="color: #94a3b8; font-size: 11px; margin-bottom: 5px;">Active Flags:</div>
+                    ${flagsHTML}
+                </div>
+            `;
+        }
+
+        updateRestrictions() {
+            const restrictionsContainer = document.getElementById('accountRestrictions');
+            if (!restrictionsContainer) return;
+
+            const restrictions = this.currentStatus.restrictions;
+            if (restrictions.length === 0) {
+                restrictionsContainer.innerHTML = '';
+                return;
+            }
+
+            const restrictionsHTML = restrictions.map(r => {
+                return `<div class="restriction-badge">
+                    <i class="fas fa-lock"></i> ${r.restriction_type.replace('_', ' ')}
+                </div>`;
+            }).join('');
+
+            restrictionsContainer.innerHTML = `
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #334155;">
+                    <div style="color: #94a3b8; font-size: 11px; margin-bottom: 5px;">Restrictions:</div>
+                    ${restrictionsHTML}
+                </div>
+            `;
+        }
+
+        checkAccessPermissions() {
+            // Disable buttons based on restrictions
+            if (!this.currentStatus.can_borrow) {
+                const loanButtons = document.querySelectorAll('[data-requires="can_borrow"]');
+                loanButtons.forEach(btn => {
+                    btn.disabled = true;
+                    btn.title = 'You cannot request loans at this time';
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                });
+            }
+
+            if (!this.currentStatus.can_invest) {
+                const investButtons = document.querySelectorAll('[data-requires="can_invest"]');
+                investButtons.forEach(btn => {
+                    btn.disabled = true;
+                    btn.title = 'You cannot invest at this time';
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                });
+            }
+        }
+
+        getStatusIcon(status) {
+            const icons = {
+                'active': 'check-circle',
+                'pending_verification': 'clock',
+                'arrears': 'exclamation-triangle',
+                'suspended': 'ban',
+                'restricted': 'lock',
+                'under_review': 'search'
+            };
+            return icons[status] || 'question-circle';
+        }
+    }
+
+    // Initialize on page load
+    let accountStatusManager;
+    document.addEventListener('DOMContentLoaded', () => {
+        accountStatusManager = new AccountStatusManager();
+    });
+
+    // Helper functions
+    function showKYCModal() {
+        // Open KYC verification modal
+        alert('KYC Modal - To be implemented');
+    }
+
+    function showPaymentModal() {
+        // Open payment modal
+        alert('Payment Modal - To be implemented');
+    }
+
+    function contactSupport() {
+        // Open support contact
+        window.location.href = 'mailto:support@zimcrowd.com';
+    }
+</script>
+
+<!-- Add API method to api-client.js -->
+<script>
+    // Add this to your ZimCrowdAPI object
+    if (window.ZimCrowdAPI) {
+        window.ZimCrowdAPI.getAccountStatus = async function() {
+            const response = await fetch('/api/account-status/current', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.getToken()}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            return await response.json();
+        };
+    }
+</script>
