@@ -5,12 +5,15 @@
   "main": "backend-server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node backend-server.js",
+    "start": "node api-server-minimal.js",
     "dev": "nodemon backend-server.js",
     "api": "node api-server-minimal.js",
     "api:dev": "nodemon api-server-minimal.js",
     "api:full": "node api-server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=18.x"
   },
   "keywords": [
     "crowdfunding",
