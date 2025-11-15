@@ -4203,12 +4203,13 @@
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
                         <div style="grid-column: 1 / -1;">
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Street Address</label>
-                            <input type="text" value="45 Samora Machel Avenue">
+                            <input type="text" id="streetAddress" placeholder="Enter street address">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">City</label>
-                            <select>
-                                <option selected>Harare</option>
+                            <select id="city">
+                                <option value="">Select city</option>
+                                <option value="Harare">Harare</option>
                                 <option>Bulawayo</option>
                                 <option>Mutare</option>
                                 <option>Gweru</option>
@@ -4226,11 +4227,11 @@
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Suburb/District</label>
-                            <input type="text" value="Avondale">
+                            <input type="text" id="suburb" placeholder="Enter suburb/district">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Postal Code</label>
-                            <input type="text" value="00263">
+                            <input type="text" id="postalCode" placeholder="Enter postal code">
                         </div>
 
                         <div class="form-group">
@@ -5069,6 +5070,8 @@
                     loadTransactionsData();
                 } else if (section === 'referrals') {
                     loadReferralsData();
+                } else if (section === 'settings') {
+                    loadSettingsData();
                 }
             });
         });
@@ -7279,6 +7282,114 @@ How it works:
                         </button>
                     </div>
                 `;
+            }
+        }
+
+        // Settings Functions
+        async function loadSettingsData() {
+            try {
+                const response = await window.ZimCrowdAPI.getProfile();
+                if (response.success) {
+                    populateProfileForm(response.data);
+                    updateProfileCompletion(response.data);
+                }
+            } catch (error) {
+                console.error('Failed to load settings:', error);
+            }
+        }
+
+        function populateProfileForm(data) {
+            // Personal Information
+            if (document.getElementById('firstName')) document.getElementById('firstName').value = data.first_name || '';
+            if (document.getElementById('lastName')) document.getElementById('lastName').value = data.last_name || '';
+            if (document.getElementById('email')) document.getElementById('email').value = data.email || '';
+            if (document.getElementById('phone')) document.getElementById('phone').value = data.phone || '';
+            if (document.getElementById('dateOfBirth')) document.getElementById('dateOfBirth').value = data.date_of_birth || '';
+            if (document.getElementById('country')) document.getElementById('country').value = data.country || '';
+            
+            // Address Information
+            if (document.getElementById('streetAddress')) document.getElementById('streetAddress').value = data.street_address || '';
+            if (document.getElementById('city')) document.getElementById('city').value = data.city || '';
+            if (document.getElementById('suburb')) document.getElementById('suburb').value = data.suburb || '';
+            if (document.getElementById('postalCode')) document.getElementById('postalCode').value = data.postal_code || '';
+            
+            // Profile Picture
+            const initials = ((data.first_name || 'T').charAt(0) + (data.last_name || 'U').charAt(0)).toUpperCase();
+            if (document.getElementById('profile-initials')) {
+                document.getElementById('profile-initials').textContent = initials;
+            }
+        }
+
+        function updateProfileCompletion(data) {
+            const fields = ['first_name', 'last_name', 'email', 'phone', 'date_of_birth', 'country', 'street_address', 'city'];
+            const completed = fields.filter(field => data[field] && data[field].trim() !== '').length;
+            const percentage = Math.round((completed / fields.length) * 100);
+            
+            if (document.getElementById('completion-percentage')) {
+                document.getElementById('completion-percentage').textContent = `${percentage}%`;
+            }
+            if (document.getElementById('completion-bar')) {
+                document.getElementById('completion-bar').style.width = `${percentage}%`;
+            }
+            
+            const status = percentage === 100 ? 'Complete' : percentage >= 75 ? 'Almost There' : percentage >= 50 ? 'In Progress' : 'Getting Started';
+            if (document.getElementById('completion-status')) {
+                document.getElementById('completion-status').textContent = status;
+            }
+        }
+
+        async function saveProfileInfo() {
+            const profileData = {
+                first_name: document.getElementById('firstName')?.value,
+                last_name: document.getElementById('lastName')?.value,
+                email: document.getElementById('email')?.value,
+                phone: document.getElementById('phone')?.value,
+                date_of_birth: document.getElementById('dateOfBirth')?.value,
+                country: document.getElementById('country')?.value,
+                street_address: document.getElementById('streetAddress')?.value,
+                city: document.getElementById('city')?.value,
+                suburb: document.getElementById('suburb')?.value,
+                postal_code: document.getElementById('postalCode')?.value
+            };
+            
+            try {
+                const response = await window.ZimCrowdAPI.updateProfile(profileData);
+                if (response.success) {
+                    alert('Profile updated successfully!');
+                    updateProfileCompletion(profileData);
+                } else {
+                    alert('Failed to update profile: ' + (response.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Profile update error:', error);
+                alert('Failed to update profile');
+            }
+        }
+
+        function saveProfilePicture() {
+            alert('Profile picture upload functionality will be implemented with backend integration');
+        }
+
+        function removeProfilePicture() {
+            if (confirm('Are you sure you want to remove your profile picture?')) {
+                const initials = document.getElementById('profile-initials');
+                if (initials) {
+                    document.getElementById('profile-avatar').innerHTML = `<span id="profile-initials">${initials.textContent}</span>`;
+                }
+                alert('Profile picture removed');
+            }
+        }
+
+        function switchSettingsTab(tabName) {
+            // Remove active class from all tabs
+            document.querySelectorAll('#settings-section .tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('#settings-section .tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to selected tab
+            event.target.classList.add('active');
+            const tabContent = document.getElementById(tabName + '-tab');
+            if (tabContent) {
+                tabContent.classList.add('active');
             }
         }
 
