@@ -1,15 +1,24 @@
 const vision = require('@google-cloud/vision');
 const path = require('path');
 const TesseractOCRService = require('./tesseract-ocr.service');
+const AzureDocumentOCRService = require('./azure-document-ocr.service');
 
 class VisionOCRService {
     constructor() {
         this.useGoogleVision = false;
+        this.useAzure = false;
         this.tesseractService = null;
+        this.azureService = null;
 
-        // ALWAYS use Tesseract for now (Google Vision requires billing)
-        console.log('🔄 Using Tesseract OCR (Free - No billing required)');
-        this.tesseractService = new TesseractOCRService();
+        // Try Azure Document Intelligence first (best for IDs)
+        this.azureService = new AzureDocumentOCRService();
+        if (this.azureService.isAvailable()) {
+            this.useAzure = true;
+            console.log('✅ Using Azure Document Intelligence (Primary)');
+        } else {
+            console.log('⚠️  Azure not configured, using Tesseract OCR (Free)');
+            this.tesseractService = new TesseractOCRService();
+        }
         
         // Uncomment below to try Google Vision (requires billing enabled)
         /*
@@ -40,7 +49,12 @@ class VisionOCRService {
      * Extract text from ID document
      */
     async extractIDText(imageBuffer) {
-        // Use Tesseract (free OCR)
+        // Use Azure if available (best accuracy)
+        if (this.useAzure && this.azureService) {
+            return await this.azureService.extractIDText(imageBuffer);
+        }
+        
+        // Fallback to Tesseract (free OCR)
         if (this.tesseractService) {
             return await this.tesseractService.extractIDText(imageBuffer);
         }
@@ -254,7 +268,12 @@ class VisionOCRService {
      * Comprehensive document analysis
      */
     async analyzeDocument(imageBuffer, expectedType = null) {
-        // Use Tesseract (free OCR)
+        // Use Azure if available (best for ID documents)
+        if (this.useAzure && this.azureService) {
+            return await this.azureService.analyzeDocument(imageBuffer, expectedType);
+        }
+        
+        // Fallback to Tesseract (free OCR)
         if (this.tesseractService) {
             return await this.tesseractService.analyzeDocument(imageBuffer, expectedType);
         }
