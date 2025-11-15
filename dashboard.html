@@ -6618,22 +6618,49 @@ How it works:
             window.location.href = 'post-registration.html';
         }
 
+        // Handle OAuth callback and extract token from URL
+        function handleAuthCallback() {
+            // Check for token in URL hash (Supabase OAuth callback)
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            const accessToken = hashParams.get('access_token');
+            
+            if (accessToken) {
+                console.log('✅ OAuth token found in URL hash, storing...');
+                localStorage.setItem('authToken', accessToken);
+                
+                // Clean up URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                return accessToken;
+            }
+            
+            // Check for token in URL query params (alternative callback format)
+            const queryParams = new URLSearchParams(window.location.search);
+            const queryToken = queryParams.get('access_token');
+            
+            if (queryToken) {
+                console.log('✅ OAuth token found in query params, storing...');
+                localStorage.setItem('authToken', queryToken);
+                
+                // Clean up URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                return queryToken;
+            }
+            
+            // Check localStorage
+            const storedToken = localStorage.getItem('authToken');
+            if (storedToken) {
+                console.log('✅ Auth token found in localStorage');
+            }
+            return storedToken;
+        }
+
         // Initialize data loading on page load
         window.addEventListener('DOMContentLoaded', function() {
-            // Load user profile data from social auth
-            loadUserProfile();
-
-            // Check if user needs to complete comprehensive registration
-            checkRegistrationCompletion();
-
-            // Clear the mode parameter from URL if present
-            const urlParams = new URLSearchParams(window.location.search);
-            const hasMode = urlParams.has('mode');
-            if (hasMode) {
-                const newUrl = window.location.pathname + window.location.search.replace(/[?&]mode=[^&]*/, '');
-                window.history.replaceState({}, document.title, newUrl);
-            }
-            const authToken = localStorage.getItem('authToken');
+            // Handle OAuth callback and get token
+            const authToken = handleAuthCallback();
+            
             if (authToken) {
                 // User is authenticated, load real data
                 window.ZimCrowdAPI.setToken(authToken);
