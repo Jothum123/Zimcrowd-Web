@@ -2439,6 +2439,12 @@
                     </a>
                 </li>
                 <li>
+                    <a href="#" class="nav-link" onclick="openLoanRequestModal(); return false;">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Request Loan</span>
+                    </a>
+                </li>
+                <li>
                     <a href="#" class="nav-link" data-section="settings">
                         <i class="fas fa-cog"></i>
                         <span>Settings</span>
@@ -6971,7 +6977,7 @@ How it works:
                 const returnsPercent = inv.returns_percentage || 0;
                 const returnsClass = returns >= 0 ? 'returns-positive' : 'returns-negative';
                 
-                return `<div class="portfolio-card"><div class="card-header"><div class="borrower-info"><div class="borrower-avatar">${initial}</div><div class="borrower-details"><div class="borrower-name">${inv.borrower_name || 'Anonymous'}</div><div class="borrower-purpose">${inv.loan_purpose || 'Loan'}</div><span class="risk-badge ${riskClass}">${generateStarRating(inv.zimscore || 3.5)}</span></div></div></div><div class="card-body"><div class="card-metrics"><div class="metric-item"><span class="metric-label">Principal</span><span class="metric-value">$${parseFloat(inv.amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div><div class="metric-item"><span class="metric-label">Returns</span><span class="metric-value ${returnsClass}">+$${parseFloat(returns).toLocaleString('en-US', {minimumFractionDigits: 2})} (${returnsPercent.toFixed(1)}%)</span></div><div class="metric-item"><span class="metric-label">Monthly Return</span><span class="metric-value">$${parseFloat(inv.monthly_return || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div></div><div class="card-progress"><div class="progress-info"><span>Progress</span><span>${progress}%</span></div><div class="progress-bar"><div class="progress-fill" style="width: ${progress}%"></div></div></div></div></div>`;
+                return `<div class="portfolio-card"><div class="card-header"><div class="borrower-info"><div class="borrower-avatar">${initial}</div><div class="borrower-details"><div class="borrower-name">${inv.borrower_name || 'Anonymous'}</div><div class="borrower-purpose">${inv.loan_purpose || 'Loan'}</div><span class="risk-badge ${riskClass}">${generateStarRating(inv.zimscore || 3.5)}</span></div></div></div><div class="card-body"><div class="card-metrics"><div class="metric-item"><span class="metric-label">Principal</span><span class="metric-value">$${parseFloat(inv.amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div><div class="metric-item"><span class="metric-label">Returns</span><span class="metric-value ${returnsClass}">+$${parseFloat(returns).toLocaleString('en-US', {minimumFractionDigits: 2})} (${returnsPercent.toFixed(1)}%)</span></div><div class="metric-item"><span class="metric-label">Monthly Return</span><span class="metric-value">$${parseFloat(inv.monthly_return || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div></div><div class="card-progress"><div class="progress-info"><span>Progress</span><span>${progress}%</span></div><div class="progress-bar"><div class="progress-fill" style="width: ${progress}%"></div></div></div><div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);"><button onclick="openSecondaryMarketModal('${inv.id}')" class="btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;"><i class="fas fa-store"></i> Sell on Secondary Market</button></div></div></div>`;
             }).join('');
         }
 
@@ -8233,6 +8239,271 @@ How it works:
                 }
             }, 500);
         });
+
+        // Loan Request Modal Functions
+        function openLoanRequestModal() {
+            document.getElementById('loanRequestModal').style.display = 'flex';
+            calculateLoanFees();
+        }
+
+        function closeLoanRequestModal() {
+            document.getElementById('loanRequestModal').style.display = 'none';
+        }
+
+        function calculateLoanFees() {
+            const amount = parseFloat(document.getElementById('loanAmount')?.value) || 0;
+            const term = parseInt(document.getElementById('loanTerm')?.value) || 12;
+            const rate = parseFloat(document.getElementById('loanRate')?.value) || 12;
+            
+            // Platform fees
+            const upfrontFeePercent = 2.5; // 2.5% upfront
+            const monthlyFeePercent = 0.5; // 0.5% monthly
+            
+            const upfrontFee = amount * (upfrontFeePercent / 100);
+            const monthlyFee = amount * (monthlyFeePercent / 100);
+            const totalTenureFees = monthlyFee * term;
+            const totalFees = upfrontFee + totalTenureFees;
+            
+            // Loan calculations
+            const monthlyRate = rate / 100 / 12;
+            const monthlyPayment = amount * (monthlyRate * Math.pow(1 + monthlyRate, term)) / (Math.pow(1 + monthlyRate, term) - 1);
+            const totalRepayment = monthlyPayment * term;
+            const totalInterest = totalRepayment - amount;
+            
+            // Update UI
+            document.getElementById('upfrontFee').textContent = `$${upfrontFee.toFixed(2)}`;
+            document.getElementById('monthlyFee').textContent = `$${monthlyFee.toFixed(2)}`;
+            document.getElementById('totalTenureFees').textContent = `$${totalTenureFees.toFixed(2)}`;
+            document.getElementById('totalPlatformFees').textContent = `$${totalFees.toFixed(2)}`;
+            document.getElementById('monthlyPayment').textContent = `$${monthlyPayment.toFixed(2)}`;
+            document.getElementById('totalRepayment').textContent = `$${totalRepayment.toFixed(2)}`;
+            document.getElementById('totalInterest').textContent = `$${totalInterest.toFixed(2)}`;
+        }
+
+        async function submitLoanRequest() {
+            const loanData = {
+                amount: parseFloat(document.getElementById('loanAmount')?.value),
+                term: parseInt(document.getElementById('loanTerm')?.value),
+                rate: parseFloat(document.getElementById('loanRate')?.value),
+                purpose: document.getElementById('loanPurpose')?.value,
+                description: document.getElementById('loanDescription')?.value,
+                agreed_to_fees: document.getElementById('agreeToFees')?.checked
+            };
+            
+            if (!loanData.agreed_to_fees) {
+                alert('Please agree to the platform fees to continue');
+                return;
+            }
+            
+            if (!loanData.amount || !loanData.term || !loanData.purpose) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            try {
+                const response = await window.ZimCrowdAPI.createLoanRequest(loanData);
+                if (response.success) {
+                    alert('Loan request submitted successfully! It will appear in the primary market for investors.');
+                    closeLoanRequestModal();
+                    loadLoansData(); // Refresh loans
+                } else {
+                    alert('Failed to submit loan request: ' + (response.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Loan request error:', error);
+                alert('Failed to submit loan request');
+            }
+        }
+
+        // Secondary Market Functions
+        function openSecondaryMarketModal(investmentId) {
+            document.getElementById('secondaryMarketModal').style.display = 'flex';
+            document.getElementById('sellInvestmentId').value = investmentId;
+        }
+
+        function closeSecondaryMarketModal() {
+            document.getElementById('secondaryMarketModal').style.display = 'none';
+        }
+
+        async function listForSecondaryMarket() {
+            const investmentId = document.getElementById('sellInvestmentId')?.value;
+            const askingPrice = parseFloat(document.getElementById('askingPrice')?.value);
+            const discount = parseFloat(document.getElementById('discountPercent')?.value) || 0;
+            
+            if (!askingPrice) {
+                alert('Please enter an asking price');
+                return;
+            }
+            
+            try {
+                const response = await window.ZimCrowdAPI.listSecondaryMarket({
+                    investment_id: investmentId,
+                    asking_price: askingPrice,
+                    discount_percent: discount
+                });
+                
+                if (response.success) {
+                    alert('Investment listed on secondary market successfully!');
+                    closeSecondaryMarketModal();
+                    loadInvestmentsData(); // Refresh investments
+                } else {
+                    alert('Failed to list investment: ' + (response.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Secondary market error:', error);
+                alert('Failed to list investment');
+            }
+        }
     </script>
+
+    <!-- Loan Request Modal -->
+    <div id="loanRequestModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: #1e293b; border-radius: 16px; max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto; padding: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="color: #38e77b;">Request a Loan</h2>
+                <button onclick="closeLoanRequestModal()" style="background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            
+            <div style="display: grid; gap: 20px;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Loan Amount ($)</label>
+                    <input type="number" id="loanAmount" placeholder="Enter amount" oninput="calculateLoanFees()" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white;">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Loan Term (months)</label>
+                        <select id="loanTerm" onchange="calculateLoanFees()" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white;">
+                            <option value="6">6 months</option>
+                            <option value="12" selected>12 months</option>
+                            <option value="18">18 months</option>
+                            <option value="24">24 months</option>
+                            <option value="36">36 months</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Interest Rate (%)</label>
+                        <input type="number" id="loanRate" value="12" step="0.1" oninput="calculateLoanFees()" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white;">
+                    </div>
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Loan Purpose</label>
+                    <select id="loanPurpose" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white;">
+                        <option value="">Select purpose</option>
+                        <option value="business">Business</option>
+                        <option value="education">Education</option>
+                        <option value="medical">Medical</option>
+                        <option value="home_improvement">Home Improvement</option>
+                        <option value="agriculture">Agriculture</option>
+                        <option value="personal">Personal</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Description</label>
+                    <textarea id="loanDescription" rows="3" placeholder="Describe how you'll use the loan..." style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white;"></textarea>
+                </div>
+                
+                <!-- Platform Fees Section -->
+                <div style="background: rgba(56, 231, 123, 0.1); border: 1px solid rgba(56, 231, 123, 0.3); border-radius: 12px; padding: 20px;">
+                    <h3 style="color: #38e77b; margin-bottom: 15px;">Platform Fees</h3>
+                    <div style="display: grid; gap: 10px;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #94a3b8;">Upfront Fee (2.5%):</span>
+                            <strong id="upfrontFee" style="color: #38e77b;">$0.00</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #94a3b8;">Monthly Fee (0.5%):</span>
+                            <strong id="monthlyFee" style="color: #38e77b;">$0.00</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #94a3b8;">Total Tenure Fees:</span>
+                            <strong id="totalTenureFees" style="color: #38e77b;">$0.00</strong>
+                        </div>
+                        <div style="border-top: 1px solid rgba(56, 231, 123, 0.3); padding-top: 10px; margin-top: 5px; display: flex; justify-content: space-between;">
+                            <span style="color: #e2e8f0; font-weight: 600;">Total Platform Fees:</span>
+                            <strong id="totalPlatformFees" style="color: #38e77b; font-size: 18px;">$0.00</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Loan Summary -->
+                <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 20px;">
+                    <h3 style="color: #3b82f6; margin-bottom: 15px;">Loan Summary</h3>
+                    <div style="display: grid; gap: 10px;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #94a3b8;">Monthly Payment:</span>
+                            <strong id="monthlyPayment" style="color: #3b82f6;">$0.00</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #94a3b8;">Total Interest:</span>
+                            <strong id="totalInterest" style="color: #3b82f6;">$0.00</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #94a3b8;">Total Repayment:</span>
+                            <strong id="totalRepayment" style="color: #3b82f6;">$0.00</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 15px;">
+                    <label style="display: flex; align-items: start; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="agreeToFees" style="width: 20px; height: 20px; margin-top: 2px;">
+                        <span style="color: #e2e8f0; font-size: 14px;">I understand and agree to the platform fees (2.5% upfront + 0.5% monthly) and confirm that my loan request will be listed on the primary market for peer-to-peer funding.</span>
+                    </label>
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button onclick="closeLoanRequestModal()" class="btn-secondary">Cancel</button>
+                    <button onclick="submitLoanRequest()" class="btn-primary">Submit Loan Request</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary Market Sell Modal -->
+    <div id="secondaryMarketModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: #1e293b; border-radius: 16px; max-width: 600px; width: 90%; padding: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="color: #38e77b;">List on Secondary Market</h2>
+                <button onclick="closeSecondaryMarketModal()" style="background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            
+            <input type="hidden" id="sellInvestmentId">
+            
+            <div style="display: grid; gap: 20px;">
+                <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 20px;">
+                    <p style="color: #94a3b8; margin-bottom: 10px;">Sell your investment to other investors on the secondary market. Set your asking price and optional discount to attract buyers.</p>
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Asking Price ($)</label>
+                    <input type="number" id="askingPrice" placeholder="Enter asking price" step="0.01" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white;">
+                    <p style="color: #64748b; font-size: 12px; margin-top: 5px;">Enter the price you want to sell for</p>
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Discount (%) - Optional</label>
+                    <input type="number" id="discountPercent" placeholder="0" step="0.1" min="0" max="50" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white;">
+                    <p style="color: #64748b; font-size: 12px; margin-top: 5px;">Offer a discount to attract buyers faster</p>
+                </div>
+                
+                <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 15px;">
+                    <p style="color: #f59e0b; font-size: 14px; margin-bottom: 8px;"><i class="fas fa-info-circle"></i> Important:</p>
+                    <ul style="color: #e2e8f0; font-size: 13px; margin-left: 20px;">
+                        <li>Your investment will be listed on the secondary market</li>
+                        <li>You'll receive payment when another investor buys it</li>
+                        <li>A 1% platform fee applies to secondary market sales</li>
+                    </ul>
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button onclick="closeSecondaryMarketModal()" class="btn-secondary">Cancel</button>
+                    <button onclick="listForSecondaryMarket()" class="btn-primary">List for Sale</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
