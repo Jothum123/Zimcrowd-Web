@@ -2,6 +2,41 @@
 const fs = require('fs');
 const path = require('path');
 
+// Test if route files exist
+const routePaths = [
+    './routes/auth.js',
+    './routes/profile.js',
+    './routes/profile-setup.js',
+    './routes/wallet.js',
+    './routes/transactions.js',
+    './routes/loans.js',
+    './routes/investments.js',
+    './routes/admin-dashboard.js',
+    './routes/kyc-ocr.js',
+    './routes/account-status.js',
+    './routes/notifications.js',
+    './routes/market.js',
+    './routes/analytics.js',
+    './routes/referrals.js'
+];
+
+console.log('Testing route file existence:\n');
+
+routePaths.forEach(routePath => {
+    const fullPath = path.join(__dirname, routePath);
+    const exists = fs.existsSync(fullPath);
+    console.log(`${exists ? '✅' : '❌'} ${routePath} - ${exists ? 'EXISTS' : 'NOT FOUND'}`);
+    if (exists) {
+        try {
+            require(routePath);
+            console.log(`   ✅ Can require successfully`);
+        } catch (error) {
+            console.log(`   ❌ Error requiring: ${error.message}`);
+        }
+    }
+    console.log('');
+});
+
 console.log('🧪 Testing ZimCrowd Backend Routes...\n');
 
 const routesDir = path.join(__dirname, 'routes');
