@@ -79,6 +79,34 @@ CREATE TABLE IF NOT EXISTS transactions (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Ensure all columns exist (for existing tables that might be missing columns)
+DO $$
+BEGIN
+    -- Add reference column if missing
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'transactions' AND column_name = 'reference'
+    ) THEN
+        ALTER TABLE transactions ADD COLUMN reference VARCHAR(100);
+    END IF;
+    
+    -- Add metadata column if missing
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'transactions' AND column_name = 'metadata'
+    ) THEN
+        ALTER TABLE transactions ADD COLUMN metadata JSONB DEFAULT '{}';
+    END IF;
+    
+    -- Add status column if missing
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'transactions' AND column_name = 'status'
+    ) THEN
+        ALTER TABLE transactions ADD COLUMN status VARCHAR(50) DEFAULT 'completed';
+    END IF;
+END $$;
+
 -- Create indexes for transactions table
 DO $$
 BEGIN
