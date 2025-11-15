@@ -14,28 +14,13 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Add missing columns to users
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'phone_number') THEN
-        ALTER TABLE users ADD COLUMN phone_number VARCHAR(20);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'role') THEN
-        ALTER TABLE users ADD COLUMN role VARCHAR(50) DEFAULT 'user';
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'is_active') THEN
-        ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT true;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'email_verified') THEN
-        ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT false;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'email_verified_at') THEN
-        ALTER TABLE users ADD COLUMN email_verified_at TIMESTAMP;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'updated_at') THEN
-        ALTER TABLE users ADD COLUMN updated_at TIMESTAMP DEFAULT NOW();
-    END IF;
-END $$;
+-- Add missing columns to users (one at a time to ensure they commit)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_number VARCHAR(20);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'user';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMP;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
 
 -- =====================================================
 -- 2. CREATE WALLETS TABLE
@@ -50,21 +35,10 @@ CREATE TABLE IF NOT EXISTS wallets (
 );
 
 -- Add missing columns to wallets
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'wallets' AND column_name = 'available_balance') THEN
-        ALTER TABLE wallets ADD COLUMN available_balance DECIMAL(15, 2) DEFAULT 0.00;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'wallets' AND column_name = 'locked_balance') THEN
-        ALTER TABLE wallets ADD COLUMN locked_balance DECIMAL(15, 2) DEFAULT 0.00;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'wallets' AND column_name = 'currency') THEN
-        ALTER TABLE wallets ADD COLUMN currency VARCHAR(10) DEFAULT 'USD';
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'wallets' AND column_name = 'updated_at') THEN
-        ALTER TABLE wallets ADD COLUMN updated_at TIMESTAMP DEFAULT NOW();
-    END IF;
-END $$;
+ALTER TABLE wallets ADD COLUMN IF NOT EXISTS available_balance DECIMAL(15, 2) DEFAULT 0.00;
+ALTER TABLE wallets ADD COLUMN IF NOT EXISTS locked_balance DECIMAL(15, 2) DEFAULT 0.00;
+ALTER TABLE wallets ADD COLUMN IF NOT EXISTS currency VARCHAR(10) DEFAULT 'USD';
+ALTER TABLE wallets ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
 
 -- =====================================================
 -- 3. CREATE TRANSACTIONS TABLE
@@ -80,27 +54,12 @@ CREATE TABLE IF NOT EXISTS transactions (
 );
 
 -- Add missing columns to transactions
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'transactions' AND column_name = 'wallet_id') THEN
-        ALTER TABLE transactions ADD COLUMN wallet_id UUID;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'transactions' AND column_name = 'balance_before') THEN
-        ALTER TABLE transactions ADD COLUMN balance_before DECIMAL(15, 2);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'transactions' AND column_name = 'balance_after') THEN
-        ALTER TABLE transactions ADD COLUMN balance_after DECIMAL(15, 2);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'transactions' AND column_name = 'reference') THEN
-        ALTER TABLE transactions ADD COLUMN reference VARCHAR(100);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'transactions' AND column_name = 'status') THEN
-        ALTER TABLE transactions ADD COLUMN status VARCHAR(50) DEFAULT 'completed';
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'transactions' AND column_name = 'metadata') THEN
-        ALTER TABLE transactions ADD COLUMN metadata JSONB DEFAULT '{}';
-    END IF;
-END $$;
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS wallet_id UUID;
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS balance_before DECIMAL(15, 2);
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS balance_after DECIMAL(15, 2);
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS reference VARCHAR(100);
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'completed';
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb;
 
 -- =====================================================
 -- 4. CREATE LOANS TABLE
