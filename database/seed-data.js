@@ -8,7 +8,7 @@ require('dotenv').config();
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_KEY // Use service key for admin operations
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY // Use service role key for admin operations
 );
 
 async function seedDatabase() {
