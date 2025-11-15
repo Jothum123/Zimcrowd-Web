@@ -3,10 +3,18 @@ const path = require('path');
 
 class VisionOCRService {
     constructor() {
-        // Initialize with JSON key file
-        this.client = new vision.ImageAnnotatorClient({
-            keyFilename: path.join(__dirname, '../config/google-vision-key.json')
-        });
+        // Initialize with environment variable (for production) or JSON key file (for development)
+        if (process.env.GOOGLE_VISION_CREDENTIALS) {
+            // Use environment variable (Render, production)
+            const credentials = JSON.parse(process.env.GOOGLE_VISION_CREDENTIALS);
+            this.client = new vision.ImageAnnotatorClient({ credentials });
+            console.log('✅ Google Vision initialized from environment variable');
+        } else {
+            // Use JSON key file (local development)
+            const keyPath = path.join(__dirname, '../config/google-vision-key.json');
+            this.client = new vision.ImageAnnotatorClient({ keyFilename: keyPath });
+            console.log('✅ Google Vision initialized from key file');
+        }
     }
 
     /**

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZimCrowd OCR Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            background: #f8f9ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background: #f0f4ff;
+            border-color: #667eea;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            color: #999;
+            font-size: 14px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .preview {
+            display: none;
+            margin-bottom: 30px;
+        }
+
+        .preview img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .result-section {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .result-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .field {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .field:last-child {
+            border-bottom: none;
+        }
+
+        .field-label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .field-value {
+            color: #333;
+            text-align: right;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #ffe0e0;
+            color: #d00;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success {
+            background: #e0ffe0;
+            color: #0a0;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 ZimCrowd OCR Test</h1>
+        <p class="subtitle">Upload a Zimbabwe National ID to test OCR extraction</p>
+
+        <div class="error" id="error"></div>
+        <div class="success" id="success"></div>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📄</div>
+            <div class="upload-text">Click to upload or drag and drop</div>
+            <div class="upload-hint">Supports: JPG, PNG (Max 5MB)</div>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <div class="preview" id="preview">
+            <img id="previewImage" alt="Preview">
+        </div>
+
+        <div class="buttons">
+            <button class="btn-primary" id="processBtn" disabled>Process Document</button>
+            <button class="btn-secondary" id="clearBtn">Clear</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing document with AI...</p>
+        </div>
+
+        <div class="results" id="results">
+            <div class="result-section">
+                <h3>📋 Extracted Information</h3>
+                <div id="extractedFields"></div>
+            </div>
+
+            <div class="result-section">
+                <h3>📊 Analysis Results</h3>
+                <div id="analysisResults"></div>
+            </div>
+
+            <div class="result-section">
+                <h3>📄 Full Text</h3>
+                <pre id="fullText" style="white-space: pre-wrap; color: #666;"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3001'; // Change to your API URL
+        let selectedFile = null;
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const previewImage = document.getElementById('previewImage');
+        const processBtn = document.getElementById('processBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const errorDiv = document.getElementById('error');
+        const successDiv = document.getElementById('success');
+
+        // Upload area click
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        // File selection
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            // Validate file
+            if (!file.type.startsWith('image/')) {
+                showError('Please select an image file');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                showError('File size must be less than 5MB');
+                return;
+            }
+
+            selectedFile = file;
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                preview.style.display = 'block';
+                uploadArea.style.display = 'none';
+                processBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+
+            hideError();
+            hideSuccess();
+            results.style.display = 'none';
+        }
+
+        // Process button
+        processBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            processBtn.disabled = true;
+            hideError();
+            hideSuccess();
+
+            try {
+                const formData = new FormData();
+                formData.append('document', selectedFile);
+                formData.append('documentType', 'national_id');
+
+                const response = await fetch(`${API_URL}/api/kyc-ocr/analyze`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data);
+                    showSuccess('Document processed successfully!');
+                } else {
+                    showError(data.message || 'Failed to process document');
+                }
+            } catch (error) {
+                showError('Error connecting to server: ' + error.message);
+            } finally {
+                loading.style.display = 'none';
+                processBtn.disabled = false;
+            }
+        });
+
+        // Clear button
+        clearBtn.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = '';
+            preview.style.display = 'none';
+            uploadArea.style.display = 'block';
+            results.style.display = 'none';
+            processBtn.disabled = true;
+            hideError();
+            hideSuccess();
+        });
+
+        function displayResults(data) {
+            // Display extracted fields
+            const fieldsHTML = Object.entries(data.parsedFields || {})
+                .map(([key, value]) => `
+                    <div class="field">
+                        <span class="field-label">${formatFieldName(key)}:</span>
+                        <span class="field-value">${value || 'Not found'}</span>
+                    </div>
+                `).join('');
+            document.getElementById('extractedFields').innerHTML = fieldsHTML;
+
+            // Display analysis results
+            const analysisHTML = `
+                <div class="field">
+                    <span class="field-label">Document Type:</span>
+                    <span class="field-value">${data.documentType || 'Unknown'}</span>
+                </div>
+                <div class="field">
+                    <span class="field-label">Text Extracted:</span>
+                    <span class="field-value">${data.textExtracted ? '✅ Yes' : '❌ No'}</span>
+                </div>
+                <div class="field">
+                    <span class="field-label">Face Detected:</span>
+                    <span class="field-value">${data.faceDetected ? '✅ Yes' : '❌ No'}</span>
+                </div>
+                <div class="field">
+                    <span class="field-label">Quality Acceptable:</span>
+                    <span class="field-value">${data.qualityAcceptable ? '✅ Yes' : '❌ No'}</span>
+                </div>
+                <div class="field">
+                    <span class="field-label">Overall Confidence:</span>
+                    <span class="field-value">${data.overallConfidence}%</span>
+                </div>
+            `;
+            document.getElementById('analysisResults').innerHTML = analysisHTML;
+
+            // Display full text
+            document.getElementById('fullText').textContent = data.fullText || 'No text extracted';
+
+            results.style.display = 'block';
+        }
+
+        function formatFieldName(name) {
+            return name.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        }
+
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            errorDiv.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+        }
+
+        function hideSuccess() {
+            successDiv.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
