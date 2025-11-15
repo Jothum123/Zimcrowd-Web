@@ -2,8 +2,21 @@
 
 ## ⚠️ IMPORTANT: Execute SQL Files in This Order
 
+### **STEP 0: Diagnose Existing Database (If you have errors)**
+If you're getting column errors, run this FIRST to see what exists:
+```sql
+DATABASE_DIAGNOSTIC.sql
+```
+
+### **STEP 0.5: Fix Missing Columns (If tables already exist)**
+If tables exist but are missing columns, run this:
+```sql
+DATABASE_FIX_MISSING_COLUMNS.sql
+```
+This will add ALL missing columns to existing tables safely.
+
 ### **STEP 1: Create Base Schema**
-Run this file FIRST:
+Run this file FIRST (or after fixing missing columns):
 ```sql
 DATABASE_BASE_SCHEMA.sql
 ```
