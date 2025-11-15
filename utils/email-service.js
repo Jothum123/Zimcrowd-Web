@@ -14,8 +14,13 @@ const {
   signInWithEmailLink
 } = require('firebase/auth');
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend client (only if API key is provided)
+let resend;
+if (process.env.RESEND_API_KEY) {
+  resend = new Resend(process.env.RESEND_API_KEY);
+} else {
+  console.warn('⚠️  RESEND_API_KEY not set - email features will be limited');
+}
 
 // Initialize SendGrid client
 if (process.env.SENDGRID_API_KEY) {
@@ -45,11 +50,12 @@ const generateOTP = () => {
 
 // Send OTP Email with Automatic Fallback (Resend -> SendGrid)
 const sendOTPEmail = async (email, otp) => {
-    // Try Resend first
-    try {
-        console.log('Attempting to send OTP via Resend (primary)...');
+    // Try Resend first (if available)
+    if (resend) {
+        try {
+            console.log('Attempting to send OTP via Resend (primary)...');
 
-        const data = await resend.emails.send({
+            const data = await resend.emails.send({
             from: process.env.RESEND_EMAIL_FROM || 'noreply@zimcrowd.com',
             to: [email],
             subject: 'Your ZimCrowd Code',
@@ -123,16 +129,42 @@ const sendOTPEmail = async (email, otp) => {
             message: 'Failed to send OTP email via all providers',
             provider: 'none'
         };
+        }
+    } else {
+        // Resend not available, try SendGrid directly
+        if (process.env.SENDGRID_API_KEY) {
+            console.log('📧 Resend not configured, using SendGrid...');
+            try {
+                const sendGridResult = await sendOTPEmailSendGrid(email, otp);
+                return sendGridResult;
+            } catch (error) {
+                return {
+                    success: false,
+                    error: error.message,
+                    message: 'Failed to send OTP email',
+                    provider: 'none'
+                };
+            }
+        } else {
+            console.error('❌ No email provider configured');
+            return {
+                success: false,
+                error: 'No email provider configured',
+                message: 'Email service not available',
+                provider: 'none'
+            };
+        }
     }
 };
 
 // Send Password Reset OTP Email with Automatic Fallback (Resend -> SendGrid)
 const sendPasswordResetOTPEmail = async (email, otp) => {
-    // Try Resend first
-    try {
-        console.log('Attempting to send password reset OTP via Resend (primary)...');
+    // Try Resend first (if available)
+    if (resend) {
+        try {
+            console.log('Attempting to send password reset OTP via Resend (primary)...');
 
-        const data = await resend.emails.send({
+            const data = await resend.emails.send({
             from: process.env.RESEND_EMAIL_FROM || 'noreply@zimcrowd.com',
             to: [email],
             subject: 'ZimCrowd Password Reset',
@@ -206,6 +238,31 @@ const sendPasswordResetOTPEmail = async (email, otp) => {
             message: 'Failed to send password reset OTP via all providers',
             provider: 'none'
         };
+        }
+    } else {
+        // Resend not available, try SendGrid directly
+        if (process.env.SENDGRID_API_KEY) {
+            console.log('📧 Resend not configured, using SendGrid for password reset...');
+            try {
+                const sendGridResult = await sendPasswordResetOTPEmailSendGrid(email, otp);
+                return sendGridResult;
+            } catch (error) {
+                return {
+                    success: false,
+                    error: error.message,
+                    message: 'Failed to send password reset OTP',
+                    provider: 'none'
+                };
+            }
+        } else {
+            console.error('❌ No email provider configured');
+            return {
+                success: false,
+                error: 'No email provider configured',
+                message: 'Email service not available',
+                provider: 'none'
+            };
+        }
     }
 };
 
