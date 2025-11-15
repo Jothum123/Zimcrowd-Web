@@ -147,7 +147,8 @@ app.use((err, req, res, next) => {
 // START SERVER
 // =====================================================
 
-const PORT = process.env.API_PORT || 3001;
+// Railway provides PORT, fallback to API_PORT or 3001
+const PORT = process.env.PORT || process.env.API_PORT || 3001;
 
 app.listen(PORT, () => {
     console.log('\n' + '='.repeat(60));
