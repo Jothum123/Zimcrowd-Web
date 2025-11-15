@@ -3660,19 +3660,19 @@
             <div id="performance-tab" class="tab-content">
                 <div class="stats-grid" style="margin-bottom: 30px;">
                     <div class="stat-card">
-                        <h3 style="font-size: 32px; color: #38e77b;">+$1,025</h3>
+                        <h3 id="perfTotalEarnings" style="font-size: 32px; color: #38e77b;">+$0</h3>
                         <p>Total Earnings (All Time)</p>
                     </div>
                     <div class="stat-card">
-                        <h3 style="font-size: 32px; color: #3b82f6;">+$187</h3>
+                        <h3 id="perfThisMonth" style="font-size: 32px; color: #3b82f6;">+$0</h3>
                         <p>This Month</p>
                     </div>
                     <div class="stat-card">
-                        <h3 style="font-size: 32px; color: #a855f7;">12.5%</h3>
+                        <h3 id="perfAvgReturn" style="font-size: 32px; color: #a855f7;">0%</h3>
                         <p>Average Annual Return</p>
                     </div>
                     <div class="stat-card">
-                        <h3 style="font-size: 32px; color: #38e77b;">100%</h3>
+                        <h3 id="perfOnTimePayments" style="font-size: 32px; color: #38e77b;">0%</h3>
                         <p>On-Time Payments</p>
                     </div>
                 </div>
@@ -3704,28 +3704,28 @@
                             <div style="margin-bottom: 15px;">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                                     <span style="color: #38e77b;">● Low Risk</span>
-                                    <strong>60%</strong>
+                                    <strong id="riskLowPercent">0%</strong>
                                 </div>
                                 <div style="background: #0f172a; height: 8px; border-radius: 4px; overflow: hidden;">
-                                    <div style="width: 60%; height: 100%; background: #38e77b;"></div>
+                                    <div id="riskLowBar" style="width: 0%; height: 100%; background: #38e77b;"></div>
                                 </div>
                             </div>
                             <div style="margin-bottom: 15px;">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                                     <span style="color: #f97316;">● Medium Risk</span>
-                                    <strong>30%</strong>
+                                    <strong id="riskMediumPercent">0%</strong>
                                 </div>
                                 <div style="background: #0f172a; height: 8px; border-radius: 4px; overflow: hidden;">
-                                    <div style="width: 30%; height: 100%; background: #f97316;"></div>
+                                    <div id="riskMediumBar" style="width: 0%; height: 100%; background: #f97316;"></div>
                                 </div>
                             </div>
                             <div>
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                                     <span style="color: #ef4444;">● High Risk</span>
-                                    <strong>10%</strong>
+                                    <strong id="riskHighPercent">0%</strong>
                                 </div>
                                 <div style="background: #0f172a; height: 8px; border-radius: 4px; overflow: hidden;">
-                                    <div style="width: 10%; height: 100%; background: #ef4444;"></div>
+                                    <div id="riskHighBar" style="width: 0%; height: 100%; background: #ef4444;"></div>
                                 </div>
                             </div>
                         </div>
@@ -4875,7 +4875,7 @@
             },
             
             async getInvestmentStats() {
-                return this.request('/api/investments/stats');
+                return this.request('/api/investments/performance');
             },
             
             // Transactions APIs
@@ -6932,6 +6932,10 @@ How it works:
                 if (investmentsResponse.success) {
                     updateInvestmentsList(investmentsResponse.data);
                 }
+                const statsResponse = await window.ZimCrowdAPI.getInvestmentStats();
+                if (statsResponse.success) {
+                    updatePerformanceStats(statsResponse.data);
+                }
             } catch (error) {
                 console.error('Failed to load investments:', error);
             }
@@ -6962,6 +6966,30 @@ How it works:
                 
                 return `<div class="portfolio-card"><div class="card-header"><div class="borrower-info"><div class="borrower-avatar">${initial}</div><div class="borrower-details"><div class="borrower-name">${inv.borrower_name || 'Anonymous'}</div><div class="borrower-purpose">${inv.loan_purpose || 'Loan'}</div><span class="risk-badge ${riskClass}">${generateStarRating(inv.zimscore || 3.5)}</span></div></div></div><div class="card-body"><div class="card-metrics"><div class="metric-item"><span class="metric-label">Principal</span><span class="metric-value">$${parseFloat(inv.amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div><div class="metric-item"><span class="metric-label">Returns</span><span class="metric-value ${returnsClass}">+$${parseFloat(returns).toLocaleString('en-US', {minimumFractionDigits: 2})} (${returnsPercent.toFixed(1)}%)</span></div><div class="metric-item"><span class="metric-label">Monthly Return</span><span class="metric-value">$${parseFloat(inv.monthly_return || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div></div><div class="card-progress"><div class="progress-info"><span>Progress</span><span>${progress}%</span></div><div class="progress-bar"><div class="progress-fill" style="width: ${progress}%"></div></div></div></div></div>`;
             }).join('');
+        }
+
+        // Update Performance Stats
+        function updatePerformanceStats(data) {
+            if (!data) return;
+            
+            // Update performance stats
+            document.getElementById('perfTotalEarnings').textContent = `+$${parseFloat(data.total_earnings || 0).toLocaleString()}`;
+            document.getElementById('perfThisMonth').textContent = `+$${parseFloat(data.this_month || 0).toLocaleString()}`;
+            document.getElementById('perfAvgReturn').textContent = `${parseFloat(data.average_return || 0).toFixed(1)}%`;
+            document.getElementById('perfOnTimePayments').textContent = `${parseFloat(data.on_time_payments || 100).toFixed(0)}%`;
+            
+            // Update risk distribution
+            const riskDist = data.risk_distribution || {};
+            const lowPercent = riskDist.low?.percentage || 0;
+            const mediumPercent = riskDist.medium?.percentage || 0;
+            const highPercent = riskDist.high?.percentage || 0;
+            
+            document.getElementById('riskLowPercent').textContent = `${lowPercent}%`;
+            document.getElementById('riskLowBar').style.width = `${lowPercent}%`;
+            document.getElementById('riskMediumPercent').textContent = `${mediumPercent}%`;
+            document.getElementById('riskMediumBar').style.width = `${mediumPercent}%`;
+            document.getElementById('riskHighPercent').textContent = `${highPercent}%`;
+            document.getElementById('riskHighBar').style.width = `${highPercent}%`;
         }
 
         // Load Referrals Data
