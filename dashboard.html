@@ -8554,7 +8554,7 @@ How it works:
                         <p style="color: #94a3b8; margin-bottom: 10px;">• You will receive the net amount after the upfront fee is deducted<br>• Monthly payments must be made on time to avoid penalties<br>• The loan will be funded through peer-to-peer investors on our platform</p>
                         
                         <p style="color: #e2e8f0; margin-bottom: 5px;"><strong>2. Platform Fees</strong></p>
-                        <p style="color: #94a3b8; margin-bottom: 10px;">• Service Fee: 10% of loan amount (deducted before disbursement)<br>• Insurance Fee: 3% of loan amount (deducted before disbursement)<br>• Tenure Fee: 1% of loan amount monthly (added to monthly payment)<br>• Collection Fee: 5% of each payment (added to monthly payment)<br>• Late Fee: 10% of remaining balance, minimum $50 (charged on late payments)<br>• All fees are non-refundable</p>
+                        <p style="color: #94a3b8; margin-bottom: 10px;">• Service Fee: 10% of loan amount (deducted before disbursement)<br>• Insurance Fee: 3% of loan amount (deducted before disbursement)<br>• Tenure Fee: 1% of loan amount monthly (added to monthly payment)<br>• Collection Fee: 5% of each payment (added to monthly payment)<br>• Late Fee: 10% of remaining balance, minimum $50 (ONLY charged when payment is 1+ days overdue)<br>• All fees are non-refundable</p>
                         
                         <p style="color: #e2e8f0; margin-bottom: 5px;"><strong>3. Repayment Obligations</strong></p>
                         <p style="color: #94a3b8; margin-bottom: 10px;">• You must repay the full loan amount plus interest<br>• Late payments may incur penalties and affect your ZimScore<br>• Early repayment is allowed without penalties</p>
@@ -8585,10 +8585,20 @@ How it works:
                     </div>
                 </div>
                 
+                <!-- Late Fee Warning -->
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                    <p style="color: #ef4444; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-exclamation-triangle"></i> Late Payment Fee Warning
+                    </p>
+                    <p style="color: #e2e8f0; font-size: 13px;">
+                        If any payment is late by <strong>1 day or more</strong>, a late fee of <strong>10% of the remaining balance (minimum $50)</strong> will be automatically charged. This fee is in addition to your regular monthly payment.
+                    </p>
+                </div>
+                
                 <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 15px;">
                     <label style="display: flex; align-items: start; gap: 10px; cursor: pointer;">
                         <input type="checkbox" id="agreeToFees" style="width: 20px; height: 20px; margin-top: 2px;">
-                        <span style="color: #e2e8f0; font-size: 14px;">I understand and agree to the platform fees: <strong>Service Fee (10%), Insurance Fee (3%), Tenure Fee (1% monthly), Collection Fee (5% of payment), and Late Fee (10% of balance, $50 min)</strong>. I confirm that my loan request will be listed on the primary market for peer-to-peer funding.</span>
+                        <span style="color: #e2e8f0; font-size: 14px;">I understand and agree to the platform fees: <strong>Service Fee (10%), Insurance Fee (3%), Tenure Fee (1% monthly), Collection Fee (5% of payment)</strong>. I also understand that <strong>Late Fees (10% of balance, $50 min) will be charged if payment is late by 1+ days</strong>. I confirm that my loan request will be listed on the primary market for peer-to-peer funding.</span>
                     </label>
                 </div>
                 
