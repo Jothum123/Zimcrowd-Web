@@ -54,8 +54,10 @@ By accessing or using the ZimCrowd platform ("Platform"), you agree to be bound 
 
 #### Upfront Fees (Deducted Before Disbursement):
 - **Service Fee**: 10% of loan amount
-- **Insurance Fee**: 3% of loan amount
-- **Total Upfront Fees**: 13% of loan amount
+- **Insurance Fee**: 5% of loan amount
+- **Total Upfront Fees**: 15% of loan amount
+
+> **Insurance Protection Benefit:** As part of your insurance coverage, you will automatically receive 90% of your outstanding principal amount if your loan becomes late. This provides immediate financial protection and peace of mind.
 
 #### Monthly Fees (Added to Monthly Payment):
 - **Tenure Fee**: 1% of loan amount per month
@@ -102,8 +104,10 @@ By accessing or using the ZimCrowd platform ("Platform"), you agree to be bound 
 
 #### Upfront Fees (Deducted Before Investment):
 - **Service Fee**: 10% of investment amount
-- **Insurance Fee**: 3% of investment amount
-- **Total Upfront Fees**: 13% of investment amount
+- **Insurance Fee**: 5% of investment amount
+- **Total Upfront Fees**: 15% of investment amount
+
+> **Insurance Protection Benefit:** Your insurance coverage provides automatic protection. If the borrower's loan becomes late, you will automatically receive 90% of your outstanding investment proceeds. This ensures immediate liquidity and minimizes your exposure to payment delays.
 
 #### Ongoing Fees (Deducted from Monthly Returns):
 - **Collection Fee**: 5% of monthly returns received
@@ -166,18 +170,22 @@ By accessing or using the ZimCrowd platform ("Platform"), you agree to be bound 
 | Fee Type | Amount | When Charged |
 |----------|--------|--------------|
 | Service Fee | 10% of loan | Upfront (before disbursement) |
-| Insurance Fee | 3% of loan | Upfront (before disbursement) |
+| Insurance Fee | 5% of loan | Upfront (before disbursement) |
 | Tenure Fee | 1% of loan/month | Monthly (added to payment) |
 | Collection Fee | 5% of payment | Monthly (added to payment) |
 | Late Fee | 10% of balance, min $50 | When 1+ days late |
+
+**Insurance Benefit:** Automatic 90% payout of outstanding principal when loan becomes late.
 
 ### 7.2 Lender Fees
 | Fee Type | Amount | When Charged |
 |----------|--------|--------------|
 | Service Fee | 10% of investment | Upfront (before investment) |
-| Insurance Fee | 3% of investment | Upfront (before investment) |
+| Insurance Fee | 5% of investment | Upfront (before investment) |
 | Collection Fee | 5% of returns | Monthly (from returns) |
 | Deal Fee | 2% of sale price | Secondary market sale |
+
+**Insurance Benefit:** Automatic 90% payout of outstanding proceeds when borrower's loan becomes late.
 
 ### 7.3 Fee Non-Refundability
 - All fees are non-refundable

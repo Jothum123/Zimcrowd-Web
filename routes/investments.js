@@ -882,7 +882,7 @@ router.post('/create', [
 
         // Calculate lender fees
         const SERVICE_FEE_PERCENT = 10;
-        const INSURANCE_FEE_PERCENT = 3;
+        const INSURANCE_FEE_PERCENT = 5;
         const COLLECTION_FEE_PERCENT = 5;
 
         // Upfront fees
