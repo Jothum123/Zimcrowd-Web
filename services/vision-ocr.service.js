@@ -1,19 +1,36 @@
 const vision = require('@google-cloud/vision');
 const path = require('path');
+const TesseractOCRService = require('./tesseract-ocr.service');
 
 class VisionOCRService {
     constructor() {
-        // Initialize with environment variable (for production) or JSON key file (for development)
-        if (process.env.GOOGLE_VISION_CREDENTIALS) {
-            // Use environment variable (Render, production)
-            const credentials = JSON.parse(process.env.GOOGLE_VISION_CREDENTIALS);
-            this.client = new vision.ImageAnnotatorClient({ credentials });
-            console.log('✅ Google Vision initialized from environment variable');
-        } else {
-            // Use JSON key file (local development)
-            const keyPath = path.join(__dirname, '../config/google-vision-key.json');
-            this.client = new vision.ImageAnnotatorClient({ keyFilename: keyPath });
-            console.log('✅ Google Vision initialized from key file');
+        this.useGoogleVision = false;
+        this.tesseractService = null;
+
+        try {
+            // Try to initialize Google Vision
+            if (process.env.GOOGLE_VISION_CREDENTIALS) {
+                // Use environment variable (Render, production)
+                const credentials = JSON.parse(process.env.GOOGLE_VISION_CREDENTIALS);
+                this.client = new vision.ImageAnnotatorClient({ credentials });
+                this.useGoogleVision = true;
+                console.log('✅ Google Vision initialized from environment variable');
+            } else {
+                // Use JSON key file (local development)
+                const keyPath = path.join(__dirname, '../config/google-vision-key.json');
+                this.client = new vision.ImageAnnotatorClient({ keyFilename: keyPath });
+                this.useGoogleVision = true;
+                console.log('✅ Google Vision initialized from key file');
+            }
+        } catch (error) {
+            console.warn('⚠️  Google Vision initialization failed:', error.message);
+            console.log('🔄 Falling back to Tesseract OCR (Free)');
+            this.tesseractService = new TesseractOCRService();
+        }
+
+        // If Google Vision failed or not configured, use Tesseract
+        if (!this.useGoogleVision && !this.tesseractService) {
+            this.tesseractService = new TesseractOCRService();
         }
     }
 
@@ -21,6 +38,11 @@ class VisionOCRService {
      * Extract text from ID document
      */
     async extractIDText(imageBuffer) {
+        // Use Tesseract if Google Vision not available
+        if (!this.useGoogleVision || this.tesseractService) {
+            return await this.tesseractService.extractIDText(imageBuffer);
+        }
+
         try {
             const [result] = await this.client.textDetection(imageBuffer);
             const detections = result.textAnnotations;
@@ -230,6 +252,11 @@ class VisionOCRService {
      * Comprehensive document analysis
      */
     async analyzeDocument(imageBuffer, expectedType = null) {
+        // Use Tesseract if Google Vision not available
+        if (!this.useGoogleVision || this.tesseractService) {
+            return await this.tesseractService.analyzeDocument(imageBuffer, expectedType);
+        }
+
         try {
             const [ocrResult, faceResult, qualityResult, detectedType] = await Promise.all([
                 this.extractIDText(imageBuffer),
