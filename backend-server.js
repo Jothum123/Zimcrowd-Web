@@ -84,9 +84,23 @@ const app = express();
 // Trust proxy for Vercel deployment
 app.set('trust proxy', 1);
 
-// Security middleware
+// Security middleware with relaxed CSP for development
 app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://kit.fontawesome.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://fonts.gstatic.com", "https://ka-f.fontawesome.com", "data:"],
+            imgSrc: ["'self'", "data:", "https:", "blob:"],
+            connectSrc: ["'self'", "https://zimcrowd-backend-fusmi0h9l-jojola.vercel.app", "https://zimcrowd-backend-dz18dm4h9-jojola.vercel.app", "http://localhost:3000", "https://*.supabase.co", "wss://*.supabase.co"],
+            frameSrc: ["'self'", "https://accounts.google.com"],
+            objectSrc: ["'none'"],
+            upgradeInsecureRequests: []
+        }
+    },
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
 }));
 
 // CORS configuration - Allow all origins for testing
