@@ -362,13 +362,13 @@
                     body: formData
                 });
 
-                const data = await response.json();
+                const result = await response.json();
 
-                if (data.success) {
-                    displayResults(data);
+                if (result.success) {
+                    displayResults(result.data);
                     showSuccess('Document processed successfully!');
                 } else {
-                    showError(data.message || 'Failed to process document');
+                    showError(result.message || 'Failed to process document');
                 }
             } catch (error) {
                 showError('Error connecting to server: ' + error.message);

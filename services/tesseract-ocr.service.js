@@ -10,33 +10,49 @@ class TesseractOCRService {
      */
     async extractIDText(imageBuffer) {
         try {
-            const { data: { text, confidence } } = await Tesseract.recognize(
+            console.log('🔍 Starting Tesseract OCR...');
+            console.log('📦 Image buffer size:', imageBuffer.length, 'bytes');
+            
+            const { data: { text, confidence, words } } = await Tesseract.recognize(
                 imageBuffer,
                 'eng',
                 {
                     logger: m => {
                         if (m.status === 'recognizing text') {
-                            console.log(`OCR Progress: ${Math.round(m.progress * 100)}%`);
+                            const progress = Math.round(m.progress * 100);
+                            if (progress % 20 === 0) { // Log every 20%
+                                console.log(`OCR Progress: ${progress}%`);
+                            }
                         }
                     }
                 }
             );
 
+            console.log('✅ OCR Complete!');
+            console.log('📝 Text length:', text ? text.length : 0);
+            console.log('🎯 Confidence:', Math.round(confidence));
+            console.log('📊 Words detected:', words ? words.length : 0);
+
             if (!text || text.trim().length === 0) {
+                console.warn('⚠️  No text detected in image');
                 return {
                     success: false,
-                    message: 'No text detected in image'
+                    message: 'No text detected in image. Image may be too blurry, too small, or not contain readable text.'
                 };
             }
 
+            const cleanText = text.trim();
+            console.log('📄 First 100 chars:', cleanText.substring(0, 100));
+
             return {
                 success: true,
-                fullText: text.trim(),
+                fullText: cleanText,
                 confidence: Math.round(confidence),
-                blocks: text.split('\n').filter(line => line.trim().length > 0)
+                blocks: cleanText.split('\n').filter(line => line.trim().length > 0),
+                blockCount: cleanText.split('\n').filter(line => line.trim().length > 0).length
             };
         } catch (error) {
-            console.error('Tesseract OCR error:', error);
+            console.error('❌ Tesseract OCR error:', error);
             return {
                 success: false,
                 message: 'Failed to extract text',
