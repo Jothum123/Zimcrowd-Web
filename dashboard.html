@@ -3739,22 +3739,31 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                 <h2>Transaction History</h2>
                 <div style="display: flex; gap: 10px;">
-                    <select>
-                        <option>All Types</option>
-                        <option>Loans</option>
-                        <option>Investments</option>
-                        <option>Wallet</option>
+                    <select id="transactionTypeFilter" onchange="filterTransactions()" style="padding: 10px 15px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; cursor: pointer;">
+                        <option value="">All Types</option>
+                        <option value="deposit">Deposits</option>
+                        <option value="withdrawal">Withdrawals</option>
+                        <option value="loan_payment">Loan Payments</option>
+                        <option value="loan_disbursement">Loan Disbursements</option>
+                        <option value="investment">Investments</option>
+                        <option value="investment_return">Investment Returns</option>
+                        <option value="transfer">Transfers</option>
                     </select>
-                    <select>
-                        <option>All Time</option>
-                        <option>This Month</option>
-                        <option>Last 3 Months</option>
-                        <option>This Year</option>
+                    <select id="transactionDateFilter" onchange="filterTransactions()" style="padding: 10px 15px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; cursor: pointer;">
+                        <option value="">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="3months">Last 3 Months</option>
+                        <option value="year">This Year</option>
                     </select>
+                    <button onclick="exportTransactions()" class="btn-secondary" style="padding: 10px 20px;">
+                        <i class="fas fa-download"></i> Export
+                    </button>
                 </div>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 15px;">
+            <div id="transactionsListContainer" style="display: flex; flex-direction: column; gap: 15px;">
                 <div class="loan-card">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 15px;">
@@ -3865,24 +3874,19 @@
             </div>
 
             <!-- Pagination for Transactions -->
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 30px; padding: 20px; background: rgba(15, 23, 42, 0.5); border-radius: 12px;" data-pagination="transactions">
-                <button class="btn-primary" style="display: flex; align-items: center; gap: 8px;" onclick="changePage('transactions', 'prev')" data-prev-btn>
+            <div id="transactionsPagination" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 30px; padding: 20px; background: rgba(15, 23, 42, 0.5); border-radius: 12px;">
+                <button id="transactionsPrevBtn" class="btn-primary" style="display: flex; align-items: center; gap: 8px;" onclick="changeTransactionsPage('prev')">
                     <i class="fas fa-chevron-left"></i> Previous
                 </button>
                 
-                <!-- Page Number Buttons -->
-                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;" data-page-buttons>
-                    <button onclick="goToPage('transactions', 1)" class="page-number-btn active" data-page-btn="1">1</button>
-                    <button onclick="goToPage('transactions', 2)" class="page-number-btn" data-page-btn="2">2</button>
-                    <button onclick="goToPage('transactions', 3)" class="page-number-btn" data-page-btn="3">3</button>
-                    <button onclick="goToPage('transactions', 4)" class="page-number-btn" data-page-btn="4">4</button>
-                    <button onclick="goToPage('transactions', 5)" class="page-number-btn" data-page-btn="5">5</button>
-                    <span style="color: #94a3b8; font-size: 14px; margin-left: 10px;">
-                        Page <span style="font-weight: 600; color: #38e77b;" data-page-number>1</span> of 5 (30 transactions)
+                <!-- Page Info -->
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span style="color: #94a3b8; font-size: 14px;">
+                        Page <span id="transactionsCurrentPage" style="font-weight: 600; color: #38e77b;">1</span> of <span id="transactionsTotalPages">1</span> (<span id="transactionsTotalCount">0</span> transactions)
                     </span>
                 </div>
                 
-                <button class="btn-primary" style="display: flex; align-items: center; gap: 8px;" onclick="changePage('transactions', 'next')" data-next-btn>
+                <button id="transactionsNextBtn" class="btn-primary" style="display: flex; align-items: center; gap: 8px;" onclick="changeTransactionsPage('next')">
                     Next <i class="fas fa-chevron-right"></i>
                 </button>
             </div>
@@ -7095,21 +7099,187 @@ How it works:
             }).join('');
         }
 
+        // Transactions State
+        let transactionsState = {
+            currentPage: 1,
+            limit: 10,
+            totalPages: 1,
+            totalCount: 0,
+            typeFilter: '',
+            dateFilter: '',
+            allTransactions: []
+        };
+
         // Load transactions data
         async function loadTransactionsData() {
             try {
-                const response = await window.ZimCrowdAPI.getTransactions();
+                const response = await window.ZimCrowdAPI.getTransactions(transactionsState.currentPage, transactionsState.limit);
                 if (response.success) {
-                    updateTransactionsSection(response.data);
+                    const responseData = response.data;
+                    transactionsState.allTransactions = responseData.transactions || responseData;
+                    transactionsState.totalCount = responseData.pagination?.total || transactionsState.allTransactions.length;
+                    transactionsState.totalPages = responseData.pagination?.pages || Math.ceil(transactionsState.totalCount / transactionsState.limit);
+                    updateTransactionsSection(transactionsState.allTransactions);
+                    updateTransactionsPagination();
                 }
             } catch (error) {
                 console.error('Failed to load transactions:', error);
+                showTransactionsError();
             }
         }
 
         function updateTransactionsSection(transactions) {
-            // Will implement transaction section update
-            console.log('Transactions loaded:', transactions);
+            const container = document.getElementById('transactionsListContainer');
+            if (!container) return;
+
+            if (!transactions || transactions.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <i class="fas fa-inbox" style="font-size: 64px; color: #334155; margin-bottom: 20px;"></i>
+                        <h3 style="color: #94a3b8; margin-bottom: 10px;">No transactions found</h3>
+                        <p style="color: #64748b;">Your transaction history will appear here.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = transactions.map(txn => {
+                const isCredit = ['deposit', 'credit', 'loan_disbursement', 'investment_return', 'transfer_in'].includes(txn.type);
+                const color = isCredit ? '#38e77b' : '#ef4444';
+                const bgColor = isCredit ? 'rgba(56, 231, 123, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+                const prefix = isCredit ? '+' : '-';
+                
+                const typeIcons = {
+                    'deposit': 'fa-wallet',
+                    'withdrawal': 'fa-money-bill-wave',
+                    'loan_payment': 'fa-hand-holding-usd',
+                    'loan_disbursement': 'fa-hand-holding-usd',
+                    'investment': 'fa-chart-line',
+                    'investment_return': 'fa-chart-line',
+                    'transfer_in': 'fa-exchange-alt',
+                    'transfer_out': 'fa-exchange-alt'
+                };
+                
+                const typeLabels = {
+                    'deposit': 'Wallet Deposit',
+                    'withdrawal': 'Withdrawal',
+                    'loan_payment': 'Loan Payment',
+                    'loan_disbursement': 'Loan Disbursement',
+                    'investment': 'Investment',
+                    'investment_return': 'Investment Return',
+                    'transfer_in': 'Transfer Received',
+                    'transfer_out': 'Transfer Sent'
+                };
+                
+                const icon = typeIcons[txn.type] || 'fa-exchange-alt';
+                const label = typeLabels[txn.type] || txn.description || 'Transaction';
+                const date = new Date(txn.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const status = txn.status || 'completed';
+                const statusColor = status === 'completed' ? '#38e77b' : status === 'pending' ? '#f59e0b' : '#ef4444';
+                const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+                
+                return `
+                    <div class="loan-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div style="width: 50px; height: 50px; background: ${bgColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas ${icon}" style="color: ${color};"></i>
+                                </div>
+                                <div>
+                                    <h4 style="margin-bottom: 5px;">${label}</h4>
+                                    <p style="color: #94a3b8; font-size: 14px;">${txn.description || ''} • ${date}</p>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 20px; font-weight: 700; color: ${color};">${prefix}$${parseFloat(txn.amount).toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                                <span style="font-size: 11px; color: ${statusColor}; background: rgba(${statusColor === '#38e77b' ? '56, 231, 123' : statusColor === '#f59e0b' ? '245, 158, 11' : '239, 68, 68'}, 0.1); padding: 4px 8px; border-radius: 4px;">${statusLabel}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateTransactionsPagination() {
+            document.getElementById('transactionsCurrentPage').textContent = transactionsState.currentPage;
+            document.getElementById('transactionsTotalPages').textContent = transactionsState.totalPages;
+            document.getElementById('transactionsTotalCount').textContent = transactionsState.totalCount;
+            
+            const prevBtn = document.getElementById('transactionsPrevBtn');
+            const nextBtn = document.getElementById('transactionsNextBtn');
+            
+            if (prevBtn) prevBtn.disabled = transactionsState.currentPage === 1;
+            if (nextBtn) nextBtn.disabled = transactionsState.currentPage >= transactionsState.totalPages;
+        }
+
+        function changeTransactionsPage(direction) {
+            if (direction === 'prev' && transactionsState.currentPage > 1) {
+                transactionsState.currentPage--;
+                loadTransactionsData();
+            } else if (direction === 'next' && transactionsState.currentPage < transactionsState.totalPages) {
+                transactionsState.currentPage++;
+                loadTransactionsData();
+            }
+        }
+
+        function filterTransactions() {
+            const typeFilter = document.getElementById('transactionTypeFilter').value;
+            const dateFilter = document.getElementById('transactionDateFilter').value;
+            
+            transactionsState.typeFilter = typeFilter;
+            transactionsState.dateFilter = dateFilter;
+            transactionsState.currentPage = 1;
+            
+            loadTransactionsData();
+        }
+
+        function exportTransactions() {
+            const transactions = transactionsState.allTransactions;
+            if (!transactions || transactions.length === 0) {
+                alert('No transactions to export');
+                return;
+            }
+            
+            // Create CSV content
+            const headers = ['Date', 'Type', 'Description', 'Amount', 'Status'];
+            const csvRows = [headers.join(',')];
+            
+            transactions.forEach(txn => {
+                const date = new Date(txn.created_at).toLocaleDateString('en-US');
+                const type = txn.type || 'N/A';
+                const description = (txn.description || '').replace(/,/g, ';');
+                const amount = parseFloat(txn.amount).toFixed(2);
+                const status = txn.status || 'completed';
+                
+                csvRows.push([date, type, description, amount, status].join(','));
+            });
+            
+            const csvContent = csvRows.join('\\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `transactions_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        function showTransactionsError() {
+            const container = document.getElementById('transactionsListContainer');
+            if (container) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 64px; color: #ef4444; margin-bottom: 20px;"></i>
+                        <h3 style="color: #94a3b8; margin-bottom: 10px;">Failed to load transactions</h3>
+                        <p style="color: #64748b;">Unable to fetch your transaction history.</p>
+                        <button onclick="loadTransactionsData()" class="btn-primary" style="margin-top: 20px;">
+                            <i class="fas fa-redo"></i> Retry
+                        </button>
+                    </div>
+                `;
+            }
         }
 
         // UI Update Functions
