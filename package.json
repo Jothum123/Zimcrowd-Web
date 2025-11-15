@@ -23,6 +23,7 @@
   "author": "ZimCrowd Team",
   "license": "ISC",
   "dependencies": {
+    "@azure/ai-form-recognizer": "^5.1.0",
     "@google-cloud/vision": "^4.3.3",
     "@google/generative-ai": "^0.24.1",
     "@sendgrid/mail": "^8.1.6",
