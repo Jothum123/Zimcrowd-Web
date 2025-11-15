@@ -7,6 +7,12 @@ class VisionOCRService {
         this.useGoogleVision = false;
         this.tesseractService = null;
 
+        // ALWAYS use Tesseract for now (Google Vision requires billing)
+        console.log('🔄 Using Tesseract OCR (Free - No billing required)');
+        this.tesseractService = new TesseractOCRService();
+        
+        // Uncomment below to try Google Vision (requires billing enabled)
+        /*
         try {
             // Try to initialize Google Vision
             if (process.env.GOOGLE_VISION_CREDENTIALS) {
@@ -27,19 +33,15 @@ class VisionOCRService {
             console.log('🔄 Falling back to Tesseract OCR (Free)');
             this.tesseractService = new TesseractOCRService();
         }
-
-        // If Google Vision failed or not configured, use Tesseract
-        if (!this.useGoogleVision && !this.tesseractService) {
-            this.tesseractService = new TesseractOCRService();
-        }
+        */
     }
 
     /**
      * Extract text from ID document
      */
     async extractIDText(imageBuffer) {
-        // Use Tesseract if Google Vision not available
-        if (!this.useGoogleVision || this.tesseractService) {
+        // Use Tesseract (free OCR)
+        if (this.tesseractService) {
             return await this.tesseractService.extractIDText(imageBuffer);
         }
 
@@ -252,8 +254,8 @@ class VisionOCRService {
      * Comprehensive document analysis
      */
     async analyzeDocument(imageBuffer, expectedType = null) {
-        // Use Tesseract if Google Vision not available
-        if (!this.useGoogleVision || this.tesseractService) {
+        // Use Tesseract (free OCR)
+        if (this.tesseractService) {
             return await this.tesseractService.analyzeDocument(imageBuffer, expectedType);
         }
 
