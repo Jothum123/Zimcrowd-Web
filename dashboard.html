@@ -4308,18 +4308,18 @@
                     <div style="display: flex; flex-direction: column; gap: 20px; max-width: 500px;">
                         <div>
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Current Password</label>
-                            <input type="password">
+                            <input type="password" id="currentPassword" placeholder="Enter current password">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">New Password</label>
-                            <input type="password">
+                            <input type="password" id="newPassword" placeholder="Enter new password">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Confirm New Password</label>
-                            <input type="password">
+                            <input type="password" id="confirmPassword" placeholder="Confirm new password">
                         </div>
                     </div>
-                    <button class="btn-primary" style="margin-top: 20px;">Update Password</button>
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="changePassword()">Update Password</button>
                 </div>
 
                 <div class="loan-card" style="margin-top: 20px;">
@@ -4327,11 +4327,11 @@
                     <p style="color: #94a3b8; margin-bottom: 20px;">Add an extra layer of security to your account</p>
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" style="width: 20px; height: 20px;">
+                            <input type="checkbox" id="twoFactorAuth" style="width: 20px; height: 20px;">
                             <span>Enable Two-Factor Authentication</span>
                         </label>
                     </div>
-                    <button class="btn-primary" style="margin-top: 20px;">Save Security Settings</button>
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="saveSecuritySettings()">Save Security Settings</button>
                 </div>
             </div>
 
@@ -4341,19 +4341,19 @@
                     <h3 style="margin-bottom: 20px;">Email Notifications</h3>
                     <div style="display: flex; flex-direction: column; gap: 15px;">
                         <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" checked style="width: 20px; height: 20px;">
+                            <input type="checkbox" id="emailLoanReminders" checked style="width: 20px; height: 20px;">
                             <span>Loan payment reminders</span>
                         </label>
                         <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" checked style="width: 20px; height: 20px;">
+                            <input type="checkbox" id="emailInvestmentReturns" checked style="width: 20px; height: 20px;">
                             <span>Investment returns</span>
                         </label>
                         <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" checked style="width: 20px; height: 20px;">
+                            <input type="checkbox" id="emailLoanOpportunities" checked style="width: 20px; height: 20px;">
                             <span>New loan opportunities</span>
                         </label>
                         <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" style="width: 20px; height: 20px;">
+                            <input type="checkbox" id="emailMarketing" style="width: 20px; height: 20px;">
                             <span>Marketing emails</span>
                         </label>
                     </div>
@@ -4363,19 +4363,19 @@
                     <h3 style="margin-bottom: 20px;">Push Notifications</h3>
                     <div style="display: flex; flex-direction: column; gap: 15px;">
                         <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" checked style="width: 20px; height: 20px;">
+                            <input type="checkbox" id="pushTransactionAlerts" checked style="width: 20px; height: 20px;">
                             <span>Transaction alerts</span>
                         </label>
                         <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" checked style="width: 20px; height: 20px;">
+                            <input type="checkbox" id="pushAccountActivity" checked style="width: 20px; height: 20px;">
                             <span>Account activity</span>
                         </label>
                         <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" style="width: 20px; height: 20px;">
+                            <input type="checkbox" id="pushPromotional" style="width: 20px; height: 20px;">
                             <span>Promotional offers</span>
                         </label>
                     </div>
-                    <button class="btn-primary" style="margin-top: 20px;">Save Notification Preferences</button>
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="saveNotificationSettings()">Save Notification Preferences</button>
                 </div>
             </div>
 
@@ -4386,8 +4386,8 @@
                     <div style="display: flex; flex-direction: column; gap: 20px;">
                         <div>
                             <label style="display: block; margin-bottom: 12px; color: #94a3b8; font-size: 14px; font-weight: 600;">Language</label>
-                            <select style="width: 100%; max-width: 300px;">
-                                <option selected>English</option>
+                            <select id="displayLanguage" style="width: 100%; max-width: 300px;">
+                                <option value="en" selected>English</option>
                                 <option>Shona</option>
                                 <option>Ndebele</option>
                                 <option>Swahili</option>
@@ -4397,8 +4397,8 @@
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 12px; color: #94a3b8; font-size: 14px; font-weight: 600;">Currency Display</label>
-                            <select style="width: 100%; max-width: 300px;">
-                                <option selected>USD ($)</option>
+                            <select id="displayCurrency" style="width: 100%; max-width: 300px;">
+                                <option value="USD" selected>USD ($)</option>
                                 <option>ZWL (Z$)</option>
                                 <option>ZAR (R)</option>
                                 <option>KES (KSh)</option>
@@ -4407,26 +4407,26 @@
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 12px; color: #94a3b8; font-size: 14px; font-weight: 600;">Date Format</label>
-                            <select style="width: 100%; max-width: 300px;">
-                                <option selected>DD/MM/YYYY</option>
+                            <select id="displayDateFormat" style="width: 100%; max-width: 300px;">
+                                <option value="DD/MM/YYYY" selected>DD/MM/YYYY</option>
                                 <option>MM/DD/YYYY</option>
                                 <option>YYYY-MM-DD</option>
                             </select>
                         </div>
                         <div>
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" checked style="width: 20px; height: 20px;">
+                                <input type="checkbox" id="displayAnimations" checked style="width: 20px; height: 20px;">
                                 <span>Show dashboard animations</span>
                             </label>
                         </div>
                         <div>
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" checked style="width: 20px; height: 20px;">
+                                <input type="checkbox" id="displayCompactView" checked style="width: 20px; height: 20px;">
                                 <span>Compact view mode</span>
                             </label>
                         </div>
                     </div>
-                    <button class="btn-primary" style="margin-top: 20px;">Save Display Settings</button>
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="saveDisplaySettings()">Save Display Settings</button>
                 </div>
             </div>
 
@@ -4519,27 +4519,27 @@
                     <div style="display: flex; flex-direction: column; gap: 20px;">
                         <div>
                             <label style="display: block; margin-bottom: 12px; color: #94a3b8; font-size: 14px; font-weight: 600;">Profile Visibility</label>
-                            <select style="width: 100%; max-width: 400px;">
-                                <option selected>Public - Visible to all users</option>
+                            <select id="profileVisibility" style="width: 100%; max-width: 400px;">
+                                <option value="public" selected>Public - Visible to all users</option>
                                 <option>Private - Only visible to connected users</option>
                                 <option>Hidden - Not visible to anyone</option>
                             </select>
                         </div>
                         <div>
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" checked style="width: 20px; height: 20px;">
+                                <input type="checkbox" id="showPortfolio" checked style="width: 20px; height: 20px;">
                                 <span>Show my investment portfolio publicly</span>
                             </label>
                         </div>
                         <div>
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" style="width: 20px; height: 20px;">
+                                <input type="checkbox" id="showLoanHistory" style="width: 20px; height: 20px;">
                                 <span>Show my loan history publicly</span>
                             </label>
                         </div>
                         <div>
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" checked style="width: 20px; height: 20px;">
+                                <input type="checkbox" id="allowMessages" checked style="width: 20px; height: 20px;">
                                 <span>Allow other users to send me messages</span>
                             </label>
                         </div>
@@ -4551,19 +4551,19 @@
                     <div style="display: flex; flex-direction: column; gap: 20px;">
                         <div>
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" checked style="width: 20px; height: 20px;">
+                                <input type="checkbox" id="allowCookies" checked style="width: 20px; height: 20px;">
                                 <span>Allow cookies for better experience</span>
                             </label>
                         </div>
                         <div>
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" style="width: 20px; height: 20px;">
+                                <input type="checkbox" id="shareData" style="width: 20px; height: 20px;">
                                 <span>Share anonymized data for platform improvement</span>
                             </label>
                         </div>
                         <div>
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" style="width: 20px; height: 20px;">
+                                <input type="checkbox" id="thirdPartyAnalytics" style="width: 20px; height: 20px;">
                                 <span>Allow third-party analytics</span>
                             </label>
                         </div>
@@ -4574,28 +4574,28 @@
                     <h3 style="margin-bottom: 20px;">Account Actions</h3>
                     <div style="display: flex; flex-direction: column; gap: 15px;">
                         <div>
-                            <button class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                            <button class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;" onclick="downloadMyData()">
                                 <i class="fas fa-download"></i>
                                 <span>Download My Data</span>
                             </button>
                             <p style="color: #94a3b8; font-size: 13px; margin-top: 8px;">Get a copy of all your account data</p>
                         </div>
                         <div>
-                            <button style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: #f59e0b; color: white; border: none; border-radius: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
+                            <button onclick="deactivateAccount()" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: #f59e0b; color: white; border: none; border-radius: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
                                 <i class="fas fa-user-slash"></i>
                                 <span>Deactivate Account</span>
                             </button>
                             <p style="color: #94a3b8; font-size: 13px; margin-top: 8px;">Temporarily disable your account</p>
                         </div>
                         <div>
-                            <button style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: #ef4444; color: white; border: none; border-radius: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">
+                            <button onclick="deleteAccount()" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: #ef4444; color: white; border: none; border-radius: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">
                                 <i class="fas fa-trash-alt"></i>
                                 <span>Delete Account</span>
                             </button>
                             <p style="color: #94a3b8; font-size: 13px; margin-top: 8px;">Permanently delete your account and all data</p>
                         </div>
                     </div>
-                    <button class="btn-primary" style="margin-top: 20px;">Save Privacy Settings</button>
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="savePrivacySettings()">Save Privacy Settings</button>
                 </div>
             </div>
 
@@ -7391,6 +7391,179 @@ How it works:
             if (tabContent) {
                 tabContent.classList.add('active');
             }
+        }
+
+        // Security Tab Functions
+        async function changePassword() {
+            const currentPassword = document.getElementById('currentPassword')?.value;
+            const newPassword = document.getElementById('newPassword')?.value;
+            const confirmPassword = document.getElementById('confirmPassword')?.value;
+            
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                alert('Please fill in all password fields');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                alert('New passwords do not match');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                alert('Password must be at least 8 characters long');
+                return;
+            }
+            
+            try {
+                const response = await window.ZimCrowdAPI.changePassword(currentPassword, newPassword);
+                if (response.success) {
+                    alert('Password changed successfully!');
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                } else {
+                    alert('Failed to change password: ' + (response.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Password change error:', error);
+                alert('Failed to change password');
+            }
+        }
+
+        async function saveSecuritySettings() {
+            const twoFactorEnabled = document.getElementById('twoFactorAuth')?.checked || false;
+            
+            try {
+                const response = await window.ZimCrowdAPI.updateSecuritySettings({ two_factor_enabled: twoFactorEnabled });
+                if (response.success) {
+                    alert('Security settings saved successfully!');
+                } else {
+                    alert('Failed to save security settings');
+                }
+            } catch (error) {
+                console.error('Security settings error:', error);
+                alert('Failed to save security settings');
+            }
+        }
+
+        // Notifications Tab Functions
+        async function saveNotificationSettings() {
+            const settings = {
+                email_loan_reminders: document.getElementById('emailLoanReminders')?.checked || false,
+                email_investment_returns: document.getElementById('emailInvestmentReturns')?.checked || false,
+                email_loan_opportunities: document.getElementById('emailLoanOpportunities')?.checked || false,
+                email_marketing: document.getElementById('emailMarketing')?.checked || false,
+                push_transaction_alerts: document.getElementById('pushTransactionAlerts')?.checked || false,
+                push_account_activity: document.getElementById('pushAccountActivity')?.checked || false,
+                push_promotional: document.getElementById('pushPromotional')?.checked || false
+            };
+            
+            try {
+                const response = await window.ZimCrowdAPI.updateNotificationSettings(settings);
+                if (response.success) {
+                    alert('Notification preferences saved successfully!');
+                } else {
+                    alert('Failed to save notification preferences');
+                }
+            } catch (error) {
+                console.error('Notification settings error:', error);
+                alert('Failed to save notification preferences');
+            }
+        }
+
+        // Display Tab Functions
+        async function saveDisplaySettings() {
+            const settings = {
+                language: document.getElementById('displayLanguage')?.value || 'en',
+                currency: document.getElementById('displayCurrency')?.value || 'USD',
+                date_format: document.getElementById('displayDateFormat')?.value || 'DD/MM/YYYY',
+                show_animations: document.getElementById('displayAnimations')?.checked || false,
+                compact_view: document.getElementById('displayCompactView')?.checked || false
+            };
+            
+            try {
+                const response = await window.ZimCrowdAPI.updateDisplaySettings(settings);
+                if (response.success) {
+                    alert('Display settings saved successfully!');
+                    // Optionally reload page to apply settings
+                    // location.reload();
+                } else {
+                    alert('Failed to save display settings');
+                }
+            } catch (error) {
+                console.error('Display settings error:', error);
+                alert('Failed to save display settings');
+            }
+        }
+
+        // Privacy Tab Functions
+        async function savePrivacySettings() {
+            const settings = {
+                profile_visibility: document.getElementById('profileVisibility')?.value || 'public',
+                show_portfolio: document.getElementById('showPortfolio')?.checked || false,
+                show_loan_history: document.getElementById('showLoanHistory')?.checked || false,
+                allow_messages: document.getElementById('allowMessages')?.checked || false,
+                allow_cookies: document.getElementById('allowCookies')?.checked || false,
+                share_data: document.getElementById('shareData')?.checked || false,
+                third_party_analytics: document.getElementById('thirdPartyAnalytics')?.checked || false
+            };
+            
+            try {
+                const response = await window.ZimCrowdAPI.updatePrivacySettings(settings);
+                if (response.success) {
+                    alert('Privacy settings saved successfully!');
+                } else {
+                    alert('Failed to save privacy settings');
+                }
+            } catch (error) {
+                console.error('Privacy settings error:', error);
+                alert('Failed to save privacy settings');
+            }
+        }
+
+        async function downloadMyData() {
+            try {
+                const response = await window.ZimCrowdAPI.downloadUserData();
+                if (response.success) {
+                    // Create download link
+                    const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `zimcrowd_data_${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                } else {
+                    alert('Failed to download data');
+                }
+            } catch (error) {
+                console.error('Download data error:', error);
+                alert('Failed to download data');
+            }
+        }
+
+        function deactivateAccount() {
+            if (confirm('Are you sure you want to deactivate your account? You can reactivate it later by logging in.')) {
+                alert('Account deactivation feature will be implemented with backend integration');
+            }
+        }
+
+        function deleteAccount() {
+            if (confirm('⚠️ WARNING: This will permanently delete your account and all data. This action cannot be undone. Are you absolutely sure?')) {
+                const confirmation = prompt('Type "DELETE" to confirm account deletion:');
+                if (confirmation === 'DELETE') {
+                    alert('Account deletion feature will be implemented with backend integration');
+                } else {
+                    alert('Account deletion cancelled');
+                }
+            }
+        }
+
+        // Documents Tab Functions
+        function uploadDocument(documentType) {
+            alert(`Document upload for ${documentType} will be implemented with backend integration`);
         }
 
         // UI Update Functions
