@@ -311,6 +311,192 @@ router.post('/withdraw', authenticateUser, [
     }
 });
 
+// @route   POST /api/wallet/transfer
+// @desc    Transfer funds to another user
+// @access  Private
+router.post('/transfer', authenticateUser, [
+    body('recipient_id')
+        .notEmpty()
+        .withMessage('Recipient ID is required'),
+    body('amount')
+        .isFloat({ min: 5, max: 5000 })
+        .withMessage('Transfer amount must be between $5 and $5,000'),
+    body('description')
+        .optional()
+        .trim()
+        .isLength({ max: 200 })
+        .withMessage('Description must be less than 200 characters'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { recipient_id, amount, description } = req.body;
+
+        // Prevent self-transfer
+        if (recipient_id === req.user.id) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot transfer to yourself'
+            });
+        }
+
+        // Verify recipient exists
+        const { data: recipient, error: recipientError } = await supabase
+            .from('profiles')
+            .select('id, first_name, last_name, email')
+            .eq('id', recipient_id)
+            .single();
+
+        if (recipientError || !recipient) {
+            return res.status(404).json({
+                success: false,
+                message: 'Recipient not found'
+            });
+        }
+
+        // Check sender balance
+        const { data: senderTransactions } = await supabase
+            .from('transactions')
+            .select('type, amount')
+            .eq('user_id', req.user.id);
+
+        let senderBalance = 0;
+        senderTransactions?.forEach(tx => {
+            if (tx.type === 'deposit') senderBalance += parseFloat(tx.amount);
+            else if (tx.type === 'withdrawal') senderBalance -= parseFloat(tx.amount);
+        });
+
+        if (senderBalance < parseFloat(amount)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Insufficient balance'
+            });
+        }
+
+        // Create withdrawal transaction for sender
+        const { data: senderTx, error: senderError } = await supabase
+            .from('transactions')
+            .insert({
+                user_id: req.user.id,
+                type: 'withdrawal',
+                amount: parseFloat(amount),
+                description: `Transfer to ${recipient.first_name} ${recipient.last_name}${description ? ` - ${description}` : ''}`,
+                transaction_type: 'transfer_out',
+                related_user_id: recipient_id
+            })
+            .select('*')
+            .single();
+
+        if (senderError) {
+            console.error('Sender transaction error:', senderError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to process transfer'
+            });
+        }
+
+        // Create deposit transaction for recipient
+        const { data: recipientTx, error: recipientError } = await supabase
+            .from('transactions')
+            .insert({
+                user_id: recipient_id,
+                type: 'deposit',
+                amount: parseFloat(amount),
+                description: `Transfer from user${description ? ` - ${description}` : ''}`,
+                transaction_type: 'transfer_in',
+                related_user_id: req.user.id
+            })
+            .select('*')
+            .single();
+
+        if (recipientError) {
+            console.error('Recipient transaction error:', recipientError);
+            // Rollback sender transaction
+            await supabase
+                .from('transactions')
+                .delete()
+                .eq('id', senderTx.id);
+
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to complete transfer'
+            });
+        }
+
+        res.status(201).json({
+            success: true,
+            message: 'Transfer completed successfully',
+            data: {
+                sender_transaction: senderTx,
+                recipient_transaction: recipientTx,
+                recipient: {
+                    name: `${recipient.first_name} ${recipient.last_name}`,
+                    email: recipient.email
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Transfer error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+});
+
+// @route   GET /api/wallet/stats
+// @desc    Get wallet statistics
+// @access  Private
+router.get('/stats', authenticateUser, async (req, res) => {
+    try {
+        const { data: transactions } = await supabase
+            .from('transactions')
+            .select('*')
+            .eq('user_id', req.user.id);
+
+        let totalDeposits = 0;
+        let totalWithdrawals = 0;
+        let totalTransfersIn = 0;
+        let totalTransfersOut = 0;
+
+        transactions?.forEach(tx => {
+            const amount = parseFloat(tx.amount);
+            if (tx.type === 'deposit') {
+                if (tx.transaction_type === 'transfer_in') {
+                    totalTransfersIn += amount;
+                } else {
+                    totalDeposits += amount;
+                }
+            } else if (tx.type === 'withdrawal') {
+                if (tx.transaction_type === 'transfer_out') {
+                    totalTransfersOut += amount;
+                } else {
+                    totalWithdrawals += amount;
+                }
+            }
+        });
+
+        const currentBalance = totalDeposits + totalTransfersIn - totalWithdrawals - totalTransfersOut;
+
+        res.json({
+            success: true,
+            data: {
+                current_balance: Math.round(currentBalance * 100) / 100,
+                total_deposits: Math.round(totalDeposits * 100) / 100,
+                total_withdrawals: Math.round(totalWithdrawals * 100) / 100,
+                total_transfers_in: Math.round(totalTransfersIn * 100) / 100,
+                total_transfers_out: Math.round(totalTransfersOut * 100) / 100,
+                transaction_count: transactions?.length || 0
+            }
+        });
+    } catch (error) {
+        console.error('Wallet stats error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+});
+
 // @route   GET /api/wallet/payment-methods
 // @desc    Get available payment methods
 // @access  Public
