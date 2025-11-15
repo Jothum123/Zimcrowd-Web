@@ -262,7 +262,12 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3001'; // Change to your API URL
+        // API Configuration - Auto-detects environment
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:3001'  // Local development
+            : 'https://zimcrowd-api.onrender.com';  // Production (Render)
+        
+        console.log('🔧 OCR Test Page - API URL:', API_URL);
         let selectedFile = null;
 
         const uploadArea = document.getElementById('uploadArea');
