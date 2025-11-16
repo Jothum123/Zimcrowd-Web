@@ -122,19 +122,20 @@ router.post('/calculate', [
 });
 
 // @route   POST /api/loans/apply
-// @desc    Submit loan application
+// @desc    Submit loan application with DTNI validation
 // @access  Private
 router.post('/apply', authenticateUser, [
-    body('amount').isFloat({ min: 100, max: 100000 }).withMessage('Amount must be between $100 and $100,000'),
-    body('term').isInt({ min: 1, max: 84 }).withMessage('Term must be between 1 and 84 months'),
-    body('loanType').isIn(['personal', 'business', 'emergency']).withMessage('Invalid loan type'),
-    body('purpose').isLength({ min: 10, max: 500 }).withMessage('Purpose must be between 10 and 500 characters'),
-    body('monthlyIncome').isFloat({ min: 0 }).withMessage('Monthly income must be a positive number'),
+    body('amount').isFloat({ min: 50, max: 100000 }).withMessage('Amount must be between $50 and $100,000'),
+    body('termDays').isInt({ min: 30, max: 720 }).withMessage('Term must be between 30 and 720 days'),
+    body('interestRate').isFloat({ min: 0, max: 10 }).withMessage('Interest rate must be between 0% and 10%'),
+    body('purpose').isLength({ min: 5, max: 500 }).withMessage('Purpose must be between 5 and 500 characters'),
     handleValidationErrors
 ], async (req, res) => {
     try {
-        const { amount, term, loanType, purpose, monthlyIncome, employmentDetails } = req.body;
+        const { amount, termDays, interestRate, purpose } = req.body;
         const userId = req.user.id;
+        
+        console.log(`💰 Loan application: $${amount}, ${termDays} days, ${interestRate}% for user ${userId}`);
         
         // Check if user has pending applications
         const { data: pendingLoans } = await supabase
@@ -146,68 +147,61 @@ router.post('/apply', authenticateUser, [
         if (pendingLoans && pendingLoans.length > 0) {
             return res.status(400).json({
                 success: false,
-                message: 'You already have a pending loan application'
+                message: 'You already have a pending loan application',
+                code: 'PENDING_APPLICATION_EXISTS'
             });
         }
         
-        // Calculate ZimScore
-        const zimScoreResult = await zimScoreService.calculateScore(userId, {
-            monthlyIncome,
-            requestedAmount: amount,
-            employmentDetails
-        });
+        // DTNI Validation using our new system
+        const dtniValidation = await zimScoreService.validateLoanAgainstDTNI(
+            userId, 
+            amount, 
+            interestRate, 
+            termDays
+        );
         
-        // Determine interest rate based on ZimScore
-        let interestRate = 15.9; // Base rate
-        if (zimScoreResult.score >= 750) interestRate = 8.5;
-        else if (zimScoreResult.score >= 700) interestRate = 12.0;
-        else if (zimScoreResult.score >= 650) interestRate = 15.9;
-        else if (zimScoreResult.score >= 600) interestRate = 19.9;
-        else interestRate = 24.9;
+        if (!dtniValidation.approved) {
+            return res.status(400).json({
+                success: false,
+                message: dtniValidation.message,
+                code: dtniValidation.reason,
+                dtni: dtniValidation.dtni,
+                suggestion: dtniValidation.suggestion,
+                requiresBankStatement: dtniValidation.requiresBankStatement,
+                minTenure: dtniValidation.minTenure,
+                maxTenure: dtniValidation.maxTenure,
+                requiredTenure: dtniValidation.requiredTenure,
+                coldStartActive: dtniValidation.coldStartActive
+            });
+        }
         
-        // Calculate fees and schedule
-        const fees = feeCalculator.calculateLoanFees(amount, term, loanType);
-        const schedule = paymentSchedule.generateSchedule(amount, interestRate, term, fees);
+        // Calculate monthly installment using reducing balance
+        const termMonths = termDays / 30;
+        const monthlyInstallment = zimScoreService.calculateMonthlyInstallment(
+            amount, 
+            interestRate / 100, 
+            termMonths
+        );
         
         // Create loan application
         const { data: loan, error } = await supabase
             .from('loans')
             .insert({
                 user_id: userId,
-                loan_type: loanType,
                 amount: amount,
-                term: term,
+                term_days: termDays,
                 interest_rate: interestRate,
-                monthly_payment: schedule.monthlyPayment,
-                total_payment: schedule.totalPayment,
+                monthly_installment: monthlyInstallment,
+                total_amount: monthlyInstallment * termMonths,
                 purpose: purpose,
-                monthly_income: monthlyIncome,
-                employment_details: employmentDetails,
-                zimscore: zimScoreResult.score,
-                zimscore_factors: zimScoreResult.factors,
-                fees: fees,
                 status: 'pending',
-                applied_at: new Date().toISOString()
+                applied_at: new Date().toISOString(),
+                dtni_validation: dtniValidation.dtni
             })
             .select()
             .single();
             
         if (error) throw error;
-        
-        // Create payment schedule records
-        for (const payment of schedule.payments) {
-            await supabase
-                .from('loan_installments')
-                .insert({
-                    loan_id: loan.id,
-                    installment_number: payment.number,
-                    due_date: payment.dueDate,
-                    principal_amount: payment.principal,
-                    interest_amount: payment.interest,
-                    total_amount: payment.total,
-                    status: 'pending'
-                });
-        }
         
         res.json({
             success: true,
@@ -216,9 +210,12 @@ router.post('/apply', authenticateUser, [
                 loanId: loan.id,
                 status: loan.status,
                 amount: loan.amount,
+                termDays: loan.term_days,
                 interestRate: loan.interest_rate,
-                monthlyPayment: loan.monthly_payment,
-                zimScore: zimScoreResult.score
+                monthlyInstallment: monthlyInstallment,
+                totalAmount: loan.total_amount,
+                dtni: dtniValidation.dtni,
+                approvalMessage: `Loan approved! Monthly payment: $${monthlyInstallment.toFixed(2)}`
             }
         });
     } catch (error) {
@@ -226,6 +223,156 @@ router.post('/apply', authenticateUser, [
         res.status(500).json({
             success: false,
             message: 'Failed to submit loan application'
+        });
+    }
+});
+
+// @route   POST /api/loans/validate
+// @desc    Validate loan application without submitting
+// @access  Private
+router.post('/validate', authenticateUser, [
+    body('amount').isFloat({ min: 50, max: 100000 }).withMessage('Amount must be between $50 and $100,000'),
+    body('termDays').isInt({ min: 30, max: 720 }).withMessage('Term must be between 30 and 720 days'),
+    body('interestRate').isFloat({ min: 0, max: 10 }).withMessage('Interest rate must be between 0% and 10%'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { amount, termDays, interestRate } = req.body;
+        const userId = req.user.id;
+        
+        console.log(`🔍 Validating loan: $${amount}, ${termDays} days, ${interestRate}% for user ${userId}`);
+        
+        // DTNI Validation
+        const dtniValidation = await zimScoreService.validateLoanAgainstDTNI(
+            userId, 
+            amount, 
+            interestRate, 
+            termDays
+        );
+        
+        // Calculate monthly installment
+        const termMonths = termDays / 30;
+        const monthlyInstallment = zimScoreService.calculateMonthlyInstallment(
+            amount, 
+            interestRate / 100, 
+            termMonths
+        );
+        
+        res.json({
+            success: true,
+            approved: dtniValidation.approved,
+            message: dtniValidation.message,
+            data: {
+                amount,
+                termDays,
+                termMonths: termMonths.toFixed(1),
+                interestRate,
+                monthlyInstallment: monthlyInstallment.toFixed(2),
+                totalAmount: (monthlyInstallment * termMonths).toFixed(2),
+                dtni: dtniValidation.dtni,
+                suggestion: dtniValidation.suggestion,
+                requiresBankStatement: dtniValidation.requiresBankStatement,
+                code: dtniValidation.reason
+            }
+        });
+    } catch (error) {
+        console.error('Loan validation error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to validate loan application'
+        });
+    }
+});
+
+// @route   POST /api/loans/calculate-max
+// @desc    Calculate maximum loan amount user can afford
+// @access  Private
+router.post('/calculate-max', authenticateUser, [
+    body('termDays').isInt({ min: 30, max: 720 }).withMessage('Term must be between 30 and 720 days'),
+    body('interestRate').isFloat({ min: 0, max: 10 }).withMessage('Interest rate must be between 0% and 10%'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { termDays, interestRate } = req.body;
+        const userId = req.user.id;
+        
+        // Get user's employment details
+        const { data: employmentDetails } = await supabase
+            .from('employment_details')
+            .select('monthly_income, employment_type')
+            .eq('user_id', userId)
+            .single();
+
+        if (!employmentDetails || !employmentDetails.monthly_income) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please update your employment details first',
+                requiresBankStatement: true
+            });
+        }
+
+        // Get existing loans
+        const { data: activeLoans } = await supabase
+            .from('loans')
+            .select('amount, interest_rate, term_days')
+            .eq('user_id', userId)
+            .in('status', ['active', 'approved']);
+
+        // Calculate existing installments
+        let existingInstallment = 0;
+        if (activeLoans && activeLoans.length > 0) {
+            activeLoans.forEach(loan => {
+                const termMonths = (loan.term_days || 30) / 30;
+                const annualRate = (loan.interest_rate || 0) / 100;
+                const monthlyInstallment = zimScoreService.calculateMonthlyInstallment(
+                    loan.amount, 
+                    annualRate, 
+                    termMonths
+                );
+                existingInstallment += monthlyInstallment;
+            });
+        }
+
+        // Calculate available installment capacity
+        const netSalary = employmentDetails.monthly_income;
+        const maxTotalInstallment = netSalary * 0.40;
+        const availableInstallment = Math.max(0, maxTotalInstallment - existingInstallment);
+
+        // Calculate max loan amount
+        const termMonths = termDays / 30;
+        const maxLoanAmount = zimScoreService.calculateMaxLoanAmount(
+            availableInstallment,
+            interestRate / 100,
+            termMonths
+        );
+
+        // Apply employment caps
+        const isCivilServant = employmentDetails.employment_type === 'government';
+        const employmentCap = isCivilServant ? 300 : 100;
+        const finalMaxAmount = Math.min(maxLoanAmount, employmentCap);
+
+        res.json({
+            success: true,
+            data: {
+                netSalary,
+                maxTotalInstallment: maxTotalInstallment.toFixed(2),
+                existingInstallment: existingInstallment.toFixed(2),
+                availableInstallment: availableInstallment.toFixed(2),
+                installmentUtilization: ((existingInstallment / maxTotalInstallment) * 100).toFixed(1) + '%',
+                maxLoanAmount: maxLoanAmount.toFixed(2),
+                employmentCap,
+                finalMaxAmount: finalMaxAmount.toFixed(2),
+                employmentType: employmentDetails.employment_type,
+                termDays,
+                interestRate,
+                monthlyInstallment: availableInstallment.toFixed(2)
+            }
+        });
+    } catch (error) {
+        console.error('Max loan calculation error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to calculate maximum loan amount'
         });
     }
 });

@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Application Demo - ZimCrowd</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            color: #1e3a8a;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .demo-section {
+            margin-bottom: 40px;
+        }
+
+        .demo-section h2 {
+            color: #1e3a8a;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        .button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .button:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .button.primary {
+            background: #10b981;
+        }
+
+        .button.primary:hover {
+            background: #059669;
+        }
+
+        .button.danger {
+            background: #ef4444;
+        }
+
+        .button.danger:hover {
+            background: #dc2626;
+        }
+
+        .result-box {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result-box.success {
+            background: #d1fae5;
+            border-color: #10b981;
+        }
+
+        .result-box.error {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+
+        .result-box.warning {
+            background: #fef3c7;
+            border-color: #f59e0b;
+        }
+
+        .result-box h3 {
+            margin-bottom: 15px;
+            color: #374151;
+        }
+
+        .result-box pre {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .api-info {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .api-info h3 {
+            color: #0c4a6e;
+            margin-bottom: 15px;
+        }
+
+        .endpoint {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+
+        .test-scenarios {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .scenario-card {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .scenario-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15);
+        }
+
+        .scenario-card h4 {
+            color: #1e3a8a;
+            margin-bottom: 10px;
+        }
+
+        .scenario-card p {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .scenario-card .amount {
+            font-weight: 600;
+            color: #059669;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px 20px;
+            }
+
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .test-scenarios {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Loan Application Demo</h1>
+            <p>Test the real DTNI validation system with reducing balance calculations</p>
+        </div>
+
+        <!-- API Information -->
+        <div class="api-info">
+            <h3>🔗 API Endpoints</h3>
+            <div class="endpoint">POST /api/loans/validate - Validate loan without submitting</div>
+            <div class="endpoint">POST /api/loans/calculate-max - Get maximum loan amount</div>
+            <div class="endpoint">POST /api/loans/apply - Submit loan application</div>
+        </div>
+
+        <!-- Test Scenarios -->
+        <div class="demo-section">
+            <h2>🧪 Test Scenarios</h2>
+            <div class="test-scenarios">
+                <div class="scenario-card" onclick="loadScenario(1)">
+                    <h4>💼 Government Employee</h4>
+                    <p>High salary, no existing debt, can access up to 24 months</p>
+                    <div class="amount">$250 for 12 months</div>
+                </div>
+                <div class="scenario-card" onclick="loadScenario(2)">
+                    <h4>🏢 Private Employee</h4>
+                    <p>Medium salary, some existing debt, max 12 months</p>
+                    <div class="amount">$150 for 6 months</div>
+                </div>
+                <div class="scenario-card" onclick="loadScenario(3)">
+                    <h4>🆕 Cold Start User</h4>
+                    <p>New user, fixed 3 months tenure</p>
+                    <div class="amount">$100 for 3 months</div>
+                </div>
+                <div class="scenario-card" onclick="loadScenario(4)">
+                    <h4>⚠️ Over DTNI Limit</h4>
+                    <p>Request exceeds 40% installment capacity</p>
+                    <div class="amount">$500 for 3 months</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loan Application Form -->
+        <div class="demo-section">
+            <h2>📝 Loan Application</h2>
+            <form id="loanForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="amount">Loan Amount ($)</label>
+                        <input type="number" id="amount" min="50" max="100000" step="1" value="200">
+                    </div>
+                    <div class="form-group">
+                        <label for="termDays">Term (Days)</label>
+                        <select id="termDays">
+                            <option value="90">3 months (90 days)</option>
+                            <option value="180">6 months (180 days)</option>
+                            <option value="270">9 months (270 days)</option>
+                            <option value="360" selected>12 months (360 days)</option>
+                            <option value="540">18 months (540 days)</option>
+                            <option value="720">24 months (720 days)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="interestRate">Interest Rate (%)</label>
+                        <input type="number" id="interestRate" min="0" max="10" step="0.5" value="5">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="purpose">Loan Purpose</label>
+                    <textarea id="purpose" rows="3" placeholder="Describe what you'll use this loan for...">Business expansion and equipment purchase</textarea>
+                </div>
+            </form>
+
+            <div style="margin-top: 20px;">
+                <button class="button" onclick="calculateMax()">📊 Calculate Max Loan</button>
+                <button class="button" onclick="validateLoan()">🔍 Validate Loan</button>
+                <button class="button primary" onclick="applyForLoan()">💰 Apply for Loan</button>
+                <button class="button danger" onclick="clearResults()">🗑️ Clear Results</button>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="results"></div>
+
+        <!-- Documentation -->
+        <div class="demo-section">
+            <h2>📚 How It Works</h2>
+            <ol style="line-height: 1.8; color: #374151;">
+                <li><strong>DTNI Calculation:</strong> Net Salary × 40% = Maximum Monthly Installment</li>
+                <li><strong>Reducing Balance:</strong> Uses proper compound interest calculations</li>
+                <li><strong>Tenure Limits:</strong> Cold start (90 days), Government (up to 720 days), Others (up to 360 days)</li>
+                <li><strong>Employment Caps:</strong> Government ($300), Others ($100)</li>
+                <li><strong>Real-time Validation:</strong> Instant feedback before submission</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Test scenarios
+        const scenarios = {
+            1: { amount: 250, termDays: 360, interestRate: 4, purpose: "Government employee loan for home improvement" },
+            2: { amount: 150, termDays: 180, interestRate: 6, purpose: "Private employee loan for education" },
+            3: { amount: 100, termDays: 90, interestRate: 5, purpose: "Cold start loan for business capital" },
+            4: { amount: 500, termDays: 90, interestRate: 8, purpose: "Large loan request to test DTNI limits" }
+        };
+
+        function loadScenario(scenarioId) {
+            const scenario = scenarios[scenarioId];
+            document.getElementById('amount').value = scenario.amount;
+            document.getElementById('termDays').value = scenario.termDays;
+            document.getElementById('interestRate').value = scenario.interestRate;
+            document.getElementById('purpose').value = scenario.purpose;
+            
+            showResult('info', `Scenario ${scenarioId} Loaded`, `Loaded test scenario with $${scenario.amount} for ${scenario.termDays} days at ${scenario.interestRate}% interest.`);
+        }
+
+        async function calculateMax() {
+            const termDays = parseInt(document.getElementById('termDays').value);
+            const interestRate = parseFloat(document.getElementById('interestRate').value);
+
+            showLoading('Calculating maximum loan amount...');
+
+            try {
+                const response = await fetch('/api/loans/calculate-max', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer demo-token' // Demo token
+                    },
+                    body: JSON.stringify({ termDays, interestRate })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult('success', 'Maximum Loan Calculation', result.data);
+                } else {
+                    showResult('error', 'Calculation Failed', result.message);
+                }
+            } catch (error) {
+                showResult('error', 'Network Error', 'Failed to connect to API. Make sure the server is running.');
+            }
+        }
+
+        async function validateLoan() {
+            const amount = parseFloat(document.getElementById('amount').value);
+            const termDays = parseInt(document.getElementById('termDays').value);
+            const interestRate = parseFloat(document.getElementById('interestRate').value);
+
+            showLoading('Validating loan application...');
+
+            try {
+                const response = await fetch('/api/loans/validate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer demo-token' // Demo token
+                    },
+                    body: JSON.stringify({ amount, termDays, interestRate })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    const status = result.approved ? 'success' : 'warning';
+                    showResult(status, 'Loan Validation Result', result);
+                } else {
+                    showResult('error', 'Validation Failed', result.message);
+                }
+            } catch (error) {
+                showResult('error', 'Network Error', 'Failed to connect to API. Make sure the server is running.');
+            }
+        }
+
+        async function applyForLoan() {
+            const amount = parseFloat(document.getElementById('amount').value);
+            const termDays = parseInt(document.getElementById('termDays').value);
+            const interestRate = parseFloat(document.getElementById('interestRate').value);
+            const purpose = document.getElementById('purpose').value;
+
+            if (!purpose || purpose.length < 5) {
+                showResult('error', 'Validation Error', 'Please provide a loan purpose (minimum 5 characters)');
+                return;
+            }
+
+            showLoading('Submitting loan application...');
+
+            try {
+                const response = await fetch('/api/loans/apply', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer demo-token' // Demo token
+                    },
+                    body: JSON.stringify({ amount, termDays, interestRate, purpose })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult('success', 'Loan Application Submitted', result);
+                } else {
+                    showResult('error', 'Application Failed', result);
+                }
+            } catch (error) {
+                showResult('error', 'Network Error', 'Failed to connect to API. Make sure the server is running.');
+            }
+        }
+
+        function showLoading(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <div class="result-box" style="display: block;">
+                    <h3><span class="loading"></span>${message}</h3>
+                </div>
+            `;
+        }
+
+        function showResult(type, title, data) {
+            const resultsDiv = document.getElementById('results');
+            const dataStr = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+            
+            resultsDiv.innerHTML = `
+                <div class="result-box ${type}" style="display: block;">
+                    <h3>${title}</h3>
+                    <pre>${dataStr}</pre>
+                </div>
+            `;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // Show initial message
+        showResult('info', 'Demo Ready', 'Select a test scenario or enter your own loan parameters to test the DTNI validation system.');
+    </script>
+</body>
+</html>
