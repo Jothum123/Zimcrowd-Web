@@ -40,6 +40,14 @@ class ZimScoreService {
             fair: 0.40,        // ≤40% DTNI: 60% of limit (civil servants only)
             poor: 0.50         // >40% DTNI: Denied
         };
+
+        // Loan Tenure Limits
+        this.LOAN_TENURE = {
+            minDays: 30,       // Minimum: 1 month
+            maxDays: 720,      // Maximum: 24 months
+            minMonths: 1,
+            maxMonths: 24
+        };
         
         // Score factor weights
         this.WEIGHTS = {
@@ -583,6 +591,27 @@ class ZimScoreService {
      */
     async validateLoanAgainstDTNI(userId, requestedAmount, interestRate, termDays) {
         try {
+            // Validate loan tenure
+            if (termDays < this.LOAN_TENURE.minDays) {
+                return {
+                    approved: false,
+                    reason: 'TENURE_TOO_SHORT',
+                    message: `Minimum loan tenure is ${this.LOAN_TENURE.minMonths} month (${this.LOAN_TENURE.minDays} days)`,
+                    minTenure: this.LOAN_TENURE.minDays,
+                    maxTenure: this.LOAN_TENURE.maxDays
+                };
+            }
+
+            if (termDays > this.LOAN_TENURE.maxDays) {
+                return {
+                    approved: false,
+                    reason: 'TENURE_TOO_LONG',
+                    message: `Maximum loan tenure is ${this.LOAN_TENURE.maxMonths} months (${this.LOAN_TENURE.maxDays} days)`,
+                    minTenure: this.LOAN_TENURE.minDays,
+                    maxTenure: this.LOAN_TENURE.maxDays
+                };
+            }
+
             // Get user's employment details
             const { data: employmentDetails } = await supabase
                 .from('employment_details')
