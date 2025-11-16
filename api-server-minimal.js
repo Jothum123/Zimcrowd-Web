@@ -74,7 +74,8 @@ const routes = {
     notifications: loadRoute('./routes/notifications', 'Notifications'),
     market: loadRoute('./routes/market', 'Market'),
     analytics: loadRoute('./routes/analytics', 'Analytics'),
-    referrals: loadRoute('./routes/referrals', 'Referrals')
+    referrals: loadRoute('./routes/referrals', 'Referrals'),
+    zimscore: loadRoute('./routes/zimscore', 'ZimScore')
 };
 
 console.log('='.repeat(60) + '\n');
@@ -116,6 +117,7 @@ if (routes.notifications) app.use('/api/notifications', routes.notifications);
 if (routes.market) app.use('/api/market', routes.market);
 if (routes.analytics) app.use('/api/analytics', routes.analytics);
 if (routes.referrals) app.use('/api/referrals', routes.referrals);
+if (routes.zimscore) app.use('/api/zimscore', routes.zimscore);
 
 // =====================================================
 // ERROR HANDLING
