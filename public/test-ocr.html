@@ -238,6 +238,29 @@
             <input type="file" id="fileInput" accept="image/*,application/pdf">
         </div>
 
+        <!-- Face Verification Section -->
+        <div style="margin-top: 30px; padding: 20px; background: #f8f9ff; border-radius: 10px; border: 2px solid #667eea;">
+            <h3 style="color: #667eea; margin-bottom: 15px;">👤 Face Verification (Optional)</h3>
+            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
+                Upload a selfie to compare with the ID photo and verify identity
+            </p>
+            
+            <div class="upload-area" id="selfieUploadArea" style="margin-bottom: 15px; padding: 30px;">
+                <div class="upload-icon">🤳</div>
+                <div class="upload-text">Upload Selfie Photo</div>
+                <div class="upload-hint">JPG or PNG only (Max 5MB)</div>
+                <input type="file" id="selfieInput" accept="image/jpeg,image/jpg,image/png">
+            </div>
+
+            <div class="preview" id="selfiePreview" style="display: none;">
+                <img id="selfiePreviewImage" alt="Selfie Preview">
+            </div>
+
+            <button class="btn-primary" id="compareFacesBtn" disabled style="width: 100%; margin-top: 10px;">
+                🔍 Compare Faces
+            </button>
+        </div>
+
         <div class="preview" id="preview">
             <img id="previewImage" alt="Preview">
         </div>
@@ -268,6 +291,14 @@
                 <pre id="fullText" style="white-space: pre-wrap; color: #666;"></pre>
             </div>
         </div>
+
+        <!-- Face Verification Results -->
+        <div class="results" id="faceResults" style="display: none;">
+            <div class="result-section">
+                <h3>👤 Face Verification Results</h3>
+                <div id="faceVerificationData"></div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -278,6 +309,7 @@
         
         console.log('🔧 OCR Test Page - API URL:', API_URL);
         let selectedFile = null;
+        let selectedSelfie = null;
 
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
@@ -290,8 +322,19 @@
         const errorDiv = document.getElementById('error');
         const successDiv = document.getElementById('success');
 
+        // Face verification elements
+        const selfieUploadArea = document.getElementById('selfieUploadArea');
+        const selfieInput = document.getElementById('selfieInput');
+        const selfiePreview = document.getElementById('selfiePreview');
+        const selfiePreviewImage = document.getElementById('selfiePreviewImage');
+        const compareFacesBtn = document.getElementById('compareFacesBtn');
+        const faceResults = document.getElementById('faceResults');
+
         // Upload area click
         uploadArea.addEventListener('click', () => fileInput.click());
+        
+        // Selfie upload area click
+        selfieUploadArea.addEventListener('click', () => selfieInput.click());
 
         // File selection
         fileInput.addEventListener('change', handleFileSelect);
@@ -401,14 +444,166 @@
         // Clear button
         clearBtn.addEventListener('click', () => {
             selectedFile = null;
+            selectedSelfie = null;
             fileInput.value = '';
+            selfieInput.value = '';
             preview.style.display = 'none';
+            selfiePreview.style.display = 'none';
             uploadArea.style.display = 'block';
             results.style.display = 'none';
+            faceResults.style.display = 'none';
             processBtn.disabled = true;
+            compareFacesBtn.disabled = true;
             hideError();
             hideSuccess();
         });
+
+        // Selfie file selection
+        selfieInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleSelfieFile(file);
+            }
+        });
+
+        function handleSelfieFile(file) {
+            // Validate file
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+            if (!validTypes.includes(file.type)) {
+                showError(`Invalid file type: ${file.type}. Please upload JPG or PNG for selfie.`);
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                showError('Selfie file size must be less than 5MB');
+                return;
+            }
+
+            selectedSelfie = file;
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                selfiePreviewImage.src = e.target.result;
+                selfiePreview.style.display = 'block';
+                selfieUploadArea.style.display = 'none';
+                
+                // Enable compare button if both images are selected
+                if (selectedFile && selectedSelfie) {
+                    compareFacesBtn.disabled = false;
+                }
+            };
+            reader.readAsDataURL(file);
+
+            hideError();
+        }
+
+        // Compare faces button
+        compareFacesBtn.addEventListener('click', async () => {
+            if (!selectedFile || !selectedSelfie) return;
+
+            loading.style.display = 'block';
+            faceResults.style.display = 'none';
+            compareFacesBtn.disabled = true;
+            hideError();
+            hideSuccess();
+
+            try {
+                const formData = new FormData();
+                formData.append('idImage', selectedFile);
+                formData.append('selfieImage', selectedSelfie);
+
+                const response = await fetch(`${API_URL}/api/face/compare`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    displayFaceResults(result.data);
+                    if (result.data.isMatch) {
+                        showSuccess(`✅ FACE MATCH! Confidence: ${result.data.confidence}%`);
+                    } else {
+                        showError(`❌ NO MATCH. Confidence: ${result.data.confidence}%`);
+                    }
+                } else {
+                    showError(result.message || 'Failed to compare faces');
+                }
+            } catch (error) {
+                showError('Error connecting to server: ' + error.message);
+            } finally {
+                loading.style.display = 'none';
+                compareFacesBtn.disabled = false;
+            }
+        });
+
+        function displayFaceResults(data) {
+            const matchStatus = data.isMatch ? '✅ MATCH' : '❌ NO MATCH';
+            const matchColor = data.isMatch ? '#10b981' : '#ef4444';
+            const resultClass = data.details?.result === 'PASS' ? 'success' : 'error';
+
+            const html = `
+                <div class="field" style="background: ${matchColor}20; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <h4 style="color: ${matchColor}; font-size: 24px; margin-bottom: 10px;">${matchStatus}</h4>
+                    <p style="font-size: 18px; font-weight: bold;">Confidence: ${data.confidence}%</p>
+                    <p style="color: #666; margin-top: 10px;">${data.recommendation}</p>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Verification Result:</span>
+                    <span class="field-value" style="color: ${matchColor}; font-weight: bold;">${data.details?.result}</span>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Threshold:</span>
+                    <span class="field-value">${data.details?.threshold}</span>
+                </div>
+
+                <h4 style="margin-top: 20px; color: #667eea;">ID Photo Analysis:</h4>
+                <div class="field">
+                    <span class="field-label">Age:</span>
+                    <span class="field-value">${data.idFace?.attributes?.age || 'N/A'}</span>
+                </div>
+                <div class="field">
+                    <span class="field-label">Gender:</span>
+                    <span class="field-value">${data.idFace?.attributes?.gender || 'N/A'}</span>
+                </div>
+                <div class="field">
+                    <span class="field-label">Blur Level:</span>
+                    <span class="field-value">${data.idFace?.quality?.blur || 'N/A'}</span>
+                </div>
+                <div class="field">
+                    <span class="field-label">Exposure:</span>
+                    <span class="field-value">${data.idFace?.quality?.exposure || 'N/A'}</span>
+                </div>
+
+                <h4 style="margin-top: 20px; color: #667eea;">Selfie Analysis:</h4>
+                <div class="field">
+                    <span class="field-label">Age:</span>
+                    <span class="field-value">${data.selfieFace?.attributes?.age || 'N/A'}</span>
+                </div>
+                <div class="field">
+                    <span class="field-label">Gender:</span>
+                    <span class="field-value">${data.selfieFace?.attributes?.gender || 'N/A'}</span>
+                </div>
+                <div class="field">
+                    <span class="field-label">Smile:</span>
+                    <span class="field-value">${data.selfieFace?.attributes?.smile ? (data.selfieFace.attributes.smile * 100).toFixed(0) + '%' : 'N/A'}</span>
+                </div>
+                <div class="field">
+                    <span class="field-label">Blur Level:</span>
+                    <span class="field-value">${data.selfieFace?.quality?.blur || 'N/A'}</span>
+                </div>
+                <div class="field">
+                    <span class="field-label">Exposure:</span>
+                    <span class="field-value">${data.selfieFace?.quality?.exposure || 'N/A'}</span>
+                </div>
+            `;
+
+            document.getElementById('faceVerificationData').innerHTML = html;
+            faceResults.style.display = 'block';
+        }
 
         function displayResults(data) {
             // Display extracted fields
