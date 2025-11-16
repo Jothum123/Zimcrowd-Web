@@ -774,6 +774,131 @@ router.post('/upload-document-with-ocr', authenticateUser, upload.single('docume
 });
 
 /**
+ * @route   POST /api/profile-setup/resubmit-bank-statement
+ * @desc    Resubmit bank statement to recalculate ZimScore and loan limits
+ * @access  Private
+ */
+router.post('/resubmit-bank-statement', authenticateUser, upload.single('document'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No bank statement file provided'
+            });
+        }
+
+        console.log(`🔄 Resubmitting bank statement for user ${req.user.id}...`);
+
+        // Process document with OCR
+        let ocrData = null;
+        if (ocrService) {
+            try {
+                const analysis = await ocrService.analyzeDocument(req.file.buffer, 'bank_statement');
+                if (analysis.success) {
+                    ocrData = {
+                        extracted_fields: analysis.parsedFields,
+                        full_text: analysis.fullText,
+                        confidence: analysis.overallConfidence,
+                        ocr_engine: 'Azure Document Intelligence'
+                    };
+                    console.log('✅ OCR processing complete');
+                }
+            } catch (ocrError) {
+                console.warn('⚠️  OCR processing failed:', ocrError.message);
+                return res.status(400).json({
+                    success: false,
+                    message: 'Failed to process bank statement',
+                    error: ocrError.message
+                });
+            }
+        }
+
+        if (!ocrData || !ocrData.extracted_fields) {
+            return res.status(400).json({
+                success: false,
+                message: 'Unable to extract data from bank statement'
+            });
+        }
+
+        // Get user's employment type
+        const { data: userData } = await supabase
+            .from('users')
+            .select('employment_type')
+            .eq('id', req.user.id)
+            .single();
+
+        const employmentType = userData?.employment_type;
+
+        if (!employmentType) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please set your employment type first',
+                nextStep: 'POST /api/profile-setup/employment'
+            });
+        }
+
+        // Extract financial data from OCR
+        const financialData = zimScoreService.extractFinancialDataFromOCR({
+            openingBalance: parseFloat(ocrData.extracted_fields.openingBalance) || 0,
+            closingBalance: parseFloat(ocrData.extracted_fields.closingBalance) || 0,
+            totalCredits: parseFloat(ocrData.extracted_fields.totalCredits) || 0,
+            totalDebits: parseFloat(ocrData.extracted_fields.totalDebits) || 0,
+            statementPeriod: ocrData.extracted_fields.statementPeriod,
+            fullText: ocrData.full_text
+        });
+
+        // Recalculate ZimScore with new bank data
+        const zimScoreResult = await zimScoreService.calculateColdStartLimit(
+            req.user.id,
+            employmentType,
+            financialData
+        );
+
+        // Update user_zimscores with new DTNI data
+        const { error: updateError } = await supabase
+            .from('user_zimscores')
+            .update({
+                max_loan_amount: zimScoreResult.coldStartLimit,
+                dtni_ratio: zimScoreResult.installmentUtilization,
+                dtni_status: zimScoreResult.status,
+                last_calculated: new Date().toISOString()
+            })
+            .eq('user_id', req.user.id);
+
+        if (updateError) {
+            console.error('Failed to update ZimScore:', updateError);
+        }
+
+        res.json({
+            success: true,
+            message: 'Bank statement resubmitted and ZimScore recalculated',
+            data: {
+                ocrData,
+                zimScore: {
+                    maxLoanAmount: zimScoreResult.coldStartLimit,
+                    dtni: {
+                        netSalary: zimScoreResult.netSalary,
+                        maxInstallment: zimScoreResult.maxInstallment,
+                        existingInstallment: zimScoreResult.existingInstallment,
+                        availableInstallment: zimScoreResult.availableInstallment,
+                        installmentUtilization: (zimScoreResult.installmentUtilization * 100).toFixed(1) + '%',
+                        status: zimScoreResult.status
+                    }
+                },
+                message: `New loan limit: $${zimScoreResult.coldStartLimit} (based on ${(zimScoreResult.installmentUtilization * 100).toFixed(1)}% installment utilization)`
+            }
+        });
+    } catch (error) {
+        console.error('Resubmit bank statement error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to resubmit bank statement',
+            error: error.message
+        });
+    }
+});
+
+/**
  * @route   POST /api/profile-setup/upload-document-with-ocr-test
  * @desc    Upload KYC document with OCR (TEST MODE - NO AUTH)
  * @access  Public (for testing only)

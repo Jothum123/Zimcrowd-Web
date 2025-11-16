@@ -572,6 +572,149 @@ class ZimScoreService {
     }
 
     /**
+     * Validate loan application against DTNI limits
+     * Checks if user can afford the requested loan amount
+     * 
+     * @param {string} userId - User ID
+     * @param {number} requestedAmount - Requested loan amount
+     * @param {number} interestRate - Interest rate (0-10%)
+     * @param {number} termDays - Loan term in days
+     * @returns {Promise<Object>} Validation result
+     */
+    async validateLoanAgainstDTNI(userId, requestedAmount, interestRate, termDays) {
+        try {
+            // Get user's employment details
+            const { data: employmentDetails } = await supabase
+                .from('employment_details')
+                .select('monthly_income, employment_type')
+                .eq('user_id', userId)
+                .single();
+
+            if (!employmentDetails || !employmentDetails.monthly_income) {
+                return {
+                    approved: false,
+                    reason: 'NO_INCOME_DATA',
+                    message: 'Please update your employment details with current monthly income',
+                    requiresBankStatement: true
+                };
+            }
+
+            const netSalary = employmentDetails.monthly_income;
+            const employmentType = employmentDetails.employment_type;
+
+            // Get user's existing active loans
+            const { data: activeLoans } = await supabase
+                .from('loans')
+                .select('amount, interest_rate, term_days')
+                .eq('user_id', userId)
+                .in('status', ['active', 'approved'])
+                .order('created_at', { ascending: false });
+
+            // Calculate existing monthly installments
+            let existingMonthlyInstallment = 0;
+            if (activeLoans && activeLoans.length > 0) {
+                activeLoans.forEach(loan => {
+                    const totalAmount = loan.amount * (1 + loan.interest_rate / 100);
+                    const termMonths = (loan.term_days || 30) / 30;
+                    existingMonthlyInstallment += totalAmount / termMonths;
+                });
+            }
+
+            // Calculate new loan monthly installment
+            const newLoanTotal = requestedAmount * (1 + interestRate / 100);
+            const newLoanTermMonths = termDays / 30;
+            const newLoanInstallment = newLoanTotal / newLoanTermMonths;
+
+            // Calculate total installment if loan is approved
+            const totalInstallment = existingMonthlyInstallment + newLoanInstallment;
+
+            // DTNI Check: Net Salary × 40% = Maximum Total Installment
+            const maxTotalInstallment = netSalary * 0.40;
+            const installmentUtilization = totalInstallment / maxTotalInstallment;
+
+            // Check if within DTNI limit
+            if (installmentUtilization > 1.0) {
+                // Over limit
+                const maxAffordableInstallment = maxTotalInstallment - existingMonthlyInstallment;
+                const maxAffordableLoan = (maxAffordableInstallment * newLoanTermMonths) / (1 + interestRate / 100);
+
+                return {
+                    approved: false,
+                    reason: 'EXCEEDS_DTNI_LIMIT',
+                    message: 'Requested loan exceeds your 40% installment capacity',
+                    dtni: {
+                        netSalary,
+                        maxInstallment: maxTotalInstallment,
+                        existingInstallment: existingMonthlyInstallment,
+                        newLoanInstallment,
+                        totalInstallment,
+                        installmentUtilization: (installmentUtilization * 100).toFixed(1) + '%',
+                        maxAffordableLoan: Math.floor(maxAffordableLoan)
+                    },
+                    suggestion: `Maximum you can borrow: $${Math.floor(maxAffordableLoan)}`,
+                    requiresBankStatement: installmentUtilization > 1.2 // If way over, require new statement
+                };
+            }
+
+            // Check ZimScore limit
+            const { data: zimScore } = await supabase
+                .from('user_zimscores')
+                .select('max_loan_amount, score_based_limit, cold_start_active')
+                .eq('user_id', userId)
+                .single();
+
+            if (zimScore) {
+                const effectiveLimit = zimScore.cold_start_active ? 
+                    zimScore.max_loan_amount : 
+                    zimScore.score_based_limit;
+
+                if (requestedAmount > effectiveLimit) {
+                    return {
+                        approved: false,
+                        reason: 'EXCEEDS_ZIMSCORE_LIMIT',
+                        message: `Requested amount exceeds your ZimScore limit of $${effectiveLimit}`,
+                        dtni: {
+                            netSalary,
+                            maxInstallment: maxTotalInstallment,
+                            existingInstallment: existingMonthlyInstallment,
+                            newLoanInstallment,
+                            totalInstallment,
+                            installmentUtilization: (installmentUtilization * 100).toFixed(1) + '%'
+                        },
+                        suggestion: `Maximum you can borrow: $${effectiveLimit}`,
+                        requiresBankStatement: false
+                    };
+                }
+            }
+
+            // Approved!
+            return {
+                approved: true,
+                message: 'Loan application approved based on DTNI and ZimScore',
+                dtni: {
+                    netSalary,
+                    maxInstallment: maxTotalInstallment,
+                    existingInstallment: existingMonthlyInstallment,
+                    newLoanInstallment,
+                    totalInstallment,
+                    installmentUtilization: (installmentUtilization * 100).toFixed(1) + '%',
+                    remainingCapacity: maxTotalInstallment - totalInstallment
+                },
+                employmentType
+            };
+
+        } catch (error) {
+            console.error('Error validating loan against DTNI:', error);
+            return {
+                approved: false,
+                reason: 'VALIDATION_ERROR',
+                message: 'Unable to validate loan application. Please try again.',
+                error: error.message
+            };
+        }
+    }
+
+    /**
      * Calculate star rating from internal score
      * @param {number} scoreValue - Internal score (30-85)
      * @returns {number} Star rating (1.0-5.0)
