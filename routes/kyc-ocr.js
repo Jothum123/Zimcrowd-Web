@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const VisionOCRService = require('../services/vision-ocr.service');
+const AzureFaceService = require('../services/azure-face.service');
 
 // Import auth middleware with error handling
 let authenticateUser;
@@ -41,6 +42,17 @@ try {
 } catch (error) {
     console.error('⚠️  OCR Service initialization failed:', error.message);
     console.log('📝 OCR routes will still load but may not function without credentials');
+}
+
+// Initialize Face service
+let faceService;
+try {
+    faceService = new AzureFaceService();
+    if (faceService.isAvailable()) {
+        console.log('✅ Face Service integrated with OCR');
+    }
+} catch (error) {
+    console.warn('⚠️  Face Service not available for OCR:', error.message);
 }
 
 /**
@@ -133,6 +145,25 @@ router.post('/analyze', upload.single('document'), async (req, res) => {
                 success: false,
                 message: analysis.message || 'Failed to analyze document'
             });
+        }
+
+        // Enhance with Azure Face detection if available and it's an ID
+        if (faceService && faceService.isAvailable() && (documentType === 'national_id' || documentType === 'id_back')) {
+            try {
+                console.log('🔍 Detecting face with Azure Face API...');
+                const faceResult = await faceService.analyzeIDPhoto(imageBuffer);
+                
+                if (faceResult.success && faceResult.faceDetected) {
+                    analysis.faceDetected = true;
+                    analysis.faceAttributes = faceResult.attributes;
+                    analysis.faceQuality = faceResult.quality;
+                    analysis.qualityAcceptable = faceResult.isGoodQuality;
+                    console.log('✅ Face detected with Azure Face API');
+                    console.log(`   Age: ${faceResult.attributes.age}, Gender: ${faceResult.attributes.gender}`);
+                }
+            } catch (faceError) {
+                console.warn('⚠️  Azure Face detection failed, using OCR service result:', faceError.message);
+            }
         }
 
         res.json({
