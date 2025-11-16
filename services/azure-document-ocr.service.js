@@ -98,7 +98,137 @@ class AzureDocumentOCRService {
     }
 
     /**
-     * Parse Zimbabwe ID fields from text
+     * Parse Zimbabwe ID BACK fields from text
+     */
+    parseZimbabweIDBackFromText(text) {
+        const fields = {
+            address: null,
+            district: null,
+            province: null,
+            chiefName: null,
+            signature: null,
+            registrarSignature: null,
+            dateIssued: null
+        };
+
+        // Address (multiple lines after ADDRESS or RESIDENTIAL ADDRESS)
+        const addressMatch = text.match(/(?:RESIDENTIAL\s+)?ADDRESS[:\s]*\n?\s*([A-Z0-9\s,.-]+?)(?=\n[A-Z]+:|$)/i);
+        if (addressMatch) {
+            fields.address = addressMatch[1].trim().replace(/\s+/g, ' ');
+        }
+
+        // District
+        const districtMatch = text.match(/DISTRICT[:\s]*\n?\s*([A-Z\s]+)/i);
+        if (districtMatch) {
+            fields.district = districtMatch[1].trim();
+        }
+
+        // Province
+        const provinceMatch = text.match(/PROVINCE[:\s]*\n?\s*([A-Z\s]+)/i);
+        if (provinceMatch) {
+            fields.province = provinceMatch[1].trim();
+        }
+
+        // Chief Name
+        const chiefMatch = text.match(/CHIEF[:\s]*\n?\s*([A-Z\s]+)/i);
+        if (chiefMatch) {
+            fields.chiefName = chiefMatch[1].trim();
+        }
+
+        // Date Issued (if different from front)
+        const dateMatch = text.match(/(?:DATE\s+(?:OF\s+)?ISSUE|ISSUED)[:\s]*\n?\s*(\d{2}\/\d{2}\/\d{4})/i);
+        if (dateMatch) {
+            fields.dateIssued = dateMatch[1];
+        }
+
+        return fields;
+    }
+
+    /**
+     * Parse bank statement information from text
+     */
+    parseBankStatementFromText(text) {
+        const fields = {
+            bankName: null,
+            accountNumber: null,
+            accountHolder: null,
+            statementPeriod: null,
+            openingBalance: null,
+            closingBalance: null,
+            totalCredits: null,
+            totalDebits: null,
+            currency: null,
+            branch: null,
+            accountType: null
+        };
+
+        // Bank Name (common Zimbabwe banks)
+        const bankMatch = text.match(/(CBZ|CABS|STEWARD|STANBIC|STANDARD\s+CHARTERED|FBC|NMB|ZB\s+BANK|ECOBANK|NEDBANK)/i);
+        if (bankMatch) {
+            fields.bankName = bankMatch[1].trim();
+        }
+
+        // Account Number (various formats)
+        const accountMatch = text.match(/(?:ACCOUNT\s+(?:NO|NUMBER|#)[:\s]*|A\/C[:\s]*)(\d{8,16})/i);
+        if (accountMatch) {
+            fields.accountNumber = accountMatch[1];
+        }
+
+        // Account Holder Name
+        const holderMatch = text.match(/(?:ACCOUNT\s+HOLDER|NAME)[:\s]*\n?\s*([A-Z\s]+?)(?=\n|ACCOUNT)/i);
+        if (holderMatch) {
+            fields.accountHolder = holderMatch[1].trim();
+        }
+
+        // Statement Period
+        const periodMatch = text.match(/(?:STATEMENT\s+PERIOD|FROM)[:\s]*(\d{2}\/\d{2}\/\d{4})\s*(?:TO|-)\s*(\d{2}\/\d{2}\/\d{4})/i);
+        if (periodMatch) {
+            fields.statementPeriod = `${periodMatch[1]} to ${periodMatch[2]}`;
+        }
+
+        // Opening Balance
+        const openingMatch = text.match(/(?:OPENING|PREVIOUS)\s+BALANCE[:\s]*([A-Z]{3})?\s*([\d,]+\.\d{2})/i);
+        if (openingMatch) {
+            fields.currency = openingMatch[1] || 'USD';
+            fields.openingBalance = openingMatch[2].replace(/,/g, '');
+        }
+
+        // Closing Balance
+        const closingMatch = text.match(/(?:CLOSING|CURRENT)\s+BALANCE[:\s]*([A-Z]{3})?\s*([\d,]+\.\d{2})/i);
+        if (closingMatch) {
+            if (!fields.currency) fields.currency = closingMatch[1] || 'USD';
+            fields.closingBalance = closingMatch[2].replace(/,/g, '');
+        }
+
+        // Total Credits
+        const creditsMatch = text.match(/(?:TOTAL\s+)?CREDITS?[:\s]*([A-Z]{3})?\s*([\d,]+\.\d{2})/i);
+        if (creditsMatch) {
+            fields.totalCredits = creditsMatch[2].replace(/,/g, '');
+        }
+
+        // Total Debits
+        const debitsMatch = text.match(/(?:TOTAL\s+)?DEBITS?[:\s]*([A-Z]{3})?\s*([\d,]+\.\d{2})/i);
+        if (debitsMatch) {
+            fields.totalDebits = debitsMatch[2].replace(/,/g, '');
+        }
+
+        // Branch
+        const branchMatch = text.match(/BRANCH[:\s]*([A-Z\s]+?)(?=\n|$)/i);
+        if (branchMatch) {
+            fields.branch = branchMatch[1].trim();
+        }
+
+        // Account Type
+        const typeMatch = text.match(/(SAVINGS|CURRENT|CHEQUE|TRANSMISSION)/i);
+        if (typeMatch) {
+            fields.accountType = typeMatch[1].trim();
+        }
+
+        return fields;
+    }
+
+    /**
+     * Parse Zimbabwe ID FRONT fields from text
      */
     parseZimbabweIDFromText(text) {
         const fields = {
@@ -167,21 +297,36 @@ class AzureDocumentOCRService {
     }
 
     /**
-     * Parse Zimbabwe ID fields from Azure result
+     * Detect document type from text
+     */
+    detectDocumentTypeFromText(text) {
+        // Bank Statement
+        if (text.match(/BANK\s+STATEMENT|ACCOUNT\s+STATEMENT|STATEMENT\s+OF\s+ACCOUNT/i)) {
+            return 'bank_statement';
+        }
+        
+        // ID Back (has address, district, province)
+        if (text.match(/RESIDENTIAL\s+ADDRESS|DISTRICT|PROVINCE|CHIEF/i) && 
+            !text.match(/ID\s+NUMBER|FIRST\s+NAME|SURNAME/i)) {
+            return 'id_back';
+        }
+        
+        // ID Front (has ID number, names, DOB)
+        if (text.match(/ID\s+NUMBER|NATIONAL\s+REGISTRATION/i)) {
+            return 'id_front';
+        }
+        
+        return 'unknown';
+    }
+
+    /**
+     * Parse document fields based on type
      */
     parseIDFields(azureFields, fullText) {
-        const fields = {
-            idNumber: null,
-            firstName: null,
-            lastName: null,
-            dateOfBirth: null,
-            placeOfBirth: null,
-            dateOfIssue: null,
-            villageOfOrigin: null,
-            address: null,
-            sex: null,
-            nationality: null
-        };
+        // Detect document type
+        const docType = this.detectDocumentTypeFromText(fullText || '');
+        
+        let fields = {};
 
         // Try Azure fields first
         if (azureFields) {
@@ -214,17 +359,29 @@ class AzureDocumentOCRService {
             }
         }
 
-        // Fallback to text parsing for missing fields
+        // Fallback to text parsing based on document type
         if (fullText) {
-            const textFields = this.parseZimbabweIDFromText(fullText);
+            let textFields = {};
+            
+            if (docType === 'bank_statement') {
+                textFields = this.parseBankStatementFromText(fullText);
+            } else if (docType === 'id_back') {
+                textFields = this.parseZimbabweIDBackFromText(fullText);
+            } else {
+                // Default to ID front
+                textFields = this.parseZimbabweIDFromText(fullText);
+            }
             
             // Fill in missing fields from text parsing
-            Object.keys(fields).forEach(key => {
+            Object.keys(textFields).forEach(key => {
                 if (!fields[key] && textFields[key]) {
                     fields[key] = textFields[key];
                 }
             });
         }
+
+        // Add document type to fields
+        fields.documentType = docType;
 
         return fields;
     }
