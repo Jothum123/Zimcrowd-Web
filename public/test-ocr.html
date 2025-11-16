@@ -323,9 +323,10 @@
         }
 
         function handleFile(file) {
-            // Validate file
-            if (!file.type.startsWith('image/')) {
-                showError('Please select an image file');
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+            if (!validTypes.includes(file.type)) {
+                showError(`Invalid file type: ${file.type}. Please upload JPG, PNG, WEBP, or PDF files.`);
                 return;
             }
 
@@ -337,14 +338,23 @@
             selectedFile = file;
 
             // Show preview
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                previewImage.src = e.target.result;
+            if (file.type === 'application/pdf') {
+                // For PDFs, show a placeholder
+                previewImage.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="%23f0f0f0"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" font-size="16" fill="%23666">PDF Document</text></svg>';
                 preview.style.display = 'block';
                 uploadArea.style.display = 'none';
                 processBtn.disabled = false;
-            };
-            reader.readAsDataURL(file);
+            } else {
+                // For images, show actual preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImage.src = e.target.result;
+                    preview.style.display = 'block';
+                    uploadArea.style.display = 'none';
+                    processBtn.disabled = false;
+                };
+                reader.readAsDataURL(file);
+            }
 
             hideError();
             hideSuccess();
