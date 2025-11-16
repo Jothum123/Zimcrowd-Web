@@ -197,11 +197,11 @@ class ZimScoreService {
 
             const maxLoanAmount = coldStartResult.coldStartLimit;
             const scoreBasedLimit = this.calculateMaxLoanAmount(score); // Unlocked after first repayment
-            const dtniRatio = coldStartResult.dtniRatio;
+            const installmentUtilization = coldStartResult.installmentUtilization || 0;
             const dtniStatus = coldStartResult.status;
 
             console.log(`✅ Cold Start Score: ${score}/85 (${starRating}⭐) - Risk Level: ${riskLevel}`);
-            console.log(`💰 Cold Start Limit: $${maxLoanAmount} (DTNI: ${(dtniRatio * 100).toFixed(1)}% - ${dtniStatus})`);
+            console.log(`💰 Cold Start Limit: $${maxLoanAmount} (Installment Utilization: ${(installmentUtilization * 100).toFixed(1)}% - ${dtniStatus})`);
             console.log(`📊 Score-based Limit: $${scoreBasedLimit} (unlocks after first repayment)`);
 
             // Save to database
@@ -214,7 +214,7 @@ class ZimScoreService {
                 factors,
                 calculationMethod: 'cold_start',
                 employmentType,
-                dtniRatio,
+                dtniRatio: installmentUtilization,
                 dtniStatus,
                 coldStartActive: true
             });
@@ -242,10 +242,12 @@ class ZimScoreService {
                 coldStartActive: true,
                 employmentType,
                 dtni: {
-                    ratio: dtniRatio,
-                    status: dtniStatus,
-                    monthlyIncome: coldStartResult.monthlyIncome,
-                    monthlyDebt: coldStartResult.monthlyDebt
+                    netSalary: coldStartResult.netSalary,
+                    maxInstallment: coldStartResult.maxInstallment,
+                    existingInstallment: coldStartResult.existingInstallment,
+                    availableInstallment: coldStartResult.availableInstallment,
+                    installmentUtilization: installmentUtilization,
+                    status: dtniStatus
                 }
             };
         } catch (error) {
@@ -436,7 +438,10 @@ class ZimScoreService {
     }
 
     /**
-     * Calculate cold start limit based on DTNI ratio
+     * Calculate cold start limit based on DTNI (Debt-to-Net-Income)
+     * Formula: Net Salary × 40% = Maximum Monthly Installment
+     * Then calculate maximum loan amount from that installment
+     * 
      * @param {string} userId - User ID
      * @param {string} employmentType - Employment type (government, private, business, informal)
      * @param {Object} financialData - Financial data from bank statement
@@ -451,94 +456,116 @@ class ZimScoreService {
                 .eq('user_id', userId)
                 .single();
 
-            const monthlyIncome = employmentDetails?.monthly_income || 0;
+            const netSalary = employmentDetails?.monthly_income || 0;
+
+            if (netSalary === 0) {
+                return {
+                    coldStartLimit: 0,
+                    maxInstallment: 0,
+                    netSalary: 0,
+                    status: 'No income data',
+                    isCivilServant: employmentType === 'government'
+                };
+            }
 
             // Get user's existing debt (active loans)
             const { data: activeLoans } = await supabase
                 .from('loans')
-                .select('amount, interest_rate')
+                .select('amount, interest_rate, term_days')
                 .eq('user_id', userId)
                 .in('status', ['active', 'approved'])
                 .order('created_at', { ascending: false });
 
-            // Calculate total monthly debt obligation
-            let totalMonthlyDebt = 0;
+            // Calculate total existing monthly installment
+            let existingMonthlyInstallment = 0;
             if (activeLoans && activeLoans.length > 0) {
                 activeLoans.forEach(loan => {
-                    // Assume 30-day term for simplicity
+                    // Calculate monthly installment for this loan
                     const totalAmount = loan.amount * (1 + loan.interest_rate / 100);
-                    totalMonthlyDebt += totalAmount;
+                    const termMonths = (loan.term_days || 30) / 30;
+                    const monthlyInstallment = totalAmount / termMonths;
+                    existingMonthlyInstallment += monthlyInstallment;
                 });
             }
 
-            // Calculate DTNI ratio
-            const dtniRatio = monthlyIncome > 0 ? totalMonthlyDebt / monthlyIncome : 0;
+            // DTNI Calculation: Net Salary × 40% = Maximum Total Monthly Installment
+            const maxTotalInstallment = netSalary * 0.40;
 
-            // Determine max cold start limit based on employment type
+            // Available installment capacity = Max Total - Existing
+            const availableInstallment = Math.max(0, maxTotalInstallment - existingMonthlyInstallment);
+
+            // Calculate maximum loan amount from available installment
+            // Assuming 30-day term and average 5% interest for cold start
+            const assumedInterestRate = 0.05; // 5%
+            const assumedTermMonths = 1; // 30 days = 1 month
+            
+            // Loan Amount = (Available Installment × Term) / (1 + Interest Rate)
+            let coldStartLimit = (availableInstallment * assumedTermMonths) / (1 + assumedInterestRate);
+
+            // Apply employment-based caps
             const isCivilServant = employmentType === 'government';
-            const maxLimit = isCivilServant ? 
+            const maxCap = isCivilServant ? 
                 this.COLD_START_LIMITS.government.max : 
                 this.COLD_START_LIMITS.other.max;
-            const maxDTNI = isCivilServant ? 
-                this.COLD_START_LIMITS.government.dtniMax : 
-                this.COLD_START_LIMITS.other.dtniMax;
 
-            // Calculate cold start limit based on DTNI
-            let coldStartLimit = 0;
-            let status = '';
-
-            if (dtniRatio <= this.DTNI_THRESHOLDS.excellent) {
-                // Excellent DTNI (≤20%): Full limit
-                coldStartLimit = maxLimit;
-                status = 'Excellent';
-            } else if (dtniRatio <= this.DTNI_THRESHOLDS.good) {
-                // Good DTNI (≤30%): 80% of limit
-                coldStartLimit = maxLimit * 0.80;
-                status = 'Good';
-            } else if (dtniRatio <= this.DTNI_THRESHOLDS.fair && isCivilServant) {
-                // Fair DTNI (≤40%): 60% of limit (civil servants only)
-                coldStartLimit = maxLimit * 0.60;
-                status = 'Fair';
-            } else if (dtniRatio <= maxDTNI) {
-                // At max DTNI threshold: Minimum limit
-                coldStartLimit = isCivilServant ? 180 : 60; // 60% for civil servants, 60% for others
-                status = 'Limited';
-            } else {
-                // Over max DTNI: Denied
-                coldStartLimit = 0;
-                status = 'Denied - DTNI too high';
-            }
+            // Cap the cold start limit
+            coldStartLimit = Math.min(coldStartLimit, maxCap);
 
             // Round to nearest dollar
             coldStartLimit = Math.round(coldStartLimit);
 
+            // Determine status based on utilization
+            const installmentUtilization = existingMonthlyInstallment / maxTotalInstallment;
+            let status = '';
+            
+            if (installmentUtilization === 0) {
+                status = 'Excellent - No existing debt';
+            } else if (installmentUtilization <= 0.20) {
+                status = 'Excellent - Low debt';
+            } else if (installmentUtilization <= 0.50) {
+                status = 'Good';
+            } else if (installmentUtilization <= 0.80) {
+                status = 'Fair';
+            } else if (installmentUtilization < 1.0) {
+                status = 'Limited';
+            } else {
+                status = 'Denied - At maximum capacity';
+                coldStartLimit = 0;
+            }
+
             console.log(`📊 DTNI Calculation:`);
-            console.log(`   Monthly Income: $${monthlyIncome}`);
-            console.log(`   Monthly Debt: $${totalMonthlyDebt.toFixed(2)}`);
-            console.log(`   DTNI Ratio: ${(dtniRatio * 100).toFixed(1)}%`);
+            console.log(`   Net Salary: $${netSalary}`);
+            console.log(`   Max Total Installment (40%): $${maxTotalInstallment.toFixed(2)}`);
+            console.log(`   Existing Monthly Installment: $${existingMonthlyInstallment.toFixed(2)}`);
+            console.log(`   Available Installment: $${availableInstallment.toFixed(2)}`);
+            console.log(`   Installment Utilization: ${(installmentUtilization * 100).toFixed(1)}%`);
             console.log(`   Employment: ${employmentType} (${isCivilServant ? 'Civil Servant' : 'Other'})`);
-            console.log(`   Max Limit: $${maxLimit}`);
+            console.log(`   Max Cap: $${maxCap}`);
             console.log(`   Cold Start Limit: $${coldStartLimit} (${status})`);
 
             return {
                 coldStartLimit,
-                dtniRatio,
+                maxInstallment: maxTotalInstallment,
+                existingInstallment: existingMonthlyInstallment,
+                availableInstallment,
+                installmentUtilization,
+                netSalary,
                 status,
-                monthlyIncome,
-                monthlyDebt: totalMonthlyDebt,
-                maxLimit,
+                maxCap,
                 isCivilServant
             };
         } catch (error) {
             console.error('Error calculating cold start limit:', error);
             // Fallback to minimum safe limit
             return {
-                coldStartLimit: employmentType === 'government' ? 180 : 60,
-                dtniRatio: 0,
-                status: 'Error - using minimum limit',
-                monthlyIncome: 0,
-                monthlyDebt: 0,
-                maxLimit: employmentType === 'government' ? 300 : 100,
+                coldStartLimit: 0,
+                maxInstallment: 0,
+                existingInstallment: 0,
+                availableInstallment: 0,
+                installmentUtilization: 0,
+                netSalary: 0,
+                status: 'Error - calculation failed',
+                maxCap: employmentType === 'government' ? 300 : 100,
                 isCivilServant: employmentType === 'government'
             };
         }
