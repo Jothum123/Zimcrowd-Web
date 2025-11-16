@@ -43,10 +43,13 @@ class ZimScoreService {
 
         // Loan Tenure Limits
         this.LOAN_TENURE = {
-            minDays: 30,       // Minimum: 1 month
-            maxDays: 720,      // Maximum: 24 months
+            coldStart: 90,              // Cold start: FIXED 3 months (90 days)
+            minDays: 30,                // Minimum after cold start: 1 month
+            maxDaysGovernment: 720,     // Government max: 24 months
+            maxDaysOthers: 360,         // Private/Business/Informal max: 12 months
             minMonths: 1,
-            maxMonths: 24
+            maxMonthsGovernment: 24,
+            maxMonthsOthers: 12
         };
         
         // Score factor weights
@@ -591,28 +594,13 @@ class ZimScoreService {
      */
     async validateLoanAgainstDTNI(userId, requestedAmount, interestRate, termDays) {
         try {
-            // Validate loan tenure
-            if (termDays < this.LOAN_TENURE.minDays) {
-                return {
-                    approved: false,
-                    reason: 'TENURE_TOO_SHORT',
-                    message: `Minimum loan tenure is ${this.LOAN_TENURE.minMonths} month (${this.LOAN_TENURE.minDays} days)`,
-                    minTenure: this.LOAN_TENURE.minDays,
-                    maxTenure: this.LOAN_TENURE.maxDays
-                };
-            }
+            // Get user's ZimScore and employment details first
+            const { data: zimScore } = await supabase
+                .from('user_zimscores')
+                .select('cold_start_active, max_loan_amount, score_based_limit')
+                .eq('user_id', userId)
+                .single();
 
-            if (termDays > this.LOAN_TENURE.maxDays) {
-                return {
-                    approved: false,
-                    reason: 'TENURE_TOO_LONG',
-                    message: `Maximum loan tenure is ${this.LOAN_TENURE.maxMonths} months (${this.LOAN_TENURE.maxDays} days)`,
-                    minTenure: this.LOAN_TENURE.minDays,
-                    maxTenure: this.LOAN_TENURE.maxDays
-                };
-            }
-
-            // Get user's employment details
             const { data: employmentDetails } = await supabase
                 .from('employment_details')
                 .select('monthly_income, employment_type')
@@ -628,8 +616,52 @@ class ZimScoreService {
                 };
             }
 
-            const netSalary = employmentDetails.monthly_income;
             const employmentType = employmentDetails.employment_type;
+            const coldStartActive = zimScore?.cold_start_active !== false; // Default to true if not found
+            const isGovernment = employmentType === 'government';
+
+            // Validate loan tenure based on cold start status
+            if (coldStartActive) {
+                // COLD START: FIXED 3 months (90 days)
+                if (termDays !== this.LOAN_TENURE.coldStart) {
+                    return {
+                        approved: false,
+                        reason: 'COLD_START_TENURE_FIXED',
+                        message: `Cold start loans are fixed at 3 months (90 days). After your first successful repayment, you can choose flexible tenures.`,
+                        requiredTenure: this.LOAN_TENURE.coldStart,
+                        coldStartActive: true
+                    };
+                }
+            } else {
+                // AFTER COLD START: Variable tenure based on employment
+                const maxTenure = isGovernment ? this.LOAN_TENURE.maxDaysGovernment : this.LOAN_TENURE.maxDaysOthers;
+                const maxMonths = isGovernment ? this.LOAN_TENURE.maxMonthsGovernment : this.LOAN_TENURE.maxMonthsOthers;
+
+                if (termDays < this.LOAN_TENURE.minDays) {
+                    return {
+                        approved: false,
+                        reason: 'TENURE_TOO_SHORT',
+                        message: `Minimum loan tenure is ${this.LOAN_TENURE.minMonths} month (${this.LOAN_TENURE.minDays} days)`,
+                        minTenure: this.LOAN_TENURE.minDays,
+                        maxTenure: maxTenure,
+                        employmentType
+                    };
+                }
+
+                if (termDays > maxTenure) {
+                    return {
+                        approved: false,
+                        reason: 'TENURE_TOO_LONG',
+                        message: `Maximum loan tenure for ${employmentType} employees is ${maxMonths} months (${maxTenure} days)`,
+                        minTenure: this.LOAN_TENURE.minDays,
+                        maxTenure: maxTenure,
+                        employmentType,
+                        suggestion: isGovernment ? null : 'Government employees can borrow for up to 24 months'
+                    };
+                }
+            }
+
+            const netSalary = employmentDetails.monthly_income;
 
             // Get user's existing active loans
             const { data: activeLoans } = await supabase
@@ -685,13 +717,7 @@ class ZimScoreService {
                 };
             }
 
-            // Check ZimScore limit
-            const { data: zimScore } = await supabase
-                .from('user_zimscores')
-                .select('max_loan_amount, score_based_limit, cold_start_active')
-                .eq('user_id', userId)
-                .single();
-
+            // Check ZimScore limit (reuse zimScore from earlier or fetch fresh data)
             if (zimScore) {
                 const effectiveLimit = zimScore.cold_start_active ? 
                     zimScore.max_loan_amount : 
