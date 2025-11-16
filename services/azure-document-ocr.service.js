@@ -162,14 +162,14 @@ class AzureDocumentOCRService {
             accountType: null
         };
 
-        // Bank Name (common Zimbabwe banks)
-        const bankMatch = text.match(/(CBZ|CABS|STEWARD|STANBIC|STANDARD\s+CHARTERED|FBC|NMB|ZB\s+BANK|ECOBANK|NEDBANK)/i);
+        // Bank Name (common Zimbabwe banks + GetBucks)
+        const bankMatch = text.match(/(GETBUCKS|CBZ|CABS|STEWARD|STANBIC|STANDARD\s+CHARTERED|FBC|NMB|ZB\s+BANK|ECOBANK|NEDBANK)(?:\s+MICROFINANCE)?\s+BANK/i);
         if (bankMatch) {
             fields.bankName = bankMatch[1].trim();
         }
 
-        // Account Number (various formats)
-        const accountMatch = text.match(/(?:ACCOUNT\s+(?:NO|NUMBER|#)[:\s]*|A\/C[:\s]*)(\d{8,16})/i);
+        // Account Number (various formats including GetBucks format)
+        const accountMatch = text.match(/(?:ACCOUNT\s+(?:NO|NUMBER|#)?[:\s]*|A\/C[:\s]*)(\d{12,18})/i);
         if (accountMatch) {
             fields.accountNumber = accountMatch[1];
         }
@@ -180,36 +180,43 @@ class AzureDocumentOCRService {
             fields.accountHolder = holderMatch[1].trim();
         }
 
-        // Statement Period
-        const periodMatch = text.match(/(?:STATEMENT\s+PERIOD|FROM)[:\s]*(\d{2}\/\d{2}\/\d{4})\s*(?:TO|-)\s*(\d{2}\/\d{2}\/\d{4})/i);
+        // Statement Period (multiple formats)
+        const periodMatch = text.match(/(?:FROM|Period)[:\s]*(\d{1,2}[-\/]\w{3}[-\/]\d{4})\s*(?:TO|To)[:\s]*(\d{1,2}[-\/]\w{3}[-\/]\d{4})/i) ||
+                           text.match(/(?:STATEMENT\s+PERIOD|FROM)[:\s]*(\d{2}\/\d{2}\/\d{4})\s*(?:TO|-)\s*(\d{2}\/\d{2}\/\d{4})/i);
         if (periodMatch) {
             fields.statementPeriod = `${periodMatch[1]} to ${periodMatch[2]}`;
         }
 
-        // Opening Balance
-        const openingMatch = text.match(/(?:OPENING|PREVIOUS)\s+BALANCE[:\s]*([A-Z]{3})?\s*([\d,]+\.\d{2})/i);
+        // Opening Balance (multiple formats)
+        const openingMatch = text.match(/(?:OPENING|PREVIOUS)\s+BALANCE[:\s]*(\d{1,2}\s+\w{3}\s+\d{4})?[:\s]*([A-Z]{3})?\s*([\d,]+\.\d{2})/i);
         if (openingMatch) {
-            fields.currency = openingMatch[1] || 'USD';
-            fields.openingBalance = openingMatch[2].replace(/,/g, '');
+            fields.currency = openingMatch[2] || 'USD';
+            fields.openingBalance = openingMatch[3].replace(/,/g, '');
         }
 
-        // Closing Balance
-        const closingMatch = text.match(/(?:CLOSING|CURRENT)\s+BALANCE[:\s]*([A-Z]{3})?\s*([\d,]+\.\d{2})/i);
+        // Closing Balance (multiple formats)
+        const closingMatch = text.match(/(?:CLOSING|CURRENT)\s+BALANCE[:\s]*(\d{1,2}\s+\w{3}\s+\d{4})?[:\s]*([A-Z]{3})?\s*([\d,]+\.\d{2})/i);
         if (closingMatch) {
-            if (!fields.currency) fields.currency = closingMatch[1] || 'USD';
-            fields.closingBalance = closingMatch[2].replace(/,/g, '');
+            if (!fields.currency) fields.currency = closingMatch[2] || 'USD';
+            fields.closingBalance = closingMatch[3].replace(/,/g, '');
         }
 
-        // Total Credits
-        const creditsMatch = text.match(/(?:TOTAL\s+)?CREDITS?[:\s]*([A-Z]{3})?\s*([\d,]+\.\d{2})/i);
-        if (creditsMatch) {
-            fields.totalCredits = creditsMatch[2].replace(/,/g, '');
-        }
+        // Total Credits and Debits (GetBucks format: "Total Debits And Credits")
+        const totalsMatch = text.match(/TOTAL\s+DEBITS\s+AND\s+CREDITS[:\s]*(\d+\.\d{2})\s+(\d+\.\d{2})/i);
+        if (totalsMatch) {
+            fields.totalDebits = totalsMatch[1];
+            fields.totalCredits = totalsMatch[2];
+        } else {
+            // Standard format
+            const creditsMatch = text.match(/(?:TOTAL\s+)?CREDITS?[:\s]*([A-Z]{3})?\s*([\d,]+\.\d{2})/i);
+            if (creditsMatch) {
+                fields.totalCredits = creditsMatch[2].replace(/,/g, '');
+            }
 
-        // Total Debits
-        const debitsMatch = text.match(/(?:TOTAL\s+)?DEBITS?[:\s]*([A-Z]{3})?\s*([\d,]+\.\d{2})/i);
-        if (debitsMatch) {
-            fields.totalDebits = debitsMatch[2].replace(/,/g, '');
+            const debitsMatch = text.match(/(?:TOTAL\s+)?DEBITS?[:\s]*([A-Z]{3})?\s*([\d,]+\.\d{2})/i);
+            if (debitsMatch) {
+                fields.totalDebits = debitsMatch[2].replace(/,/g, '');
+            }
         }
 
         // Branch
@@ -218,10 +225,18 @@ class AzureDocumentOCRService {
             fields.branch = branchMatch[1].trim();
         }
 
-        // Account Type
-        const typeMatch = text.match(/(SAVINGS|CURRENT|CHEQUE|TRANSMISSION)/i);
+        // Account Type (including SME SAVINGS FCA)
+        const typeMatch = text.match(/(SME\s+SAVINGS|SAVINGS|CURRENT|CHEQUE|TRANSMISSION)/i);
         if (typeMatch) {
             fields.accountType = typeMatch[1].trim();
+        }
+
+        // Currency (if not already set, look for FCA, USD, ZWG, ZWL)
+        if (!fields.currency) {
+            const currencyMatch = text.match(/(?:ACCOUNT\s+CURRENCY|Currency)[:\s]*(FCA|USD|ZWG|ZWL)/i);
+            if (currencyMatch) {
+                fields.currency = currencyMatch[1];
+            }
         }
 
         return fields;
