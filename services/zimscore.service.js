@@ -505,13 +505,17 @@ class ZimScoreService {
             // Available installment capacity = Max Total - Existing
             const availableInstallment = Math.max(0, maxTotalInstallment - existingMonthlyInstallment);
 
-            // Calculate maximum loan amount from available installment
-            // Assuming 30-day term and average 5% interest for cold start
-            const assumedInterestRate = 0.05; // 5%
-            const assumedTermMonths = 1; // 30 days = 1 month
+            // Calculate maximum loan amount from available installment using reducing balance method
+            // For cold start, use fixed 3 months and 5% interest
+            const assumedInterestRate = 0.05; // 5% annual
+            const assumedTermMonths = 3; // Cold start: 3 months
             
-            // Loan Amount = (Available Installment × Term) / (1 + Interest Rate)
-            let coldStartLimit = (availableInstallment * assumedTermMonths) / (1 + assumedInterestRate);
+            // Use the new reducing balance method
+            let coldStartLimit = this.calculateMaxLoanAmount(
+                availableInstallment,
+                assumedInterestRate,
+                assumedTermMonths
+            );
 
             // Apply employment-based caps
             const isCivilServant = employmentType === 'government';
@@ -580,6 +584,62 @@ class ZimScoreService {
                 isCivilServant: employmentType === 'government'
             };
         }
+    }
+
+    /**
+     * Calculate maximum loan amount using reducing balance method
+     * Formula: P = PMT * [(1+r)^n - 1] / [r(1+r)^n]
+     * 
+     * @param {number} maxMonthlyInstallment - Maximum monthly payment user can afford
+     * @param {number} annualInterestRate - Annual interest rate (e.g., 0.05 for 5%)
+     * @param {number} termMonths - Loan term in months
+     * @returns {number} Maximum loan principal amount
+     */
+    calculateMaxLoanAmount(maxMonthlyInstallment, annualInterestRate, termMonths) {
+        if (maxMonthlyInstallment <= 0 || termMonths <= 0) {
+            return 0;
+        }
+
+        const monthlyRate = annualInterestRate / 12;
+        
+        if (monthlyRate === 0) {
+            // No interest case
+            return maxMonthlyInstallment * termMonths;
+        }
+
+        // Reducing balance formula: P = PMT * [(1+r)^n - 1] / [r(1+r)^n]
+        const factor = Math.pow(1 + monthlyRate, termMonths);
+        const maxLoanAmount = maxMonthlyInstallment * (factor - 1) / (monthlyRate * factor);
+        
+        return Math.floor(maxLoanAmount); // Round down to whole dollar
+    }
+
+    /**
+     * Calculate monthly installment using reducing balance method
+     * Formula: PMT = P * [r(1+r)^n] / [(1+r)^n - 1]
+     * 
+     * @param {number} principal - Loan principal amount
+     * @param {number} annualInterestRate - Annual interest rate (e.g., 0.05 for 5%)
+     * @param {number} termMonths - Loan term in months
+     * @returns {number} Monthly installment amount
+     */
+    calculateMonthlyInstallment(principal, annualInterestRate, termMonths) {
+        if (principal <= 0 || termMonths <= 0) {
+            return 0;
+        }
+
+        const monthlyRate = annualInterestRate / 12;
+        
+        if (monthlyRate === 0) {
+            // No interest case
+            return principal / termMonths;
+        }
+
+        // Reducing balance formula: PMT = P * [r(1+r)^n] / [(1+r)^n - 1]
+        const factor = Math.pow(1 + monthlyRate, termMonths);
+        const monthlyInstallment = principal * (monthlyRate * factor) / (factor - 1);
+        
+        return monthlyInstallment;
     }
 
     /**
@@ -671,20 +731,29 @@ class ZimScoreService {
                 .in('status', ['active', 'approved'])
                 .order('created_at', { ascending: false });
 
-            // Calculate existing monthly installments
+            // Calculate existing monthly installments using reducing balance method
             let existingMonthlyInstallment = 0;
             if (activeLoans && activeLoans.length > 0) {
                 activeLoans.forEach(loan => {
-                    const totalAmount = loan.amount * (1 + loan.interest_rate / 100);
                     const termMonths = (loan.term_days || 30) / 30;
-                    existingMonthlyInstallment += totalAmount / termMonths;
+                    const annualRate = (loan.interest_rate || 0) / 100;
+                    const monthlyInstallment = this.calculateMonthlyInstallment(
+                        loan.amount, 
+                        annualRate, 
+                        termMonths
+                    );
+                    existingMonthlyInstallment += monthlyInstallment;
                 });
             }
 
-            // Calculate new loan monthly installment
-            const newLoanTotal = requestedAmount * (1 + interestRate / 100);
+            // Calculate new loan monthly installment using reducing balance method
             const newLoanTermMonths = termDays / 30;
-            const newLoanInstallment = newLoanTotal / newLoanTermMonths;
+            const annualRate = interestRate / 100;
+            const newLoanInstallment = this.calculateMonthlyInstallment(
+                requestedAmount, 
+                annualRate, 
+                newLoanTermMonths
+            );
 
             // Calculate total installment if loan is approved
             const totalInstallment = existingMonthlyInstallment + newLoanInstallment;
@@ -695,9 +764,13 @@ class ZimScoreService {
 
             // Check if within DTNI limit
             if (installmentUtilization > 1.0) {
-                // Over limit
+                // Over limit - calculate max affordable loan using reducing balance method
                 const maxAffordableInstallment = maxTotalInstallment - existingMonthlyInstallment;
-                const maxAffordableLoan = (maxAffordableInstallment * newLoanTermMonths) / (1 + interestRate / 100);
+                const maxAffordableLoan = this.calculateMaxLoanAmount(
+                    maxAffordableInstallment, 
+                    annualRate, 
+                    newLoanTermMonths
+                );
 
                 return {
                     approved: false,
