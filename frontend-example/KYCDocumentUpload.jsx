@@ -16,7 +16,11 @@ const KYCDocumentUpload = () => {
   const documentTypes = [
     { value: 'national_id', label: 'National ID (Front)', icon: '🪪' },
     { value: 'id_back', label: 'National ID (Back)', icon: '🪪' },
-    { value: 'bank_statement', label: 'Bank Statement', icon: '🏦' }
+    { value: 'bank_statement', label: 'Bank Statement', icon: '🏦' },
+    { value: 'ecocash_statement', label: 'EcoCash Statement', icon: '📱' },
+    { value: 'onemoney_statement', label: 'OneMoney Statement', icon: '📱' },
+    { value: 'utility_bill', label: 'Utility Bill', icon: '💡' },
+    { value: 'employment_letter', label: 'Employment Letter', icon: '💼' }
   ];
 
   const handleFileSelect = (e) => {

@@ -312,23 +312,262 @@ class AzureDocumentOCRService {
     }
 
     /**
+     * Parse EcoCash statement from text
+     */
+    parseEcoCashStatementFromText(text) {
+        const fields = {
+            provider: 'EcoCash',
+            phoneNumber: null,
+            accountHolder: null,
+            statementPeriod: null,
+            openingBalance: null,
+            closingBalance: null,
+            totalReceived: null,
+            totalSent: null,
+            currency: 'USD'
+        };
+
+        // Phone number
+        const phoneMatch = text.match(/(?:MOBILE|PHONE|NUMBER)[:\s]*(\+?263\s?\d{9,10}|\d{10})/i);
+        if (phoneMatch) {
+            fields.phoneNumber = phoneMatch[1].replace(/\s/g, '');
+        }
+
+        // Account holder
+        const nameMatch = text.match(/(?:NAME|ACCOUNT\s+HOLDER)[:\s]*([A-Z\s]+?)(?=\n|PHONE|MOBILE)/i);
+        if (nameMatch) {
+            fields.accountHolder = nameMatch[1].trim();
+        }
+
+        // Statement period
+        const periodMatch = text.match(/(?:PERIOD|FROM)[:\s]*(\d{1,2}[-\/]\w{3}[-\/]\d{4})\s*(?:TO|-)\s*(\d{1,2}[-\/]\w{3}[-\/]\d{4})/i);
+        if (periodMatch) {
+            fields.statementPeriod = `${periodMatch[1]} to ${periodMatch[2]}`;
+        }
+
+        // Balances
+        const openingMatch = text.match(/OPENING\s+BALANCE[:\s]*(USD|ZWG)?\s*([\d,]+\.\d{2})/i);
+        if (openingMatch) {
+            fields.currency = openingMatch[1] || 'USD';
+            fields.openingBalance = openingMatch[2].replace(/,/g, '');
+        }
+
+        const closingMatch = text.match(/CLOSING\s+BALANCE[:\s]*(USD|ZWG)?\s*([\d,]+\.\d{2})/i);
+        if (closingMatch) {
+            fields.closingBalance = closingMatch[2].replace(/,/g, '');
+        }
+
+        return fields;
+    }
+
+    /**
+     * Parse OneMoney statement from text
+     */
+    parseOneMoneyStatementFromText(text) {
+        const fields = {
+            provider: 'OneMoney',
+            phoneNumber: null,
+            accountHolder: null,
+            statementPeriod: null,
+            openingBalance: null,
+            closingBalance: null,
+            totalReceived: null,
+            totalSent: null,
+            currency: 'USD'
+        };
+
+        // Phone number
+        const phoneMatch = text.match(/(?:MOBILE|PHONE|NUMBER)[:\s]*(\+?263\s?\d{9,10}|\d{10})/i);
+        if (phoneMatch) {
+            fields.phoneNumber = phoneMatch[1].replace(/\s/g, '');
+        }
+
+        // Account holder
+        const nameMatch = text.match(/(?:NAME|ACCOUNT\s+HOLDER)[:\s]*([A-Z\s]+?)(?=\n|PHONE|MOBILE)/i);
+        if (nameMatch) {
+            fields.accountHolder = nameMatch[1].trim();
+        }
+
+        // Statement period
+        const periodMatch = text.match(/(?:PERIOD|FROM)[:\s]*(\d{1,2}[-\/]\w{3}[-\/]\d{4})\s*(?:TO|-)\s*(\d{1,2}[-\/]\w{3}[-\/]\d{4})/i);
+        if (periodMatch) {
+            fields.statementPeriod = `${periodMatch[1]} to ${periodMatch[2]}`;
+        }
+
+        // Balances
+        const openingMatch = text.match(/OPENING\s+BALANCE[:\s]*(USD|ZWG)?\s*([\d,]+\.\d{2})/i);
+        if (openingMatch) {
+            fields.currency = openingMatch[1] || 'USD';
+            fields.openingBalance = openingMatch[2].replace(/,/g, '');
+        }
+
+        const closingMatch = text.match(/CLOSING\s+BALANCE[:\s]*(USD|ZWG)?\s*([\d,]+\.\d{2})/i);
+        if (closingMatch) {
+            fields.closingBalance = closingMatch[2].replace(/,/g, '');
+        }
+
+        return fields;
+    }
+
+    /**
+     * Parse utility bill from text
+     */
+    parseUtilityBillFromText(text) {
+        const fields = {
+            utilityProvider: null,
+            accountNumber: null,
+            accountHolder: null,
+            address: null,
+            billDate: null,
+            dueDate: null,
+            amountDue: null,
+            previousBalance: null,
+            currentCharges: null,
+            meterNumber: null
+        };
+
+        // Provider (ZESA, ZETDC, City Council, etc.)
+        const providerMatch = text.match(/(ZESA|ZETDC|HARARE\s+CITY\s+COUNCIL|BULAWAYO\s+CITY\s+COUNCIL|WATER\s+AUTHORITY)/i);
+        if (providerMatch) {
+            fields.utilityProvider = providerMatch[1].trim();
+        }
+
+        // Account number
+        const accountMatch = text.match(/(?:ACCOUNT|CUSTOMER)\s+(?:NO|NUMBER)[:\s]*(\d+)/i);
+        if (accountMatch) {
+            fields.accountNumber = accountMatch[1];
+        }
+
+        // Account holder
+        const nameMatch = text.match(/(?:NAME|ACCOUNT\s+HOLDER)[:\s]*([A-Z\s]+?)(?=\n|ADDRESS)/i);
+        if (nameMatch) {
+            fields.accountHolder = nameMatch[1].trim();
+        }
+
+        // Address
+        const addressMatch = text.match(/(?:ADDRESS|PROPERTY)[:\s]*\n?\s*([A-Z0-9\s,.-]+?)(?=\n[A-Z]+:|BILL\s+DATE|$)/i);
+        if (addressMatch) {
+            fields.address = addressMatch[1].trim().replace(/\s+/g, ' ');
+        }
+
+        // Bill date
+        const billDateMatch = text.match(/BILL\s+DATE[:\s]*(\d{1,2}[-\/]\w{3}[-\/]\d{4}|\d{2}\/\d{2}\/\d{4})/i);
+        if (billDateMatch) {
+            fields.billDate = billDateMatch[1];
+        }
+
+        // Due date
+        const dueMatch = text.match(/DUE\s+DATE[:\s]*(\d{1,2}[-\/]\w{3}[-\/]\d{4}|\d{2}\/\d{2}\/\d{4})/i);
+        if (dueMatch) {
+            fields.dueDate = dueMatch[1];
+        }
+
+        // Amount due
+        const amountMatch = text.match(/(?:AMOUNT\s+DUE|TOTAL\s+DUE)[:\s]*(USD|ZWG)?\s*([\d,]+\.\d{2})/i);
+        if (amountMatch) {
+            fields.amountDue = amountMatch[2].replace(/,/g, '');
+        }
+
+        // Meter number
+        const meterMatch = text.match(/METER\s+(?:NO|NUMBER)[:\s]*(\d+)/i);
+        if (meterMatch) {
+            fields.meterNumber = meterMatch[1];
+        }
+
+        return fields;
+    }
+
+    /**
+     * Parse employment letter from text
+     */
+    parseEmploymentLetterFromText(text) {
+        const fields = {
+            employerName: null,
+            employeeName: null,
+            position: null,
+            employmentDate: null,
+            salary: null,
+            employerAddress: null,
+            letterDate: null,
+            employmentStatus: 'Employed'
+        };
+
+        // Employee name (after "This is to certify that" or similar)
+        const nameMatch = text.match(/(?:CERTIFY\s+THAT|CONFIRM\s+THAT|EMPLOYED\s+AS)[:\s]*([A-Z\s]+?)(?=\s+IS|HAS|WORKS|,)/i);
+        if (nameMatch) {
+            fields.employeeName = nameMatch[1].trim();
+        }
+
+        // Position/Job title
+        const positionMatch = text.match(/(?:POSITION|TITLE|EMPLOYED\s+AS)[:\s]*([A-Z\s]+?)(?=\n|WITH|AT|SINCE)/i);
+        if (positionMatch) {
+            fields.position = positionMatch[1].trim();
+        }
+
+        // Employment date
+        const dateMatch = text.match(/(?:SINCE|FROM|EMPLOYED\s+ON)[:\s]*(\d{1,2}[-\/]\w{3}[-\/]\d{4}|\d{2}\/\d{2}\/\d{4})/i);
+        if (dateMatch) {
+            fields.employmentDate = dateMatch[1];
+        }
+
+        // Salary
+        const salaryMatch = text.match(/(?:SALARY|EARNING|REMUNERATION)[:\s]*(USD|ZWG)?\s*([\d,]+(?:\.\d{2})?)/i);
+        if (salaryMatch) {
+            fields.salary = salaryMatch[2].replace(/,/g, '');
+        }
+
+        // Employer name (from letterhead or signature)
+        const employerMatch = text.match(/^([A-Z\s&]+(?:LIMITED|LTD|PVT|PRIVATE|COMPANY|CORPORATION))/im);
+        if (employerMatch) {
+            fields.employerName = employerMatch[1].trim();
+        }
+
+        // Letter date
+        const letterDateMatch = text.match(/DATE[:\s]*(\d{1,2}[-\/]\w{3}[-\/]\d{4}|\d{2}\/\d{2}\/\d{4})/i);
+        if (letterDateMatch) {
+            fields.letterDate = letterDateMatch[1];
+        }
+
+        return fields;
+    }
+
+    /**
      * Detect document type from text
      */
     detectDocumentTypeFromText(text) {
+        const upperText = text.toUpperCase();
+        
+        // National ID (Front)
+        if (upperText.match(/REPUBLIC\s+OF\s+ZIMBABWE.*NATIONAL.*ID|IDENTITY\s+CARD/)) {
+            if (upperText.includes('CHIEF') || upperText.includes('DISTRICT')) {
+                return 'id_back';
+            }
+            return 'national_id';
+        }
+        
         // Bank Statement
-        if (text.match(/BANK\s+STATEMENT|ACCOUNT\s+STATEMENT|STATEMENT\s+OF\s+ACCOUNT/i)) {
+        if (upperText.match(/BANK\s+STATEMENT|ACCOUNT\s+STATEMENT|STATEMENT\s+OF\s+ACCOUNT/)) {
             return 'bank_statement';
         }
         
-        // ID Back (has address, district, province)
-        if (text.match(/RESIDENTIAL\s+ADDRESS|DISTRICT|PROVINCE|CHIEF/i) && 
-            !text.match(/ID\s+NUMBER|FIRST\s+NAME|SURNAME/i)) {
-            return 'id_back';
+        // EcoCash Statement
+        if (upperText.match(/ECOCASH|ECO\s*CASH|ECONET/)) {
+            return 'ecocash_statement';
         }
         
-        // ID Front (has ID number, names, DOB)
-        if (text.match(/ID\s+NUMBER|NATIONAL\s+REGISTRATION/i)) {
-            return 'id_front';
+        // OneMoney Statement
+        if (upperText.match(/ONE\s*MONEY|ONEMONEY|NETONE/)) {
+            return 'onemoney_statement';
+        }
+        
+        // Utility Bill
+        if (upperText.match(/UTILITY\s+BILL|ELECTRICITY\s+BILL|WATER\s+BILL|ZESA|ZETDC|HARARE\s+CITY\s+COUNCIL/)) {
+            return 'utility_bill';
+        }
+        
+        // Employment Letter
+        if (upperText.match(/EMPLOYMENT\s+LETTER|LETTER\s+OF\s+EMPLOYMENT|EMPLOYMENT\s+CONFIRMATION|TO\s+WHOM\s+IT\s+MAY\s+CONCERN.*EMPLOY/)) {
+            return 'employment_letter';
         }
         
         return 'unknown';
@@ -378,13 +617,29 @@ class AzureDocumentOCRService {
         if (fullText) {
             let textFields = {};
             
-            if (docType === 'bank_statement') {
-                textFields = this.parseBankStatementFromText(fullText);
-            } else if (docType === 'id_back') {
-                textFields = this.parseZimbabweIDBackFromText(fullText);
-            } else {
-                // Default to ID front
-                textFields = this.parseZimbabweIDFromText(fullText);
+            switch(docType) {
+                case 'bank_statement':
+                    textFields = this.parseBankStatementFromText(fullText);
+                    break;
+                case 'ecocash_statement':
+                    textFields = this.parseEcoCashStatementFromText(fullText);
+                    break;
+                case 'onemoney_statement':
+                    textFields = this.parseOneMoneyStatementFromText(fullText);
+                    break;
+                case 'utility_bill':
+                    textFields = this.parseUtilityBillFromText(fullText);
+                    break;
+                case 'employment_letter':
+                    textFields = this.parseEmploymentLetterFromText(fullText);
+                    break;
+                case 'id_back':
+                    textFields = this.parseZimbabweIDBackFromText(fullText);
+                    break;
+                case 'national_id':
+                default:
+                    textFields = this.parseZimbabweIDFromText(fullText);
+                    break;
             }
             
             // Fill in missing fields from text parsing
