@@ -180,6 +180,17 @@ router.post('/employment', authenticateUser, async (req, res) => {
             });
         }
 
+        // Validate employment_type for ZimScore (REQUIRED)
+        const validEmploymentTypes = ['government', 'private', 'business', 'informal'];
+        if (!employment_type || !validEmploymentTypes.includes(employment_type.toLowerCase())) {
+            return res.status(400).json({
+                success: false,
+                message: 'Valid employment type is required for ZimScore calculation',
+                validTypes: validEmploymentTypes,
+                hint: 'Choose: government, private, business, or informal'
+            });
+        }
+
         // Insert or update employment details
         const { data: employment, error: employmentError } = await supabase
             .from('employment_details')
@@ -188,7 +199,7 @@ router.post('/employment', authenticateUser, async (req, res) => {
                 employment_status,
                 employer_name,
                 job_title,
-                employment_type,
+                employment_type: employment_type.toLowerCase(),
                 industry,
                 years_employed,
                 monthly_income,
@@ -205,6 +216,19 @@ router.post('/employment', authenticateUser, async (req, res) => {
             .single();
 
         if (employmentError) throw employmentError;
+
+        // IMPORTANT: Also save employment_type to users table for ZimScore
+        const { error: userUpdateError } = await supabase
+            .from('users')
+            .update({ 
+                employment_type: employment_type.toLowerCase(),
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', req.user.id);
+
+        if (userUpdateError) {
+            console.warn('Failed to update user employment_type:', userUpdateError);
+        }
 
         // Get updated completion status
         const { data: status } = await supabase
@@ -660,37 +684,53 @@ router.post('/upload-document-with-ocr', authenticateUser, upload.single('docume
             try {
                 console.log('🎯 Calculating ZimScore from bank statement...');
                 
-                // Extract financial data from OCR
-                const financialData = zimScoreService.extractFinancialDataFromOCR({
-                    openingBalance: parseFloat(ocrData.extracted_fields.openingBalance) || 0,
-                    closingBalance: parseFloat(ocrData.extracted_fields.closingBalance) || 0,
-                    totalCredits: parseFloat(ocrData.extracted_fields.totalCredits) || 0,
-                    totalDebits: parseFloat(ocrData.extracted_fields.totalDebits) || 0,
-                    statementPeriod: ocrData.extracted_fields.statementPeriod,
-                    fullText: ocrData.full_text
-                });
-
-                // Get user's employment type
+                // Get user's employment type (REQUIRED)
                 const { data: userData } = await supabase
                     .from('users')
                     .select('employment_type')
                     .eq('id', req.user.id)
                     .single();
 
-                const employmentType = userData?.employment_type || null;
+                const employmentType = userData?.employment_type;
 
-                // Calculate cold start ZimScore
-                zimScoreResult = await zimScoreService.calculateColdStartScore(
-                    req.user.id,
-                    financialData,
-                    employmentType
-                );
+                // VALIDATION: Employment type is REQUIRED for ZimScore
+                if (!employmentType) {
+                    console.warn('⚠️  Cannot calculate ZimScore: Employment type not set');
+                    zimScoreResult = {
+                        success: false,
+                        error: 'EMPLOYMENT_REQUIRED',
+                        message: 'Please complete your employment details before ZimScore can be calculated',
+                        nextStep: 'POST /api/profile-setup/employment'
+                    };
+                } else {
+                    // Extract financial data from OCR
+                    const financialData = zimScoreService.extractFinancialDataFromOCR({
+                        openingBalance: parseFloat(ocrData.extracted_fields.openingBalance) || 0,
+                        closingBalance: parseFloat(ocrData.extracted_fields.closingBalance) || 0,
+                        totalCredits: parseFloat(ocrData.extracted_fields.totalCredits) || 0,
+                        totalDebits: parseFloat(ocrData.extracted_fields.totalDebits) || 0,
+                        statementPeriod: ocrData.extracted_fields.statementPeriod,
+                        fullText: ocrData.full_text
+                    });
 
-                if (zimScoreResult.success) {
-                    console.log(`✅ ZimScore calculated: ${zimScoreResult.scoreValue}/85 - Limit: $${zimScoreResult.maxLoanAmount}`);
+                    // Calculate cold start ZimScore
+                    zimScoreResult = await zimScoreService.calculateColdStartScore(
+                        req.user.id,
+                        financialData,
+                        employmentType
+                    );
+
+                    if (zimScoreResult.success) {
+                        console.log(`✅ ZimScore calculated: ${zimScoreResult.scoreValue}/85 - Limit: $${zimScoreResult.maxLoanAmount}`);
+                    }
                 }
             } catch (zimScoreError) {
                 console.error('⚠️  ZimScore calculation failed:', zimScoreError.message);
+                zimScoreResult = {
+                    success: false,
+                    error: 'CALCULATION_ERROR',
+                    message: zimScoreError.message
+                };
             }
         }
 
