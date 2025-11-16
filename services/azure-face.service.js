@@ -141,13 +141,15 @@ class AzureFaceService {
                 confidence: null,
                 idFace: {
                     detected: true,
-                    attributes: idFaceResult.attributes,
-                    quality: idFaceResult.attributes.quality
+                    faceCount: idFaceResult.faceCount,
+                    attributes: null, // Requires Limited Access
+                    quality: null // Requires Limited Access
                 },
                 selfieFace: {
                     detected: true,
-                    attributes: selfieFaceResult.attributes,
-                    quality: selfieFaceResult.attributes.quality
+                    faceCount: selfieFaceResult.faceCount,
+                    attributes: null, // Requires Limited Access
+                    quality: null // Requires Limited Access
                 },
                 recommendation: 'Face comparison requires Limited Access approval from Microsoft. Both faces detected successfully. Manual verification recommended.',
                 details: {
@@ -281,18 +283,17 @@ class AzureFaceService {
                 };
             }
 
-            const quality = faceResult.attributes.quality;
-            const isGoodQuality = quality.blur === 'low' && 
-                                 quality.exposure !== 'overExposure' &&
-                                 quality.noise === 'low';
-
+            // Note: Quality and attributes are null without Limited Access
             return {
                 success: true,
                 faceDetected: true,
-                quality: quality,
-                isGoodQuality: isGoodQuality,
-                attributes: faceResult.attributes,
-                recommendations: this.getQualityRecommendations(quality)
+                faceCount: faceResult.faceCount,
+                faceRectangle: faceResult.faceRectangle,
+                quality: null, // Requires Limited Access
+                isGoodQuality: null, // Requires Limited Access
+                attributes: null, // Requires Limited Access
+                limitedAccessNote: faceResult.limitedAccessNote,
+                recommendations: ['Face detected successfully. Quality analysis requires Microsoft Limited Access approval.']
             };
 
         } catch (error) {
