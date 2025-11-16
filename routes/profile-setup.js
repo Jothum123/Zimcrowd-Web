@@ -682,6 +682,80 @@ router.post('/upload-document-with-ocr', authenticateUser, upload.single('docume
 });
 
 /**
+ * @route   POST /api/profile-setup/upload-document-with-ocr-test
+ * @desc    Upload KYC document with OCR (TEST MODE - NO AUTH)
+ * @access  Public (for testing only)
+ */
+router.post('/upload-document-with-ocr-test', upload.single('document'), async (req, res) => {
+    try {
+        const { document_type } = req.body;
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No document file provided'
+            });
+        }
+
+        if (!document_type) {
+            return res.status(400).json({
+                success: false,
+                message: 'Document type is required'
+            });
+        }
+
+        console.log(`📄 Processing ${document_type} (TEST MODE - NO AUTH)`);
+
+        // Process document with OCR
+        let ocrData = null;
+        if (ocrService) {
+            try {
+                const analysis = await ocrService.analyzeDocument(req.file.buffer, document_type);
+                if (analysis.success) {
+                    ocrData = {
+                        extracted_fields: analysis.parsedFields,
+                        full_text: analysis.fullText,
+                        confidence: analysis.overallConfidence,
+                        face_detected: analysis.faceDetected,
+                        face_count: analysis.faceCount,
+                        ocr_engine: 'Azure Document Intelligence'
+                    };
+                    console.log('✅ OCR processing complete');
+                }
+            } catch (ocrError) {
+                console.warn('⚠️  OCR processing failed:', ocrError.message);
+            }
+        }
+
+        // Return OCR data without saving (test mode)
+        res.json({
+            success: true,
+            message: 'Document processed successfully (TEST MODE)',
+            data: {
+                document: {
+                    document_type,
+                    file_name: req.file.originalname,
+                    file_size: req.file.size,
+                    mime_type: req.file.mimetype,
+                    status: 'test'
+                },
+                ocr_data: ocrData,
+                auto_filled: false,
+                test_mode: true,
+                note: 'This is test mode. Document was not saved. Use /upload-document-with-ocr with authentication for production.'
+            }
+        });
+    } catch (error) {
+        console.error('Upload document test error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to process document',
+            error: error.message
+        });
+    }
+});
+
+/**
  * @route   GET /api/profile-setup/documents
  * @desc    Get user's uploaded documents
  * @access  Private

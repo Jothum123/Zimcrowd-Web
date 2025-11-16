@@ -446,14 +446,9 @@
                 formData.append('document', selectedFile);
                 formData.append('document_type', documentType);
 
-                // Get token from localStorage (replace with your auth method)
-                const token = localStorage.getItem('token') || 'test-token';
-
-                const response = await fetch(`${API_URL}/api/profile-setup/upload-document-with-ocr`, {
+                // Using test endpoint (no authentication required)
+                const response = await fetch(`${API_URL}/api/profile-setup/upload-document-with-ocr-test`, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
                     body: formData
                 });
 
