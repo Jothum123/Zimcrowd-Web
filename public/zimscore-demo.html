@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZimScore Demo - ZimCrowd</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .demo-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .demo-section h2 {
+            color: #1e3a8a;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .test-scenarios {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .scenario-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .scenario-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .scenario-card.active {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .scenario-card h3 {
+            color: #1e3a8a;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .scenario-card .score-preview {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .scenario-card .details {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .zimscore-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 30px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .score-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .score-header h2 {
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .cold-start-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .score-value {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .score-number {
+            font-size: 72px;
+            font-weight: 700;
+        }
+
+        .score-max {
+            font-size: 36px;
+            opacity: 0.7;
+        }
+
+        .stars {
+            text-align: center;
+            font-size: 32px;
+            margin: 20px 0;
+        }
+
+        .progress-bar-container {
+            background: rgba(255, 255, 255, 0.2);
+            height: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .risk-level {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .limit-display {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .limit-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .limit-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .limit-note {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+
+        .components {
+            margin-top: 30px;
+        }
+
+        .component {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .component-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .component-bar {
+            background: rgba(255, 255, 255, 0.2);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .component-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .api-section {
+            margin-top: 30px;
+        }
+
+        .api-endpoint {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .api-endpoint .method {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        .api-endpoint .path {
+            font-family: 'Courier New', monospace;
+            color: #1e3a8a;
+            font-weight: 600;
+        }
+
+        .api-endpoint .description {
+            margin-top: 8px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎯 ZimScore Demo</h1>
+            <p>Interactive demonstration of the ZimScore credit scoring system</p>
+        </div>
+
+        <!-- Test Scenarios -->
+        <div class="demo-section">
+            <h2>📊 Test Scenarios</h2>
+            <p style="margin-bottom: 20px; color: #6b7280;">Click on a scenario to see how ZimScore is calculated:</p>
+            
+            <div class="test-scenarios">
+                <div class="scenario-card" onclick="loadScenario('newUser')">
+                    <h3>🆕 New User (Good Banking)</h3>
+                    <div class="score-preview">66/85</div>
+                    <div class="details">
+                        • Cash Flow: 1.25<br>
+                        • Avg Balance: $200<br>
+                        • Employment: Private<br>
+                        • Cold Start: $100
+                    </div>
+                </div>
+
+                <div class="scenario-card" onclick="loadScenario('government')">
+                    <h3>🏛️ Government Employee</h3>
+                    <div class="score-preview">70/85</div>
+                    <div class="details">
+                        • Cash Flow: 1.11<br>
+                        • Avg Balance: $550<br>
+                        • Employment: Government<br>
+                        • Cold Start: $100
+                    </div>
+                </div>
+
+                <div class="scenario-card" onclick="loadScenario('experienced')">
+                    <h3>⭐ Experienced User</h3>
+                    <div class="score-preview">85/85</div>
+                    <div class="details">
+                        • 10 loans, 100% on-time<br>
+                        • Max repaid: $800<br>
+                        • Platform: 12 months<br>
+                        • Limit: $1,000
+                    </div>
+                </div>
+
+                <div class="scenario-card" onclick="loadScenario('poorBanking')">
+                    <h3>⚠️ Poor Banking Data</h3>
+                    <div class="score-preview">30/85</div>
+                    <div class="details">
+                        • Cash Flow: 0.67<br>
+                        • Avg Balance: $25<br>
+                        • NSF Events: 5<br>
+                        • Limit: $100
+                    </div>
+                </div>
+
+                <div class="scenario-card" onclick="loadScenario('latePayments')">
+                    <h3>📉 Late Payments</h3>
+                    <div class="score-preview">46/85</div>
+                    <div class="details">
+                        • 5 loans, 40% on-time<br>
+                        • 3 late payments<br>
+                        • Score reduced<br>
+                        • Limit: $300
+                    </div>
+                </div>
+
+                <div class="scenario-card" onclick="loadScenario('afterFirstRepay')">
+                    <h3>🎉 After First Repayment</h3>
+                    <div class="score-preview">69/85</div>
+                    <div class="details">
+                        • First loan repaid on-time<br>
+                        • Score: +3 points<br>
+                        • Cold start removed<br>
+                        • Limit: $600 unlocked!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ZimScore Display -->
+        <div class="demo-section">
+            <div id="zimscoreDisplay" class="zimscore-display">
+                <div class="score-header">
+                    <h2>🎯 Your ZimScore</h2>
+                    <span id="coldStartBadge" class="cold-start-badge">Cold Start Active</span>
+                </div>
+
+                <div class="score-value">
+                    <span id="scoreNumber" class="score-number">66</span>
+                    <span class="score-max">/ 85</span>
+                </div>
+
+                <div id="stars" class="stars">⭐⭐⭐☆☆ 3.5</div>
+
+                <div class="progress-bar-container">
+                    <div id="progressBar" class="progress-bar" style="width: 65%; background: #3b82f6;"></div>
+                </div>
+
+                <div id="riskLevel" class="risk-level">
+                    🛡️ Medium Risk
+                </div>
+
+                <div class="limit-display">
+                    <div class="limit-label">💰 Current Borrowing Limit</div>
+                    <div id="limitValue" class="limit-value">$100.00</div>
+                    <div id="limitNote" class="limit-note">
+                        Score-based limit: $600.00<br>
+                        <small>(Unlocks after first on-time repayment)</small>
+                    </div>
+                </div>
+
+                <div class="components">
+                    <h3 style="margin-bottom: 15px;">📊 Score Components</h3>
+                    
+                    <div class="component">
+                        <div class="component-header">
+                            <span>🏦 Banking Data</span>
+                            <span id="comp1Score">60/60</span>
+                        </div>
+                        <div class="component-bar">
+                            <div id="comp1Bar" class="component-fill" style="width: 100%; background: #3b82f6;"></div>
+                        </div>
+                    </div>
+
+                    <div class="component">
+                        <div class="component-header">
+                            <span>💼 Employment</span>
+                            <span id="comp2Score">6/10</span>
+                        </div>
+                        <div class="component-bar">
+                            <div id="comp2Bar" class="component-fill" style="width: 60%; background: #10b981;"></div>
+                        </div>
+                    </div>
+
+                    <div class="component">
+                        <div class="component-header">
+                            <span>📈 Performance</span>
+                            <span id="comp3Score">0/39</span>
+                        </div>
+                        <div class="component-bar">
+                            <div id="comp3Bar" class="component-fill" style="width: 0%; background: #f59e0b;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Documentation -->
+        <div class="demo-section api-section">
+            <h2>🔌 API Endpoints</h2>
+            
+            <div class="api-endpoint">
+                <span class="method">GET</span>
+                <span class="path">/api/zimscore/my-score</span>
+                <div class="description">Get current user's ZimScore with all details</div>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="method">GET</span>
+                <span class="path">/api/zimscore/breakdown</span>
+                <div class="description">Get detailed breakdown of all three components</div>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="method">GET</span>
+                <span class="path">/api/zimscore/score-history</span>
+                <div class="description">Get user's score history with changes over time</div>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="method">POST</span>
+                <span class="path">/api/profile-setup/upload-document-with-ocr</span>
+                <div class="description">Upload bank statement → Triggers automatic ZimScore calculation</div>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="method">POST</span>
+                <span class="path">/api/zimscore/recalculate</span>
+                <div class="description">Manually trigger ZimScore recalculation</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const scenarios = {
+            newUser: {
+                score: 66,
+                stars: '⭐⭐⭐☆☆ 3.5',
+                risk: '🛡️ Medium Risk',
+                riskColor: '#3b82f6',
+                limit: 100,
+                scoreBasedLimit: 600,
+                coldStart: true,
+                comp1: 60,
+                comp2: 6,
+                comp3: 0
+            },
+            government: {
+                score: 70,
+                stars: '⭐⭐⭐⭐☆ 4.0',
+                risk: '🛡️ Low Risk',
+                riskColor: '#3b82f6',
+                limit: 100,
+                scoreBasedLimit: 800,
+                coldStart: true,
+                comp1: 60,
+                comp2: 10,
+                comp3: 0
+            },
+            experienced: {
+                score: 85,
+                stars: '⭐⭐⭐⭐⭐ 5.0',
+                risk: '🛡️ Very Low Risk',
+                riskColor: '#10b981',
+                limit: 1000,
+                scoreBasedLimit: 1000,
+                coldStart: false,
+                comp1: 60,
+                comp2: 6,
+                comp3: 38
+            },
+            poorBanking: {
+                score: 30,
+                stars: '⭐☆☆☆☆ 1.0',
+                risk: '🛡️ Building Credit',
+                riskColor: '#6b7280',
+                limit: 100,
+                scoreBasedLimit: 100,
+                coldStart: true,
+                comp1: 30,
+                comp2: 0,
+                comp3: 0
+            },
+            latePayments: {
+                score: 46,
+                stars: '⭐⭐☆☆☆ 2.0',
+                risk: '🛡️ Very High Risk',
+                riskColor: '#ef4444',
+                limit: 300,
+                scoreBasedLimit: 300,
+                coldStart: false,
+                comp1: 60,
+                comp2: 6,
+                comp3: -20
+            },
+            afterFirstRepay: {
+                score: 69,
+                stars: '⭐⭐⭐☆☆ 3.5',
+                risk: '🛡️ Medium Risk',
+                riskColor: '#3b82f6',
+                limit: 600,
+                scoreBasedLimit: 600,
+                coldStart: false,
+                comp1: 60,
+                comp2: 6,
+                comp3: 3
+            }
+        };
+
+        function loadScenario(scenarioKey) {
+            const scenario = scenarios[scenarioKey];
+            
+            // Update active card
+            document.querySelectorAll('.scenario-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            // Update display
+            document.getElementById('scoreNumber').textContent = scenario.score;
+            document.getElementById('stars').textContent = scenario.stars;
+            document.getElementById('riskLevel').textContent = scenario.risk;
+            document.getElementById('riskLevel').style.color = scenario.riskColor;
+            document.getElementById('limitValue').textContent = `$${scenario.limit.toFixed(2)}`;
+            
+            // Cold start badge
+            const badge = document.getElementById('coldStartBadge');
+            badge.style.display = scenario.coldStart ? 'block' : 'none';
+
+            // Limit note
+            const limitNote = document.getElementById('limitNote');
+            if (scenario.coldStart && scenario.scoreBasedLimit > scenario.limit) {
+                limitNote.innerHTML = `Score-based limit: $${scenario.scoreBasedLimit.toFixed(2)}<br><small>(Unlocks after first on-time repayment)</small>`;
+                limitNote.style.display = 'block';
+            } else {
+                limitNote.style.display = 'none';
+            }
+
+            // Progress bar
+            const progress = ((scenario.score - 30) / 55) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('progressBar').style.backgroundColor = scenario.riskColor;
+
+            // Components
+            document.getElementById('comp1Score').textContent = `${scenario.comp1}/60`;
+            document.getElementById('comp1Bar').style.width = `${(scenario.comp1 / 60) * 100}%`;
+
+            document.getElementById('comp2Score').textContent = `${scenario.comp2}/10`;
+            document.getElementById('comp2Bar').style.width = `${(scenario.comp2 / 10) * 100}%`;
+
+            document.getElementById('comp3Score').textContent = `${scenario.comp3}/39`;
+            const comp3Width = Math.max(0, (scenario.comp3 / 39) * 100);
+            document.getElementById('comp3Bar').style.width = `${comp3Width}%`;
+        }
+
+        // Load default scenario
+        window.onload = () => {
+            document.querySelector('.scenario-card').classList.add('active');
+        };
+    </script>
+</body>
+</html>

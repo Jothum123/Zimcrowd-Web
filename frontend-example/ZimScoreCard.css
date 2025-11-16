@@ -1,0 +1,434 @@
+/* ZimScore Card Styles */
+
+.zimscore-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 30px;
+    color: white;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    max-width: 600px;
+    margin: 20px auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.zimscore-card.loading,
+.zimscore-card.error,
+.zimscore-card.no-score {
+    background: white;
+    color: #333;
+    text-align: center;
+    padding: 40px;
+}
+
+/* Header */
+.zimscore-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.zimscore-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.cold-start-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Score Display */
+.score-display {
+    text-align: center;
+    margin: 30px 0;
+}
+
+.score-value {
+    font-size: 72px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 10px;
+}
+
+.score-number {
+    color: #fff;
+}
+
+.score-max {
+    font-size: 36px;
+    opacity: 0.7;
+}
+
+.star-rating {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    margin-top: 15px;
+}
+
+.star {
+    font-size: 24px;
+}
+
+.star.full {
+    color: #fbbf24;
+}
+
+.star.half {
+    color: #fbbf24;
+    opacity: 0.5;
+}
+
+.star.empty {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.rating-value {
+    margin-left: 10px;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+/* Progress Bar */
+.score-progress {
+    background: rgba(255, 255, 255, 0.2);
+    height: 12px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 20px 0;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease, background-color 0.3s ease;
+}
+
+/* Risk Level */
+.risk-level {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+}
+
+.risk-icon {
+    font-size: 24px;
+}
+
+/* Borrowing Limit */
+.borrowing-limit {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.limit-label {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-bottom: 8px;
+}
+
+.limit-value {
+    font-size: 36px;
+    font-weight: 700;
+    margin: 10px 0;
+}
+
+.limit-note {
+    font-size: 13px;
+    opacity: 0.8;
+    margin-top: 10px;
+    line-height: 1.5;
+}
+
+.limit-note small {
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+/* Interest Info */
+.interest-info {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 12px;
+    margin: 15px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.info-label {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.info-value {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Score Breakdown */
+.score-breakdown {
+    margin-top: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.breakdown-toggle {
+    width: 100%;
+    background: none;
+    border: none;
+    color: white;
+    padding: 15px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s;
+}
+
+.breakdown-toggle:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.breakdown-content {
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Component */
+.component {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.component:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.component-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.component-name {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.component-score {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.component-bar {
+    background: rgba(255, 255, 255, 0.2);
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+.component-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.component-factors {
+    margin-top: 15px;
+}
+
+.factor {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.factor span:first-child {
+    opacity: 0.8;
+}
+
+.factor span:last-child {
+    font-weight: 600;
+}
+
+.employment-type {
+    margin-top: 10px;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.employment-type strong {
+    text-transform: capitalize;
+}
+
+/* Improvement Tips */
+.improvement-tips {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.improvement-tips h4 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.improvement-tips ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.improvement-tips li {
+    padding: 8px 0;
+    font-size: 14px;
+    opacity: 0.9;
+    line-height: 1.5;
+}
+
+/* Last Updated */
+.last-updated {
+    text-align: center;
+    font-size: 12px;
+    opacity: 0.7;
+    margin-top: 20px;
+}
+
+/* Loading State */
+.zimscore-card.loading .spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(102, 126, 234, 0.2);
+    border-top-color: #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Error State */
+.zimscore-card.error {
+    border: 2px solid #ef4444;
+}
+
+.error-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.retry-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: background 0.2s;
+}
+
+.retry-btn:hover {
+    background: #5568d3;
+}
+
+/* No Score State */
+.zimscore-card.no-score {
+    border: 2px dashed #d1d5db;
+}
+
+.no-score-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+}
+
+.zimscore-card.no-score h3 {
+    margin: 0 0 10px 0;
+    color: #111827;
+}
+
+.zimscore-card.no-score p {
+    color: #6b7280;
+    line-height: 1.6;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .zimscore-card {
+        padding: 20px;
+        margin: 10px;
+    }
+
+    .score-value {
+        font-size: 56px;
+    }
+
+    .score-max {
+        font-size: 28px;
+    }
+
+    .limit-value {
+        font-size: 28px;
+    }
+
+    .zimscore-header h2 {
+        font-size: 20px;
+    }
+
+    .cold-start-badge {
+        font-size: 10px;
+        padding: 4px 8px;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .zimscore-card.loading,
+    .zimscore-card.error,
+    .zimscore-card.no-score {
+        background: #1f2937;
+        color: #f9fafb;
+    }
+
+    .zimscore-card.no-score {
+        border-color: #374151;
+    }
+
+    .zimscore-card.no-score h3 {
+        color: #f9fafb;
+    }
+
+    .zimscore-card.no-score p {
+        color: #9ca3af;
+    }
+}
