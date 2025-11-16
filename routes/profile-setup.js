@@ -5,6 +5,7 @@ const { createClient } = require('@supabase/supabase-js');
 const { authenticateUser, requireAdmin } = require('../middleware/auth');
 const VisionOCRService = require('../services/vision-ocr.service');
 const AzureFaceService = require('../services/azure-face.service');
+const { getZimScoreService } = require('../services/zimscore.service');
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -26,14 +27,15 @@ const upload = multer({
     }
 });
 
-// Initialize OCR and Face services
-let ocrService, faceService;
+// Initialize OCR, Face, and ZimScore services
+let ocrService, faceService, zimScoreService;
 try {
     ocrService = new VisionOCRService();
     faceService = new AzureFaceService();
-    console.log('✅ OCR and Face services initialized for KYC');
+    zimScoreService = getZimScoreService();
+    console.log('✅ OCR, Face, and ZimScore services initialized for KYC');
 } catch (error) {
-    console.warn('⚠️  OCR/Face services not available:', error.message);
+    console.warn('⚠️  Services not available:', error.message);
 }
 
 /**
@@ -652,6 +654,46 @@ router.post('/upload-document-with-ocr', authenticateUser, upload.single('docume
             }
         }
 
+        // Calculate ZimScore if bank statement uploaded
+        let zimScoreResult = null;
+        if (document_type === 'bank_statement' && ocrData && ocrData.extracted_fields && zimScoreService) {
+            try {
+                console.log('🎯 Calculating ZimScore from bank statement...');
+                
+                // Extract financial data from OCR
+                const financialData = zimScoreService.extractFinancialDataFromOCR({
+                    openingBalance: parseFloat(ocrData.extracted_fields.openingBalance) || 0,
+                    closingBalance: parseFloat(ocrData.extracted_fields.closingBalance) || 0,
+                    totalCredits: parseFloat(ocrData.extracted_fields.totalCredits) || 0,
+                    totalDebits: parseFloat(ocrData.extracted_fields.totalDebits) || 0,
+                    statementPeriod: ocrData.extracted_fields.statementPeriod,
+                    fullText: ocrData.full_text
+                });
+
+                // Get user's employment type
+                const { data: userData } = await supabase
+                    .from('users')
+                    .select('employment_type')
+                    .eq('id', req.user.id)
+                    .single();
+
+                const employmentType = userData?.employment_type || null;
+
+                // Calculate cold start ZimScore
+                zimScoreResult = await zimScoreService.calculateColdStartScore(
+                    req.user.id,
+                    financialData,
+                    employmentType
+                );
+
+                if (zimScoreResult.success) {
+                    console.log(`✅ ZimScore calculated: ${zimScoreResult.scoreValue}/85 - Limit: $${zimScoreResult.maxLoanAmount}`);
+                }
+            } catch (zimScoreError) {
+                console.error('⚠️  ZimScore calculation failed:', zimScoreError.message);
+            }
+        }
+
         // Get updated completion status
         const { data: status } = await supabase
             .from('user_profile_completion')
@@ -666,6 +708,16 @@ router.post('/upload-document-with-ocr', authenticateUser, upload.single('docume
                 document,
                 ocr_data: ocrData,
                 auto_filled: document_type === 'national_id' && ocrData,
+                zimscore: zimScoreResult ? {
+                    calculated: true,
+                    score: zimScoreResult.scoreValue,
+                    starRating: zimScoreResult.starRating,
+                    maxLoanAmount: zimScoreResult.maxLoanAmount,
+                    scoreBasedLimit: zimScoreResult.scoreBasedLimit,
+                    riskLevel: zimScoreResult.riskLevel,
+                    coldStartActive: zimScoreResult.coldStartActive,
+                    message: `ZimScore: ${zimScoreResult.scoreValue}/85 - Current Limit: $${zimScoreResult.maxLoanAmount} (Score-based: $${zimScoreResult.scoreBasedLimit} unlocks after first repayment)`
+                } : null,
                 completion_percentage: status?.setup_completion_percentage,
                 pending_steps: status?.pending_steps.filter(step => step !== null),
                 kyc_documents_submitted: status?.kyc_documents_submitted

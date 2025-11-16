@@ -8,8 +8,10 @@ const multer = require('multer');
 const { supabase } = require('../utils/supabase-auth');
 const KycService = require('../services/KycService');
 const { getUserScore, getPublicStarRating } = require('../services/ZimScoreService');
+const { getZimScoreService } = require('../services/zimscore.service');
 
 const router = express.Router();
+const zimScoreService = getZimScoreService();
 
 // Configure multer for file uploads
 const upload = multer({
@@ -309,6 +311,131 @@ router.get('/public/:userId', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to retrieve public score',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * @route   GET /api/zimscore/breakdown
+ * @desc    Get detailed ZimScore breakdown
+ * @access  Private
+ */
+router.get('/breakdown', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const result = await zimScoreService.getUserScore(userId);
+
+        if (!result.success) {
+            return res.status(404).json({
+                success: false,
+                message: 'ZimScore not found. Please complete KYC first.'
+            });
+        }
+
+        const score = result.data;
+        
+        res.json({
+            success: true,
+            data: {
+                score: score.score_value,
+                starRating: score.star_rating,
+                maxLoanAmount: score.max_loan_amount,
+                scoreBasedLimit: score.score_based_limit,
+                riskLevel: score.risk_level,
+                coldStartActive: score.cold_start_active,
+                components: {
+                    component1: {
+                        name: 'Banking Data',
+                        score: score.component1_banking || 0,
+                        maxScore: 60,
+                        factors: {
+                            cashFlowRatio: score.score_factors?.cash_flow_ratio || 0,
+                            avgBalance: score.score_factors?.initial_balance || 0,
+                            balanceConsistency: score.score_factors?.balance_consistency || 0,
+                            nsfEvents: score.score_factors?.nsf_events || 0,
+                            accountTenor: score.score_factors?.account_tenor || 0,
+                            additionalAccounts: score.score_factors?.additional_accounts || 0
+                        }
+                    },
+                    component2: {
+                        name: 'Employment',
+                        score: score.component2_employment || 0,
+                        maxScore: 10,
+                        employmentType: score.employment_type || 'unknown'
+                    },
+                    component3: {
+                        name: 'Performance',
+                        score: score.component3_performance || 0,
+                        maxScore: 39,
+                        factors: {
+                            totalLoans: score.total_loans || 0,
+                            onTimePayments: score.on_time_payments || 0,
+                            latePayments: score.late_payments || 0,
+                            defaults: score.defaults || 0,
+                            maxLoanRepaid: score.max_loan_repaid || 0,
+                            platformTenure: score.platform_tenure_months || 0
+                        }
+                    }
+                },
+                lastCalculated: score.last_calculated,
+                calculationMethod: score.calculation_method
+            }
+        });
+    } catch (error) {
+        console.error('Get breakdown error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to retrieve score breakdown',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * @route   POST /api/zimscore/recalculate
+ * @desc    Manually trigger ZimScore recalculation (admin only)
+ * @access  Private (Admin)
+ */
+router.post('/recalculate', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.body.userId || req.user.id;
+        
+        // TODO: Add admin check
+        // if (!req.user.isAdmin && userId !== req.user.id) {
+        //     return res.status(403).json({ success: false, message: 'Unauthorized' });
+        // }
+
+        // Get user's financial data
+        const { data: userData, error } = await supabase
+            .from('users')
+            .select('employment_type')
+            .eq('id', userId)
+            .single();
+
+        if (error) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // TODO: Get latest bank statement OCR data
+        // For now, return message to upload new statement
+        
+        res.json({
+            success: true,
+            message: 'Please upload a new bank statement to recalculate ZimScore',
+            data: {
+                currentEmploymentType: userData.employment_type,
+                nextSteps: ['Upload updated bank statement', 'System will auto-calculate new score']
+            }
+        });
+    } catch (error) {
+        console.error('Recalculate error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to recalculate score',
             error: error.message
         });
     }

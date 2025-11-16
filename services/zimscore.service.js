@@ -47,15 +47,20 @@ class ZimScoreService {
     /**
      * Calculate initial "Cold Start" ZimScore from financial documents
      * @param {string} userId - User ID
-     * @param {Object} financialData - Parsed financial statement data
+     * @param {Object} financialData - Parsed financial statement data (from OCR)
+     * @param {string} employmentType - Employment type (government, private, business, informal)
      * @returns {Promise<Object>} Calculated score
      */
-    async calculateColdStartScore(userId, financialData) {
+    async calculateColdStartScore(userId, financialData, employmentType = null) {
         console.log(`🎯 Calculating Cold Start ZimScore for user ${userId}...`);
         
         try {
             let score = this.DEFAULT_SCORE;
-            const factors = {};
+            const factors = {
+                component1_banking: 0,
+                component2_employment: 0,
+                component3_performance: 0
+            };
 
             // Factor 1: Cash Flow Ratio (Primary Factor - SPEC REQUIREMENT)
             // This replaces simple income check with income/expense ratio
@@ -137,24 +142,48 @@ class ZimScoreService {
                 factors.additional_accounts = accountBonus;
             }
 
-            // Clamp Initial Risk Score to 30-60 range (Component 1)
-            score = Math.max(this.MIN_SCORE, Math.min(60, score));
+            // Component 1: Banking Data (capped at 30-60 range)
+            const component1Score = Math.max(this.MIN_SCORE, Math.min(60, score));
+            factors.component1_banking = component1Score;
+
+            // Component 2: Employment Bonus (0-10 points)
+            let employmentBonus = 0;
+            if (employmentType && this.EMPLOYMENT_BONUS[employmentType]) {
+                employmentBonus = this.EMPLOYMENT_BONUS[employmentType];
+                score = component1Score + employmentBonus;
+                factors.component2_employment = employmentBonus;
+                factors.employment_type = employmentType;
+                console.log(`💼 Employment Bonus (${employmentType}): +${employmentBonus} points`);
+            } else {
+                score = component1Score;
+            }
+
+            // Component 3: Performance (0 for new users)
+            factors.component3_performance = 0;
+
+            // Final score (Component 1 + Component 2 + Component 3)
+            score = Math.max(this.MIN_SCORE, Math.min(this.MAX_SCORE, score));
 
             // Calculate star rating, max loan amount, and reputation level
             const starRating = this.calculateStarRating(score);
-            const maxLoanAmount = this.calculateMaxLoanAmount(score);
+            // Cold start override: $100 for all new users
+            const maxLoanAmount = 100.00; // Cold start limit
+            const scoreBasedLimit = this.calculateMaxLoanAmount(score); // Unlocked after first repayment
             const riskLevel = this.getRiskLevel(score);
 
-            console.log(`✅ Cold Start Score: ${score}/85 (${starRating}⭐) - Risk Level: ${riskLevel} - Max Loan: $${maxLoanAmount}`);
+            console.log(`✅ Cold Start Score: ${score}/85 (${starRating}⭐) - Risk Level: ${riskLevel}`);
+            console.log(`💰 Cold Start Limit: $${maxLoanAmount} (Score-based: $${scoreBasedLimit} - unlocks after first repayment)`);
 
             // Save to database
             await this.saveZimScore(userId, {
                 scoreValue: score,
                 starRating,
-                maxLoanAmount,
+                maxLoanAmount, // $100 cold start
+                scoreBasedLimit, // Actual limit based on score
                 riskLevel,
                 factors,
-                calculationMethod: 'cold_start'
+                calculationMethod: 'cold_start',
+                employmentType
             });
 
             // Record in history
@@ -173,9 +202,12 @@ class ZimScoreService {
                 success: true,
                 scoreValue: score,
                 starRating,
-                maxLoanAmount,
+                maxLoanAmount, // $100 cold start
+                scoreBasedLimit, // Unlocked after first repayment
                 riskLevel,
-                factors
+                factors,
+                coldStartActive: true,
+                employmentType
             };
         } catch (error) {
             console.error('❌ Cold Start calculation error:', error);
@@ -315,6 +347,12 @@ class ZimScoreService {
             const newMaxLoanAmount = this.calculateMaxLoanAmount(newScore);
             const newRiskLevel = this.getRiskLevel(newScore);
 
+            // Remove cold start override after first repayment
+            const coldStartRemoved = currentScore.cold_start_active && loanEvent.type === 'LOAN_REPAID_ON_TIME';
+            if (coldStartRemoved) {
+                console.log(`🎉 Cold Start Removed! Limit unlocked: $100 → $${newMaxLoanAmount}`);
+            }
+
             console.log(`✅ Score updated: ${currentScore.score_value} -> ${newScore} (${scoreChange >= 0 ? '+' : ''}${scoreChange}) - Reputation: ${newRiskLevel}`);
 
             // Update in database
@@ -418,9 +456,12 @@ class ZimScoreService {
                 score_value: scoreData.scoreValue,
                 star_rating: scoreData.starRating,
                 max_loan_amount: scoreData.maxLoanAmount,
+                score_based_limit: scoreData.scoreBasedLimit || scoreData.maxLoanAmount,
                 risk_level: scoreData.riskLevel,
                 score_factors: scoreData.factors,
                 calculation_method: scoreData.calculationMethod,
+                employment_type: scoreData.employmentType,
+                cold_start_active: scoreData.maxLoanAmount === 100,
                 last_calculated: new Date().toISOString()
             }, {
                 onConflict: 'user_id'
@@ -571,6 +612,61 @@ class ZimScoreService {
             console.error('Error calculating platform tenure bonus:', error);
             return 0;
         }
+    }
+
+    /**
+     * Extract financial data from OCR bank statement results
+     * @param {Object} ocrData - OCR extracted data from bank statement
+     * @returns {Object} Financial data for ZimScore calculation
+     */
+    extractFinancialDataFromOCR(ocrData) {
+        const financialData = {
+            cashFlowRatio: 0,
+            avgEndingBalance: 0,
+            balanceConsistencyScore: 0,
+            nsfEvents: 0,
+            accountAgeMonths: 0,
+            additionalAccountsCount: 0
+        };
+
+        // Extract from bank statement OCR
+        if (ocrData.openingBalance !== undefined && ocrData.closingBalance !== undefined) {
+            financialData.avgEndingBalance = (ocrData.openingBalance + ocrData.closingBalance) / 2;
+        }
+
+        // Calculate cash flow ratio
+        if (ocrData.totalCredits && ocrData.totalDebits && ocrData.totalDebits > 0) {
+            financialData.cashFlowRatio = ocrData.totalCredits / ocrData.totalDebits;
+        }
+
+        // Detect NSF events from text
+        if (ocrData.fullText) {
+            const nsfMatches = ocrData.fullText.match(/NSF|INSUFFICIENT\s+FUNDS|OVERDRAFT|RETURNED\s+ITEM/gi);
+            financialData.nsfEvents = nsfMatches ? nsfMatches.length : 0;
+        }
+
+        // Calculate account age from statement period
+        if (ocrData.statementPeriod) {
+            // Try to extract dates from period string
+            const dateMatch = ocrData.statementPeriod.match(/(\d{1,2})[-\/](\w{3})[-\/](\d{4})/);
+            if (dateMatch) {
+                const year = parseInt(dateMatch[3]);
+                const currentYear = new Date().getFullYear();
+                financialData.accountAgeMonths = Math.max(1, (currentYear - year) * 12);
+            }
+        }
+
+        // Balance consistency (simplified - can be enhanced)
+        if (ocrData.openingBalance && ocrData.closingBalance) {
+            const variation = Math.abs(ocrData.closingBalance - ocrData.openingBalance) / ocrData.openingBalance;
+            if (variation < 0.1) financialData.balanceConsistencyScore = 9;
+            else if (variation < 0.3) financialData.balanceConsistencyScore = 7;
+            else if (variation < 0.5) financialData.balanceConsistencyScore = 5;
+            else financialData.balanceConsistencyScore = 3;
+        }
+
+        console.log('📊 Extracted Financial Data from OCR:', financialData);
+        return financialData;
     }
 
     /**
