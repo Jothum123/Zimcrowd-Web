@@ -69,6 +69,7 @@ const routes = {
     investments: loadRoute('./routes/investments', 'Investments'),
     adminDashboard: loadRoute('./routes/admin-dashboard', 'Admin Dashboard'),
     kycOcr: loadRoute('./routes/kyc-ocr', 'KYC OCR'),
+    faceVerification: loadRoute('./routes/face-verification', 'Face Verification'),
     accountStatus: loadRoute('./routes/account-status', 'Account Status'),
     notifications: loadRoute('./routes/notifications', 'Notifications'),
     market: loadRoute('./routes/market', 'Market'),
@@ -109,6 +110,7 @@ if (routes.loans) app.use('/api/loans', routes.loans);
 if (routes.investments) app.use('/api/investments', routes.investments);
 if (routes.adminDashboard) app.use('/api/admin-dashboard', routes.adminDashboard);
 if (routes.kycOcr) app.use('/api/kyc-ocr', routes.kycOcr);
+if (routes.faceVerification) app.use('/api/face', routes.faceVerification);
 if (routes.accountStatus) app.use('/api/account-status', routes.accountStatus);
 if (routes.notifications) app.use('/api/notifications', routes.notifications);
 if (routes.market) app.use('/api/market', routes.market);
