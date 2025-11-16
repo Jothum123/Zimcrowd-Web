@@ -23,63 +23,75 @@ The system now calculates cold start limits based on **DTNI (Debt-to-Net-Income)
 ## 📈 **DTNI Calculation Formula**
 
 ```
-DTNI Ratio = Total Monthly Debt / Monthly Net Income
+Step 1: Net Salary × 40% = Maximum Monthly Installment
+Step 2: Available Installment = Max Installment - Existing Installments
+Step 3: Max Loan Amount = (Available Installment × Term) / (1 + Interest Rate)
+Step 4: Apply Employment Cap (Civil Servants: $300, Others: $100)
 
 Where:
-- Total Monthly Debt = Sum of all active loan repayments
-- Monthly Net Income = User's declared monthly income
+- Net Salary = User's declared monthly income
+- Existing Installments = Sum of all active loan monthly payments
+- Term = Assumed 1 month (30 days) for cold start
+- Interest Rate = Assumed 5% for cold start calculation
 ```
 
-### **Example 1: Civil Servant**
+### **Example 1: Civil Servant - No Existing Debt**
 ```
-Monthly Income: $500
-Active Loans: $50 (total monthly repayment)
-DTNI = $50 / $500 = 0.10 (10%)
+Net Salary: $500
+Max Installment: $500 × 40% = $200
+Existing Installments: $0
+Available Installment: $200 - $0 = $200
 
-Result: Excellent DTNI → Full $300 cold start limit
+Max Loan Amount = ($200 × 1) / (1 + 0.05) = $190.48
+Employment Cap: $300
+Result: $190 cold start limit ✅
 ```
 
-### **Example 2: Private Sector**
+### **Example 2: Private Sector - With Existing Debt**
 ```
-Monthly Income: $400
-Active Loans: $120 (total monthly repayment)
-DTNI = $120 / $400 = 0.30 (30%)
+Net Salary: $400
+Max Installment: $400 × 40% = $160
+Existing Installments: $100
+Available Installment: $160 - $100 = $60
 
-Result: Good DTNI → $80 cold start limit (80% of $100)
+Max Loan Amount = ($60 × 1) / (1 + 0.05) = $57.14
+Employment Cap: $100
+Result: $57 cold start limit ✅
 ```
 
 ---
 
-## 🎚️ **DTNI Thresholds & Limits**
+## 🎚️ **Installment Utilization Thresholds**
 
-### **Excellent DTNI (≤20%)**
-- **Status:** Excellent
-- **Civil Servants:** $300 (100% of max)
-- **Others:** $100 (100% of max)
-- **Description:** Very low debt, excellent borrowing capacity
+### **Excellent (0% Utilization)**
+- **Status:** Excellent - No existing debt
+- **Description:** No active loans, full borrowing capacity available
+- **Cold Start:** Based on 40% of net salary, capped at employment limit
 
-### **Good DTNI (21-30%)**
+### **Excellent (1-20% Utilization)**
+- **Status:** Excellent - Low debt
+- **Description:** Very low existing debt, excellent borrowing capacity
+- **Cold Start:** High available installment capacity
+
+### **Good (21-50% Utilization)**
 - **Status:** Good
-- **Civil Servants:** $240 (80% of max)
-- **Others:** $80 (80% of max)
-- **Description:** Manageable debt, good borrowing capacity
+- **Description:** Moderate existing debt, good borrowing capacity
+- **Cold Start:** Moderate available installment capacity
 
-### **Fair DTNI (31-40%)** ⚠️ *Civil Servants Only*
+### **Fair (51-80% Utilization)**
 - **Status:** Fair
-- **Civil Servants:** $180 (60% of max)
-- **Others:** Denied (exceeds 33% max)
-- **Description:** Higher debt, limited borrowing capacity
+- **Description:** Higher existing debt, limited borrowing capacity
+- **Cold Start:** Limited available installment capacity
 
-### **Limited (At Max DTNI)**
+### **Limited (81-99% Utilization)**
 - **Status:** Limited
-- **Civil Servants:** $180 (at 40% DTNI)
-- **Others:** $60 (at 33% DTNI)
-- **Description:** At maximum acceptable debt level
+- **Description:** Near maximum installment capacity
+- **Cold Start:** Minimal available borrowing capacity
 
-### **Denied (Over Max DTNI)**
-- **Status:** Denied - DTNI too high
+### **Denied (100%+ Utilization)**
+- **Status:** Denied - At maximum capacity
 - **Cold Start Limit:** $0
-- **Description:** Debt level too high, must reduce debt first
+- **Description:** Already at or over 40% installment limit, must repay existing loans first
 
 ---
 
@@ -107,11 +119,13 @@ System extracts:
 ### **Step 3: DTNI Calculation**
 ```
 System checks:
-1. Monthly income from employment_details
-2. Active loans from loans table
-3. Calculates total monthly debt
-4. Computes DTNI ratio
-5. Determines cold start limit
+1. Net salary from employment_details
+2. Calculates max installment: Net Salary × 40%
+3. Gets active loans from loans table
+4. Calculates existing monthly installments
+5. Computes available installment capacity
+6. Determines max loan amount from available installment
+7. Applies employment cap ($300 or $100)
 ```
 
 ### **Step 4: ZimScore Calculated**
@@ -129,13 +143,20 @@ Score-based Limit: Unlocks after first repayment
 
 ## 📋 **DTNI Calculation Examples**
 
-### **Example 1: New Civil Servant - Excellent DTNI**
+### **Example 1: New Civil Servant - No Existing Debt**
 ```
 Profile:
 - Employment: Government
-- Monthly Income: $600
+- Net Salary: $600
 - Active Loans: $0
-- DTNI: 0% (no debt)
+
+DTNI Calculation:
+- Max Installment: $600 × 40% = $240
+- Existing Installments: $0
+- Available Installment: $240
+- Max Loan Amount: ($240 × 1) / 1.05 = $228.57
+- Employment Cap: $300
+- Final Limit: $228 (rounded)
 
 ZimScore Calculation:
 - Banking Score: 60/60
@@ -144,18 +165,26 @@ ZimScore Calculation:
 - Total Score: 70/85
 
 Cold Start Result:
-- DTNI Status: Excellent (0%)
-- Cold Start Limit: $300 ✅
+- Installment Utilization: 0%
+- Status: Excellent - No existing debt
+- Cold Start Limit: $228 ✅
 - Score-based Limit: $800 (unlocks after first repayment)
 ```
 
-### **Example 2: Private Sector - Good DTNI**
+### **Example 2: Private Sector - With Existing Debt**
 ```
 Profile:
 - Employment: Private
-- Monthly Income: $400
-- Active Loans: $100 (25% DTNI)
-- DTNI: 25%
+- Net Salary: $400
+- Active Loans: 1 loan with $80 monthly installment
+
+DTNI Calculation:
+- Max Installment: $400 × 40% = $160
+- Existing Installments: $80
+- Available Installment: $160 - $80 = $80
+- Max Loan Amount: ($80 × 1) / 1.05 = $76.19
+- Employment Cap: $100
+- Final Limit: $76 (rounded)
 
 ZimScore Calculation:
 - Banking Score: 55/60
@@ -164,8 +193,9 @@ ZimScore Calculation:
 - Total Score: 61/85
 
 Cold Start Result:
-- DTNI Status: Good (25%)
-- Cold Start Limit: $80 ✅ (80% of $100)
+- Installment Utilization: 50% ($80/$160)
+- Status: Good
+- Cold Start Limit: $76 ✅
 - Score-based Limit: $600 (unlocks after first repayment)
 ```
 
