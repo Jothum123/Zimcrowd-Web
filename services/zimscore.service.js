@@ -20,6 +20,26 @@ class ZimScoreService {
             business: 3,       // Self-employed but established
             informal: 0        // Irregular income
         };
+
+        // Cold Start Limits (DTNI-based)
+        this.COLD_START_LIMITS = {
+            government: {
+                max: 300,      // Civil servants can get up to $300
+                dtniMax: 0.40  // Max 40% DTNI for civil servants
+            },
+            other: {
+                max: 100,      // Other employment types up to $100
+                dtniMax: 0.33  // Max 33% DTNI for others
+            }
+        };
+
+        // DTNI (Debt-to-Net-Income) Thresholds
+        this.DTNI_THRESHOLDS = {
+            excellent: 0.20,   // ≤20% DTNI: Full limit
+            good: 0.30,        // ≤30% DTNI: 80% of limit
+            fair: 0.40,        // ≤40% DTNI: 60% of limit (civil servants only)
+            poor: 0.50         // >40% DTNI: Denied
+        };
         
         // Score factor weights
         this.WEIGHTS = {
@@ -164,26 +184,39 @@ class ZimScoreService {
             // Final score (Component 1 + Component 2 + Component 3)
             score = Math.max(this.MIN_SCORE, Math.min(this.MAX_SCORE, score));
 
-            // Calculate star rating, max loan amount, and reputation level
+            // Calculate star rating and reputation level
             const starRating = this.calculateStarRating(score);
-            // Cold start override: $100 for all new users
-            const maxLoanAmount = 100.00; // Cold start limit
-            const scoreBasedLimit = this.calculateMaxLoanAmount(score); // Unlocked after first repayment
             const riskLevel = this.getRiskLevel(score);
 
+            // Calculate DTNI-based cold start limit
+            const coldStartResult = await this.calculateColdStartLimit(
+                userId, 
+                employmentType, 
+                financialData
+            );
+
+            const maxLoanAmount = coldStartResult.coldStartLimit;
+            const scoreBasedLimit = this.calculateMaxLoanAmount(score); // Unlocked after first repayment
+            const dtniRatio = coldStartResult.dtniRatio;
+            const dtniStatus = coldStartResult.status;
+
             console.log(`✅ Cold Start Score: ${score}/85 (${starRating}⭐) - Risk Level: ${riskLevel}`);
-            console.log(`💰 Cold Start Limit: $${maxLoanAmount} (Score-based: $${scoreBasedLimit} - unlocks after first repayment)`);
+            console.log(`💰 Cold Start Limit: $${maxLoanAmount} (DTNI: ${(dtniRatio * 100).toFixed(1)}% - ${dtniStatus})`);
+            console.log(`📊 Score-based Limit: $${scoreBasedLimit} (unlocks after first repayment)`);
 
             // Save to database
             await this.saveZimScore(userId, {
                 scoreValue: score,
                 starRating,
-                maxLoanAmount, // $100 cold start
+                maxLoanAmount, // DTNI-based cold start
                 scoreBasedLimit, // Actual limit based on score
                 riskLevel,
                 factors,
                 calculationMethod: 'cold_start',
-                employmentType
+                employmentType,
+                dtniRatio,
+                dtniStatus,
+                coldStartActive: true
             });
 
             // Record in history
@@ -202,12 +235,18 @@ class ZimScoreService {
                 success: true,
                 scoreValue: score,
                 starRating,
-                maxLoanAmount, // $100 cold start
+                maxLoanAmount, // DTNI-based cold start
                 scoreBasedLimit, // Unlocked after first repayment
                 riskLevel,
                 factors,
                 coldStartActive: true,
-                employmentType
+                employmentType,
+                dtni: {
+                    ratio: dtniRatio,
+                    status: dtniStatus,
+                    monthlyIncome: coldStartResult.monthlyIncome,
+                    monthlyDebt: coldStartResult.monthlyDebt
+                }
             };
         } catch (error) {
             console.error('❌ Cold Start calculation error:', error);
@@ -397,6 +436,115 @@ class ZimScoreService {
     }
 
     /**
+     * Calculate cold start limit based on DTNI ratio
+     * @param {string} userId - User ID
+     * @param {string} employmentType - Employment type (government, private, business, informal)
+     * @param {Object} financialData - Financial data from bank statement
+     * @returns {Promise<Object>} Cold start limit details
+     */
+    async calculateColdStartLimit(userId, employmentType, financialData) {
+        try {
+            // Get user's employment details for monthly income
+            const { data: employmentDetails } = await supabase
+                .from('employment_details')
+                .select('monthly_income')
+                .eq('user_id', userId)
+                .single();
+
+            const monthlyIncome = employmentDetails?.monthly_income || 0;
+
+            // Get user's existing debt (active loans)
+            const { data: activeLoans } = await supabase
+                .from('loans')
+                .select('amount, interest_rate')
+                .eq('user_id', userId)
+                .in('status', ['active', 'approved'])
+                .order('created_at', { ascending: false });
+
+            // Calculate total monthly debt obligation
+            let totalMonthlyDebt = 0;
+            if (activeLoans && activeLoans.length > 0) {
+                activeLoans.forEach(loan => {
+                    // Assume 30-day term for simplicity
+                    const totalAmount = loan.amount * (1 + loan.interest_rate / 100);
+                    totalMonthlyDebt += totalAmount;
+                });
+            }
+
+            // Calculate DTNI ratio
+            const dtniRatio = monthlyIncome > 0 ? totalMonthlyDebt / monthlyIncome : 0;
+
+            // Determine max cold start limit based on employment type
+            const isCivilServant = employmentType === 'government';
+            const maxLimit = isCivilServant ? 
+                this.COLD_START_LIMITS.government.max : 
+                this.COLD_START_LIMITS.other.max;
+            const maxDTNI = isCivilServant ? 
+                this.COLD_START_LIMITS.government.dtniMax : 
+                this.COLD_START_LIMITS.other.dtniMax;
+
+            // Calculate cold start limit based on DTNI
+            let coldStartLimit = 0;
+            let status = '';
+
+            if (dtniRatio <= this.DTNI_THRESHOLDS.excellent) {
+                // Excellent DTNI (≤20%): Full limit
+                coldStartLimit = maxLimit;
+                status = 'Excellent';
+            } else if (dtniRatio <= this.DTNI_THRESHOLDS.good) {
+                // Good DTNI (≤30%): 80% of limit
+                coldStartLimit = maxLimit * 0.80;
+                status = 'Good';
+            } else if (dtniRatio <= this.DTNI_THRESHOLDS.fair && isCivilServant) {
+                // Fair DTNI (≤40%): 60% of limit (civil servants only)
+                coldStartLimit = maxLimit * 0.60;
+                status = 'Fair';
+            } else if (dtniRatio <= maxDTNI) {
+                // At max DTNI threshold: Minimum limit
+                coldStartLimit = isCivilServant ? 180 : 60; // 60% for civil servants, 60% for others
+                status = 'Limited';
+            } else {
+                // Over max DTNI: Denied
+                coldStartLimit = 0;
+                status = 'Denied - DTNI too high';
+            }
+
+            // Round to nearest dollar
+            coldStartLimit = Math.round(coldStartLimit);
+
+            console.log(`📊 DTNI Calculation:`);
+            console.log(`   Monthly Income: $${monthlyIncome}`);
+            console.log(`   Monthly Debt: $${totalMonthlyDebt.toFixed(2)}`);
+            console.log(`   DTNI Ratio: ${(dtniRatio * 100).toFixed(1)}%`);
+            console.log(`   Employment: ${employmentType} (${isCivilServant ? 'Civil Servant' : 'Other'})`);
+            console.log(`   Max Limit: $${maxLimit}`);
+            console.log(`   Cold Start Limit: $${coldStartLimit} (${status})`);
+
+            return {
+                coldStartLimit,
+                dtniRatio,
+                status,
+                monthlyIncome,
+                monthlyDebt: totalMonthlyDebt,
+                maxLimit,
+                isCivilServant
+            };
+        } catch (error) {
+            console.error('Error calculating cold start limit:', error);
+            // Fallback to minimum safe limit
+            return {
+                coldStartLimit: employmentType === 'government' ? 180 : 60,
+                dtniRatio: 0,
+                status: 'Error - using minimum limit',
+                monthlyIncome: 0,
+                monthlyDebt: 0,
+                maxLimit: employmentType === 'government' ? 300 : 100,
+                isCivilServant: employmentType === 'government'
+            };
+        }
+    }
+
+    /**
      * Calculate star rating from internal score
      * @param {number} scoreValue - Internal score (30-85)
      * @returns {number} Star rating (1.0-5.0)
@@ -461,7 +609,9 @@ class ZimScoreService {
                 score_factors: scoreData.factors,
                 calculation_method: scoreData.calculationMethod,
                 employment_type: scoreData.employmentType,
-                cold_start_active: scoreData.maxLoanAmount === 100,
+                dtni_ratio: scoreData.dtniRatio,
+                dtni_status: scoreData.dtniStatus,
+                cold_start_active: scoreData.coldStartActive !== undefined ? scoreData.coldStartActive : true,
                 last_calculated: new Date().toISOString()
             }, {
                 onConflict: 'user_id'

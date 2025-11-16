@@ -30,6 +30,10 @@ CREATE TABLE IF NOT EXISTS user_zimscores (
     -- Employment
     employment_type TEXT, -- government, private, business, informal
     
+    -- DTNI (Debt-to-Net-Income) metrics
+    dtni_ratio DECIMAL(5,4), -- DTNI ratio (e.g., 0.2500 = 25%)
+    dtni_status TEXT, -- 'Excellent', 'Good', 'Fair', 'Limited', 'Denied'
+    
     -- Performance metrics
     total_loans INTEGER DEFAULT 0,
     on_time_payments INTEGER DEFAULT 0,
@@ -186,12 +190,14 @@ COMMENT ON TABLE zimscore_history IS 'Tracks all ZimScore changes over time';
 
 COMMENT ON COLUMN user_zimscores.score_value IS 'Internal score: 30-85 points';
 COMMENT ON COLUMN user_zimscores.star_rating IS 'Public rating: 1.0-5.0 stars';
-COMMENT ON COLUMN user_zimscores.max_loan_amount IS 'Current borrowing limit ($100 cold start, then score-based)';
+COMMENT ON COLUMN user_zimscores.max_loan_amount IS 'Current borrowing limit (DTNI-based: civil servants $60-$300, others $60-$100)';
 COMMENT ON COLUMN user_zimscores.score_based_limit IS 'Actual limit based on score (unlocked after first repayment)';
-COMMENT ON COLUMN user_zimscores.cold_start_active IS 'TRUE = $100 limit, FALSE = score-based limit active';
+COMMENT ON COLUMN user_zimscores.cold_start_active IS 'TRUE = DTNI-based limit, FALSE = score-based limit active';
 COMMENT ON COLUMN user_zimscores.component1_banking IS 'Banking data component: 30-60 points';
 COMMENT ON COLUMN user_zimscores.component2_employment IS 'Employment bonus: 0-10 points';
 COMMENT ON COLUMN user_zimscores.component3_performance IS 'Performance adjustment: -20 to +39 points';
+COMMENT ON COLUMN user_zimscores.dtni_ratio IS 'Debt-to-Net-Income ratio (0.0-1.0, e.g., 0.25 = 25%)';
+COMMENT ON COLUMN user_zimscores.dtni_status IS 'DTNI status: Excellent (≤20%), Good (≤30%), Fair (≤40%), Limited, or Denied';
 
 -- ============================================================================
 -- 7. Grant Permissions (adjust as needed)
