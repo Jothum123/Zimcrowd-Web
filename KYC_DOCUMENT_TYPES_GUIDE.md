@@ -300,16 +300,26 @@ const documentTypes = [
 
 ---
 
-## 📈 Usage Statistics
+## 📈 KYC Requirements
 
-### **Typical KYC Requirements:**
+### **Required Documents (ALL Users):**
 
-| Loan Amount | Required Documents |
-|-------------|-------------------|
-| $0 - $100 | ID Front + Selfie |
-| $100 - $500 | ID Front + ID Back + Proof of Income |
-| $500 - $1,000 | ID Front + ID Back + Proof of Income + Proof of Address |
-| $1,000+ | All documents + Additional verification |
+**ALL users must submit the following documents regardless of loan amount:**
+
+| Category | Required Documents | Options |
+|----------|-------------------|---------|
+| **Proof of Identity** | National ID (Front) | Required |
+| **Proof of Address** | National ID (Back) OR Utility Bill | Choose one |
+| **Proof of Income** | Bank Statement OR EcoCash Statement OR OneMoney Statement OR Employment Letter | Choose one |
+| **Selfie** | Selfie Photo | Required |
+
+### **Minimum Required Documents:**
+1. ✅ National ID (Front) - **Required**
+2. ✅ National ID (Back) OR Utility Bill - **Choose one**
+3. ✅ Bank Statement OR Mobile Money Statement OR Employment Letter - **Choose one**
+4. ✅ Selfie Photo - **Required**
+
+**Total: 4 documents minimum for all loan amounts ($0 - $1,000+)**
 
 ---
 
