@@ -98,11 +98,77 @@ class AzureDocumentOCRService {
     }
 
     /**
+     * Parse Zimbabwe ID fields from text
+     */
+    parseZimbabweIDFromText(text) {
+        const fields = {
+            idNumber: null,
+            firstName: null,
+            lastName: null,
+            dateOfBirth: null,
+            placeOfBirth: null,
+            dateOfIssue: null,
+            villageOfOrigin: null,
+            address: null,
+            sex: null,
+            nationality: 'Zimbabwe'
+        };
+
+        // ID Number pattern: XX-XXXXXXAXX or similar
+        const idMatch = text.match(/(\d{2}[-\s]?\d{6}\s*[A-Z]\s*\d{2})/i);
+        if (idMatch) {
+            fields.idNumber = idMatch[1].replace(/\s+/g, ' ').trim();
+        }
+
+        // First Name (after "FIRST NAME")
+        const firstNameMatch = text.match(/FIRST\s+NAME[:\s]*\n?\s*([A-Z]+)/i);
+        if (firstNameMatch) {
+            fields.firstName = firstNameMatch[1].trim();
+        }
+
+        // Surname (after "SURNAME")
+        const surnameMatch = text.match(/SURNAME[:\s]*\n?\s*([A-Z]+)/i);
+        if (surnameMatch) {
+            fields.lastName = surnameMatch[1].trim();
+        }
+
+        // Date of Birth (DD/MM/YYYY format)
+        const dobMatch = text.match(/DATE\s+OF\s+BIRTH[:\s]*\n?\s*(\d{2}\/\d{2}\/\d{4})/i);
+        if (dobMatch) {
+            fields.dateOfBirth = dobMatch[1];
+        }
+
+        // Place of Birth
+        const pobMatch = text.match(/PLACE\s+OF\s+BIRTH[:\s]*\n?\s*([A-Z]+)/i);
+        if (pobMatch) {
+            fields.placeOfBirth = pobMatch[1].trim();
+        }
+
+        // Date of Issue
+        const doiMatch = text.match(/DATE\s+OF\s+ISSUE[:\s]*\n?\s*(\d{2}\/\d{2}\/\d{4})/i);
+        if (doiMatch) {
+            fields.dateOfIssue = doiMatch[1];
+        }
+
+        // Village of Origin
+        const villageMatch = text.match(/VILLAGE\s+OF\s+ORIGIN[:\s]*\n?\s*([A-Z]+)/i);
+        if (villageMatch) {
+            fields.villageOfOrigin = villageMatch[1].trim();
+        }
+
+        // Sex (M or F in ID number or separate field)
+        const sexMatch = text.match(/\b([MF])\b/);
+        if (sexMatch) {
+            fields.sex = sexMatch[1] === 'M' ? 'Male' : 'Female';
+        }
+
+        return fields;
+    }
+
+    /**
      * Parse Zimbabwe ID fields from Azure result
      */
-    parseIDFields(azureFields) {
-        if (!azureFields) return null;
-
+    parseIDFields(azureFields, fullText) {
         const fields = {
             idNumber: null,
             firstName: null,
@@ -116,41 +182,47 @@ class AzureDocumentOCRService {
             nationality: null
         };
 
-        // Map Azure fields to our structure
-        if (azureFields.DocumentNumber?.content) {
-            fields.idNumber = azureFields.DocumentNumber.content;
+        // Try Azure fields first
+        if (azureFields) {
+            if (azureFields.DocumentNumber?.content) {
+                fields.idNumber = azureFields.DocumentNumber.content;
+            }
+            if (azureFields.FirstName?.content) {
+                fields.firstName = azureFields.FirstName.content;
+            }
+            if (azureFields.LastName?.content) {
+                fields.lastName = azureFields.LastName.content;
+            }
+            if (azureFields.DateOfBirth?.content) {
+                fields.dateOfBirth = azureFields.DateOfBirth.content;
+            }
+            if (azureFields.PlaceOfBirth?.content) {
+                fields.placeOfBirth = azureFields.PlaceOfBirth.content;
+            }
+            if (azureFields.DateOfIssue?.content) {
+                fields.dateOfIssue = azureFields.DateOfIssue.content;
+            }
+            if (azureFields.Address?.content) {
+                fields.address = azureFields.Address.content;
+            }
+            if (azureFields.Sex?.content) {
+                fields.sex = azureFields.Sex.content;
+            }
+            if (azureFields.CountryRegion?.content) {
+                fields.nationality = azureFields.CountryRegion.content;
+            }
         }
 
-        if (azureFields.FirstName?.content) {
-            fields.firstName = azureFields.FirstName.content;
-        }
-
-        if (azureFields.LastName?.content) {
-            fields.lastName = azureFields.LastName.content;
-        }
-
-        if (azureFields.DateOfBirth?.content) {
-            fields.dateOfBirth = azureFields.DateOfBirth.content;
-        }
-
-        if (azureFields.PlaceOfBirth?.content) {
-            fields.placeOfBirth = azureFields.PlaceOfBirth.content;
-        }
-
-        if (azureFields.DateOfIssue?.content) {
-            fields.dateOfIssue = azureFields.DateOfIssue.content;
-        }
-
-        if (azureFields.Address?.content) {
-            fields.address = azureFields.Address.content;
-        }
-
-        if (azureFields.Sex?.content) {
-            fields.sex = azureFields.Sex.content;
-        }
-
-        if (azureFields.CountryRegion?.content) {
-            fields.nationality = azureFields.CountryRegion.content;
+        // Fallback to text parsing for missing fields
+        if (fullText) {
+            const textFields = this.parseZimbabweIDFromText(fullText);
+            
+            // Fill in missing fields from text parsing
+            Object.keys(fields).forEach(key => {
+                if (!fields[key] && textFields[key]) {
+                    fields[key] = textFields[key];
+                }
+            });
         }
 
         return fields;
@@ -271,8 +343,8 @@ class AzureDocumentOCRService {
                 };
             }
 
-            // Parse fields
-            const parsedFields = this.parseIDFields(textResult.fields);
+            // Parse fields (with text fallback)
+            const parsedFields = this.parseIDFields(textResult.fields, textResult.fullText);
 
             // Face detection
             const faceResult = await this.detectFace(imageBuffer);
