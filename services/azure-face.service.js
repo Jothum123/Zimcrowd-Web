@@ -49,10 +49,10 @@ class AzureFaceService {
             const detectedFaces = await this.client.face.detectWithStream(
                 imageBuffer,
                 {
-                    returnFaceId: false, // Face recognition features are restricted
-                    returnFaceLandmarks: false,
-                    returnFaceAttributes: ['age', 'gender', 'smile', 'glasses', 'blur', 'exposure', 'noise']
-                    // Note: 'emotion' requires face recognition approval from Microsoft
+                    returnFaceId: false,
+                    returnFaceLandmarks: false
+                    // Note: All face attributes (age, gender, smile, etc.) have been deprecated
+                    // and require Limited Access approval from Microsoft
                 }
             );
 
@@ -65,32 +65,20 @@ class AzureFaceService {
             }
 
             const face = detectedFaces[0];
-            const attributes = face.faceAttributes;
 
             console.log('✅ Face detected!');
-            console.log('   Age:', attributes.age);
-            console.log('   Gender:', attributes.gender);
-            console.log('   Quality:', attributes.blur.blurLevel);
+            console.log('   Face count:', detectedFaces.length);
+            console.log('   Face rectangle:', face.faceRectangle);
 
             return {
                 success: true,
                 faceDetected: true,
-                faceId: face.faceId,
                 faceCount: detectedFaces.length,
-                attributes: {
-                    age: attributes.age,
-                    gender: attributes.gender,
-                    smile: attributes.smile,
-                    glasses: attributes.glasses,
-                    emotion: attributes.emotion,
-                    quality: {
-                        blur: attributes.blur.blurLevel,
-                        exposure: attributes.exposure.exposureLevel,
-                        noise: attributes.noise.noiseLevel
-                    }
-                },
                 faceRectangle: face.faceRectangle,
-                confidence: this.calculateConfidence(attributes)
+                attributes: null, // Attributes require Limited Access approval
+                quality: null, // Quality analysis requires Limited Access approval
+                confidence: 100, // Face was detected
+                limitedAccessNote: 'Face attributes (age, gender, etc.) require Microsoft Limited Access approval'
             };
 
         } catch (error) {

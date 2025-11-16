@@ -155,11 +155,15 @@ router.post('/analyze', upload.single('document'), async (req, res) => {
                 
                 if (faceResult.success && faceResult.faceDetected) {
                     analysis.faceDetected = true;
-                    analysis.faceAttributes = faceResult.attributes;
-                    analysis.faceQuality = faceResult.quality;
-                    analysis.qualityAcceptable = faceResult.isGoodQuality;
+                    analysis.faceCount = faceResult.faceCount;
+                    analysis.faceRectangle = faceResult.faceRectangle;
                     console.log('✅ Face detected with Azure Face API');
-                    console.log(`   Age: ${faceResult.attributes.age}, Gender: ${faceResult.attributes.gender}`);
+                    console.log(`   Face count: ${faceResult.faceCount}`);
+                    
+                    // Note: Face attributes require Limited Access approval
+                    if (faceResult.limitedAccessNote) {
+                        analysis.limitedAccessNote = faceResult.limitedAccessNote;
+                    }
                 }
             } catch (faceError) {
                 console.warn('⚠️  Azure Face detection failed, using OCR service result:', faceError.message);

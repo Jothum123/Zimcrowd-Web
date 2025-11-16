@@ -653,44 +653,25 @@
                 </div>
             `;
 
-            // Add face attributes if available
-            if (data.faceAttributes) {
+            // Add Limited Access note if present
+            if (data.limitedAccessNote) {
                 analysisHTML += `
-                    <h4 style="margin-top: 20px; color: #667eea;">👤 Face Analysis (Azure Face API):</h4>
-                    <div class="field">
-                        <span class="field-label">Age:</span>
-                        <span class="field-value">${data.faceAttributes.age || 'N/A'}</span>
-                    </div>
-                    <div class="field">
-                        <span class="field-label">Gender:</span>
-                        <span class="field-value">${data.faceAttributes.gender || 'N/A'}</span>
-                    </div>
-                    <div class="field">
-                        <span class="field-label">Glasses:</span>
-                        <span class="field-value">${data.faceAttributes.glasses || 'N/A'}</span>
-                    </div>
-                    <div class="field">
-                        <span class="field-label">Smile:</span>
-                        <span class="field-value">${data.faceAttributes.smile ? (data.faceAttributes.smile * 100).toFixed(0) + '%' : 'N/A'}</span>
+                    <div class="field" style="background: #fef3c7; padding: 10px; border-radius: 5px; border-left: 4px solid #f59e0b; margin-top: 15px;">
+                        <span class="field-label">⚠️ Note:</span>
+                        <span class="field-value">${data.limitedAccessNote}</span>
                     </div>
                 `;
+            }
 
-                if (data.faceQuality) {
-                    analysisHTML += `
-                        <div class="field">
-                            <span class="field-label">Photo Blur:</span>
-                            <span class="field-value">${data.faceQuality.blur || 'N/A'}</span>
-                        </div>
-                        <div class="field">
-                            <span class="field-label">Photo Exposure:</span>
-                            <span class="field-value">${data.faceQuality.exposure || 'N/A'}</span>
-                        </div>
-                        <div class="field">
-                            <span class="field-label">Photo Noise:</span>
-                            <span class="field-value">${data.faceQuality.noise || 'N/A'}</span>
-                        </div>
-                    `;
-                }
+            // Add face count if available
+            if (data.faceCount) {
+                analysisHTML += `
+                    <h4 style="margin-top: 20px; color: #667eea;">👤 Face Detection (Azure Face API):</h4>
+                    <div class="field">
+                        <span class="field-label">Faces Detected:</span>
+                        <span class="field-value">${data.faceCount}</span>
+                    </div>
+                `;
             }
 
             document.getElementById('analysisResults').innerHTML = analysisHTML;
