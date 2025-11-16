@@ -1,12 +1,40 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const { createClient } = require('@supabase/supabase-js');
 const { authenticateUser, requireAdmin } = require('../middleware/auth');
+const VisionOCRService = require('../services/vision-ocr.service');
+const AzureFaceService = require('../services/azure-face.service');
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
 );
+
+// Configure multer for file uploads
+const upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { 
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    },
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+        if (!allowedTypes.includes(file.mimetype)) {
+            return cb(new Error(`Invalid file type: ${file.mimetype}`), false);
+        }
+        cb(null, true);
+    }
+});
+
+// Initialize OCR and Face services
+let ocrService, faceService;
+try {
+    ocrService = new VisionOCRService();
+    faceService = new AzureFaceService();
+    console.log('✅ OCR and Face services initialized for KYC');
+} catch (error) {
+    console.warn('⚠️  OCR/Face services not available:', error.message);
+}
 
 /**
  * @route   GET /api/profile-setup/status
@@ -499,6 +527,156 @@ router.post('/upload-document', authenticateUser, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to upload document'
+        });
+    }
+});
+
+/**
+ * @route   POST /api/profile-setup/upload-document-with-ocr
+ * @desc    Upload KYC document with automatic OCR processing
+ * @access  Private
+ */
+router.post('/upload-document-with-ocr', authenticateUser, upload.single('document'), async (req, res) => {
+    try {
+        const { document_type } = req.body;
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No document file provided'
+            });
+        }
+
+        if (!document_type) {
+            return res.status(400).json({
+                success: false,
+                message: 'Document type is required'
+            });
+        }
+
+        console.log(`📄 Processing ${document_type} for user ${req.user.id}`);
+
+        // Process document with OCR
+        let ocrData = null;
+        if (ocrService) {
+            try {
+                const analysis = await ocrService.analyzeDocument(req.file.buffer, document_type);
+                if (analysis.success) {
+                    ocrData = {
+                        extracted_fields: analysis.parsedFields,
+                        full_text: analysis.fullText,
+                        confidence: analysis.overallConfidence,
+                        face_detected: analysis.faceDetected,
+                        face_count: analysis.faceCount,
+                        ocr_engine: 'Azure Document Intelligence'
+                    };
+                    console.log('✅ OCR processing complete');
+                }
+            } catch (ocrError) {
+                console.warn('⚠️  OCR processing failed:', ocrError.message);
+            }
+        }
+
+        // Upload file to Supabase Storage
+        const fileName = `${req.user.id}/${document_type}_${Date.now()}_${req.file.originalname}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('kyc-documents')
+            .upload(fileName, req.file.buffer, {
+                contentType: req.file.mimetype,
+                upsert: false
+            });
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+            .from('kyc-documents')
+            .getPublicUrl(fileName);
+
+        // Extract document number from OCR if available
+        let documentNumber = null;
+        if (ocrData && ocrData.extracted_fields) {
+            documentNumber = ocrData.extracted_fields.idNumber || 
+                           ocrData.extracted_fields.accountNumber || 
+                           null;
+        }
+
+        // Insert document record
+        const { data: document, error: docError } = await supabase
+            .from('verification_documents')
+            .insert({
+                user_id: req.user.id,
+                document_type,
+                document_number: documentNumber,
+                file_url: publicUrl,
+                file_name: req.file.originalname,
+                file_size: req.file.size,
+                mime_type: req.file.mimetype,
+                status: 'pending',
+                ocr_data: ocrData,
+                submitted_at: new Date().toISOString(),
+                created_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+        if (docError) throw docError;
+
+        // Auto-fill profile data from OCR if it's a national ID
+        if (document_type === 'national_id' && ocrData && ocrData.extracted_fields) {
+            const fields = ocrData.extracted_fields;
+            const updates = {};
+
+            if (fields.firstName && fields.lastName) {
+                updates.full_name = `${fields.firstName} ${fields.lastName}`;
+            }
+            if (fields.dateOfBirth) {
+                updates.date_of_birth = fields.dateOfBirth;
+            }
+            if (fields.sex) {
+                updates.gender = fields.sex.toLowerCase();
+            }
+            if (fields.idNumber) {
+                updates.national_id = fields.idNumber;
+            }
+            if (fields.address) {
+                updates.address = fields.address;
+            }
+
+            if (Object.keys(updates).length > 0) {
+                await supabase
+                    .from('users')
+                    .update(updates)
+                    .eq('id', req.user.id);
+                console.log('✅ Profile auto-filled from OCR data');
+            }
+        }
+
+        // Get updated completion status
+        const { data: status } = await supabase
+            .from('user_profile_completion')
+            .select('setup_completion_percentage, pending_steps, kyc_documents_submitted')
+            .eq('id', req.user.id)
+            .single();
+
+        res.json({
+            success: true,
+            message: 'Document uploaded and processed successfully',
+            data: {
+                document,
+                ocr_data: ocrData,
+                auto_filled: document_type === 'national_id' && ocrData,
+                completion_percentage: status?.setup_completion_percentage,
+                pending_steps: status?.pending_steps.filter(step => step !== null),
+                kyc_documents_submitted: status?.kyc_documents_submitted
+            }
+        });
+    } catch (error) {
+        console.error('Upload document with OCR error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to upload and process document',
+            error: error.message
         });
     }
 });
