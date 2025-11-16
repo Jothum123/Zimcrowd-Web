@@ -522,13 +522,19 @@
 
                 if (result.success) {
                     displayFaceResults(result.data);
-                    if (result.data.isMatch) {
+                    if (result.data.isMatch === null) {
+                        showError('⚠️ Face comparison requires Microsoft approval. Both faces detected - manual review recommended.');
+                    } else if (result.data.isMatch) {
                         showSuccess(`✅ FACE MATCH! Confidence: ${result.data.confidence}%`);
                     } else {
                         showError(`❌ NO MATCH. Confidence: ${result.data.confidence}%`);
                     }
                 } else {
-                    showError(result.message || 'Failed to compare faces');
+                    if (result.limitedAccessRequired) {
+                        showError('⚠️ ' + result.message + ' - ' + result.error);
+                    } else {
+                        showError(result.message || 'Failed to compare faces');
+                    }
                 }
             } catch (error) {
                 showError('Error connecting to server: ' + error.message);
@@ -539,14 +545,14 @@
         });
 
         function displayFaceResults(data) {
-            const matchStatus = data.isMatch ? '✅ MATCH' : '❌ NO MATCH';
-            const matchColor = data.isMatch ? '#10b981' : '#ef4444';
+            const matchStatus = data.isMatch === null ? '⚠️ MANUAL REVIEW' : (data.isMatch ? '✅ MATCH' : '❌ NO MATCH');
+            const matchColor = data.isMatch === null ? '#f59e0b' : (data.isMatch ? '#10b981' : '#ef4444');
             const resultClass = data.details?.result === 'PASS' ? 'success' : 'error';
 
             const html = `
                 <div class="field" style="background: ${matchColor}20; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
                     <h4 style="color: ${matchColor}; font-size: 24px; margin-bottom: 10px;">${matchStatus}</h4>
-                    <p style="font-size: 18px; font-weight: bold;">Confidence: ${data.confidence}%</p>
+                    <p style="font-size: 18px; font-weight: bold;">Confidence: ${data.confidence !== null ? data.confidence + '%' : 'N/A (Requires Microsoft Approval)'}</p>
                     <p style="color: #666; margin-top: 10px;">${data.recommendation}</p>
                 </div>
 
@@ -559,6 +565,13 @@
                     <span class="field-label">Threshold:</span>
                     <span class="field-value">${data.details?.threshold}</span>
                 </div>
+
+                ${data.details?.note ? `
+                <div class="field" style="background: #fef3c7; padding: 10px; border-radius: 5px; border-left: 4px solid #f59e0b;">
+                    <span class="field-label">Note:</span>
+                    <span class="field-value">${data.details.note}</span>
+                </div>
+                ` : ''}
 
                 <h4 style="margin-top: 20px; color: #667eea;">ID Photo Analysis:</h4>
                 <div class="field">

@@ -49,9 +49,10 @@ class AzureFaceService {
             const detectedFaces = await this.client.face.detectWithStream(
                 imageBuffer,
                 {
-                    returnFaceId: true,
+                    returnFaceId: false, // Face recognition features are restricted
                     returnFaceLandmarks: false,
-                    returnFaceAttributes: ['age', 'gender', 'smile', 'glasses', 'emotion', 'blur', 'exposure', 'noise']
+                    returnFaceAttributes: ['age', 'gender', 'smile', 'glasses', 'blur', 'exposure', 'noise']
+                    // Note: 'emotion' requires face recognition approval from Microsoft
                 }
             );
 
@@ -105,6 +106,8 @@ class AzureFaceService {
 
     /**
      * Compare two faces (ID photo vs selfie)
+     * NOTE: Face verification requires Limited Access approval from Microsoft
+     * https://aka.ms/cog-services-limited-access
      */
     async compareFaces(idImageBuffer, selfieImageBuffer) {
         if (!this.client) {
@@ -137,23 +140,17 @@ class AzureFaceService {
                 };
             }
 
-            // Verify faces match
-            const verifyResult = await this.client.face.verifyFaceToFace(
-                idFaceResult.faceId,
-                selfieFaceResult.faceId
-            );
-
-            const isMatch = verifyResult.isIdentical;
-            const confidence = Math.round(verifyResult.confidence * 100);
-
-            console.log('✅ Face comparison complete!');
-            console.log('   Match:', isMatch ? 'YES' : 'NO');
-            console.log('   Confidence:', confidence + '%');
+            // IMPORTANT: Face verification/comparison is a Limited Access feature
+            // It requires approval from Microsoft: https://aka.ms/cog-services-limited-access
+            // For now, we'll provide face detection results without comparison
+            
+            console.log('⚠️  Face comparison requires Limited Access approval from Microsoft');
+            console.log('   Providing face detection results instead');
 
             return {
                 success: true,
-                isMatch: isMatch,
-                confidence: confidence,
+                isMatch: null, // Cannot determine without Limited Access
+                confidence: null,
                 idFace: {
                     detected: true,
                     attributes: idFaceResult.attributes,
@@ -164,15 +161,27 @@ class AzureFaceService {
                     attributes: selfieFaceResult.attributes,
                     quality: selfieFaceResult.attributes.quality
                 },
-                recommendation: this.getRecommendation(isMatch, confidence),
+                recommendation: 'Face comparison requires Limited Access approval from Microsoft. Both faces detected successfully. Manual verification recommended.',
                 details: {
-                    threshold: 'High confidence match requires 70%+ similarity',
-                    result: confidence >= 70 ? 'PASS' : 'FAIL'
+                    threshold: 'Face verification requires Microsoft approval',
+                    result: 'MANUAL_REVIEW',
+                    note: 'Apply for Limited Access at: https://aka.ms/cog-services-limited-access'
                 }
             };
 
         } catch (error) {
             console.error('❌ Face comparison error:', error);
+            
+            // Check if it's a Limited Access error
+            if (error.message && error.message.includes('Limited Access')) {
+                return {
+                    success: false,
+                    message: 'Face verification requires Limited Access approval from Microsoft',
+                    error: 'Apply at: https://aka.ms/cog-services-limited-access',
+                    limitedAccessRequired: true
+                };
+            }
+            
             return {
                 success: false,
                 message: 'Failed to compare faces',
