@@ -114,10 +114,11 @@ class AzureDocumentOCRService {
             nationality: 'Zimbabwe'
         };
 
-        // ID Number pattern: XX-XXXXXXAXX or similar
-        const idMatch = text.match(/(\d{2}[-\s]?\d{6}\s*[A-Z]\s*\d{2})/i);
+        // ID Number pattern: XX- XXXXXX F XX CIT M (with variable spacing)
+        const idMatch = text.match(/ID\s+NUMBER[:\s]*\n?\s*(\d{2}[-\s]+\d{6}\s+[A-Z]\s+\d{2}\s+[A-Z]+\s+[A-Z])/i);
         if (idMatch) {
-            fields.idNumber = idMatch[1].replace(/\s+/g, ' ').trim();
+            // Normalize spacing: keep single spaces, remove extra spaces
+            fields.idNumber = idMatch[1].replace(/\s+/g, ' ').replace(/- /g, '-').trim();
         }
 
         // First Name (after "FIRST NAME")
@@ -156,10 +157,10 @@ class AzureDocumentOCRService {
             fields.villageOfOrigin = villageMatch[1].trim();
         }
 
-        // Sex (M or F in ID number or separate field)
-        const sexMatch = text.match(/\b([MF])\b/);
+        // Sex (M or F - look for it after CIT or at end of ID number)
+        const sexMatch = text.match(/CIT\s+([MF])\b/i) || text.match(/\d{2}\s+([MF])\b/);
         if (sexMatch) {
-            fields.sex = sexMatch[1] === 'M' ? 'Male' : 'Female';
+            fields.sex = sexMatch[1].toUpperCase() === 'M' ? 'Male' : 'Female';
         }
 
         return fields;
