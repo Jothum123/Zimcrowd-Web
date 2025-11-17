@@ -82,7 +82,9 @@ const routes = {
     paynowProduction: loadRoute('./routes/paynow-production', 'PayNow Production'),
     referralCredits: loadRoute('./routes/referral-credits', 'Referral Credits'),
     transactionsRealtime: loadRoute('./routes/transactions-realtime', 'Real-Time Transactions'),
-    paymentFallback: loadRoute('./routes/payment-fallback', 'Payment Fallback')
+    paymentFallback: loadRoute('./routes/payment-fallback', 'Payment Fallback'),
+    adminWalletMonitoring: loadRoute('./routes/admin-wallet-monitoring', 'Admin Wallet Monitoring'),
+    adminManualTransactions: loadRoute('./routes/admin-manual-transactions', 'Admin Manual Transactions')
 };
 
 console.log('='.repeat(60) + '\n');
@@ -133,6 +135,8 @@ if (routes.paynowProduction) app.use('/api/paynow-production', routes.paynowProd
 if (routes.referralCredits) app.use('/api/referral-credits', routes.referralCredits);
 if (routes.transactionsRealtime) app.use('/api/transactions-realtime', routes.transactionsRealtime);
 if (routes.paymentFallback) app.use('/api/payment-fallback', routes.paymentFallback);
+if (routes.adminWalletMonitoring) app.use('/api/admin-wallet-monitoring', routes.adminWalletMonitoring);
+if (routes.adminManualTransactions) app.use('/api/admin-manual-transactions', routes.adminManualTransactions);
 
 // =====================================================
 // ERROR HANDLING
