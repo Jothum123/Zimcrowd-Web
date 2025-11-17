@@ -75,7 +75,14 @@ const routes = {
     market: loadRoute('./routes/market', 'Market'),
     analytics: loadRoute('./routes/analytics', 'Analytics'),
     referrals: loadRoute('./routes/referrals', 'Referrals'),
-    zimscore: loadRoute('./routes/zimscore', 'ZimScore')
+    zimscore: loadRoute('./routes/zimscore', 'ZimScore'),
+    kairo: loadRoute('./routes/kairo', 'Kairo AI'),
+    kairoAzure: loadRoute('./routes/kairo-azure', 'Kairo AI with Azure OpenAI'),
+    // Production Financial Routes
+    paynowProduction: loadRoute('./routes/paynow-production', 'PayNow Production'),
+    referralCredits: loadRoute('./routes/referral-credits', 'Referral Credits'),
+    transactionsRealtime: loadRoute('./routes/transactions-realtime', 'Real-Time Transactions'),
+    paymentFallback: loadRoute('./routes/payment-fallback', 'Payment Fallback')
 };
 
 console.log('='.repeat(60) + '\n');
@@ -118,6 +125,14 @@ if (routes.market) app.use('/api/market', routes.market);
 if (routes.analytics) app.use('/api/analytics', routes.analytics);
 if (routes.referrals) app.use('/api/referrals', routes.referrals);
 if (routes.zimscore) app.use('/api/zimscore', routes.zimscore);
+if (routes.kairo) app.use('/api/kairo', routes.kairo);
+if (routes.kairoAzure) app.use('/api/kairo-azure', routes.kairoAzure);
+
+// Production Financial Routes
+if (routes.paynowProduction) app.use('/api/paynow-production', routes.paynowProduction);
+if (routes.referralCredits) app.use('/api/referral-credits', routes.referralCredits);
+if (routes.transactionsRealtime) app.use('/api/transactions-realtime', routes.transactionsRealtime);
+if (routes.paymentFallback) app.use('/api/payment-fallback', routes.paymentFallback);
 
 // =====================================================
 // ERROR HANDLING

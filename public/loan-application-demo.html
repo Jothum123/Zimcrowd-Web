@@ -329,8 +329,24 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="purpose">Loan Purpose</label>
-                    <textarea id="purpose" rows="3" placeholder="Describe what you'll use this loan for...">Business expansion and equipment purchase</textarea>
+                    <label for="purpose">Loan Purpose:</label>
+                    <textarea id="purpose" placeholder="e.g., Business expansion, emergency expenses, etc." rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="employmentType">Employment Type (Test Scenario):</label>
+                    <select id="employmentType">
+                        <option value="government">Government Employee ($300 max, 24 months)</option>
+                        <option value="private">Private Employee ($100 max, 12 months)</option>
+                        <option value="business">Business Owner ($100 max, 12 months)</option>
+                        <option value="informal">Informal Worker ($100 max, 12 months)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="monthlyIncome">Monthly Income (Test Scenario):</label>
+                    <input type="number" id="monthlyIncome" value="600" min="100" max="2000" step="50">
+                    <small>Net monthly salary for DTNI calculation (40% = max installment)</small>
                 </div>
             </form>
 
@@ -380,44 +396,116 @@
         async function calculateMax() {
             const termDays = parseInt(document.getElementById('termDays').value);
             const interestRate = parseFloat(document.getElementById('interestRate').value);
+            const employmentType = document.getElementById('employmentType').value;
+            const monthlyIncome = parseInt(document.getElementById('monthlyIncome').value);
 
-            showLoading('Calculating maximum loan amount...');
+            showLoading('Calculating maximum loan amount using DTNI system...');
 
             try {
-                const response = await fetch('/api/loans/calculate-max', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer demo-token' // Demo token
-                    },
-                    body: JSON.stringify({ termDays, interestRate })
-                });
-
-                const result = await response.json();
+                // Step 1: Calculate DTNI capacity (40% rule)
+                const maxInstallment = monthlyIncome * 0.40;
+                const availableInstallment = maxInstallment; // Assuming no existing loans
                 
-                if (result.success) {
-                    showResult('success', 'Maximum Loan Calculation', result.data);
-                } else {
-                    showResult('error', 'Calculation Failed', result.message);
-                }
+                // Step 2: Get employment cap
+                const employmentCap = employmentType === 'government' ? 300 : 100;
+                
+                // Step 3: Calculate maximum loan amount from DTNI capacity
+                const maxLoanFromDTNI = calculateMaxLoanFromInstallment(availableInstallment, interestRate, termDays);
+                
+                // Step 4: Apply employment cap limit
+                const maxLoanAmount = Math.min(maxLoanFromDTNI, employmentCap);
+                
+                // Step 5: Calculate monthly repayment for the max loan amount
+                const termMonths = termDays / 30;
+                const monthlyRepayment = calculateMonthlyInstallment(maxLoanAmount, interestRate, termMonths);
+                
+                // Step 6: Calculate total amount to be repaid
+                const totalRepayment = monthlyRepayment * termMonths;
+                const totalInterest = totalRepayment - maxLoanAmount;
+                
+                // Step 7: Calculate interest breakdown
+                const effectiveRate = ((totalRepayment / maxLoanAmount) - 1) * 100;
+                
+                const calculationData = {
+                    // DTNI Analysis
+                    dtniAnalysis: {
+                        netSalary: monthlyIncome,
+                        dtniPercentage: '40%',
+                        maxInstallmentCapacity: maxInstallment.toFixed(2),
+                        availableCapacity: availableInstallment.toFixed(2)
+                    },
+                    
+                    // Loan Calculation
+                    loanCalculation: {
+                        maxLoanFromDTNI: maxLoanFromDTNI.toFixed(2),
+                        employmentCap: employmentCap,
+                        finalMaxLoanAmount: maxLoanAmount.toFixed(2),
+                        limitation: maxLoanFromDTNI > employmentCap ? 
+                            `Limited by ${employmentType} employment cap` : 
+                            'Limited by DTNI installment capacity'
+                    },
+                    
+                    // Repayment Details
+                    repaymentDetails: {
+                        monthlyRepayment: monthlyRepayment.toFixed(2),
+                        termDays: termDays,
+                        termMonths: termMonths.toFixed(1),
+                        interestRate: interestRate + '%',
+                        totalRepayment: totalRepayment.toFixed(2),
+                        totalInterest: totalInterest.toFixed(2),
+                        effectiveRate: effectiveRate.toFixed(2) + '%'
+                    },
+                    
+                    // Summary
+                    summary: {
+                        employmentType: employmentType,
+                        calculationMethod: 'DTNI-based with reducing balance interest',
+                        formula: `Net Salary ($${monthlyIncome}) × 40% = $${maxInstallment.toFixed(2)} max installment`,
+                        result: `Maximum loan: $${maxLoanAmount.toFixed(2)} → Monthly payment: $${monthlyRepayment.toFixed(2)}`
+                    }
+                };
+                
+                showResult('success', 'Maximum Loan Amount Calculation (DTNI System)', calculationData);
             } catch (error) {
-                showResult('error', 'Network Error', 'Failed to connect to API. Make sure the server is running.');
+                showResult('error', 'Calculation Error', 'Failed to calculate maximum loan amount: ' + error.message);
             }
+        }
+        
+        function calculateMonthlyInstallment(principal, annualRate, termMonths) {
+            const monthlyRate = annualRate / 100 / 12;
+            
+            if (monthlyRate === 0) {
+                return principal / termMonths;
+            }
+            
+            const monthlyPayment = principal * (monthlyRate * Math.pow(1 + monthlyRate, termMonths)) / (Math.pow(1 + monthlyRate, termMonths) - 1);
+            return monthlyPayment;
+        }
+
+        function calculateMaxLoanFromInstallment(maxInstallment, annualRate, termDays) {
+            const monthlyRate = annualRate / 100 / 12;
+            const numPayments = termDays / 30;
+            
+            if (monthlyRate === 0) return maxInstallment * numPayments;
+            
+            const maxLoan = maxInstallment * ((Math.pow(1 + monthlyRate, numPayments) - 1) / (monthlyRate * Math.pow(1 + monthlyRate, numPayments)));
+            return Math.round(maxLoan * 100) / 100;
         }
 
         async function validateLoan() {
             const amount = parseFloat(document.getElementById('amount').value);
             const termDays = parseInt(document.getElementById('termDays').value);
             const interestRate = parseFloat(document.getElementById('interestRate').value);
+            const employmentType = document.getElementById('employmentType').value;
+            const monthlyIncome = parseInt(document.getElementById('monthlyIncome').value);
 
             showLoading('Validating loan application...');
 
             try {
-                const response = await fetch('/api/loans/validate', {
+                const response = await fetch(`/api/loans/test-validate?employment_type=${employmentType}&monthly_income=${monthlyIncome}`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer demo-token' // Demo token
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ amount, termDays, interestRate })
                 });
@@ -440,6 +528,8 @@
             const termDays = parseInt(document.getElementById('termDays').value);
             const interestRate = parseFloat(document.getElementById('interestRate').value);
             const purpose = document.getElementById('purpose').value;
+            const employmentType = document.getElementById('employmentType').value;
+            const monthlyIncome = parseInt(document.getElementById('monthlyIncome').value);
 
             if (!purpose || purpose.length < 5) {
                 showResult('error', 'Validation Error', 'Please provide a loan purpose (minimum 5 characters)');
@@ -449,19 +539,59 @@
             showLoading('Submitting loan application...');
 
             try {
-                const response = await fetch('/api/loans/apply', {
+                // First validate the loan
+                const response = await fetch(`/api/loans/test-validate?employment_type=${employmentType}&monthly_income=${monthlyIncome}`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer demo-token' // Demo token
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ amount, termDays, interestRate, purpose })
+                    body: JSON.stringify({ amount, termDays, interestRate })
                 });
 
                 const result = await response.json();
                 
-                if (result.success) {
-                    showResult('success', 'Loan Application Submitted', result);
+                // Check if validation passed AND loan was approved
+                if (result.success && result.approved) {
+                    // Simulate loan application submission
+                    const mockApplication = {
+                        success: true,
+                        message: 'Loan application submitted successfully (DEMO MODE)',
+                        data: {
+                            loanId: 'demo-' + Date.now(),
+                            status: 'approved',
+                            amount: amount,
+                            termDays: termDays,
+                            interestRate: interestRate,
+                            purpose: purpose,
+                            monthlyInstallment: result.data.monthlyInstallment,
+                            totalAmount: result.data.totalAmount,
+                            submittedAt: new Date().toISOString(),
+                            testMode: true,
+                            validationPassed: true
+                        }
+                    };
+                    showResult('success', 'Loan Application Approved & Submitted', mockApplication);
+                } else if (result.success && !result.approved) {
+                    // Validation failed - show denial reason
+                    const denialResult = {
+                        success: false,
+                        message: 'Loan application denied',
+                        reason: result.message,
+                        data: {
+                            amount: amount,
+                            termDays: termDays,
+                            interestRate: interestRate,
+                            purpose: purpose,
+                            monthlyInstallment: result.data.monthlyInstallment,
+                            totalAmount: result.data.totalAmount,
+                            deniedAt: new Date().toISOString(),
+                            testMode: true,
+                            validationFailed: true,
+                            dtni: result.data.dtni,
+                            validation: result.data.validation
+                        }
+                    };
+                    showResult('error', 'Loan Application Denied', denialResult);
                 } else {
                     showResult('error', 'Application Failed', result);
                 }

@@ -2,7 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { supabase } = require('../utils/supabase-auth');
 const { authenticateUser } = require('../middleware/auth');
-const ZimScoreService = require('../services/ZimScoreService');
+const { ZimScoreService } = require('../services/zimscore.service');
 const FeeCalculatorService = require('../services/fee-calculator.service');
 const PaymentScheduleService = require('../services/payment-schedule.service');
 
@@ -25,6 +25,184 @@ const handleValidationErrors = (req, res, next) => {
     }
     next();
 };
+
+// @route   POST /api/loans/test-validate
+// @desc    Test loan validation without authentication (DEMO ONLY)
+// @access  Public
+router.post('/test-validate', [
+    body('amount').isFloat({ min: 50, max: 100000 }).withMessage('Amount must be between $50 and $100,000'),
+    body('termDays').isInt({ min: 30, max: 720 }).withMessage('Term must be between 30 and 720 days'),
+    body('interestRate').isFloat({ min: 0, max: 10 }).withMessage('Interest rate must be between 0% and 10%'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { amount, termDays, interestRate } = req.body;
+        
+        console.log(`🧪 TEST: Validating loan: $${amount}, ${termDays} days, ${interestRate}%`);
+        
+        // Mock user ID for testing
+        const mockUserId = 'test-user-123';
+        
+        // Create mock employment data for testing - can be overridden via query params
+        const employmentType = req.query.employment_type || 'government';
+        const monthlyIncome = parseInt(req.query.monthly_income) || 600;
+        
+        const mockEmploymentData = {
+            monthly_income: monthlyIncome,
+            employment_type: employmentType
+        };
+        
+        console.log(`🧪 TEST SCENARIO: ${employmentType} employee with $${monthlyIncome}/month income`);
+        
+        // Create a comprehensive mock for the ZimScore service
+        const originalValidateMethod = zimScoreService.validateLoanAgainstDTNI;
+        
+        // Override the validateLoanAgainstDTNI method for testing
+        zimScoreService.validateLoanAgainstDTNI = async function(userId, requestedAmount, interestRate, termDays) {
+            console.log(`🧪 MOCK DTNI: Validating $${requestedAmount} for ${termDays} days at ${interestRate}%`);
+            
+            // Mock employment and ZimScore data
+            const mockEmployment = mockEmploymentData;
+            const mockZimScore = {
+                cold_start_active: true,
+                max_loan_amount: 300,
+                score_based_limit: 800,
+                employment_type: mockEmployment.employment_type
+            };
+            
+            // Calculate DTNI manually for test
+            const netSalary = mockEmployment.monthly_income;
+            const maxInstallment = netSalary * 0.40;
+            const existingInstallments = 0; // No existing loans for test
+            const availableInstallment = maxInstallment - existingInstallments;
+            
+            // Calculate monthly installment for this loan
+            const termMonths = termDays / 30;
+            const monthlyInstallment = this.calculateMonthlyInstallment(
+                requestedAmount, 
+                interestRate / 100, 
+                termMonths
+            );
+            
+            // Check if loan is affordable
+            const totalInstallment = existingInstallments + monthlyInstallment;
+            const installmentUtilization = (totalInstallment / maxInstallment) * 100;
+            
+            // Employment caps
+            const employmentCap = mockEmployment.employment_type === 'government' ? 300 : 100;
+            
+            // Tenure validation
+            let tenureValid = true;
+            let tenureMessage = '';
+            
+            if (mockZimScore.cold_start_active && termDays !== 90) {
+                tenureValid = false;
+                tenureMessage = 'Cold start loans are fixed at 3 months (90 days)';
+            } else if (!mockZimScore.cold_start_active) {
+                const maxTenure = mockEmployment.employment_type === 'government' ? 720 : 360;
+                if (termDays > maxTenure) {
+                    tenureValid = false;
+                    tenureMessage = `Maximum loan tenure for ${mockEmployment.employment_type} employees is ${maxTenure / 30} months`;
+                }
+            }
+            
+            // Calculate max affordable loan based on available installment capacity
+            const maxAffordableLoan = Math.floor(availableInstallment * termMonths * 0.85); // Conservative estimate
+            
+            // Determine approval conditions
+            const dtniApproved = monthlyInstallment <= availableInstallment;
+            const employmentCapApproved = requestedAmount <= employmentCap;
+            const capacityApproved = requestedAmount <= maxAffordableLoan;
+            const approved = dtniApproved && employmentCapApproved && tenureValid;
+            
+            let message = '';
+            if (!tenureValid) {
+                message = tenureMessage;
+            } else if (!dtniApproved) {
+                message = `Monthly payment $${monthlyInstallment.toFixed(2)} exceeds your capacity of $${availableInstallment.toFixed(2)}`;
+            } else if (!employmentCapApproved) {
+                message = `Amount $${requestedAmount} exceeds ${mockEmployment.employment_type} employment limit of $${employmentCap}`;
+            } else {
+                message = 'Loan application approved based on DTNI and ZimScore';
+            }
+            
+            return {
+                approved,
+                message,
+                dtni: {
+                    netSalary,
+                    maxInstallment: maxInstallment.toFixed(2),
+                    availableInstallment: availableInstallment.toFixed(2),
+                    existingInstallment: existingInstallments.toFixed(2),
+                    newLoanInstallment: monthlyInstallment.toFixed(2),
+                    totalInstallment: totalInstallment.toFixed(2),
+                    installmentUtilization: `${installmentUtilization.toFixed(1)}%`,
+                    remainingCapacity: (availableInstallment - monthlyInstallment).toFixed(2)
+                },
+                validation: {
+                    dtniApproved,
+                    employmentCapApproved,
+                    tenureValid,
+                    employmentCap,
+                    requestedAmount,
+                    maxAffordableLoan
+                },
+                employmentType: mockEmployment.employment_type,
+                coldStartActive: mockZimScore.cold_start_active
+            };
+        };
+        
+        // DTNI Validation
+        const dtniValidation = await zimScoreService.validateLoanAgainstDTNI(
+            mockUserId, 
+            amount, 
+            interestRate, 
+            termDays
+        );
+        
+        // Restore original method
+        zimScoreService.validateLoanAgainstDTNI = originalValidateMethod;
+        
+        // Calculate monthly installment
+        const termMonths = termDays / 30;
+        const monthlyInstallment = zimScoreService.calculateMonthlyInstallment(
+            amount, 
+            interestRate / 100, 
+            termMonths
+        );
+        
+        res.json({
+            success: true,
+            approved: dtniValidation.approved,
+            message: dtniValidation.message,
+            testMode: true,
+            mockData: {
+                userId: mockUserId,
+                employment: mockEmploymentData
+            },
+            data: {
+                amount,
+                termDays,
+                termMonths: termMonths.toFixed(1),
+                interestRate,
+                monthlyInstallment: monthlyInstallment.toFixed(2),
+                totalAmount: (monthlyInstallment * termMonths).toFixed(2),
+                dtni: dtniValidation.dtni,
+                suggestion: dtniValidation.suggestion,
+                requiresBankStatement: dtniValidation.requiresBankStatement,
+                code: dtniValidation.reason
+            }
+        });
+    } catch (error) {
+        console.error('Test loan validation error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to validate loan application',
+            testMode: true,
+            error: error.message
+        });
+    }
+});
 
 // @route   GET /api/loans/types
 // @desc    Get available loan types and terms
@@ -351,21 +529,59 @@ router.post('/calculate-max', authenticateUser, [
         const employmentCap = isCivilServant ? 300 : 100;
         const finalMaxAmount = Math.min(maxLoanAmount, employmentCap);
 
+        // Calculate monthly repayment for the final max loan amount
+        const monthlyRepayment = zimScoreService.calculateMonthlyInstallment(
+            finalMaxAmount, 
+            interestRate / 100, 
+            termMonths
+        );
+        
+        // Calculate total repayment and interest
+        const totalRepayment = monthlyRepayment * termMonths;
+        const totalInterest = totalRepayment - finalMaxAmount;
+        const effectiveRate = ((totalRepayment / finalMaxAmount) - 1) * 100;
+
         res.json({
             success: true,
             data: {
-                netSalary,
-                maxTotalInstallment: maxTotalInstallment.toFixed(2),
-                existingInstallment: existingInstallment.toFixed(2),
-                availableInstallment: availableInstallment.toFixed(2),
-                installmentUtilization: ((existingInstallment / maxTotalInstallment) * 100).toFixed(1) + '%',
-                maxLoanAmount: maxLoanAmount.toFixed(2),
-                employmentCap,
-                finalMaxAmount: finalMaxAmount.toFixed(2),
-                employmentType: employmentDetails.employment_type,
-                termDays,
-                interestRate,
-                monthlyInstallment: availableInstallment.toFixed(2)
+                // DTNI Analysis
+                dtniAnalysis: {
+                    netSalary,
+                    dtniPercentage: '40%',
+                    maxInstallmentCapacity: maxTotalInstallment.toFixed(2),
+                    existingInstallment: existingInstallment.toFixed(2),
+                    availableCapacity: availableInstallment.toFixed(2),
+                    installmentUtilization: ((existingInstallment / maxTotalInstallment) * 100).toFixed(1) + '%'
+                },
+                
+                // Loan Calculation
+                loanCalculation: {
+                    maxLoanFromDTNI: maxLoanAmount.toFixed(2),
+                    employmentCap,
+                    finalMaxLoanAmount: finalMaxAmount.toFixed(2),
+                    limitation: maxLoanAmount > employmentCap ? 
+                        `Limited by ${employmentDetails.employment_type} employment cap` : 
+                        'Limited by DTNI installment capacity'
+                },
+                
+                // Repayment Details
+                repaymentDetails: {
+                    monthlyRepayment: monthlyRepayment.toFixed(2),
+                    termDays,
+                    termMonths: termMonths.toFixed(1),
+                    interestRate: interestRate + '%',
+                    totalRepayment: totalRepayment.toFixed(2),
+                    totalInterest: totalInterest.toFixed(2),
+                    effectiveRate: effectiveRate.toFixed(2) + '%'
+                },
+                
+                // Summary
+                summary: {
+                    employmentType: employmentDetails.employment_type,
+                    calculationMethod: 'DTNI-based with reducing balance interest',
+                    formula: `Net Salary ($${netSalary}) × 40% = $${maxTotalInstallment.toFixed(2)} max installment`,
+                    result: `Maximum loan: $${finalMaxAmount.toFixed(2)} → Monthly payment: $${monthlyRepayment.toFixed(2)}`
+                }
             }
         });
     } catch (error) {

@@ -10,12 +10,19 @@ class MasterAIService {
         // Initialize Kairo AI as fallback
         this.kairoAI = new GeminiKairoAIService();
         
-        // Primary AI configuration
+        // Primary AI configuration with multi-model support
         this.primaryAI = {
             enabled: !!process.env.PRIMARY_AI_ENABLED,
             provider: process.env.PRIMARY_AI_PROVIDER || 'openai', // openai, claude, openrouter, custom
             apiKey: process.env.PRIMARY_AI_API_KEY,
-            model: process.env.PRIMARY_AI_MODEL || 'gpt-4o-mini',
+            models: [
+                process.env.PRIMARY_AI_MODEL || 'deepseek/deepseek-chat-v3.1:free',
+                process.env.PRIMARY_AI_MODEL_2 || 'z-ai/glm-4.5-air:free',
+                process.env.PRIMARY_AI_MODEL_3 || 'qwen/qwen2.5-vl-32b-instruct:free',
+                process.env.PRIMARY_AI_MODEL_4 || 'meta-llama/llama-3.3-70b-instruct:free'
+            ].filter(Boolean),
+            currentModelIndex: 0,
+            rotationEnabled: process.env.AI_MODEL_ROTATION === 'true',
             maxRetries: 2
         };
         
@@ -31,6 +38,10 @@ class MasterAIService {
         
         console.log(`🤖 Master AI initialized:`);
         console.log(`   Primary AI: ${this.primaryAI.enabled ? this.primaryAI.provider : 'Disabled'}`);
+        if (this.primaryAI.enabled && this.primaryAI.models.length > 0) {
+            console.log(`   Models: ${this.primaryAI.models.length} free models available`);
+            console.log(`   Rotation: ${this.primaryAI.rotationEnabled ? 'Enabled' : 'Disabled'}`);
+        }
         console.log(`   Fallback: Kairo AI (Gemini-powered)`);
     }
 
@@ -73,6 +84,24 @@ class MasterAIService {
             console.error('❌ Failed to initialize primary AI:', error.message);
             this.primaryAI.enabled = false;
         }
+    }
+
+    /**
+     * Get current model and rotate if enabled
+     */
+    getCurrentModel() {
+        if (!this.primaryAI.models || this.primaryAI.models.length === 0) {
+            return 'deepseek/deepseek-chat-v3.1:free'; // Default fallback
+        }
+
+        const currentModel = this.primaryAI.models[this.primaryAI.currentModelIndex];
+
+        // Rotate to next model if rotation is enabled
+        if (this.primaryAI.rotationEnabled) {
+            this.primaryAI.currentModelIndex = (this.primaryAI.currentModelIndex + 1) % this.primaryAI.models.length;
+        }
+
+        return currentModel;
     }
 
     /**
@@ -232,10 +261,15 @@ class MasterAIService {
         // Get user profile for context
         const userProfile = await this.kairoAI.getUserFinancialProfile(userId);
         
+        // Get current model (with rotation if enabled)
+        const currentModel = this.getCurrentModel();
+        
         const systemPrompt = this.buildAdvancedSystemPrompt(userProfile);
         
+        console.log(`🤖 Using model: ${currentModel}`);
+        
         const response = await this.openrouter.chat.completions.create({
-            model: this.primaryAI.model, // e.g., "openai/gpt-oss-120b", "anthropic/claude-3-haiku", etc.
+            model: currentModel, // Rotates between: DeepSeek, GLM-4.5, Qwen2.5-VL, Llama-3.3-70B
             messages: [
                 { role: "system", content: systemPrompt },
                 { role: "user", content: message }
@@ -254,7 +288,7 @@ class MasterAIService {
             response: aiResponse,
             intent: intent,
             suggestions: suggestions,
-            model: this.primaryAI.model,
+            model: currentModel,
             provider: 'openrouter'
         };
     }
