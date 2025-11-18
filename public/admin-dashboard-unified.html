@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZimCrowd Admin Dashboard - Unified</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin-dashboard-unified.css">
+    <link rel="stylesheet" href="/css/admin-dashboard-sections.css">
+    <style>
+        /* Critical CSS for immediate rendering */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; }
+        .loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #191A23; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .loading-spinner { width: 50px; height: 50px; border: 4px solid rgba(56, 224, 123, 0.3); border-top-color: #38e07b; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .admin-container { display: flex; min-height: 100vh; }
+        .admin-sidebar { width: 280px; background: #191A23; color: white; padding: 20px; }
+        .admin-main { flex: 1; padding: 30px; background: #f5f5f5; }
+        .sidebar-header { margin-bottom: 30px; }
+        .admin-logo { display: flex; align-items: center; gap: 15px; }
+        .admin-logo i { font-size: 32px; color: #38e07b; }
+        .admin-logo h3 { font-size: 24px; margin: 0; }
+        .nav-menu { list-style: none; }
+        .nav-item { margin-bottom: 5px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: #a0a0a0; text-decoration: none; border-radius: 10px; transition: all 0.3s; }
+        .nav-link:hover, .nav-link.active { background: rgba(56, 224, 123, 0.1); color: #38e07b; }
+        .stat-card { background: white; padding: 24px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .stat-value { font-size: 32px; font-weight: 700; color: #191A23; margin: 8px 0; }
+        .stat-label { color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <i class="fas fa-chart-line"></i>
+                <h2>ZimCrowd Admin</h2>
+            </div>
+            <div class="loading-spinner"></div>
+            <p>Loading dashboard...</p>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div id="adminContainer" class="admin-container" style="display: none;">
+        <!-- Sidebar -->
+        <nav class="admin-sidebar" id="adminSidebar">
+            <div class="sidebar-header">
+                <div class="admin-logo">
+                    <i class="fas fa-chart-line"></i>
+                    <div>
+                        <h3>ZimCrowd</h3>
+                        <span>Admin Dashboard</span>
+                    </div>
+                </div>
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <!-- Admin Profile -->
+            <div class="admin-profile" id="adminProfile">
+                <div class="profile-avatar">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <div class="profile-info">
+                    <h4 id="adminName">Loading...</h4>
+                    <span id="adminRole">Admin</span>
+                </div>
+                <div class="profile-actions">
+                    <button onclick="showAdminProfile()" title="Profile Settings">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button onclick="logout()" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation Menu -->
+            <div class="sidebar-nav">
+                <!-- Dashboard -->
+                <div class="nav-section">
+                    <h5>Dashboard</h5>
+                    <div class="nav-item active" data-section="overview">
+                        <div class="nav-link" onclick="showSection('overview')">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Overview</span>
+                        </div>
+                    </div>
+                    <div class="nav-item" data-section="analytics">
+                        <div class="nav-link" onclick="showSection('analytics')">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Analytics</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Management -->
+                <div class="nav-section" id="financialSection">
+                    <h5>Financial</h5>
+                    <div class="nav-item" data-section="wallet-monitoring">
+                        <div class="nav-link" onclick="showSection('wallet-monitoring')">
+                            <i class="fas fa-wallet"></i>
+                            <span>Wallet Monitoring</span>
+                            <span class="nav-badge alert" id="suspiciousCount">0</span>
+                        </div>
+                    </div>
+                    <div class="nav-item" data-section="manual-transactions">
+                        <div class="nav-link" onclick="showSection('manual-transactions')">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span>Manual Transactions</span>
+                        </div>
+                    </div>
+                    <div class="nav-item" data-section="transaction-history">
+                        <div class="nav-link" onclick="showSection('transaction-history')">
+                            <i class="fas fa-history"></i>
+                            <span>Transaction History</span>
+                        </div>
+                    </div>
+                    <div class="nav-item" data-section="financial-reports">
+                        <div class="nav-link" onclick="showSection('financial-reports')">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>Financial Reports</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Management -->
+                <div class="nav-section" id="userSection">
+                    <h5>Users</h5>
+                    <div class="nav-item" data-section="users">
+                        <div class="nav-link" onclick="showSection('users')">
+                            <i class="fas fa-users"></i>
+                            <span>User Management</span>
+                        </div>
+                    </div>
+                    <div class="nav-item" data-section="kyc-review">
+                        <div class="nav-link" onclick="showSection('kyc-review')">
+                            <i class="fas fa-id-card"></i>
+                            <span>KYC Review</span>
+                            <span class="nav-badge warning" id="kycPendingCount">0</span>
+                        </div>
+                    </div>
+                    <div class="nav-item" data-section="account-status">
+                        <div class="nav-link" onclick="showSection('account-status')">
+                            <i class="fas fa-flag"></i>
+                            <span>Account Status</span>
+                            <span class="nav-badge info" id="arrearsCount">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loan Management -->
+                <div class="nav-section" id="loanSection">
+                    <h5>Loans</h5>
+                    <div class="nav-item" data-section="loans">
+                        <div class="nav-link" onclick="showSection('loans')">
+                            <i class="fas fa-hand-holding-usd"></i>
+                            <span>Loan Management</span>
+                        </div>
+                    </div>
+                    <div class="nav-item" data-section="loan-applications">
+                        <div class="nav-link" onclick="showSection('loan-applications')">
+                            <i class="fas fa-file-contract"></i>
+                            <span>Applications</span>
+                            <span class="nav-badge success" id="pendingLoansCount">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Administration -->
+                <div class="nav-section" id="systemSection">
+                    <h5>System</h5>
+                    <div class="nav-item" data-section="admin-users">
+                        <div class="nav-link" onclick="showSection('admin-users')">
+                            <i class="fas fa-user-shield"></i>
+                            <span>Admin Users</span>
+                        </div>
+                    </div>
+                    <div class="nav-item" data-section="audit-logs">
+                        <div class="nav-link" onclick="showSection('audit-logs')">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Audit Logs</span>
+                        </div>
+                    </div>
+                    <div class="nav-item" data-section="system-settings">
+                        <div class="nav-link" onclick="showSection('system-settings')">
+                            <i class="fas fa-cogs"></i>
+                            <span>Settings</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Header -->
+            <header class="admin-header">
+                <div class="header-left">
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="breadcrumb">
+                        <span id="currentSection">Dashboard</span>
+                        <i class="fas fa-chevron-right"></i>
+                        <span id="currentSubSection">Overview</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-stats">
+                        <div class="stat-item">
+                            <i class="fas fa-users"></i>
+                            <span id="totalUsers">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-dollar-sign"></i>
+                            <span id="totalRevenue">$0</span>
+                        </div>
+                    </div>
+                    <div class="header-actions">
+                        <button class="action-btn" onclick="showNotifications()" title="Notifications">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge" id="notificationCount">0</span>
+                        </button>
+                        <button class="action-btn" onclick="toggleKairoAI()" title="Kairo AI Assistant">
+                            <i class="fas fa-robot"></i>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="admin-content" id="adminContent">
+                <!-- Content sections will be loaded here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Kairo AI Assistant Widget -->
+    <div id="kairoWidget" class="kairo-widget">
+        <div class="kairo-header">
+            <div class="kairo-title">
+                <i class="fas fa-robot"></i>
+                <span>Kairo AI - Admin Assistant</span>
+            </div>
+            <div class="kairo-actions">
+                <button onclick="minimizeKairo()" title="Minimize">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <button onclick="closeKairo()" title="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="kairo-content">
+            <div class="kairo-chat" id="kairoChat">
+                <div class="kairo-message system">
+                    <div class="message-content">
+                        <i class="fas fa-robot"></i>
+                        <p>Hello! I'm Kairo, your AI admin assistant. I can help you with:</p>
+                        <ul>
+                            <li>System performance insights</li>
+                            <li>Risk analysis and alerts</li>
+                            <li>Revenue optimization</li>
+                            <li>Troubleshooting guidance</li>
+                            <li>Data analysis and reporting</li>
+                        </ul>
+                        <p>How can I assist you today?</p>
+                    </div>
+                </div>
+            </div>
+            <div class="kairo-input">
+                <input type="text" id="kairoInput" placeholder="Ask Kairo about system performance, risks, or insights...">
+                <button onclick="sendKairoMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals and Overlays -->
+    <div id="modalOverlay" class="modal-overlay"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/admin-utils.js"></script>
+    <script src="js/admin-config.js"></script>
+    <script src="js/admin-auth.js"></script>
+    <script src="js/admin-dashboard-unified.js"></script>
+    <script src="js/admin-dashboard-sections.js"></script>
+    <script src="js/admin-wallet-management.js"></script>
+    <script src="js/admin-manual-transactions.js"></script>
+    <script src="js/admin-kairo-ai.js"></script>
+</body>
+</html>

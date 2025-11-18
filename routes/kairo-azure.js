@@ -1,6 +1,6 @@
 /**
- * Kairo AI with Azure OpenAI Routes
- * Enhanced API endpoints with Azure OpenAI integration
+ * Kairo AI with OpenRouter Routes
+ * Enhanced API endpoints with OpenRouter free tier models
  */
 
 const express = require('express');
@@ -8,10 +8,17 @@ const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const { authenticateUser, requireAdmin } = require('../middleware/auth');
 const EnhancedKairoAIService = require('../services/enhanced-kairo-ai-with-azure.service');
-const AzureOpenAIService = require('../services/azure-openai.service');
+const OpenRouterAIService = require('../services/openrouter-ai.service');
+const { createClient } = require('@supabase/supabase-js');
 
 const enhancedKairo = new EnhancedKairoAIService();
-const azureOpenAI = new AzureOpenAIService();
+const openRouterAI = new OpenRouterAIService();
+
+// Initialize Supabase client for admin logging
+const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 // Validation middleware
 const handleValidationErrors = (req, res, next) => {
@@ -27,15 +34,15 @@ const handleValidationErrors = (req, res, next) => {
 };
 
 // @route   POST /api/kairo-azure/chat
-// @desc    Enhanced chat with Azure OpenAI integration
+// @desc    Enhanced chat with OpenRouter free tier models
 // @access  Private
 router.post('/chat', authenticateUser, [
     body('message').isLength({ min: 1, max: 2000 }).withMessage('Message must be between 1 and 2000 characters'),
-    body('useAzure').optional().isBoolean().withMessage('useAzure must be boolean'),
+    body('preferredModel').optional().isString().withMessage('preferredModel must be string'),
     handleValidationErrors
 ], async (req, res) => {
     try {
-        const { message, useAzure = null } = req.body;
+        const { message, preferredModel = null } = req.body;
         const userId = req.user.id;
         
         console.log(`🤖 Enhanced Kairo chat from user ${userId}: ${message.substring(0, 50)}...`);
@@ -45,7 +52,7 @@ router.post('/chat', authenticateUser, [
         const context = {
             recentMessages: conversationHistory.conversations || [],
             timestamp: new Date().toISOString(),
-            forceAzure: useAzure
+            preferredModel: preferredModel
         };
         
         // Process with enhanced AI
@@ -121,7 +128,7 @@ router.get('/insights', authenticateUser, async (req, res) => {
 });
 
 // @route   POST /api/kairo-azure/loan-analysis
-// @desc    Advanced loan analysis using Azure OpenAI
+// @desc    Advanced loan analysis using OpenRouter AI
 // @access  Private
 router.post('/loan-analysis', authenticateUser, [
     body('amount').optional().isFloat({ min: 50, max: 1000000 }),
@@ -138,8 +145,8 @@ router.post('/loan-analysis', authenticateUser, [
         // Get user profile
         const userProfile = await enhancedKairo.getUserFinancialProfile(userId);
         
-        // Generate loan recommendations using Azure OpenAI
-        const recommendations = await azureOpenAI.generateLoanRecommendations(userProfile, loanRequest);
+        // Generate loan recommendations using OpenRouter
+        const recommendations = await openRouterAI.generateLoanRecommendations(userProfile, loanRequest);
         
         if (recommendations.success) {
             res.json({
@@ -152,7 +159,7 @@ router.post('/loan-analysis', authenticateUser, [
                         enhancedKairo.calculateDTNIUtilization(userProfile) : 'N/A'
                 },
                 generatedAt: recommendations.generatedAt,
-                source: 'azure-openai'
+                source: 'openrouter'
             });
         } else {
             // Fallback to local analysis
@@ -175,7 +182,7 @@ router.post('/loan-analysis', authenticateUser, [
 });
 
 // @route   POST /api/kairo-azure/investment-advice
-// @desc    Advanced investment advice using Azure OpenAI
+// @desc    Advanced investment advice using OpenRouter AI
 // @access  Private
 router.post('/investment-advice', authenticateUser, [
     body('amount').optional().isFloat({ min: 50, max: 1000000 }),
@@ -193,8 +200,8 @@ router.post('/investment-advice', authenticateUser, [
         // Get user profile
         const userProfile = await enhancedKairo.getUserFinancialProfile(userId);
         
-        // Generate investment advice using Azure OpenAI
-        const advice = await azureOpenAI.generateInvestmentAdvice(userProfile, investmentRequest);
+        // Generate investment advice using OpenRouter
+        const advice = await openRouterAI.generateInvestmentAdvice(userProfile, investmentRequest);
         
         if (advice.success) {
             res.json({
@@ -207,7 +214,7 @@ router.post('/investment-advice', authenticateUser, [
                     currentInvestments: userProfile.investments?.length || 0
                 },
                 generatedAt: advice.generatedAt,
-                source: 'azure-openai'
+                source: 'openrouter'
             });
         } else {
             // Fallback to local advice
@@ -232,7 +239,7 @@ router.post('/investment-advice', authenticateUser, [
 });
 
 // @route   POST /api/kairo-azure/financial-planning
-// @desc    Comprehensive financial planning using Azure OpenAI
+// @desc    Comprehensive financial planning using OpenRouter AI
 // @access  Private
 router.post('/financial-planning', authenticateUser, [
     body('goals').optional().isArray(),
@@ -279,7 +286,7 @@ router.post('/financial-planning', authenticateUser, [
         
         Provide a structured financial plan with specific actionable steps.`;
         
-        const response = await azureOpenAI.generateResponse(planPrompt, {
+        const response = await openRouterAI.generateResponse(planPrompt, {
             userId,
             userProfile,
             intent: 'financial_planning',
@@ -298,7 +305,7 @@ router.post('/financial-planning', authenticateUser, [
                     followUp: response.followUpQuestions || []
                 },
                 confidence: response.confidence,
-                source: 'azure-openai',
+                source: 'openrouter',
                 generatedAt: new Date().toISOString()
             });
         } else {
@@ -403,22 +410,25 @@ router.get('/models', authenticateUser, requireAdmin, async (req, res) => {
                 status: 'active',
                 capabilities: ['basic_chat', 'intent_detection', 'simple_recommendations']
             },
-            azure: {
-                name: 'Azure OpenAI',
-                status: process.env.AZURE_OPENAI_ENABLED === 'true' ? 'active' : 'disabled',
+            openrouter: {
+                name: 'OpenRouter AI (Free Tier)',
+                status: process.env.OPENROUTER_API_KEY ? 'active' : 'disabled',
                 models: {
-                    gpt4o: process.env.AZURE_OPENAI_GPT4O_DEPLOYMENT || 'gpt-4o',
-                    gpt4oMini: process.env.AZURE_OPENAI_GPT4O_MINI_DEPLOYMENT || 'gpt-4o-mini',
-                    embedding: process.env.AZURE_OPENAI_EMBEDDING_DEPLOYMENT || 'text-embedding-3-large'
+                    primary: process.env.PRIMARY_AI_MODEL || 'meta-llama/llama-3.2-3b-instruct:free',
+                    secondary: process.env.PRIMARY_AI_MODEL_2 || 'z-ai/glm-4.5-air:free',
+                    advanced: process.env.PRIMARY_AI_MODEL_4 || 'meta-llama/llama-3.3-70b-instruct:free',
+                    fast: process.env.PRIMARY_AI_MODEL_5 || 'google/gemini-2.5-pro',
+                    efficient: process.env.PRIMARY_AI_MODEL_6 || 'x-ai/grok-4-fast'
                 },
-                capabilities: ['advanced_chat', 'financial_analysis', 'complex_reasoning', 'personalization']
+                capabilities: ['advanced_chat', 'financial_analysis', 'complex_reasoning', 'personalization'],
+                rotation: process.env.AI_MODEL_ROTATION === 'true'
             }
         };
         
-        // Test Azure OpenAI if enabled
-        if (process.env.AZURE_OPENAI_ENABLED === 'true') {
-            const azureHealth = await azureOpenAI.healthCheck();
-            models.azure.health = azureHealth;
+        // Test OpenRouter if enabled
+        if (process.env.OPENROUTER_API_KEY) {
+            const openRouterHealth = await openRouterAI.healthCheck();
+            models.openrouter.health = openRouterHealth;
         }
         
         res.json({
@@ -431,6 +441,104 @@ router.get('/models', authenticateUser, requireAdmin, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to get models status',
+            error: error.message
+        });
+    }
+});
+
+// @route   POST /api/kairo-azure/admin-chat
+// @desc    Admin-specific chat with enhanced context and permissions
+// @access  Private (Admin)
+router.post('/admin-chat', authenticateUser, requireAdmin, [
+    body('message').isLength({ min: 1, max: 2000 }).withMessage('Message must be between 1 and 2000 characters'),
+    body('context').optional().isObject(),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { message, context = {} } = req.body;
+        const adminId = req.user.id;
+        
+        console.log(`🛡️ Admin Kairo chat from admin ${adminId}: ${message.substring(0, 50)}...`);
+        
+        // Enhanced admin context
+        const adminContext = {
+            ...context,
+            isAdmin: true,
+            adminId,
+            adminRole: req.user.role || 'admin',
+            timestamp: new Date().toISOString(),
+            capabilities: [
+                'user_management',
+                'financial_operations',
+                'system_monitoring',
+                'analytics_access',
+                'audit_logs'
+            ]
+        };
+        
+        // Create admin-specific prompt
+        const adminPrompt = `[ADMIN QUERY]
+Admin Role: ${adminContext.adminRole}
+Query: ${message}
+
+Context: You are assisting a ZimCrowd platform administrator. Provide detailed, actionable insights with:
+- Platform metrics and analytics
+- User behavior patterns
+- Financial operation recommendations
+- Risk assessment and fraud detection
+- System optimization suggestions
+- Compliance and regulatory guidance
+
+Respond with admin-level detail and technical accuracy.`;
+        
+        // Process with OpenRouter
+        const response = await openRouterAI.generateResponse(adminPrompt, adminContext);
+        
+        if (response.success) {
+            // Log admin AI interaction
+            await supabase
+                .from('admin_activity_log')
+                .insert({
+                    admin_id: adminId,
+                    action: 'ai_query',
+                    details: `Kairo AI query: ${message.substring(0, 100)}`,
+                    ip_address: req.ip,
+                    created_at: new Date().toISOString()
+                })
+                .catch(err => console.error('Failed to log admin AI activity:', err));
+            
+            res.json({
+                success: true,
+                response: response.response,
+                confidence: response.confidence,
+                suggestions: response.suggestions || [],
+                quickActions: [
+                    { label: 'View Analytics', action: 'navigate:analytics' },
+                    { label: 'Check Audit Logs', action: 'navigate:audit-logs' },
+                    { label: 'User Management', action: 'navigate:users' }
+                ],
+                source: response.source || 'openrouter',
+                model: response.model,
+                timestamp: new Date().toISOString(),
+                adminContext: {
+                    role: adminContext.adminRole,
+                    capabilities: adminContext.capabilities
+                }
+            });
+        } else {
+            // Fallback to local response
+            res.json({
+                success: true,
+                response: "I'm here to help with admin tasks. I can assist with user management, financial operations, analytics, and system monitoring. What would you like to know?",
+                source: 'local-fallback',
+                timestamp: new Date().toISOString()
+            });
+        }
+    } catch (error) {
+        console.error('Admin Kairo chat error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Sorry, I encountered an error processing your admin query. Please try again.',
             error: error.message
         });
     }

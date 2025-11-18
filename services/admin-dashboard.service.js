@@ -193,10 +193,15 @@ class AdminDashboardService {
     async getPaymentStatistics() {
         try {
             // Check if payment_transactions table exists
-            const { count: totalPayments } = await supabase
-                .from('payment_transactions')
-                .select('*', { count: 'exact', head: true })
-                .catch(() => ({ count: 0 }));
+            let totalPayments = 0;
+            try {
+                const result = await supabase
+                    .from('payment_transactions')
+                    .select('*', { count: 'exact', head: true });
+                totalPayments = result.count || 0;
+            } catch (error) {
+                totalPayments = 0;
+            }
             
             if (!totalPayments) {
                 return {
@@ -285,11 +290,16 @@ class AdminDashboardService {
                 .gte('created_at', today.toISOString());
             
             // Payments today
-            const { count: paymentsToday } = await supabase
-                .from('payment_transactions')
-                .select('*', { count: 'exact', head: true })
-                .gte('created_at', today.toISOString())
-                .catch(() => ({ count: 0 }));
+            let paymentsToday = 0;
+            try {
+                const result = await supabase
+                    .from('payment_transactions')
+                    .select('*', { count: 'exact', head: true })
+                    .gte('created_at', today.toISOString());
+                paymentsToday = result.count || 0;
+            } catch (error) {
+                paymentsToday = 0;
+            }
             
             return {
                 new_users_today: newUsers || 0,
@@ -494,16 +504,26 @@ class AdminDashboardService {
     async getInvestmentAnalytics() {
         try {
             // Get P2P investments
-            const { data: p2pInvestments } = await supabase
-                .from('p2p_investments')
-                .select('amount, interest_earned, status, created_at')
-                .catch(() => ({ data: [] }));
+            let p2pInvestments = [];
+            try {
+                const result = await supabase
+                    .from('p2p_investments')
+                    .select('amount, interest_earned, status, created_at');
+                p2pInvestments = result.data || [];
+            } catch (error) {
+                p2pInvestments = [];
+            }
 
             // Get traditional investments
-            const { data: investments } = await supabase
-                .from('investments')
-                .select('amount, current_value, total_returns, investment_type, status, created_at')
-                .catch(() => ({ data: [] }));
+            let investments = [];
+            try {
+                const result = await supabase
+                    .from('investments')
+                    .select('amount, current_value, total_returns, investment_type, status, created_at');
+                investments = result.data || [];
+            } catch (error) {
+                investments = [];
+            }
 
             // Calculate P2P metrics
             const p2pTotal = p2pInvestments?.reduce((sum, inv) => sum + parseFloat(inv.amount || 0), 0) || 0;
@@ -768,19 +788,30 @@ class AdminDashboardService {
                 paymentQuery = paymentQuery.lte('created_at', endDate);
             }
 
-            const { data: payments } = await paymentQuery.catch(() => ({ data: [] }));
+            let payments = [];
+            try {
+                const result = await paymentQuery;
+                payments = result.data || [];
+            } catch (error) {
+                payments = [];
+            }
 
             // Calculate revenue
             const totalRevenue = payments?.filter(p => p.status === 'paid')
                 .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
 
             // Get fees collected
-            const { data: fees } = await supabase
-                .from('platform_fees')
-                .select('amount, fee_type')
-                .gte('created_at', startDate || '2000-01-01')
-                .lte('created_at', endDate || '2100-01-01')
-                .catch(() => ({ data: [] }));
+            let fees = [];
+            try {
+                const result = await supabase
+                    .from('platform_fees')
+                    .select('amount, fee_type')
+                    .gte('created_at', startDate || '2000-01-01')
+                    .lte('created_at', endDate || '2100-01-01');
+                fees = result.data || [];
+            } catch (error) {
+                fees = [];
+            }
 
             const totalFees = fees?.reduce((sum, fee) => sum + parseFloat(fee.amount || 0), 0) || 0;
 
@@ -828,10 +859,15 @@ class AdminDashboardService {
                     break;
 
                 case 'investments':
-                    const { data: investments } = await supabase
-                        .from('p2p_investments')
-                        .select('*')
-                        .catch(() => ({ data: [] }));
+                    let investments = [];
+                    try {
+                        const result = await supabase
+                            .from('p2p_investments')
+                            .select('*');
+                        investments = result.data || [];
+                    } catch (error) {
+                        investments = [];
+                    }
                     data = investments || [];
                     headers = ['ID', 'Investor', 'Amount', 'Interest Earned', 'Status', 'Created At'];
                     break;
@@ -865,12 +901,17 @@ class AdminDashboardService {
     async getAIMonitoringMetrics() {
         try {
             // Get AI conversation logs
-            const { data: conversations } = await supabase
-                .from('ai_conversations')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(1000)
-                .catch(() => ({ data: [] }));
+            let conversations = [];
+            try {
+                const result = await supabase
+                    .from('ai_conversations')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(1000);
+                conversations = result.data || [];
+            } catch (error) {
+                conversations = [];
+            }
 
             // Calculate metrics
             const totalConversations = conversations?.length || 0;

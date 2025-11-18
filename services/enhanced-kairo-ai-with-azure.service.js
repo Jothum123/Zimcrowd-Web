@@ -1,22 +1,22 @@
 /**
- * Enhanced Kairo AI Service with Azure OpenAI Integration
- * Combines existing Kairo AI capabilities with Azure OpenAI GPT models
+ * Enhanced Kairo AI Service with OpenRouter Integration
+ * Combines existing Kairo AI capabilities with OpenRouter free tier models
  * Provides intelligent fallback and hybrid AI responses
  */
 
 const KairoAIService = require('./kairo-ai.service');
-const AzureOpenAIService = require('./azure-openai.service');
+const OpenRouterAIService = require('./openrouter-ai.service');
 const { supabase } = require('../utils/supabase-auth');
 
 class EnhancedKairoAIService extends KairoAIService {
     constructor() {
         super();
-        this.azureOpenAI = new AzureOpenAIService();
-        this.useAzureOpenAI = process.env.AZURE_OPENAI_ENABLED === 'true';
+        this.openRouterAI = new OpenRouterAIService();
+        this.useOpenRouter = process.env.OPENROUTER_API_KEY ? true : false;
         
         // Hybrid AI configuration
         this.hybridConfig = {
-            // Use Azure OpenAI for complex queries
+            // Use OpenRouter for complex queries
             complexIntents: [
                 'investment_analysis',
                 'financial_planning',
@@ -38,13 +38,13 @@ class EnhancedKairoAIService extends KairoAIService {
             ],
             
             // Confidence thresholds
-            azureThreshold: 0.7,  // Use Azure if local confidence < 0.7
+            openRouterThreshold: 0.7,  // Use OpenRouter if local confidence < 0.7
             hybridThreshold: 0.5  // Combine both if confidence between 0.5-0.7
         };
     }
 
     /**
-     * Enhanced message processing with Azure OpenAI integration
+     * Enhanced message processing with OpenRouter integration
      */
     async processMessage(userId, message, context = {}) {
         try {
@@ -59,8 +59,8 @@ class EnhancedKairoAIService extends KairoAIService {
             // Step 3: Process with selected strategy
             let response;
             switch (strategy) {
-                case 'azure_only':
-                    response = await this.processWithAzureOpenAI(userId, message, context, analysis);
+                case 'openrouter_only':
+                    response = await this.processWithOpenRouter(userId, message, context, analysis);
                     break;
                     
                 case 'local_only':
@@ -152,13 +152,13 @@ class EnhancedKairoAIService extends KairoAIService {
      * Select AI processing strategy
      */
     selectAIStrategy(analysis) {
-        if (!this.useAzureOpenAI) {
+        if (!this.useOpenRouter) {
             return 'local_only';
         }
 
-        // Use Azure for complex intents
+        // Use OpenRouter for complex intents
         if (this.hybridConfig.complexIntents.includes(analysis.intent)) {
-            return 'azure_only';
+            return 'openrouter_only';
         }
 
         // Use local for simple intents
@@ -177,11 +177,11 @@ class EnhancedKairoAIService extends KairoAIService {
     }
 
     /**
-     * Process with Azure OpenAI only
+     * Process with OpenRouter only
      */
-    async processWithAzureOpenAI(userId, message, context, analysis) {
+    async processWithOpenRouter(userId, message, context, analysis) {
         try {
-            console.log('🤖 Using Azure OpenAI for processing');
+            console.log('🤖 Using OpenRouter AI for processing');
             
             // Get user profile for context
             const userProfile = await this.getUserFinancialProfile(userId);
@@ -189,8 +189,8 @@ class EnhancedKairoAIService extends KairoAIService {
             // Get conversation history
             const conversationHistory = await this.getConversationHistory(userId, 5);
             
-            // Prepare context for Azure OpenAI
-            const azureContext = {
+            // Prepare context for OpenRouter
+            const openRouterContext = {
                 userId,
                 conversationHistory: conversationHistory.conversations || [],
                 userProfile,
@@ -198,17 +198,12 @@ class EnhancedKairoAIService extends KairoAIService {
                 systemContext: this.selectSystemContext(analysis.intent)
             };
             
-            // Generate response with Azure OpenAI
-            const response = await this.azureOpenAI.generateResponse(message, azureContext);
+            // Generate response with OpenRouter
+            const response = await this.openRouterAI.chat(userId, message, conversationHistory.conversations || [], openRouterContext);
             
             if (response.success) {
-                // Save conversation
-                await this.saveConversation(userId, message, response.response, {
-                    intent: response.intent,
-                    confidence: response.confidence,
-                    model: 'azure-openai',
-                    tokens: response.tokens
-                });
+                // Conversation already saved in openRouterAI.chat()
+                // No need to save again
                 
                 return {
                     success: true,
@@ -217,16 +212,16 @@ class EnhancedKairoAIService extends KairoAIService {
                     confidence: response.confidence,
                     suggestions: response.suggestions || [],
                     followUpQuestions: response.followUpQuestions || [],
-                    source: 'azure-openai',
+                    source: 'openrouter',
                     model: response.model
                 };
             }
             
-            // Fallback to local if Azure fails
+            // Fallback to local if OpenRouter fails
             return await this.processWithLocalKairo(userId, message, context);
 
         } catch (error) {
-            console.error('Azure OpenAI processing error:', error);
+            console.error('OpenRouter processing error:', error);
             return await this.processWithLocalKairo(userId, message, context);
         }
     }
@@ -248,21 +243,21 @@ class EnhancedKairoAIService extends KairoAIService {
     }
 
     /**
-     * Process with hybrid AI (both Azure and local)
+     * Process with hybrid AI (both OpenRouter and local)
      */
     async processWithHybridAI(userId, message, context, analysis) {
         try {
             console.log('🔄 Using hybrid AI processing');
             
             // Get both responses in parallel
-            const [azureResponse, localResponse] = await Promise.allSettled([
-                this.processWithAzureOpenAI(userId, message, context, analysis),
+            const [openRouterResponse, localResponse] = await Promise.allSettled([
+                this.processWithOpenRouter(userId, message, context, analysis),
                 this.processWithLocalKairo(userId, message, context)
             ]);
             
             // Determine best response
             const bestResponse = this.selectBestResponse(
-                azureResponse.status === 'fulfilled' ? azureResponse.value : null,
+                openRouterResponse.status === 'fulfilled' ? openRouterResponse.value : null,
                 localResponse.status === 'fulfilled' ? localResponse.value : null,
                 analysis
             );
@@ -284,27 +279,27 @@ class EnhancedKairoAIService extends KairoAIService {
     /**
      * Select best response from multiple AI sources
      */
-    selectBestResponse(azureResponse, localResponse, analysis) {
+    selectBestResponse(openRouterResponse, localResponse, analysis) {
         // If only one succeeded, use it
-        if (azureResponse && !localResponse) return azureResponse;
-        if (localResponse && !azureResponse) return localResponse;
-        if (!azureResponse && !localResponse) return null;
+        if (openRouterResponse && !localResponse) return openRouterResponse;
+        if (localResponse && !openRouterResponse) return localResponse;
+        if (!openRouterResponse && !localResponse) return null;
         
         // Both succeeded - choose based on confidence and context
-        const azureScore = this.calculateResponseScore(azureResponse, analysis);
+        const openRouterScore = this.calculateResponseScore(openRouterResponse, analysis);
         const localScore = this.calculateResponseScore(localResponse, analysis);
         
-        if (azureScore > localScore) {
+        if (openRouterScore > localScore) {
             return {
-                ...azureResponse,
+                ...openRouterResponse,
                 alternativeResponse: localResponse.response,
-                combinedConfidence: (azureScore + localScore) / 2
+                combinedConfidence: (openRouterScore + localScore) / 2
             };
         } else {
             return {
                 ...localResponse,
-                alternativeResponse: azureResponse.response,
-                combinedConfidence: (azureScore + localScore) / 2
+                alternativeResponse: openRouterResponse.response,
+                combinedConfidence: (openRouterScore + localScore) / 2
             };
         }
     }

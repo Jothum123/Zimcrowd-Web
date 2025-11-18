@@ -60,7 +60,8 @@ console.log('📦 Loading Routes...');
 console.log('='.repeat(60));
 
 const routes = {
-    auth: loadRoute('./routes/auth', 'Authentication'),
+    authProduction: loadRoute('./routes/auth-production', 'Authentication (Production)'),
+    auth: loadRoute('./routes/auth', 'Authentication (Legacy)'),
     profile: loadRoute('./routes/profile', 'Profile'),
     profileSetup: loadRoute('./routes/profile-setup', 'Profile Setup'),
     wallet: loadRoute('./routes/wallet', 'Wallet'),
@@ -84,7 +85,8 @@ const routes = {
     transactionsRealtime: loadRoute('./routes/transactions-realtime', 'Real-Time Transactions'),
     paymentFallback: loadRoute('./routes/payment-fallback', 'Payment Fallback'),
     adminWalletMonitoring: loadRoute('./routes/admin-wallet-monitoring', 'Admin Wallet Monitoring'),
-    adminManualTransactions: loadRoute('./routes/admin-manual-transactions', 'Admin Manual Transactions')
+    adminManualTransactions: loadRoute('./routes/admin-manual-transactions', 'Admin Manual Transactions'),
+    adminRoleManagement: loadRoute('./routes/admin-role-management', 'Admin Role Management')
 };
 
 console.log('='.repeat(60) + '\n');
@@ -111,7 +113,8 @@ app.get('/api/health', (req, res) => {
 });
 
 // Register routes if they loaded successfully
-if (routes.auth) app.use('/api/auth', routes.auth);
+if (routes.authProduction) app.use('/api/auth', routes.authProduction);
+else if (routes.auth) app.use('/api/auth', routes.auth);
 if (routes.profile) app.use('/api/profile', routes.profile);
 if (routes.profileSetup) app.use('/api/profile-setup', routes.profileSetup);
 if (routes.wallet) app.use('/api/wallet', routes.wallet);
@@ -137,6 +140,7 @@ if (routes.transactionsRealtime) app.use('/api/transactions-realtime', routes.tr
 if (routes.paymentFallback) app.use('/api/payment-fallback', routes.paymentFallback);
 if (routes.adminWalletMonitoring) app.use('/api/admin-wallet-monitoring', routes.adminWalletMonitoring);
 if (routes.adminManualTransactions) app.use('/api/admin-manual-transactions', routes.adminManualTransactions);
+if (routes.adminRoleManagement) app.use('/api/admin-role-management', routes.adminRoleManagement);
 
 // =====================================================
 // ERROR HANDLING

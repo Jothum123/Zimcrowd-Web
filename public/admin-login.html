@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZimCrowd Admin Login</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #191A23 0%, #2d2e3a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        .login-header { text-align: center; margin-bottom: 30px; }
+        .login-logo {
+            width: 80px; height: 80px;
+            background: linear-gradient(135deg, #38e07b 0%, #2ecc71 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 40px;
+        }
+        h1 { color: #191A23; font-size: 28px; margin-bottom: 8px; }
+        p { color: #666; font-size: 14px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; color: #191A23; font-weight: 600; margin-bottom: 8px; }
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #38e07b;
+            box-shadow: 0 0 0 3px rgba(56, 224, 123, 0.1);
+        }
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #38e07b 0%, #2ecc71 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-login:hover { transform: translateY(-2px); }
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #38e07b;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        code {
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #38e07b;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-logo">🔐</div>
+            <h1>Admin Login</h1>
+            <p>Enter your API key to access the dashboard</p>
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Admin API Key</label>
+                <input type="password" id="apiKey" placeholder="zimcrowd-admin-xxxxx" required>
+            </div>
+            <button type="submit" class="btn-login">Login to Dashboard</button>
+        </form>
+
+        <div class="info-box">
+            <h3>Default API Key</h3>
+            <p><code>zimcrowd-admin-dfc7e9a5e1ba1508d0d4950b9765a934</code></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const apiKey = document.getElementById('apiKey').value.trim();
+            
+            if (apiKey) {
+                localStorage.setItem('admin_api_key', apiKey);
+                window.location.href = '/admin-dashboard-unified.html';
+            } else {
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('errorMessage').textContent = 'Please enter your API key';
+            }
+        });
+    </script>
+</body>
+</html>

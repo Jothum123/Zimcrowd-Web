@@ -25,32 +25,16 @@ const handleValidationErrors = (req, res, next) => {
     next();
 };
 
-/**
- * Admin authentication middleware
- */
-const authenticateAdmin = (req, res, next) => {
-    const apiKey = req.headers['x-admin-key'];
-    
-    if (apiKey === process.env.ADMIN_API_KEY || apiKey === 'admin-dev-key-123') {
-        // In a real system, decode JWT to get admin details
-        req.admin = {
-            id: 'admin-' + Date.now(),
-            name: req.headers['x-admin-name'] || 'System Admin',
-            email: req.headers['x-admin-email'] || 'admin@zimcrowd.com'
-        };
-        next();
-    } else {
-        res.status(401).json({
-            success: false,
-            message: 'Unauthorized - Admin access required'
-        });
-    }
-};
+// Import enhanced admin authentication middleware
+const {
+    authenticateAdmin,
+    requireFinancialAccess
+} = require('../middleware/admin-auth.middleware');
 
 // @route   POST /api/admin-manual-transactions/deposit
 // @desc    Manual deposit/credit to user account
-// @access  Admin
-router.post('/deposit', authenticateAdmin, [
+// @access  Admin with Financial Access
+router.post('/deposit', authenticateAdmin, requireFinancialAccess, [
     body('user_id').isUUID().withMessage('Valid user ID required'),
     body('amount').isFloat({ min: 0.01 }).withMessage('Valid amount required (minimum $0.01)'),
     body('currency').optional().isIn(['USD', 'ZWL']).withMessage('Currency must be USD or ZWL'),
@@ -111,8 +95,8 @@ router.post('/deposit', authenticateAdmin, [
 
 // @route   POST /api/admin-manual-transactions/debit
 // @desc    Manual debit/deduction from user account
-// @access  Admin
-router.post('/debit', authenticateAdmin, [
+// @access  Admin with Financial Access
+router.post('/debit', authenticateAdmin, requireFinancialAccess, [
     body('user_id').isUUID().withMessage('Valid user ID required'),
     body('amount').isFloat({ min: 0.01 }).withMessage('Valid amount required (minimum $0.01)'),
     body('currency').optional().isIn(['USD', 'ZWL']).withMessage('Currency must be USD or ZWL'),
@@ -173,8 +157,8 @@ router.post('/debit', authenticateAdmin, [
 
 // @route   POST /api/admin-manual-transactions/bank-transfer
 // @desc    Process bank transfer deposit
-// @access  Admin
-router.post('/bank-transfer', authenticateAdmin, [
+// @access  Admin with Financial Access
+router.post('/bank-transfer', authenticateAdmin, requireFinancialAccess, [
     body('user_id').isUUID().withMessage('Valid user ID required'),
     body('amount').isFloat({ min: 0.01 }).withMessage('Valid amount required (minimum $0.01)'),
     body('currency').optional().isIn(['USD', 'ZWL']).withMessage('Currency must be USD or ZWL'),
@@ -241,8 +225,8 @@ router.post('/bank-transfer', authenticateAdmin, [
 
 // @route   POST /api/admin-manual-transactions/bulk
 // @desc    Process bulk manual transactions
-// @access  Admin
-router.post('/bulk', authenticateAdmin, [
+// @access  Admin with Financial Access
+router.post('/bulk', authenticateAdmin, requireFinancialAccess, [
     body('transactions').isArray({ min: 1 }).withMessage('Transactions array required'),
     body('transactions.*.user_id').isUUID().withMessage('Valid user ID required for each transaction'),
     body('transactions.*.amount').isFloat({ min: 0.01 }).withMessage('Valid amount required for each transaction'),
@@ -288,8 +272,8 @@ router.post('/bulk', authenticateAdmin, [
 
 // @route   GET /api/admin-manual-transactions/history
 // @desc    Get manual transaction history
-// @access  Admin
-router.get('/history', authenticateAdmin, async (req, res) => {
+// @access  Admin with Financial Access
+router.get('/history', authenticateAdmin, requireFinancialAccess, async (req, res) => {
     try {
         const filters = {
             admin_id: req.query.admin_id,
@@ -329,8 +313,8 @@ router.get('/history', authenticateAdmin, async (req, res) => {
 
 // @route   GET /api/admin-manual-transactions/user-balance/:user_id
 // @desc    Get user's current wallet balance
-// @access  Admin
-router.get('/user-balance/:user_id', authenticateAdmin, async (req, res) => {
+// @access  Admin with Financial Access
+router.get('/user-balance/:user_id', authenticateAdmin, requireFinancialAccess, async (req, res) => {
     try {
         const { user_id } = req.params;
         const { currency = 'USD' } = req.query;

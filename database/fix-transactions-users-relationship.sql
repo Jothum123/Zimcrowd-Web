@@ -2,16 +2,39 @@
 -- This ensures Supabase can properly join transactions with users
 
 -- First, ensure the users table exists with proper structure
-CREATE TABLE IF NOT EXISTS users (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    full_name VARCHAR(255),
-    phone VARCHAR(20),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    last_sign_in_at TIMESTAMP WITH TIME ZONE,
-    email_verified BOOLEAN DEFAULT false
-);
+-- Check if users table exists and add missing columns if needed
+DO $$ 
+BEGIN
+    -- Create users table if it doesn't exist
+    CREATE TABLE IF NOT EXISTS users (
+        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        full_name VARCHAR(255),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        last_sign_in_at TIMESTAMP WITH TIME ZONE,
+        email_verified BOOLEAN DEFAULT false
+    );
+    
+    -- Add phone column if it doesn't exist
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'users' AND column_name = 'phone') THEN
+        ALTER TABLE users ADD COLUMN phone VARCHAR(20);
+    END IF;
+    
+    -- Add email_verified column if it doesn't exist
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'users' AND column_name = 'email_verified') THEN
+        ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT false;
+    END IF;
+    
+    -- Add full_name column if it doesn't exist
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'users' AND column_name = 'full_name') THEN
+        ALTER TABLE users ADD COLUMN full_name VARCHAR(255);
+    END IF;
+    
+END $$;
 
 -- Ensure the transactions table exists with proper foreign key
 CREATE TABLE IF NOT EXISTS transactions (
@@ -66,14 +89,35 @@ CREATE POLICY "Service role can access all users" ON users
     FOR ALL USING (auth.role() = 'service_role');
 
 -- Insert a test user for testing purposes
-INSERT INTO users (id, email, full_name, phone, email_verified) 
-VALUES (
-    '00000000-0000-0000-0000-000000000001',
-    'test@zimcrowd.com',
-    'Test User',
-    '+263771234567',
-    true
-) ON CONFLICT (email) DO NOTHING;
+-- Use a more flexible approach that works with existing schema
+DO $$
+BEGIN
+    -- Insert test user with only required columns first
+    INSERT INTO users (id, email) 
+    VALUES (
+        '00000000-0000-0000-0000-000000000001',
+        'test@zimcrowd.com'
+    ) ON CONFLICT (email) DO NOTHING;
+    
+    -- Update with optional columns if they exist
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'users' AND column_name = 'full_name') THEN
+        UPDATE users SET full_name = 'Test User' 
+        WHERE id = '00000000-0000-0000-0000-000000000001';
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'users' AND column_name = 'phone') THEN
+        UPDATE users SET phone = '+263771234567' 
+        WHERE id = '00000000-0000-0000-0000-000000000001';
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'users' AND column_name = 'email_verified') THEN
+        UPDATE users SET email_verified = true 
+        WHERE id = '00000000-0000-0000-0000-000000000001';
+    END IF;
+END $$;
 
 -- Add some sample transaction types that the system supports
 COMMENT ON TABLE transactions IS 'All financial transactions including deposits, withdrawals, manual transactions';

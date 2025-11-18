@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth System Test - ZimCrowd</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .test-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .test-card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            word-wrap: break-word;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result pre {
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-size: 12px;
+        }
+
+        .token-display {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .token-display h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .token-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            word-wrap: break-word;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-badge.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Authentication System Test</h1>
+
+        <!-- Token Display -->
+        <div class="token-display">
+            <h2>Current Session <span id="sessionStatus" class="status-badge inactive">Not Logged In</span></h2>
+            <div class="token-info" id="tokenInfo">No active session</div>
+        </div>
+
+        <!-- Test Cards -->
+        <div class="test-grid">
+            <!-- Signup Test -->
+            <div class="test-card">
+                <h2>1️⃣ Signup Test</h2>
+                <form id="signupForm">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="signupEmail" value="test@zimcrowd.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="signupPassword" value="Test123!" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="signupFullName" value="Test User" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone (Optional)</label>
+                        <input type="tel" id="signupPhone" value="+263771234567">
+                    </div>
+                    <button type="submit">Test Signup</button>
+                </form>
+                <div id="signupResult"></div>
+            </div>
+
+            <!-- Login Test -->
+            <div class="test-card">
+                <h2>2️⃣ Login Test</h2>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" value="test@zimcrowd.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" value="Test123!" required>
+                    </div>
+                    <button type="submit">Test Login</button>
+                </form>
+                <div id="loginResult"></div>
+            </div>
+
+            <!-- Get User Test -->
+            <div class="test-card">
+                <h2>3️⃣ Get Current User</h2>
+                <p style="margin-bottom: 15px; color: #666;">Click to fetch current user data using stored token</p>
+                <button onclick="testGetUser()">Get User Info</button>
+                <div id="getUserResult"></div>
+            </div>
+
+            <!-- Verify Token Test -->
+            <div class="test-card">
+                <h2>4️⃣ Verify Token</h2>
+                <p style="margin-bottom: 15px; color: #666;">Check if current token is valid</p>
+                <button onclick="testVerifyToken()">Verify Token</button>
+                <div id="verifyResult"></div>
+            </div>
+
+            <!-- Forgot Password Test -->
+            <div class="test-card">
+                <h2>5️⃣ Forgot Password</h2>
+                <form id="forgotForm">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="forgotEmail" value="test@zimcrowd.com" required>
+                    </div>
+                    <button type="submit">Request Reset</button>
+                </form>
+                <div id="forgotResult"></div>
+            </div>
+
+            <!-- Logout Test -->
+            <div class="test-card">
+                <h2>6️⃣ Logout Test</h2>
+                <p style="margin-bottom: 15px; color: #666;">Clear session and logout</p>
+                <button onclick="testLogout()">Test Logout</button>
+                <div id="logoutResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3001/api/auth';
+
+        // Update session display
+        function updateSessionDisplay() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            const statusBadge = document.getElementById('sessionStatus');
+            const tokenInfo = document.getElementById('tokenInfo');
+
+            if (token && user) {
+                statusBadge.textContent = 'Logged In';
+                statusBadge.className = 'status-badge active';
+                
+                const userData = JSON.parse(user);
+                tokenInfo.innerHTML = `
+                    <strong>User:</strong> ${userData.email}<br>
+                    <strong>Name:</strong> ${userData.fullName}<br>
+                    <strong>Token:</strong> ${token.substring(0, 50)}...<br>
+                    <strong>Wallet Balance:</strong> $${userData.walletBalance || 0}
+                `;
+            } else {
+                statusBadge.textContent = 'Not Logged In';
+                statusBadge.className = 'status-badge inactive';
+                tokenInfo.textContent = 'No active session';
+            }
+        }
+
+        // Show result
+        function showResult(elementId, success, data) {
+            const element = document.getElementById(elementId);
+            element.className = `result ${success ? 'success' : 'error'}`;
+            element.innerHTML = `
+                <strong>${success ? '✅ Success' : '❌ Error'}</strong>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+        }
+
+        // 1. Signup Test
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const fullName = document.getElementById('signupFullName').value;
+            const phone = document.getElementById('signupPhone').value;
+
+            try {
+                const response = await fetch(`${API_URL}/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, fullName, phone })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    updateSessionDisplay();
+                }
+
+                showResult('signupResult', data.success, data);
+            } catch (error) {
+                showResult('signupResult', false, { message: error.message });
+            }
+        });
+
+        // 2. Login Test
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    updateSessionDisplay();
+                }
+
+                showResult('loginResult', data.success, data);
+            } catch (error) {
+                showResult('loginResult', false, { message: error.message });
+            }
+        });
+
+        // 3. Get User Test
+        async function testGetUser() {
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                showResult('getUserResult', false, { message: 'No token found. Please login first.' });
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                showResult('getUserResult', data.success, data);
+            } catch (error) {
+                showResult('getUserResult', false, { message: error.message });
+            }
+        }
+
+        // 4. Verify Token Test
+        async function testVerifyToken() {
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                showResult('verifyResult', false, { message: 'No token found. Please login first.' });
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/verify-token`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    }
+                });
+
+                const data = await response.json();
+                showResult('verifyResult', data.success, data);
+            } catch (error) {
+                showResult('verifyResult', false, { message: error.message });
+            }
+        }
+
+        // 5. Forgot Password Test
+        document.getElementById('forgotForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('forgotEmail').value;
+
+            try {
+                const response = await fetch(`${API_URL}/forgot-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+                showResult('forgotResult', data.success, data);
+            } catch (error) {
+                showResult('forgotResult', false, { message: error.message });
+            }
+        });
+
+        // 6. Logout Test
+        async function testLogout() {
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                showResult('logoutResult', false, { message: 'No token found. Already logged out.' });
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/logout`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    updateSessionDisplay();
+                }
+
+                showResult('logoutResult', data.success, data);
+            } catch (error) {
+                showResult('logoutResult', false, { message: error.message });
+            }
+        }
+
+        // Initialize
+        updateSessionDisplay();
+    </script>
+</body>
+</html>
