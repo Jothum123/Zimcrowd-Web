@@ -3,8 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - ZimCrowd</title>
-    <link rel="icon" type="image/png" href="/favicon.png">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://zimcrowd-backend.vercel.app http://localhost:3000;">
+    <title>Login - ZimCrowd Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/api-config-new.js"></script>
+    <script src="js/api-helper.js"></script>
+    <script src="js/api-client.js"></script>
     <style>
         * {
             margin: 0;
@@ -12,268 +17,404 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --color-green: #38e07b;
+            --color-green-light: #4ade80;
+            --color-green-dark: #22c55e;
+            --color-dark: #191A23;
+            --color-grey: #F3F3F3;
+            --color-grey-light: #f8fafc;
+            --color-white: #FFFFFF;
+            --color-black: #000000;
+            --color-text: #374151;
+            --color-text-light: #6b7280;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: 
-                linear-gradient(135deg, rgba(25, 26, 35, 0.95) 0%, rgba(42, 43, 53, 0.95) 100%),
-                url('/assets/images/pexels-brett-sayles-3963829.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            font-family: 'Space Grotesk', sans-serif;
+            background: url('assets/images/pexels-ayaka-kato-1441033-2860905.jpg') center/cover no-repeat;
+            color: white;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 40px 20px;
+            padding: 20px;
             position: relative;
-            overflow-y: auto;
         }
 
         body::before {
             content: '';
             position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(56, 224, 123, 0.15) 0%, transparent 70%);
-            animation: pulse 15s ease-in-out infinite;
-            pointer-events: none;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1) rotate(0deg); }
-            50% { transform: scale(1.1) rotate(180deg); }
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(25, 26, 35, 0.9) 0%, rgba(56, 224, 123, 0.1) 100%);
+            z-index: 0;
         }
 
         .login-container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
             width: 100%;
-            max-width: 450px;
-            max-height: 90vh;
-            padding: 40px;
-            animation: slideUp 0.5s ease;
+            max-width: 480px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 24px;
+            padding: 50px 40px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 
+                0 0 60px rgba(56, 231, 123, 0.2),
+                0 0 120px rgba(56, 231, 123, 0.15),
+                0 0 180px rgba(56, 231, 123, 0.1),
+                0 25px 50px rgba(56, 231, 123, 0.12),
+                0 0 0 1px rgba(56, 231, 123, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12);
             position: relative;
             z-index: 1;
-            overflow-y: auto;
-        }
-
-        .login-container::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .login-container::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-        }
-
-        .login-container::-webkit-scrollbar-thumb {
-            background: rgba(56, 224, 123, 0.3);
-            border-radius: 10px;
-        }
-
-        .login-container::-webkit-scrollbar-thumb:hover {
-            background: rgba(56, 224, 123, 0.5);
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .logo {
             text-align: center;
+            animation: loginCardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes loginCardEntrance {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .login-header {
+            margin-bottom: 40px;
+        }
+
+        .login-logo {
+            width: 120px;
+            height: auto;
+            margin: 0 auto 20px;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+        }
+
+        .login-header h1 {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.8));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 16px;
+            line-height: 1.5;
+            font-weight: 400;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
             margin-bottom: 30px;
         }
 
-        .logo h1 {
-            color: #38e07b;
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            text-shadow: 0 0 20px rgba(56, 224, 123, 0.3);
-        }
-
-        .logo p {
-            color: #F3F3F3;
-            font-size: 1rem;
-            opacity: 0.9;
-        }
-
         .form-group {
-            margin-bottom: 25px;
+            text-align: left;
         }
 
-        label {
+        .form-label {
             display: block;
             margin-bottom: 8px;
-            color: #FFFFFF;
-            font-weight: 600;
             font-size: 14px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 0.3px;
         }
 
-        input {
+        .form-input {
             width: 100%;
-            padding: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            font-size: 15px;
-            transition: all 0.3s;
-            background: rgba(255, 255, 255, 0.05);
-            color: #FFFFFF;
-            backdrop-filter: blur(10px);
-        }
-
-        input::placeholder {
-            color: rgba(243, 243, 243, 0.5);
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #38e07b;
+            padding: 16px 20px;
             background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 0 3px rgba(56, 224, 123, 0.2),
-                        0 0 20px rgba(56, 224, 123, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 400;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            line-height: 1.5;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: rgba(56, 224, 123, 0.4);
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 
+                0 0 0 3px rgba(56, 224, 123, 0.15),
+                0 0 20px rgba(56, 224, 123, 0.1),
+                0 4px 12px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+            color: white;
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .password-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-input-wrapper .form-input {
+            padding-right: 45px;
         }
 
         .password-toggle {
-            position: relative;
-        }
-
-        .password-toggle input {
-            padding-right: 50px;
-        }
-
-        .toggle-btn {
             position: absolute;
             right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
             background: none;
             border: none;
-            color: #F3F3F3;
+            color: rgba(255, 255, 255, 0.6);
             cursor: pointer;
-            font-size: 14px;
-            padding: 5px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
         }
 
-        .toggle-btn:hover {
-            color: #38e07b;
+        .password-toggle:hover {
+            color: rgba(56, 224, 123, 0.9);
+            background: rgba(56, 224, 123, 0.1);
         }
 
-        .remember-forgot {
+        .password-toggle:active {
+            transform: scale(0.95);
+        }
+
+        .form-options {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
-            font-size: 14px;
+            margin: 10px 0;
         }
 
         .remember-me {
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #F3F3F3;
         }
 
         .remember-me input[type="checkbox"] {
-            width: auto;
+            width: 16px;
+            height: 16px;
+            accent-color: #38e07b;
+        }
+
+        .remember-me label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
             cursor: pointer;
         }
 
-        .forgot-link {
-            color: #38e07b;
+        .forgot-password {
+            font-size: 14px;
+            color: rgba(56, 224, 123, 0.9);
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 500;
+            transition: all 0.3s ease;
         }
 
-        .forgot-link:hover {
+        .forgot-password:hover {
+            color: #4ade80;
             text-decoration: underline;
         }
 
-        .btn-login {
+        .login-btn {
             width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #38e07b 0%, #2bc76a 100%);
-            color: #191a23;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #38e07b 0%, #22c55e 100%);
             border: none;
             border-radius: 12px;
+            color: white;
             font-size: 16px;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 20px rgba(56, 224, 123, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 24px 0 16px 0;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
         }
 
-        .btn-login:hover {
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .login-btn:hover::before {
+            left: 100%;
+        }
+
+        .login-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(56, 224, 123, 0.5);
-            background: linear-gradient(135deg, #2bc76a 0%, #38e07b 100%);
+            box-shadow: 
+                0 10px 25px rgba(56, 224, 123, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
         }
 
-        .btn-login:active {
-            transform: translateY(0);
-        }
-
-        .btn-login:disabled {
+        .login-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+            animation: pulse 2s infinite;
         }
 
-        .alert {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 0.8; }
+        }
+
+        /* Login Method Toggle */
+        .login-method-toggle {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .method-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
             font-size: 14px;
-            display: none;
-            animation: slideDown 0.3s ease;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .method-btn.active {
+            background: rgba(56, 224, 123, 0.1);
+            color: #38e07b;
+            border: 1px solid rgba(56, 224, 123, 0.3);
         }
 
-        .alert.show {
+        .method-btn:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .method-btn.active:hover {
+            color: #4ade80;
+        }
+
+        /* OTP Form Styles */
+        .otp-form {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .otp-request-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            margin-top: 16px;
+        }
+
+        .otp-request-btn:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        }
+
+        .otp-input, .totp-input {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .otp-hint, .totp-hint {
             display: block;
+            color: rgba(56, 224, 123, 0.8);
+            font-size: 12px;
+            margin-top: 4px;
+            text-align: center;
         }
 
-        .alert-success {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
+        .otp-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-top: 16px;
         }
 
-        .alert-error {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
+        .otp-verify-btn {
+            flex: 1;
+        }
+
+        .resend-btn {
+            background: transparent;
+            border: 1px solid rgba(56, 224, 123, 0.5);
+            color: rgba(56, 224, 123, 0.8);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .resend-btn:hover {
+            background: rgba(56, 224, 123, 0.1);
+            border-color: #38e07b;
+            color: #4ade80;
+        }
+
+        .totp-login-btn {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            margin-top: 16px;
+        }
+
+        .totp-login-btn:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
         }
 
         .divider {
             text-align: center;
-            margin: 30px 0;
+            margin: 24px 0;
             position: relative;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
         }
 
         .divider::before {
@@ -283,324 +424,748 @@
             left: 0;
             right: 0;
             height: 1px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .divider span {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 0 15px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 0 12px;
             position: relative;
-            color: #F3F3F3;
-            font-size: 14px;
-        }
-
-        .signup-link {
-            text-align: center;
-            color: #F3F3F3;
-            font-size: 15px;
-        }
-
-        .signup-link a {
-            color: #38e07b;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .signup-link a:hover {
-            text-decoration: underline;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #ffffff;
-            border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 0.8s linear infinite;
-            margin-right: 8px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .social-login {
-            margin-top: 25px;
-        }
-
-        .social-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .btn-social {
-            padding: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
-            color: #FFFFFF;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+        }
+
+        .signup-prompt {
+            text-align: center;
+            margin-top: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 16px;
         }
 
-        .btn-social:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: #38e07b;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(56, 224, 123, 0.2);
+        .divider-text {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            font-weight: 400;
         }
 
-        .btn-social svg {
-            width: 20px;
-            height: 20px;
+        .signup-link {
+            color: rgba(56, 224, 123, 0.9);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 14px;
         }
 
-        .social-divider {
-            text-align: center;
-            margin: 25px 0;
+        .signup-link:hover {
+            color: #4ade80;
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: rgba(239, 68, 68, 0.9);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            display: none;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        /* Social Login Styles */
+        .social-login {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 24px 0;
+        }
+
+        .social-btn {
+            width: 100%;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             position: relative;
+            overflow: hidden;
         }
 
-        .social-divider::before {
+        .social-btn::before {
             content: '';
             position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: rgba(255, 255, 255, 0.1);
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
         }
 
-        .social-divider span {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 0 15px;
-            position: relative;
-            color: #F3F3F3;
-            font-size: 13px;
-            opacity: 0.7;
+        .social-btn:hover::before {
+            left: 100%;
         }
 
-        @media (max-width: 480px) {
-            .login-container {
-                padding: 40px 30px;
-            }
+        .google-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            font-weight: 600;
+        }
 
-            .logo h1 {
-                font-size: 2rem;
-            }
+        .google-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+        }
 
-            .social-buttons {
-                grid-template-columns: 1fr;
-            }
+        .google-btn i {
+            color: #ea4335;
+            font-size: 18px;
+        }
+
+        .facebook-btn {
+            background: rgba(66, 103, 178, 0.2);
+            color: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(66, 103, 178, 0.4);
+            font-weight: 600;
+        }
+
+        .facebook-btn:hover {
+            background: rgba(66, 103, 178, 0.3);
+            color: white;
+            border-color: rgba(66, 103, 178, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 103, 178, 0.3);
+        }
+
+        .facebook-btn i {
+            color: #4267b2;
+            font-size: 18px;
         }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <div class="logo">
-            <h1>ZimCrowd</h1>
-            <p>Welcome back! Please login to your account.</p>
+        <div class="login-header">
+            <img src="assets/images/Zimcrowd_Dark.png" alt="ZimCrowd" class="login-logo">
+            <h1>Welcome Back</h1>
+            <p class="login-subtitle">Sign in to your ZimCrowd account</p>
         </div>
 
-        <div id="alertBox" class="alert"></div>
+        <div class="error-message" id="errorMessage"></div>
 
-        <!-- Social Login -->
-        <div class="social-login">
-            <div class="social-buttons">
-                <button type="button" class="btn-social" onclick="loginWithGoogle()">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                    </svg>
-                    Google
+        <!-- Login Method Toggle -->
+        <div class="login-method-toggle">
+            <button type="button" class="method-btn active" id="passwordMethod" onclick="switchLoginMethod('password')">
+                <i class="fas fa-lock"></i> Password Login
+            </button>
+            <button type="button" class="method-btn" id="otpMethod" onclick="switchLoginMethod('otp')">
+                <i class="fas fa-mobile-alt"></i> OTP Login
+            </button>
+        </div>
+
+        <!-- Password Login Form -->
+        <form class="login-form" id="passwordLoginForm">
+            <!-- Method Toggle -->
+            <div class="method-toggle" style="display: flex; gap: 12px; margin-bottom: 24px; background: rgba(255, 255, 255, 0.05); padding: 6px; border-radius: 12px;">
+                <button type="button" class="method-btn active" id="phoneMethodBtn" style="flex: 1; padding: 12px 20px; background: transparent; border: none; border-radius: 8px; color: rgba(255, 255, 255, 0.6); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; font-family: 'Space Grotesk', sans-serif;">
+                    <i class="fas fa-mobile-alt"></i> Phone
                 </button>
-                <button type="button" class="btn-social" onclick="loginWithFacebook()">
-                    <svg viewBox="0 0 24 24" fill="#1877F2">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                    </svg>
-                    Facebook
+                <button type="button" class="method-btn" id="emailMethodBtn" style="flex: 1; padding: 12px 20px; background: transparent; border: none; border-radius: 8px; color: rgba(255, 255, 255, 0.6); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; font-family: 'Space Grotesk', sans-serif;">
+                    <i class="fas fa-envelope"></i> Email
                 </button>
             </div>
-        </div>
 
-        <div class="social-divider">
-            <span>Or continue with email</span>
-        </div>
+            <!-- Phone Input -->
+            <div class="input-group active" id="phoneGroup" style="display: block;">
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" class="form-input" id="phone" placeholder="+263 77 123 4567">
+                </div>
+            </div>
 
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="email">Phone Number or Email</label>
-                <input 
-                    type="text" 
-                    id="email" 
-                    name="email" 
-                    placeholder="+263771234567 or email@example.com"
-                    required
-                    autocomplete="username"
-                >
+            <!-- Email Input -->
+            <div class="input-group" id="emailGroup" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="email" placeholder="your@email.com">
+                </div>
             </div>
 
             <div class="form-group">
-                <label for="password">Password</label>
-                <div class="password-toggle">
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        placeholder="Enter your password"
-                        required
-                        autocomplete="current-password"
-                    >
-                    <button type="button" class="toggle-btn" onclick="togglePassword()">
-                        👁️
+                <label class="form-label">Password</label>
+                <div class="password-input-wrapper">
+                    <input type="password" class="form-input" id="password" placeholder="Enter your password" required>
+                    <button type="button" class="password-toggle" id="passwordToggle" onclick="togglePasswordVisibility()">
+                        <i class="fas fa-eye"></i>
                     </button>
                 </div>
             </div>
 
-            <div class="remember-forgot">
-                <label class="remember-me">
-                    <input type="checkbox" id="rememberMe">
-                    <span>Remember me</span>
-                </label>
-                <a href="/password-reset-request.html" class="forgot-link">Forgot Password?</a>
+            <div class="form-options">
+                <div class="remember-me">
+                    <input type="checkbox" id="rememberMe" name="rememberMe">
+                    <label for="rememberMe">Remember me</label>
+                </div>
             </div>
 
-            <button type="submit" class="btn-login" id="loginBtn">
-                Login
+            <button type="submit" class="login-btn" id="passwordLoginBtn">
+                <span id="passwordLoginText">Sign In</span>
+                <div id="passwordLoginSpinner" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
             </button>
         </form>
 
-        <div class="divider">
-            <span>Don't have an account?</span>
+        <!-- OTP Login Form -->
+        <form class="login-form otp-form" id="otpLoginForm" style="display: none;">
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" class="form-input" id="otpPhone" placeholder="+263 77 123 4567" required>
+            </div>
+
+            <!-- OTP Request Section -->
+            <div id="otpRequestSection">
+                <button type="button" class="login-btn otp-request-btn" id="requestOTPBtn" onclick="requestOTP()">
+                    <i class="fas fa-paper-plane"></i> Send Verification Code
+                </button>
+            </div>
+
+            <!-- OTP Verification Section -->
+            <div id="otpVerifySection" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Enter 6-digit Code</label>
+                    <input type="text" class="form-input otp-input" id="otpCode" placeholder="000000" maxlength="6" required>
+                    <small class="otp-hint">Check server console for your OTP code</small>
+                </div>
+
+                <div class="otp-actions">
+                    <button type="submit" class="login-btn otp-verify-btn" id="verifyOTPBtn">
+                        <span id="otpVerifyText">Verify & Login</span>
+                        <div id="otpVerifySpinner" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
+                    </button>
+                    <button type="button" class="resend-btn" id="resendOTPBtn" onclick="requestOTP()" style="display: none;">
+                        <i class="fas fa-redo"></i> Resend Code
+                    </button>
+                </div>
+            </div>
+
+            <!-- TOTP Section (for users with TOTP enabled) -->
+            <div id="totpSection" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Enter TOTP Code</label>
+                    <input type="text" class="form-input totp-input" id="totpCode" placeholder="000000" maxlength="6" required>
+                    <small class="totp-hint">Enter code from your authenticator app</small>
+                </div>
+
+                <button type="button" class="login-btn totp-login-btn" id="totpLoginBtn" onclick="loginWithTOTP()">
+                    <span id="totpLoginText">Login with TOTP</span>
+                    <div id="totpLoginSpinner" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                </button>
+            </div>
+        </form>
+
+        <div class="forgot-password">
+            <a href="password-reset-request.html" class="forgot-link">Forgot your password?</a>
         </div>
 
-        <div class="signup-link">
-            <a href="/signup.html">Create Account</a>
+        <!-- Social Login Buttons -->
+        <div class="social-login">
+            <button type="button" class="social-btn google-btn" onclick="loginWithGoogle()">
+                <i class="fab fa-google"></i>
+                <span>Continue with Google</span>
+            </button>
+            <button type="button" class="social-btn facebook-btn" onclick="loginWithFacebook()">
+                <i class="fab fa-facebook-f"></i>
+                <span>Continue with Facebook</span>
+            </button>
+        </div>
+
+        <div class="divider">
+            <span>or</span>
+        </div>
+
+        <div class="signup-prompt">
+            <a href="signup.html" class="signup-link">Create Account</a>
+            <span class="divider-text">or</span>
+            <a href="index.html" class="signup-link">← Back to Home</a>
         </div>
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3001/api/auth';
+        // API Configuration
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:3000'
+            : 'https://zimcrowd-backend-dz18dm4h9-jojola.vercel.app';
 
-        // Toggle password visibility
-        function togglePassword() {
-            const passwordInput = document.getElementById('password');
-            const type = passwordInput.type === 'password' ? 'text' : 'password';
-            passwordInput.type = type;
-        }
-
-        // Show alert
-        function showAlert(message, type = 'error') {
-            const alertBox = document.getElementById('alertBox');
-            alertBox.textContent = message;
-            alertBox.className = `alert alert-${type} show`;
+        // API Utility
+        window.ZimCrowdAPI = {
+            token: null,
             
-            setTimeout(() => {
-                alertBox.classList.remove('show');
-            }, 5000);
+            setToken(token) {
+                this.token = token;
+            },
+            
+            async request(endpoint, options = {}) {
+                const headers = {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                };
+                
+                if (this.token) {
+                    headers['Authorization'] = `Bearer ${this.token}`;
+                }
+                
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    ...options,
+                    headers
+                });
+                
+                return response.json();
+            },
+            
+            // Passwordless login
+            async passwordlessLogin(phone) {
+                return this.request('/api/phone-auth/passwordless-login', {
+                    method: 'POST',
+                    body: JSON.stringify({ phone })
+                });
+            },
+            
+            async passwordlessVerify(phone, otp) {
+                return this.request('/api/phone-auth/verify-passwordless', {
+                    method: 'POST',
+                    body: JSON.stringify({ phone, otp })
+                });
+            },
+            
+            // Phone login
+            async phoneLogin(phone, password) {
+                return this.request('/api/phone-auth/login-phone', {
+                    method: 'POST',
+                    body: JSON.stringify({ phone, password })
+                });
+            },
+            
+            // Email login
+            async emailLogin(email, password) {
+                return this.request('/api/email-auth/login-email', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password })
+                });
+            }
+        };
+
+        // Login Form Handling
+        let currentLoginMethod = 'password';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordLoginForm = document.getElementById('passwordLoginForm');
+            const otpLoginForm = document.getElementById('otpLoginForm');
+            const passwordLoginBtn = document.getElementById('passwordLoginBtn');
+            const passwordLoginText = document.getElementById('passwordLoginText');
+            const passwordLoginSpinner = document.getElementById('passwordLoginSpinner');
+
+            // Check for signup success
+            const signupSuccess = localStorage.getItem('signupSuccess');
+            const userPhone = localStorage.getItem('userPhone');
+            
+            if (signupSuccess === 'true' && userPhone) {
+                // Show success message and pre-fill phone
+                document.getElementById('phone').value = userPhone;
+                showSuccess('Account created successfully! Please login with your phone number and password.');
+                localStorage.removeItem('signupSuccess');
+                localStorage.removeItem('userPhone');
+            }
+
+            // Check for password reset success
+            const urlParams = new URLSearchParams(window.location.search);
+            const resetMessage = urlParams.get('message');
+            
+            if (resetMessage === 'password-reset-success') {
+                showSuccess('Password reset successful! Please login with your new password.');
+                // Clear the URL parameter
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
+            // Phone/Email toggle functionality
+            let currentAuthMethod = 'phone';
+            const phoneMethodBtn = document.getElementById('phoneMethodBtn');
+            const emailMethodBtn = document.getElementById('emailMethodBtn');
+            const phoneGroup = document.getElementById('phoneGroup');
+            const emailGroup = document.getElementById('emailGroup');
+
+            // Add active state styles
+            const activeStyle = 'background: linear-gradient(135deg, #38e77b, #34d399); color: #0f172a; box-shadow: 0 4px 12px rgba(56, 231, 123, 0.3);';
+            const inactiveStyle = 'background: transparent; color: rgba(255, 255, 255, 0.6);';
+
+            phoneMethodBtn.addEventListener('click', function() {
+                currentAuthMethod = 'phone';
+                phoneMethodBtn.style.cssText += activeStyle;
+                emailMethodBtn.style.cssText += inactiveStyle;
+                phoneGroup.style.display = 'block';
+                emailGroup.style.display = 'none';
+            });
+
+            emailMethodBtn.addEventListener('click', function() {
+                currentAuthMethod = 'email';
+                emailMethodBtn.style.cssText += activeStyle;
+                phoneMethodBtn.style.cssText += inactiveStyle;
+                emailGroup.style.display = 'block';
+                phoneGroup.style.display = 'none';
+            });
+
+            // Password login form handler
+            passwordLoginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                // Get form data
+                const phone = document.getElementById('phone').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+                const rememberMe = document.getElementById('rememberMe').checked;
+
+                const identifier = currentAuthMethod === 'phone' ? phone : email;
+
+                // Basic validation
+                let isValid = true;
+
+                if (!identifier) {
+                    showError(currentAuthMethod === 'phone' ? 'Please enter your phone number' : 'Please enter your email address');
+                    isValid = false;
+                } else {
+                    hideError();
+                }
+
+                if (!password) {
+                    showError('Password is required');
+                    isValid = false;
+                } else {
+                    hideError();
+                }
+
+                if (!isValid) return;
+
+                // Show loading state
+                passwordLoginBtn.disabled = true;
+                passwordLoginText.style.display = 'none';
+                passwordLoginSpinner.style.display = 'inline-block';
+
+                try {
+                    let response;
+                    
+                    if (currentAuthMethod === 'phone') {
+                        // Use ZimCrowdAPI client for phone login
+                        response = await window.ZimCrowdAPI.loginPhone(phone, password);
+                    } else {
+                        // Use email login endpoint
+                        response = await APIHelper.loginWithEmail(email, password);
+                    }
+
+                    if (response.success) {
+                        // Store authentication data
+                        localStorage.setItem('isAuthenticated', 'true');
+                        localStorage.setItem('onboardingCompleted', 'false');
+                        localStorage.setItem('authToken', response.session?.access_token || '');
+                        localStorage.setItem('userData', JSON.stringify(response.user || {}));
+
+                        // Set token in API client for future requests
+                        window.ZimCrowdAPI.setToken(response.session?.access_token || '');
+
+                        // Show success and redirect
+                        showSuccess('Login successful! Redirecting to dashboard...');
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 1500);
+                    } else {
+                        // Show error
+                        showError(response.message || 'Login failed. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    showError(error.message || 'Network error. Please check your connection and try again.');
+                } finally {
+                    // Reset loading state
+                    passwordLoginBtn.disabled = false;
+                    passwordLoginText.style.display = 'inline';
+                    passwordLoginSpinner.style.display = 'none';
+                }
+            });
+
+            // OTP login form handler
+            otpLoginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await verifyOTP();
+            });
+        });
+
+        // Switch between login methods
+        function switchLoginMethod(method) {
+            currentLoginMethod = method;
+            
+            const passwordMethod = document.getElementById('passwordMethod');
+            const otpMethod = document.getElementById('otpMethod');
+            const passwordForm = document.getElementById('passwordLoginForm');
+            const otpForm = document.getElementById('otpLoginForm');
+
+            if (method === 'password') {
+                passwordMethod.classList.add('active');
+                otpMethod.classList.remove('active');
+                passwordForm.style.display = 'block';
+                otpForm.style.display = 'none';
+            } else {
+                passwordMethod.classList.remove('active');
+                otpMethod.classList.add('active');
+                passwordForm.style.display = 'none';
+                otpForm.style.display = 'block';
+            }
+
+            // Clear any errors
+            hideError();
         }
 
-        // Handle login form submission
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const loginBtn = document.getElementById('loginBtn');
-
-            // Validate
-            if (!email || !password) {
-                showAlert('Please fill in all fields');
+        // Request OTP function
+        async function requestOTP() {
+            const phone = document.getElementById('otpPhone').value.trim();
+            
+            if (!phone) {
+                showError('Please enter your phone number');
                 return;
             }
 
-            // Disable button and show loading
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = '<span class="loading"></span>Logging in...';
+            const requestBtn = document.getElementById('requestOTPBtn');
+            const originalText = requestBtn.innerHTML;
+            
+            // Show loading
+            requestBtn.disabled = true;
+            requestBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
             try {
-                const response = await fetch(`${API_URL}/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Store token and user data
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
+                const response = await window.ZimCrowdAPI.passwordlessLogin(phone);
+                
+                if (response.success) {
+                    showSuccess('Verification code sent! Check the server console for your OTP code.');
                     
-                    // Show success message
-                    showAlert('Login successful! Redirecting...', 'success');
+                    // Show OTP verification section
+                    document.getElementById('otpRequestSection').style.display = 'none';
+                    document.getElementById('otpVerifySection').style.display = 'block';
+                    document.getElementById('resendOTPBtn').style.display = 'inline-block';
                     
-                    // Redirect to dashboard
+                    // Auto-focus OTP input
                     setTimeout(() => {
-                        window.location.href = '/dashboard.html';
-                    }, 1000);
+                        document.getElementById('otpCode').focus();
+                    }, 500);
                 } else {
-                    showAlert(data.message || 'Login failed. Please try again.');
-                    loginBtn.disabled = false;
-                    loginBtn.innerHTML = 'Login';
+                    showError(response.message || 'Failed to send code');
                 }
             } catch (error) {
-                console.error('Login error:', error);
-                showAlert('An error occurred. Please try again.');
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = 'Login';
+                console.error('OTP request error:', error);
+                showError('Network error. Please try again.');
+            } finally {
+                requestBtn.disabled = false;
+                requestBtn.innerHTML = originalText;
             }
-        });
-
-        // Social Login Functions
-        function loginWithGoogle() {
-            showAlert('Redirecting to Google...', 'success');
-            window.location.href = '/api/social-auth/google?mode=login';
         }
 
-        function loginWithFacebook() {
-            showAlert('Redirecting to Facebook...', 'success');
-            window.location.href = '/api/social-auth/facebook?mode=login';
+        // Verify OTP function
+        async function verifyOTP() {
+            const phone = document.getElementById('otpPhone').value.trim();
+            const otp = document.getElementById('otpCode').value.trim();
+            
+            if (!phone || !otp) {
+                showError('Please enter both phone number and OTP code');
+                return;
+            }
+
+            const verifyBtn = document.getElementById('verifyOTPBtn');
+            const verifyText = document.getElementById('otpVerifyText');
+            const verifySpinner = document.getElementById('otpVerifySpinner');
+            
+            // Show loading
+            verifyBtn.disabled = true;
+            verifyText.style.display = 'none';
+            verifySpinner.style.display = 'inline-block';
+
+            try {
+                const response = await window.ZimCrowdAPI.passwordlessVerify(phone, otp);
+                
+                if (response.success) {
+                    // Store authentication data
+                    localStorage.setItem('isAuthenticated', 'true');
+                    localStorage.setItem('onboardingCompleted', 'false');
+                    localStorage.setItem('authToken', response.session?.access_token || '');
+                    localStorage.setItem('userData', JSON.stringify(response.user || {}));
+
+                    // Set token in API client
+                    window.ZimCrowdAPI.setToken(response.session?.access_token || '');
+
+                    // Check if user has TOTP enabled
+                    if (response.user?.totpEnabled) {
+                        // Show TOTP section for additional security
+                        showSuccess('OTP verified! Now enter your TOTP code for complete login.');
+                        document.getElementById('otpVerifySection').style.display = 'none';
+                        document.getElementById('totpSection').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('totpCode').focus();
+                        }, 500);
+                    } else {
+                        // Direct login success
+                        showSuccess('Login successful! Redirecting to dashboard...');
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 1500);
+                    }
+                } else {
+                    showError(response.message || 'Invalid OTP code');
+                }
+            } catch (error) {
+                console.error('OTP verification error:', error);
+                showError('Verification failed. Please try again.');
+            } finally {
+                verifyBtn.disabled = false;
+                verifyText.style.display = 'inline';
+                verifySpinner.style.display = 'none';
+            }
         }
 
-        // Check if already logged in
-        window.addEventListener('load', () => {
-            const token = localStorage.getItem('token');
-            if (token) {
-                // Verify token is still valid
-                fetch(`${API_URL}/verify-token`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.valid) {
-                        window.location.href = '/dashboard.html';
-                    }
-                })
-                .catch(() => {
-                    // Token invalid, clear storage
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                });
+        // Login with TOTP function
+        async function loginWithTOTP() {
+            const phone = document.getElementById('otpPhone').value.trim();
+            const otp = document.getElementById('totpCode').value.trim();
+            
+            if (!otp) {
+                showError('Please enter your TOTP code');
+                return;
             }
-        });
+
+            const totpBtn = document.getElementById('totpLoginBtn');
+            const totpText = document.getElementById('totpLoginText');
+            const totpSpinner = document.getElementById('totpLoginSpinner');
+            
+            // Show loading
+            totpBtn.disabled = true;
+            totpText.style.display = 'none';
+            totpSpinner.style.display = 'inline-block';
+
+            try {
+                // Use smart login with TOTP
+                const response = await window.ZimCrowdAPI.smartLogin(phone, otp);
+                
+                if (response.success) {
+                    showSuccess('TOTP login successful! Redirecting to dashboard...');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
+                } else {
+                    showError(response.message || 'Invalid TOTP code');
+                }
+            } catch (error) {
+                console.error('TOTP login error:', error);
+                showError('TOTP verification failed. Please try again.');
+            } finally {
+                totpBtn.disabled = false;
+                totpText.style.display = 'inline';
+                totpSpinner.style.display = 'none';
+            }
+        }
+
+        function showSuccess(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success-message';
+            successDiv.textContent = message;
+            successDiv.style.cssText = `
+                background: rgba(56, 224, 123, 0.1);
+                border: 1px solid rgba(56, 224, 123, 0.3);
+                color: #4ade80;
+                padding: 12px 16px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                margin-bottom: 20px;
+                display: block;
+                backdrop-filter: blur(10px);
+            `;
+            
+            const container = errorDiv.parentNode;
+            container.insertBefore(successDiv, errorDiv);
+            errorDiv.style.display = 'none';
+            
+            setTimeout(() => {
+                successDiv.remove();
+            }, 5000);
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Password visibility toggle
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const passwordToggle = document.getElementById('passwordToggle');
+            const icon = passwordToggle.querySelector('i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Social login functions
+        async function loginWithGoogle() {
+            try {
+                showSuccess('Redirecting to Google...');
+                // Redirect to our backend OAuth endpoint with login mode
+                window.location.href = APIHelper.getGoogleAuthUrl('login');
+            } catch (error) {
+                console.error('Google login error:', error);
+                showError('Failed to initiate Google login. Please try again.');
+            }
+        }
+
+        async function loginWithFacebook() {
+            try {
+                showSuccess('Redirecting to Facebook...');
+                // Redirect to our backend OAuth endpoint with login mode
+                window.location.href = APIHelper.getFacebookAuthUrl('login');
+            } catch (error) {
+                console.error('Facebook login error:', error);
+                showError('Failed to initiate Facebook login. Please try again.');
+            }
+        }
     </script>
 </body>
 </html>
