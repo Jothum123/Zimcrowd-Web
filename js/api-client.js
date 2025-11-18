@@ -42,10 +42,15 @@ class ZimCrowdAPI {
     }
 
     // Authentication methods
-    async registerPhone(firstName, lastName, phone, password) {
-        return this.request('/phone-auth/register-phone', {
+    async registerPhone(firstName, lastName, phone, password, email) {
+        return this.request('/api/auth/signup', {
             method: 'POST',
-            body: JSON.stringify({ firstName, lastName, phone, password })
+            body: JSON.stringify({ 
+                fullName: `${firstName} ${lastName}`,
+                phone, 
+                password,
+                email: email || null
+            })
         });
     }
 
@@ -85,13 +90,10 @@ class ZimCrowdAPI {
     }
 
     // Smart login - auto-detects authentication method
-    async smartLogin(phone, otp, password = null) {
-        const body = { phone, otp };
-        if (password) body.password = password;
-
-        return this.request('/phone-auth/smart-login', {
+    async smartLogin(email, password) {
+        return this.request('/api/auth/login', {
             method: 'POST',
-            body: JSON.stringify(body)
+            body: JSON.stringify({ email, password })
         });
     }
 

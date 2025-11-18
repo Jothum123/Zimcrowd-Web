@@ -4,7 +4,7 @@
 const API_CONFIG = {
   // Backend URLs
   PRODUCTION_URL: 'https://zimcrowd-backend.vercel.app',
-  DEVELOPMENT_URL: 'http://localhost:3000',
+  DEVELOPMENT_URL: 'http://localhost:3001',
   
   // Auto-detect environment
   get BASE_URL() {
