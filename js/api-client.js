@@ -43,7 +43,7 @@ class ZimCrowdAPI {
 
     // Authentication methods
     async registerPhone(firstName, lastName, phone, password, email) {
-        return this.request('/api/auth/signup', {
+        return this.request('/auth/signup', {
             method: 'POST',
             body: JSON.stringify({ 
                 fullName: `${firstName} ${lastName}`,
@@ -91,7 +91,7 @@ class ZimCrowdAPI {
 
     // Smart login - auto-detects authentication method
     async smartLogin(email, password) {
-        return this.request('/api/auth/login', {
+        return this.request('/auth/login', {
             method: 'POST',
             body: JSON.stringify({ email, password })
         });
