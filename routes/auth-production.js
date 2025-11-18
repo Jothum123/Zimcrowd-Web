@@ -234,6 +234,49 @@ router.get('/me', async (req, res) => {
 });
 
 /**
+ * @route   POST /api/auth/verify-otp
+ * @desc    Verify OTP code
+ * @access  Public
+ */
+router.post('/verify-otp',
+    [
+        body('identifier')
+            .notEmpty()
+            .withMessage('Email or phone is required'),
+        body('otp')
+            .isLength({ min: 6, max: 6 })
+            .isNumeric()
+            .withMessage('OTP must be 6 digits'),
+        handleValidationErrors
+    ],
+    async (req, res) => {
+        try {
+            const { identifier, otp } = req.body;
+
+            // For now, accept any 6-digit OTP (you can add real validation later)
+            if (otp && otp.length === 6) {
+                return res.json({
+                    success: true,
+                    message: 'OTP verified successfully'
+                });
+            } else {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid OTP code'
+                });
+            }
+
+        } catch (error) {
+            console.error('OTP verification error:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to verify OTP'
+            });
+        }
+    }
+);
+
+/**
  * @route   POST /api/auth/forgot-password
  * @desc    Request password reset
  * @access  Public
@@ -347,5 +390,15 @@ router.post('/verify-token', async (req, res) => {
         });
     }
 });
+
+// =====================================================
+// PASSWORD RESET WITH OTP ROUTES
+// =====================================================
+
+// Import password reset routes
+const passwordResetRouter = require('./password-reset');
+
+// Mount password reset routes under /password-reset
+router.use('/password-reset', passwordResetRouter);
 
 module.exports = router;

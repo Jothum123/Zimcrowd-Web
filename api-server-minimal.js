@@ -62,6 +62,8 @@ console.log('='.repeat(60));
 const routes = {
     authProduction: loadRoute('./routes/auth-production', 'Authentication (Production)'),
     auth: loadRoute('./routes/auth', 'Authentication (Legacy)'),
+    socialAuth: loadRoute('./routes/social-auth', 'Social Authentication (Google/Facebook)'),
+    passwordReset: loadRoute('./routes/password-reset', 'Password Reset (OTP)'),
     profile: loadRoute('./routes/profile', 'Profile'),
     profileSetup: loadRoute('./routes/profile-setup', 'Profile Setup'),
     wallet: loadRoute('./routes/wallet', 'Wallet'),
@@ -86,7 +88,8 @@ const routes = {
     paymentFallback: loadRoute('./routes/payment-fallback', 'Payment Fallback'),
     adminWalletMonitoring: loadRoute('./routes/admin-wallet-monitoring', 'Admin Wallet Monitoring'),
     adminManualTransactions: loadRoute('./routes/admin-manual-transactions', 'Admin Manual Transactions'),
-    adminRoleManagement: loadRoute('./routes/admin-role-management', 'Admin Role Management')
+    adminRoleManagement: loadRoute('./routes/admin-role-management', 'Admin Role Management'),
+    cleanupOrphaned: loadRoute('./routes/cleanup-orphaned', 'Cleanup Orphaned Records')
 };
 
 console.log('='.repeat(60) + '\n');
@@ -115,6 +118,8 @@ app.get('/api/health', (req, res) => {
 // Register routes if they loaded successfully
 if (routes.authProduction) app.use('/api/auth', routes.authProduction);
 else if (routes.auth) app.use('/api/auth', routes.auth);
+if (routes.socialAuth) app.use('/api/social-auth', routes.socialAuth);
+if (routes.passwordReset) app.use('/api/auth/password-reset', routes.passwordReset);
 if (routes.profile) app.use('/api/profile', routes.profile);
 if (routes.profileSetup) app.use('/api/profile-setup', routes.profileSetup);
 if (routes.wallet) app.use('/api/wallet', routes.wallet);
@@ -141,6 +146,7 @@ if (routes.paymentFallback) app.use('/api/payment-fallback', routes.paymentFallb
 if (routes.adminWalletMonitoring) app.use('/api/admin-wallet-monitoring', routes.adminWalletMonitoring);
 if (routes.adminManualTransactions) app.use('/api/admin-manual-transactions', routes.adminManualTransactions);
 if (routes.adminRoleManagement) app.use('/api/admin-role-management', routes.adminRoleManagement);
+if (routes.cleanupOrphaned) app.use('/api/cleanup', routes.cleanupOrphaned);
 
 // =====================================================
 // ERROR HANDLING

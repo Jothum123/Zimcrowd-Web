@@ -31,7 +31,7 @@ async function registerUser(userData) {
             };
         }
 
-        // 2. Check if user already exists
+        // 2. Check if user already exists by email
         const { data: existingUser } = await supabase
             .from('users')
             .select('id, email')
@@ -43,6 +43,36 @@ async function registerUser(userData) {
                 success: false,
                 message: 'User with this email already exists'
             };
+        }
+
+        // 3. Check if phone number already exists (if provided)
+        if (phone) {
+            const { data: existingPhone } = await supabase
+                .from('users')
+                .select('id, phone')
+                .eq('phone', phone)
+                .single();
+
+            if (existingPhone) {
+                return {
+                    success: false,
+                    message: 'Phone number already registered'
+                };
+            }
+
+            // Also check in profiles table
+            const { data: existingPhoneProfile } = await supabase
+                .from('profiles')
+                .select('id, phone')
+                .eq('phone', phone)
+                .single();
+
+            if (existingPhoneProfile) {
+                return {
+                    success: false,
+                    message: 'Phone number already registered'
+                };
+            }
         }
 
         // 3. Hash password
