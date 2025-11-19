@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - ZimCrowd</title>
     <link rel="icon" type="image/png" href="/favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="js/api-config-new.js"></script>
+    <script src="js/api-helper.js"></script>
+    <script src="js/api-client.js"></script>
     <style>
         * {
             margin: 0;
@@ -492,7 +497,8 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3001/api/auth';
+        // Use centralized API configuration
+        const API_URL = API_CONFIG.BASE_URL + '/api/auth';
 
         // Toggle password visibility
         function togglePassword() {
@@ -569,12 +575,12 @@
         // Social Login Functions
         function loginWithGoogle() {
             showAlert('Redirecting to Google...', 'success');
-            window.location.href = '/api/social-auth/google?mode=login';
+            window.location.href = API_CONFIG.getEndpoint('GOOGLE_AUTH') + '?mode=login';
         }
 
         function loginWithFacebook() {
             showAlert('Redirecting to Facebook...', 'success');
-            window.location.href = '/api/social-auth/facebook?mode=login';
+            window.location.href = API_CONFIG.getEndpoint('FACEBOOK_AUTH') + '?mode=login';
         }
 
         // Check if already logged in
