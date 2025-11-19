@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Auth Debug - ZimCrowd</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .debug-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #38e07b;
+        }
+        .debug-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: #333;
+            border-radius: 4px;
+        }
+        .debug-item strong {
+            color: #38e07b;
+        }
+        .btn {
+            background: #38e07b;
+            color: #000;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #2bc76a;
+        }
+        pre {
+            background: #000;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Social Auth Debug Tool</h1>
+    
+    <div class="debug-section">
+        <h2>Current localStorage Data</h2>
+        <div id="localStorageData"></div>
+        <button class="btn" onclick="refreshData()">🔄 Refresh Data</button>
+        <button class="btn" onclick="clearAllData()">🗑️ Clear All Data</button>
+    </div>
+
+    <div class="debug-section">
+        <h2>URL Parameters</h2>
+        <div id="urlParams"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>Test Social Auth</h2>
+        <button class="btn" onclick="testGoogleAuth()">🔗 Test Google Signup</button>
+        <button class="btn" onclick="testFacebookAuth()">🔗 Test Facebook Signup</button>
+        <button class="btn" onclick="goToDashboard()">📊 Go to Dashboard</button>
+    </div>
+
+    <div class="debug-section">
+        <h2>Authentication Status</h2>
+        <div id="authStatus"></div>
+        <button class="btn" onclick="checkAuth()">🔐 Check Authentication</button>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE_URL = 'https://zimcrowd-backend-d9frm1o6a-jojola.vercel.app';
+
+        function refreshData() {
+            displayLocalStorageData();
+            displayUrlParams();
+            checkAuth();
+        }
+
+        function displayLocalStorageData() {
+            const container = document.getElementById('localStorageData');
+            const relevantKeys = [
+                'authToken',
+                'socialAuthData', 
+                'socialSignupCompleted',
+                'userData',
+                'isAuthenticated',
+                'tempToken',
+                'verificationPhone',
+                'signupPhone'
+            ];
+
+            let html = '';
+            relevantKeys.forEach(key => {
+                const value = localStorage.getItem(key);
+                html += `<div class="debug-item">
+                    <strong>${key}:</strong> ${value ? (key.includes('Data') ? '<pre>' + JSON.stringify(JSON.parse(value), null, 2) + '</pre>' : value) : '<em>null</em>'}
+                </div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function displayUrlParams() {
+            const container = document.getElementById('urlParams');
+            const urlParams = new URLSearchParams(window.location.search);
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            
+            let html = '<h3>Query Parameters:</h3>';
+            if (urlParams.toString()) {
+                for (const [key, value] of urlParams) {
+                    html += `<div class="debug-item"><strong>${key}:</strong> ${value}</div>`;
+                }
+            } else {
+                html += '<div class="debug-item"><em>No query parameters</em></div>';
+            }
+
+            html += '<h3>Hash Parameters:</h3>';
+            if (hashParams.toString()) {
+                for (const [key, value] of hashParams) {
+                    html += `<div class="debug-item"><strong>${key}:</strong> ${value}</div>`;
+                }
+            } else {
+                html += '<div class="debug-item"><em>No hash parameters</em></div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        function checkAuth() {
+            const container = document.getElementById('authStatus');
+            
+            // Check for social auth data
+            const socialAuthData = JSON.parse(localStorage.getItem('socialAuthData') || '{}');
+            const socialSignupCompleted = localStorage.getItem('socialSignupCompleted');
+            const isAuthenticated = localStorage.getItem('isAuthenticated');
+            const authToken = localStorage.getItem('authToken');
+
+            let html = '<h3>Authentication Analysis:</h3>';
+            
+            html += `<div class="debug-item">
+                <strong>Has Auth Token:</strong> ${!!authToken ? '✅ Yes' : '❌ No'}
+            </div>`;
+            
+            html += `<div class="debug-item">
+                <strong>Has Social Auth Data:</strong> ${Object.keys(socialAuthData).length > 0 ? '✅ Yes' : '❌ No'}
+            </div>`;
+            
+            html += `<div class="debug-item">
+                <strong>Social Signup Completed:</strong> ${socialSignupCompleted ? '✅ Yes' : '❌ No'}
+            </div>`;
+            
+            html += `<div class="debug-item">
+                <strong>Is Authenticated Flag:</strong> ${isAuthenticated ? '✅ Yes' : '❌ No'}
+            </div>`;
+
+            // Determine authentication status
+            let authResult = 'Unknown';
+            if (authToken) {
+                authResult = '✅ Regular Auth (Token)';
+            } else if ((socialAuthData.provider && socialSignupCompleted) || 
+                      (socialAuthData.provider && isAuthenticated === 'true') ||
+                      (socialAuthData.email && socialAuthData.first_name)) {
+                authResult = '✅ Social Auth';
+            } else {
+                authResult = '❌ Not Authenticated';
+            }
+
+            html += `<div class="debug-item">
+                <strong>Final Status:</strong> ${authResult}
+            </div>`;
+
+            container.innerHTML = html;
+        }
+
+        function clearAllData() {
+            if (confirm('Clear all localStorage data?')) {
+                localStorage.clear();
+                refreshData();
+                alert('All data cleared!');
+            }
+        }
+
+        function testGoogleAuth() {
+            window.location.href = `${API_BASE_URL}/api/social-auth/google?mode=signup`;
+        }
+
+        function testFacebookAuth() {
+            window.location.href = `${API_BASE_URL}/api/social-auth/facebook?mode=signup`;
+        }
+
+        function goToDashboard() {
+            window.location.href = '/dashboard.html';
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            refreshData();
+            
+            // Auto-refresh every 2 seconds to catch changes
+            setInterval(refreshData, 2000);
+        });
+    </script>
+</body>
+</html>
