@@ -43,7 +43,7 @@ class ZimCrowdAPI {
 
     // Authentication methods
     async registerPhone(firstName, lastName, phone, password, email) {
-        return this.request('/auth/signup', {
+        return this.request('/phone-auth/register-phone', {
             method: 'POST',
             body: JSON.stringify({ 
                 fullName: `${firstName} ${lastName}`,
