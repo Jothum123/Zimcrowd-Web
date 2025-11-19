@@ -10,7 +10,7 @@ const API_CONFIG = {
         : 'https://zimcrowd-backend.vercel.app/api',
     
     get HEADERS() {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken');
         return {
             'Content-Type': 'application/json',
             ...(token && { 'Authorization': `Bearer ${token}` })
@@ -59,15 +59,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Authentication
 function checkAuth() {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
+    const token = localStorage.getItem('authToken');
+    const userData = localStorage.getItem('userData');
     
-    if (!token || !user) {
+    if (!token || !userData) {
         return false;
     }
     
     try {
-        DashboardState.user = JSON.parse(user);
+        DashboardState.user = JSON.parse(userData);
         return true;
     } catch (error) {
         console.error('Error parsing user data:', error);
@@ -80,8 +80,9 @@ function redirectToLogin() {
 }
 
 function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
+    localStorage.removeItem('isAuthenticated');
     redirectToLogin();
 }
 
