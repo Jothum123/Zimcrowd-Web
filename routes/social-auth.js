@@ -15,8 +15,8 @@ socialRouter.get('/google', async (req, res) => {
     try {
         const { mode = 'login' } = req.query; // 'login' or 'signup'
         const redirectTo = mode === 'signup'
-            ? `https://www.zimcrowd.com/dashboard-production.html?mode=signup`
-            : `https://www.zimcrowd.com/dashboard-production.html`;
+            ? `https://www.zimcrowd.com/dashboard.html?mode=signup`
+            : `https://www.zimcrowd.com/dashboard.html`;
 
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
@@ -49,8 +49,8 @@ socialRouter.get('/facebook', async (req, res) => {
     try {
         const { mode = 'login' } = req.query; // 'login' or 'signup'
         const redirectTo = mode === 'signup'
-            ? `https://www.zimcrowd.com/dashboard-production.html?mode=signup`
-            : `https://www.zimcrowd.com/dashboard-production.html`;
+            ? `https://www.zimcrowd.com/dashboard.html?mode=signup`
+            : `https://www.zimcrowd.com/dashboard.html`;
 
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'facebook',
@@ -192,7 +192,7 @@ socialRouter.get('/callback', async (req, res) => {
                 redirectUrl = '/onboarding.html?source=social';
             } else {
                 // Existing login - go to dashboard
-                redirectUrl = '/dashboard-production.html';
+                redirectUrl = '/dashboard.html';
             }
 
             // Send social auth data to frontend via localStorage script
