@@ -1343,8 +1343,17 @@ body {
 }
 
 /* Advanced Loan Application Styles */
+.loan-application-modal {
+    background: var(--bg-primary) !important;
+}
+
+.loan-application-modal .modal-body {
+    padding: 2rem !important;
+}
+
 .loan-application-container {
     padding: 0;
+    background: transparent;
 }
 
 .loan-form-grid {
@@ -1352,6 +1361,7 @@ body {
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
     margin-bottom: 2rem;
+    min-height: 500px;
 }
 
 .loan-form-section,
@@ -1359,6 +1369,11 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .section-header {
@@ -1388,6 +1403,7 @@ body {
     background: var(--border-color);
     outline: none;
     -webkit-appearance: none;
+    appearance: none;
 }
 
 .form-range::-webkit-slider-thumb {
@@ -1403,6 +1419,7 @@ body {
 }
 
 .form-range::-moz-range-thumb {
+    appearance: none;
     width: 20px;
     height: 20px;
     border-radius: 50%;
@@ -1428,12 +1445,41 @@ body {
     font-size: 0.875rem;
     resize: vertical;
     min-height: 80px;
+    transition: all 0.2s ease;
 }
 
 .form-textarea:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Enhanced form input styling for loan application */
+.loan-form .form-input,
+.loan-form .form-select {
+    padding: 0.875rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.loan-form .form-input:focus,
+.loan-form .form-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    transform: translateY(-1px);
+}
+
+.loan-form .form-label {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+    display: block;
+    font-size: 0.875rem;
 }
 
 .char-count {

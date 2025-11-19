@@ -111,7 +111,7 @@ const LoansModule = {
         const modal = document.createElement('div');
         modal.className = 'modal open';
         modal.innerHTML = `
-            <div class="modal-content" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-content loan-application-modal" style="max-width: 1200px; max-height: 90vh; overflow-y: auto; padding: 0;">
                 <div class="modal-header">
                     <h2 class="modal-title"><i class="fas fa-dollar-sign"></i> Loan Application</h2>
                     <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
