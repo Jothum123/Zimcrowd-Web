@@ -651,7 +651,18 @@
                         window.location.href = `/verify-otp.html?phone=${encodeURIComponent(phone)}&type=signup`;
                     }, 1500);
                 } else {
-                    showAlert(data.message || 'Signup failed. Please try again.');
+                    // Handle specific error cases
+                    if (data.code === 'PHONE_EXISTS' || data.code === 'EMAIL_EXISTS') {
+                        showAlert(data.message + ' Would you like to login instead?');
+                        // Optionally redirect to login after a delay
+                        setTimeout(() => {
+                            if (confirm('Would you like to go to the login page?')) {
+                                window.location.href = '/login.html';
+                            }
+                        }, 3000);
+                    } else {
+                        showAlert(data.message || 'Signup failed. Please try again.');
+                    }
                     signupBtn.disabled = false;
                     signupBtn.innerHTML = 'Create Account';
                 }

@@ -241,9 +241,20 @@ router.post('/verify-email-signup', [
 
         if (authError) {
             console.error('Supabase auth error:', authError);
+            
+            // Handle specific error cases
+            if (authError.message?.includes('already been registered') || authError.code === 'email_exists') {
+                return res.status(409).json({
+                    success: false,
+                    message: 'An account with this email already exists. Please try logging in instead.',
+                    code: 'EMAIL_EXISTS'
+                });
+            }
+            
             return res.status(500).json({
                 success: false,
-                message: 'Failed to create account'
+                message: 'Failed to create account. Please try again.',
+                error: authError.message
             });
         }
 

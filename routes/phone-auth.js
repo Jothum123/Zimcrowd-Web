@@ -576,6 +576,18 @@ router.post('/verify-phone-signup', [
         
         if (authError) {
             console.error('[Phone Signup] Auth user creation error:', authError);
+            
+            // Handle specific error cases
+            if (authError.message?.includes('already been registered') || 
+                authError.message?.includes('phone number has already been registered') ||
+                authError.code === 'phone_exists' || authError.code === 'email_exists') {
+                return res.status(409).json({
+                    success: false,
+                    message: 'An account with this phone number already exists. Please try logging in instead.',
+                    code: 'PHONE_EXISTS'
+                });
+            }
+            
             return res.status(500).json({
                 success: false,
                 message: 'Account creation failed. Please try again.',
