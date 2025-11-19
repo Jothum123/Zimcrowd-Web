@@ -2944,6 +2944,68 @@
                 max-width: none;
             }
         }
+
+        /* Toggle Switch Styles */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #334155;
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #38e77b;
+        }
+
+        input:focus + .toggle-slider {
+            box-shadow: 0 0 1px #38e77b;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        body.light-mode .toggle-slider {
+            background-color: #e2e8f0;
+        }
+
+        body.light-mode .toggle-slider:before {
+            background-color: white;
+        }
+
+        body.light-mode input:checked + .toggle-slider {
+            background-color: #38e77b;
+        }
     </style>
 </head>
 <body>
@@ -5046,8 +5108,47 @@
                     </div>
                 </div>
 
-                <div class="loan-card">
-                    <h3 style="margin-bottom: 20px;">Change Password</h3>
+            </div>
+
+            <!-- Security Tab -->
+            <div id="security-tab" class="tab-content">
+                <!-- Security Overview -->
+                <div class="loan-card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px;">🔒 Security Overview</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div style="background: rgba(16, 185, 129, 0.1); padding: 20px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                <i class="fas fa-shield-alt" style="color: #10b981; font-size: 24px;"></i>
+                                <div>
+                                    <h4 style="color: #10b981; margin: 0;">Account Security</h4>
+                                    <p style="color: #94a3b8; font-size: 12px; margin: 0;">Strong</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="flex: 1; background: rgba(16, 185, 129, 0.2); height: 6px; border-radius: 3px;">
+                                    <div style="width: 85%; height: 100%; background: #10b981; border-radius: 3px;"></div>
+                                </div>
+                                <span style="color: #10b981; font-size: 12px; font-weight: 600;">85%</span>
+                            </div>
+                        </div>
+                        <div style="background: rgba(245, 158, 11, 0.1); padding: 20px; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                <i class="fas fa-exclamation-triangle" style="color: #f59e0b; font-size: 24px;"></i>
+                                <div>
+                                    <h4 style="color: #f59e0b; margin: 0;">Security Alerts</h4>
+                                    <p style="color: #94a3b8; font-size: 12px; margin: 0;">2 recommendations</p>
+                                </div>
+                            </div>
+                            <button class="btn-secondary" style="font-size: 12px; padding: 6px 12px;" onclick="showSecurityRecommendations()">
+                                View Recommendations
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Password Security -->
+                <div class="loan-card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px;">🔑 Password Security</h3>
                     <div style="display: flex; flex-direction: column; gap: 20px; max-width: 500px;">
                         <div>
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Current Password</label>
@@ -5055,70 +5156,363 @@
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">New Password</label>
-                            <input type="password" id="newPassword" placeholder="Enter new password">
+                            <input type="password" id="newPassword" placeholder="Enter new password" oninput="checkPasswordStrength(this.value)">
+                            <div id="passwordStrength" style="margin-top: 8px; display: none;">
+                                <div style="display: flex; gap: 2px; margin-bottom: 5px;">
+                                    <div class="strength-bar" style="flex: 1; height: 4px; background: #334155; border-radius: 2px;"></div>
+                                    <div class="strength-bar" style="flex: 1; height: 4px; background: #334155; border-radius: 2px;"></div>
+                                    <div class="strength-bar" style="flex: 1; height: 4px; background: #334155; border-radius: 2px;"></div>
+                                    <div class="strength-bar" style="flex: 1; height: 4px; background: #334155; border-radius: 2px;"></div>
+                                </div>
+                                <p id="strengthText" style="font-size: 12px; margin: 0; color: #94a3b8;">Password strength: Weak</p>
+                            </div>
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Confirm New Password</label>
                             <input type="password" id="confirmPassword" placeholder="Confirm new password">
                         </div>
+                        <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                            <h4 style="color: #3b82f6; margin: 0 0 8px 0; font-size: 14px;">Password Requirements:</h4>
+                            <ul style="color: #94a3b8; font-size: 12px; margin: 0; padding-left: 20px;">
+                                <li>At least 8 characters long</li>
+                                <li>Contains uppercase and lowercase letters</li>
+                                <li>Contains at least one number</li>
+                                <li>Contains at least one special character</li>
+                            </ul>
+                        </div>
                     </div>
-                    <button class="btn-primary" style="margin-top: 20px;" onclick="changePassword()">Update Password</button>
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="changePassword()">
+                        <i class="fas fa-key"></i> Update Password
+                    </button>
                 </div>
 
-                <div class="loan-card" style="margin-top: 20px;">
-                    <h3 style="margin-bottom: 20px;">Two-Factor Authentication</h3>
-                    <p style="color: #94a3b8; margin-bottom: 20px;">Add an extra layer of security to your account</p>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" id="twoFactorAuth" style="width: 20px; height: 20px;">
-                            <span>Enable Two-Factor Authentication</span>
-                        </label>
+                <!-- Two-Factor Authentication -->
+                <div class="loan-card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px;">🛡️ Two-Factor Authentication (2FA)</h3>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                        <div>
+                            <p style="color: #e2e8f0; margin: 0 0 5px 0; font-weight: 600;">Enhanced Security</p>
+                            <p style="color: #94a3b8; margin: 0; font-size: 14px;">Add an extra layer of security to your account</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="color: #94a3b8; font-size: 14px;">Disabled</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="twoFactorAuth" onchange="toggle2FA(this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
                     </div>
-                    <button class="btn-primary" style="margin-top: 20px;" onclick="saveSecuritySettings()">Save Security Settings</button>
+                    
+                    <div id="twoFactorSetup" style="display: none;">
+                        <div style="background: rgba(56, 231, 123, 0.1); padding: 20px; border-radius: 12px; border: 1px solid rgba(56, 231, 123, 0.3); margin-bottom: 20px;">
+                            <h4 style="color: #38e77b; margin: 0 0 15px 0;">Setup 2FA with Authenticator App</h4>
+                            <div style="display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center;">
+                                <div style="width: 120px; height: 120px; background: white; padding: 10px; border-radius: 8px;">
+                                    <div id="qrCode" style="width: 100%; height: 100%; background: #f3f4f6; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #6b7280;">
+                                        QR Code
+                                    </div>
+                                </div>
+                                <div>
+                                    <p style="color: #94a3b8; margin: 0 0 10px 0; font-size: 14px;">1. Download an authenticator app (Google Authenticator, Authy, etc.)</p>
+                                    <p style="color: #94a3b8; margin: 0 0 10px 0; font-size: 14px;">2. Scan this QR code with your app</p>
+                                    <p style="color: #94a3b8; margin: 0 0 15px 0; font-size: 14px;">3. Enter the 6-digit code below</p>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <input type="text" id="twoFactorCode" placeholder="Enter 6-digit code" maxlength="6" style="width: 150px;">
+                                        <button class="btn-primary" onclick="verify2FA()">Verify</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fas fa-mobile-alt" style="color: #3b82f6;"></i>
+                                <span style="font-weight: 600;">SMS Authentication</span>
+                            </div>
+                            <p style="color: #94a3b8; font-size: 12px; margin: 0;">Receive codes via SMS</p>
+                        </div>
+                        <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fas fa-envelope" style="color: #10b981;"></i>
+                                <span style="font-weight: 600;">Email Authentication</span>
+                            </div>
+                            <p style="color: #94a3b8; font-size: 12px; margin: 0;">Receive codes via email</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Login Activity -->
+                <div class="loan-card">
+                    <h3 style="margin-bottom: 20px;">🕒 Recent Login Activity</h3>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-desktop" style="color: #10b981; font-size: 18px;"></i>
+                                <div>
+                                    <p style="margin: 0; font-weight: 600;">Windows Desktop</p>
+                                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">Chrome Browser • Harare, Zimbabwe</p>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="margin: 0; color: #10b981; font-size: 12px;">Current Session</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 11px;">2 hours ago</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-mobile-alt" style="color: #3b82f6; font-size: 18px;"></i>
+                                <div>
+                                    <p style="margin: 0; font-weight: 600;">Mobile Device</p>
+                                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">Safari Browser • Harare, Zimbabwe</p>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="margin: 0; color: #94a3b8; font-size: 12px;">Yesterday</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 11px;">Nov 18, 2:30 PM</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-secondary" style="margin-top: 15px;" onclick="viewAllSessions()">
+                        <i class="fas fa-list"></i> View All Sessions
+                    </button>
                 </div>
             </div>
 
             <!-- Notifications Tab -->
             <div id="notifications-tab" class="tab-content">
-                <div class="loan-card">
-                    <h3 style="margin-bottom: 20px;">Email Notifications</h3>
-                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                <!-- Notification Overview -->
+                <div class="loan-card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px;">🔔 Notification Center</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                                <span style="font-weight: 600; color: #10b981;">Active Alerts</span>
+                            </div>
+                            <p style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">12</p>
+                        </div>
+                        <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fas fa-envelope" style="color: #3b82f6;"></i>
+                                <span style="font-weight: 600; color: #3b82f6;">Email Enabled</span>
+                            </div>
+                            <p style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">8</p>
+                        </div>
+                        <div style="background: rgba(245, 158, 11, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fas fa-mobile-alt" style="color: #f59e0b;"></i>
+                                <span style="font-weight: 600; color: #f59e0b;">Push Enabled</span>
+                            </div>
+                            <p style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">6</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn-primary" onclick="markAllNotificationsRead()">
+                            <i class="fas fa-check-double"></i> Mark All as Read
+                        </button>
+                        <button class="btn-secondary" onclick="clearNotificationHistory()">
+                            <i class="fas fa-trash"></i> Clear History
+                        </button>
+                        <button class="btn-secondary" onclick="testNotifications()">
+                            <i class="fas fa-bell"></i> Test Notifications
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Email Notifications -->
+                <div class="loan-card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px;">📧 Email Notifications</h3>
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Loan Payment Reminders</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Get notified 3 days before payment due</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="emailLoanReminders" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Investment Returns</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Receive updates on investment earnings</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="emailInvestmentReturns" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">New Loan Opportunities</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Alert me of new investment opportunities</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="emailLoanOpportunities" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Security Alerts</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Important account security notifications</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="emailSecurityAlerts" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Weekly Summary</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Weekly portfolio performance summary</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="emailWeeklySummary" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Marketing & Promotions</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Special offers and platform updates</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="emailMarketing">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Push Notifications -->
+                <div class="loan-card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px;">📱 Push Notifications</h3>
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Transaction Alerts</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Instant notifications for all transactions</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="pushTransactionAlerts" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Account Activity</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Login attempts and profile changes</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="pushAccountActivity" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Investment Updates</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Real-time investment performance updates</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="pushInvestmentUpdates" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Promotional Offers</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Special deals and limited-time offers</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="pushPromotional">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Timing -->
+                <div class="loan-card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px;">⏰ Notification Timing</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Quiet Hours Start</label>
+                            <input type="time" id="quietHoursStart" value="22:00" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Quiet Hours End</label>
+                            <input type="time" id="quietHoursEnd" value="08:00" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Timezone</label>
+                            <select id="notificationTimezone" style="width: 100%;">
+                                <option value="Africa/Harare" selected>Africa/Harare (CAT)</option>
+                                <option value="Africa/Johannesburg">Africa/Johannesburg (SAST)</option>
+                                <option value="UTC">UTC</option>
+                                <option value="America/New_York">America/New_York (EST)</option>
+                                <option value="Europe/London">Europe/London (GMT)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
                         <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" id="emailLoanReminders" checked style="width: 20px; height: 20px;">
-                            <span>Loan payment reminders</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" id="emailInvestmentReturns" checked style="width: 20px; height: 20px;">
-                            <span>Investment returns</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" id="emailLoanOpportunities" checked style="width: 20px; height: 20px;">
-                            <span>New loan opportunities</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" id="emailMarketing" style="width: 20px; height: 20px;">
-                            <span>Marketing emails</span>
+                            <input type="checkbox" id="enableQuietHours" checked style="width: 20px; height: 20px;">
+                            <span>Enable quiet hours (no notifications during specified time)</span>
                         </label>
                     </div>
                 </div>
 
-                <div class="loan-card" style="margin-top: 20px;">
-                    <h3 style="margin-bottom: 20px;">Push Notifications</h3>
-                    <div style="display: flex; flex-direction: column; gap: 15px;">
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" id="pushTransactionAlerts" checked style="width: 20px; height: 20px;">
-                            <span>Transaction alerts</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" id="pushAccountActivity" checked style="width: 20px; height: 20px;">
-                            <span>Account activity</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" id="pushPromotional" style="width: 20px; height: 20px;">
-                            <span>Promotional offers</span>
-                        </label>
+                <!-- Recent Notifications -->
+                <div class="loan-card">
+                    <h3 style="margin-bottom: 20px;">📋 Recent Notifications</h3>
+                    <div style="display: flex; flex-direction: column; gap: 12px; max-height: 300px; overflow-y: auto;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-dollar-sign" style="color: #10b981; font-size: 16px;"></i>
+                                <div>
+                                    <p style="margin: 0; font-weight: 600;">Investment Return Received</p>
+                                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">You received $75.00 from Education Loan #EL-2024-001</p>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="margin: 0; color: #94a3b8; font-size: 11px;">2 hours ago</p>
+                                <button class="btn-secondary" style="font-size: 10px; padding: 4px 8px;" onclick="markNotificationRead(1)">Mark Read</button>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-exclamation-triangle" style="color: #f59e0b; font-size: 16px;"></i>
+                                <div>
+                                    <p style="margin: 0; font-weight: 600;">Payment Due Reminder</p>
+                                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">Your loan payment of $250.00 is due in 3 days</p>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="margin: 0; color: #94a3b8; font-size: 11px;">5 hours ago</p>
+                                <button class="btn-secondary" style="font-size: 10px; padding: 4px 8px;" onclick="markNotificationRead(2)">Mark Read</button>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-lightbulb" style="color: #3b82f6; font-size: 16px;"></i>
+                                <div>
+                                    <p style="margin: 0; font-weight: 600;">New Investment Opportunity</p>
+                                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">A new business loan matching your criteria is available</p>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="margin: 0; color: #94a3b8; font-size: 11px;">1 day ago</p>
+                                <button class="btn-secondary" style="font-size: 10px; padding: 4px 8px;" onclick="markNotificationRead(3)">Mark Read</button>
+                            </div>
+                        </div>
                     </div>
-                    <button class="btn-primary" style="margin-top: 20px;" onclick="saveNotificationSettings()">Save Notification Preferences</button>
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="saveNotificationSettings()">
+                        <i class="fas fa-save"></i> Save Notification Preferences
+                    </button>
                 </div>
             </div>
 
@@ -5255,97 +5649,429 @@
                 </div>
             </div>
 
-            <!-- Privacy Settings Tab -->
+            <!-- Investment Privacy Tab -->
             <div id="privacy-tab" class="tab-content">
-                <div class="loan-card">
-                    <h3 style="margin-bottom: 20px;">Profile Privacy</h3>
+                <!-- Privacy Overview -->
+                <div class="loan-card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px;">🔒 Investment Privacy & Data Control</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                        <div style="background: rgba(16, 185, 129, 0.1); padding: 20px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                <i class="fas fa-shield-alt" style="color: #10b981; font-size: 24px;"></i>
+                                <div>
+                                    <h4 style="color: #10b981; margin: 0;">Privacy Level</h4>
+                                    <p style="color: #94a3b8; font-size: 12px; margin: 0;">High Security</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="flex: 1; background: rgba(16, 185, 129, 0.2); height: 6px; border-radius: 3px;">
+                                    <div style="width: 90%; height: 100%; background: #10b981; border-radius: 3px;"></div>
+                                </div>
+                                <span style="color: #10b981; font-size: 12px; font-weight: 600;">90%</span>
+                            </div>
+                        </div>
+                        <div style="background: rgba(59, 130, 246, 0.1); padding: 20px; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                <i class="fas fa-eye-slash" style="color: #3b82f6; font-size: 24px;"></i>
+                                <div>
+                                    <h4 style="color: #3b82f6; margin: 0;">Hidden Data</h4>
+                                    <p style="color: #94a3b8; font-size: 12px; margin: 0;">5 categories</p>
+                                </div>
+                            </div>
+                            <button class="btn-secondary" style="font-size: 12px; padding: 6px 12px;" onclick="reviewHiddenData()">
+                                Review Settings
+                            </button>
+                        </div>
+                    </div>
+                    <div style="background: rgba(245, 158, 11, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.3);">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-info-circle" style="color: #f59e0b;"></i>
+                            <p style="margin: 0; color: #f59e0b; font-weight: 600; font-size: 14px;">Your financial data is encrypted and protected according to Zimbabwe's Data Protection Act</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Investment Portfolio Privacy -->
+                <div class="loan-card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px;">💼 Investment Portfolio Privacy</h3>
                     <div style="display: flex; flex-direction: column; gap: 20px;">
-                        <div>
-                            <label style="display: block; margin-bottom: 12px; color: #94a3b8; font-size: 14px; font-weight: 600;">Profile Visibility</label>
-                            <select id="profileVisibility" style="width: 100%; max-width: 400px;">
-                                <option value="public" selected>Public - Visible to all users</option>
-                                <option>Private - Only visible to connected users</option>
-                                <option>Hidden - Not visible to anyone</option>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Portfolio Visibility</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Control who can see your investment portfolio</p>
+                            </div>
+                            <select id="portfolioVisibility" style="width: 200px;">
+                                <option value="private" selected>Private - Only me</option>
+                                <option value="friends">Friends only</option>
+                                <option value="public">Public - Everyone</option>
                             </select>
                         </div>
-                        <div>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" id="showPortfolio" checked style="width: 20px; height: 20px;">
-                                <span>Show my investment portfolio publicly</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Investment Amounts</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Hide specific investment amounts from public view</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="hideInvestmentAmounts" checked>
+                                <span class="toggle-slider"></span>
                             </label>
                         </div>
-                        <div>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" id="showLoanHistory" style="width: 20px; height: 20px;">
-                                <span>Show my loan history publicly</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Returns & Earnings</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Keep your earnings and returns private</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="hideReturns" checked>
+                                <span class="toggle-slider"></span>
                             </label>
                         </div>
-                        <div>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" id="allowMessages" checked style="width: 20px; height: 20px;">
-                                <span>Allow other users to send me messages</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Investment History</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Show only current investments, hide historical data</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="hideInvestmentHistory">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Risk Profile</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Hide your risk tolerance and investment strategy</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="hideRiskProfile">
+                                <span class="toggle-slider"></span>
                             </label>
                         </div>
                     </div>
                 </div>
 
-                <div class="loan-card" style="margin-top: 20px;">
-                    <h3 style="margin-bottom: 20px;">Data & Privacy</h3>
+                <!-- Loan Privacy Settings -->
+                <div class="loan-card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px;">🏦 Loan Privacy Settings</h3>
                     <div style="display: flex; flex-direction: column; gap: 20px;">
-                        <div>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" id="allowCookies" checked style="width: 20px; height: 20px;">
-                                <span>Allow cookies for better experience</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Loan History</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Control visibility of your borrowing history</p>
+                            </div>
+                            <select id="loanHistoryVisibility" style="width: 200px;">
+                                <option value="private" selected>Private - Only me</option>
+                                <option value="summary">Summary only</option>
+                                <option value="public">Public - Full details</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Credit Score</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Hide your credit score from other users</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="hideCreditScore" checked>
+                                <span class="toggle-slider"></span>
                             </label>
                         </div>
-                        <div>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" id="shareData" style="width: 20px; height: 20px;">
-                                <span>Share anonymized data for platform improvement</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Loan Amounts</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Keep loan amounts and balances private</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="hideLoanAmounts" checked>
+                                <span class="toggle-slider"></span>
                             </label>
                         </div>
-                        <div>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" id="thirdPartyAnalytics" style="width: 20px; height: 20px;">
-                                <span>Allow third-party analytics</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Payment History</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Hide payment patterns and history</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="hidePaymentHistory">
+                                <span class="toggle-slider"></span>
                             </label>
                         </div>
                     </div>
                 </div>
 
-                <div class="loan-card" style="margin-top: 20px;">
-                    <h3 style="margin-bottom: 20px;">Account Actions</h3>
-                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                <!-- Data Sharing & Analytics -->
+                <div class="loan-card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px;">📊 Data Sharing & Analytics</h3>
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Platform Analytics</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Share anonymized data to improve platform features</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="shareAnalytics" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Market Research</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Contribute to financial market research (anonymized)</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="shareMarketResearch">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Third-Party Analytics</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Allow third-party analytics for service improvement</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="thirdPartyAnalytics">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Marketing Personalization</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Use my data to personalize offers and recommendations</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="personalizedMarketing">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Communication Privacy -->
+                <div class="loan-card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px;">💬 Communication Privacy</h3>
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Direct Messages</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Allow other users to send you direct messages</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="allowDirectMessages" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Investment Discussions</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Participate in public investment discussions</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="allowInvestmentDiscussions" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Profile Contact Info</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">Show contact information on your public profile</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="showContactInfo">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Rights & Account Actions -->
+                <div class="loan-card">
+                    <h3 style="margin-bottom: 20px;">⚖️ Your Data Rights</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px;">
                         <div>
-                            <button class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;" onclick="downloadMyData()">
+                            <button class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px; width: 100%;" onclick="downloadMyData()">
                                 <i class="fas fa-download"></i>
                                 <span>Download My Data</span>
                             </button>
-                            <p style="color: #94a3b8; font-size: 13px; margin-top: 8px;">Get a copy of all your account data</p>
+                            <p style="color: #94a3b8; font-size: 12px; margin-top: 8px;">Get a complete copy of your data (GDPR compliant)</p>
                         </div>
                         <div>
-                            <button onclick="deactivateAccount()" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: #f59e0b; color: white; border: none; border-radius: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
-                                <i class="fas fa-user-slash"></i>
-                                <span>Deactivate Account</span>
+                            <button class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; width: 100%;" onclick="requestDataCorrection()">
+                                <i class="fas fa-edit"></i>
+                                <span>Correct My Data</span>
                             </button>
-                            <p style="color: #94a3b8; font-size: 13px; margin-top: 8px;">Temporarily disable your account</p>
+                            <p style="color: #94a3b8; font-size: 12px; margin-top: 8px;">Request corrections to inaccurate information</p>
                         </div>
                         <div>
-                            <button onclick="deleteAccount()" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: #ef4444; color: white; border: none; border-radius: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">
-                                <i class="fas fa-trash-alt"></i>
-                                <span>Delete Account</span>
+                            <button class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; width: 100%;" onclick="requestDataDeletion()">
+                                <i class="fas fa-trash"></i>
+                                <span>Delete Specific Data</span>
                             </button>
-                            <p style="color: #94a3b8; font-size: 13px; margin-top: 8px;">Permanently delete your account and all data</p>
+                            <p style="color: #94a3b8; font-size: 12px; margin-top: 8px;">Request deletion of specific data categories</p>
                         </div>
                     </div>
-                    <button class="btn-primary" style="margin-top: 20px;" onclick="savePrivacySettings()">Save Privacy Settings</button>
+                    
+                    <div style="background: rgba(239, 68, 68, 0.1); padding: 20px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3); margin-bottom: 20px;">
+                        <h4 style="color: #ef4444; margin: 0 0 15px 0;">Danger Zone</h4>
+                        <div style="display: flex; flex-direction: column; gap: 15px;">
+                            <div>
+                                <button onclick="deactivateAccount()" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: #f59e0b; color: white; border: none; border-radius: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
+                                    <i class="fas fa-user-slash"></i>
+                                    <span>Deactivate Account</span>
+                                </button>
+                                <p style="color: #94a3b8; font-size: 12px; margin-top: 8px;">Temporarily disable your account (reversible)</p>
+                            </div>
+                            <div>
+                                <button onclick="deleteAccount()" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: #ef4444; color: white; border: none; border-radius: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">
+                                    <i class="fas fa-trash-alt"></i>
+                                    <span>Delete Account Permanently</span>
+                                </button>
+                                <p style="color: #94a3b8; font-size: 12px; margin-top: 8px;">Permanently delete your account and all data (irreversible)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="savePrivacySettings()">
+                        <i class="fas fa-save"></i> Save Privacy Settings
+                    </button>
                 </div>
             </div>
 
             <!-- Documents Tab -->
             <div id="documents-tab" class="tab-content">
-                <div class="loan-card">
-                    <h3 style="margin-bottom: 20px;">KYC Documents & Verification</h3>
+                <!-- Document Overview -->
+                <div class="loan-card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px;">📄 Document Center</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                                <span style="font-weight: 600; color: #10b981;">Verified</span>
+                            </div>
+                            <p style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">4</p>
+                        </div>
+                        <div style="background: rgba(245, 158, 11, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fas fa-clock" style="color: #f59e0b;"></i>
+                                <span style="font-weight: 600; color: #f59e0b;">Pending</span>
+                            </div>
+                            <p style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">1</p>
+                        </div>
+                        <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i>
+                                <span style="font-weight: 600; color: #ef4444;">Missing</span>
+                            </div>
+                            <p style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">1</p>
+                        </div>
+                        <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fas fa-file-alt" style="color: #3b82f6;"></i>
+                                <span style="font-weight: 600; color: #3b82f6;">Total Docs</span>
+                            </div>
+                            <p style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">12</p>
+                        </div>
+                    </div>
+                    <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-shield-alt" style="color: #3b82f6;"></i>
+                            <p style="margin: 0; color: #3b82f6; font-weight: 600; font-size: 14px;">All documents are encrypted with AES-256 and comply with Zimbabwe's Data Protection Act</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Legal & Regulatory Documents -->
+                <div class="loan-card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px;">⚖️ Legal & Regulatory Documents</h3>
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-gavel" style="color: #3b82f6; font-size: 20px;"></i>
+                                <div>
+                                    <h4 style="margin: 0; font-weight: 600;">Terms of Service</h4>
+                                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">Platform usage terms and conditions</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-secondary" onclick="viewDocument('terms')" style="font-size: 12px; padding: 6px 12px;">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button class="btn-secondary" onclick="downloadDocument('terms')" style="font-size: 12px; padding: 6px 12px;">
+                                    <i class="fas fa-download"></i> Download
+                                </button>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-user-shield" style="color: #10b981; font-size: 20px;"></i>
+                                <div>
+                                    <h4 style="margin: 0; font-weight: 600;">Privacy Policy</h4>
+                                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">How we collect, use, and protect your data</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-secondary" onclick="viewDocument('privacy')" style="font-size: 12px; padding: 6px 12px;">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button class="btn-secondary" onclick="downloadDocument('privacy')" style="font-size: 12px; padding: 6px 12px;">
+                                    <i class="fas fa-download"></i> Download
+                                </button>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-handshake" style="color: #f59e0b; font-size: 20px;"></i>
+                                <div>
+                                    <h4 style="margin: 0; font-weight: 600;">Loan Agreement Template</h4>
+                                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">Standard loan agreement terms</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-secondary" onclick="viewDocument('loan-agreement')" style="font-size: 12px; padding: 6px 12px;">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button class="btn-secondary" onclick="downloadDocument('loan-agreement')" style="font-size: 12px; padding: 6px 12px;">
+                                    <i class="fas fa-download"></i> Download
+                                </button>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-chart-line" style="color: #a855f7; font-size: 20px;"></i>
+                                <div>
+                                    <h4 style="margin: 0; font-weight: 600;">Investment Disclosure</h4>
+                                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">Investment risks and disclosures</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-secondary" onclick="viewDocument('investment-disclosure')" style="font-size: 12px; padding: 6px 12px;">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button class="btn-secondary" onclick="downloadDocument('investment-disclosure')" style="font-size: 12px; padding: 6px 12px;">
+                                    <i class="fas fa-download"></i> Download
+                                </button>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-balance-scale" style="color: #ef4444; font-size: 20px;"></i>
+                                <div>
+                                    <h4 style="margin: 0; font-weight: 600;">Regulatory Compliance</h4>
+                                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">Zimbabwe financial regulations compliance</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-secondary" onclick="viewDocument('compliance')" style="font-size: 12px; padding: 6px 12px;">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button class="btn-secondary" onclick="downloadDocument('compliance')" style="font-size: 12px; padding: 6px 12px;">
+                                    <i class="fas fa-download"></i> Download
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KYC Documents & Verification -->
+                <div class="loan-card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px;">🆔 KYC Documents & Verification</h3>
                     <p style="color: #94a3b8; margin-bottom: 25px;">Upload your documents for identity verification. All documents are encrypted and stored securely.</p>
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
