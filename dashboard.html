@@ -13,6 +13,7 @@
     <script src="js/api-config-new.js"></script>
     <script src="js/api-helper.js"></script>
     <script src="js/api-client.js"></script>
+    <script src="js/dashboard-core.js"></script>
     <!-- Chart.js for Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -6612,8 +6613,274 @@ How it works:
             }
         }
 
+        // Authentication and API Integration
+        class DashboardAuth {
+            constructor() {
+                this.token = localStorage.getItem('authToken');
+                this.user = null;
+                this.isAuthenticated = false;
+            }
+
+            async checkAuthentication() {
+                console.log('🔐 Checking authentication...');
+                
+                if (!this.token) {
+                    console.log('❌ No auth token found');
+                    this.redirectToLogin();
+                    return false;
+                }
+
+                try {
+                    // Verify token with backend
+                    const response = await window.ZimCrowdAPI.getProfile();
+                    if (response.success) {
+                        this.user = response.data;
+                        this.isAuthenticated = true;
+                        localStorage.setItem('userData', JSON.stringify(this.user));
+                        console.log('✅ Authentication successful:', this.user);
+                        return true;
+                    } else {
+                        throw new Error('Invalid token');
+                    }
+                } catch (error) {
+                    console.error('❌ Authentication failed:', error);
+                    this.clearAuth();
+                    this.redirectToLogin();
+                    return false;
+                }
+            }
+
+            async loadDashboardData() {
+                if (!this.isAuthenticated) return;
+
+                console.log('📊 Loading dashboard data...');
+                
+                try {
+                    // Load user profile data
+                    await this.updateUserProfile();
+                    
+                    // Load dashboard stats
+                    await this.loadDashboardStats();
+                    
+                    // Load wallet balance
+                    await this.loadWalletBalance();
+                    
+                    console.log('✅ Dashboard data loaded successfully');
+                } catch (error) {
+                    console.error('❌ Error loading dashboard data:', error);
+                }
+            }
+
+            async updateUserProfile() {
+                try {
+                    const userNameEl = document.getElementById('userName');
+                    const userAvatarEl = document.getElementById('userAvatar');
+                    
+                    if (userNameEl && this.user) {
+                        const displayName = this.user.first_name || this.user.fullName || this.user.email || 'User';
+                        userNameEl.textContent = displayName;
+                    }
+                    
+                    if (userAvatarEl && this.user) {
+                        const initial = (this.user.first_name || this.user.fullName || this.user.email || 'U')[0].toUpperCase();
+                        userAvatarEl.textContent = initial;
+                    }
+                } catch (error) {
+                    console.error('Error updating user profile:', error);
+                }
+            }
+
+            async loadDashboardStats() {
+                try {
+                    const response = await window.ZimCrowdAPI.getDashboardOverview();
+                    if (response.success) {
+                        const stats = response.data;
+                        
+                        // Update wallet balance
+                        const walletBalanceEl = document.getElementById('walletBalance');
+                        if (walletBalanceEl) {
+                            walletBalanceEl.textContent = `$${(stats.wallet_balance || 0).toFixed(2)}`;
+                        }
+                        
+                        // Update active loans
+                        const activeLoansEl = document.getElementById('activeLoans');
+                        if (activeLoansEl) {
+                            activeLoansEl.textContent = stats.active_loans || 0;
+                        }
+                        
+                        // Update loan amount
+                        const loanAmountEl = document.getElementById('loanAmount');
+                        if (loanAmountEl) {
+                            loanAmountEl.textContent = `$${(stats.total_loan_amount || 0).toFixed(2)}`;
+                        }
+                        
+                        // Update investment value
+                        const investmentValueEl = document.getElementById('investmentValue');
+                        if (investmentValueEl) {
+                            investmentValueEl.textContent = `$${(stats.investment_value || 0).toFixed(2)}`;
+                        }
+                        
+                        // Update ZimScore
+                        const zimScoreEl = document.getElementById('zimScore');
+                        if (zimScoreEl) {
+                            zimScoreEl.textContent = stats.zim_score || 0;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading dashboard stats:', error);
+                }
+            }
+
+            async loadWalletBalance() {
+                try {
+                    const response = await window.ZimCrowdAPI.getWalletBalance();
+                    if (response.success) {
+                        const balance = response.data.balance || 0;
+                        const walletBalanceEl = document.getElementById('walletBalance');
+                        if (walletBalanceEl) {
+                            walletBalanceEl.textContent = `$${balance.toFixed(2)}`;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading wallet balance:', error);
+                }
+            }
+
+            clearAuth() {
+                this.token = null;
+                this.user = null;
+                this.isAuthenticated = false;
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userData');
+                localStorage.removeItem('isAuthenticated');
+            }
+
+            redirectToLogin() {
+                window.location.href = 'login.html';
+            }
+
+            async logout() {
+                try {
+                    await window.ZimCrowdAPI.request('/auth/logout', { method: 'POST' });
+                } catch (error) {
+                    console.error('Logout API error:', error);
+                }
+                
+                this.clearAuth();
+                this.redirectToLogin();
+            }
+        }
+
+        // Initialize dashboard authentication
+        const dashboardAuth = new DashboardAuth();
+
+        // Enhanced section loading with API integration
+        async function loadSectionData(sectionName) {
+            console.log(`Loading data for section: ${sectionName}`);
+            
+            try {
+                switch(sectionName) {
+                    case 'loans':
+                        await loadLoansData();
+                        break;
+                    case 'investments':
+                        await loadInvestmentsData();
+                        break;
+                    case 'wallet':
+                        await loadWalletData();
+                        break;
+                    case 'transactions':
+                        await loadTransactionsData();
+                        break;
+                    case 'referrals':
+                        await loadReferralsData();
+                        break;
+                    case 'settings':
+                        await loadUserProfile();
+                        break;
+                }
+            } catch (error) {
+                console.error(`Error loading ${sectionName} data:`, error);
+            }
+        }
+
+        async function loadLoansData() {
+            try {
+                const response = await window.ZimCrowdAPI.getLoans();
+                if (response.success) {
+                    // Update loans UI with real data
+                    console.log('Loans data loaded:', response.data);
+                }
+            } catch (error) {
+                console.error('Error loading loans:', error);
+            }
+        }
+
+        async function loadInvestmentsData() {
+            try {
+                const response = await window.ZimCrowdAPI.getInvestments();
+                if (response.success) {
+                    // Update investments UI with real data
+                    console.log('Investments data loaded:', response.data);
+                }
+            } catch (error) {
+                console.error('Error loading investments:', error);
+            }
+        }
+
+        async function loadWalletData() {
+            try {
+                const response = await window.ZimCrowdAPI.getWalletBalance();
+                if (response.success) {
+                    // Update wallet UI with real data
+                    console.log('Wallet data loaded:', response.data);
+                }
+            } catch (error) {
+                console.error('Error loading wallet:', error);
+            }
+        }
+
+        async function loadTransactionsData() {
+            try {
+                const response = await window.ZimCrowdAPI.getTransactions();
+                if (response.success) {
+                    // Update transactions UI with real data
+                    console.log('Transactions data loaded:', response.data);
+                }
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+            }
+        }
+
+        async function loadReferralsData() {
+            try {
+                const response = await window.ZimCrowdAPI.getReferralStats();
+                if (response.success) {
+                    // Update referrals UI with real data
+                    console.log('Referrals data loaded:', response.data);
+                }
+            } catch (error) {
+                console.error('Error loading referrals:', error);
+            }
+        }
+
         // Load saved theme - Default to DARK mode
-        window.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Initializing ZimCrowd Dashboard...');
+            
+            // Check authentication first
+            const isAuthenticated = await dashboardAuth.checkAuthentication();
+            if (!isAuthenticated) {
+                return; // Will redirect to login
+            }
+            
+            // Load dashboard data
+            await dashboardAuth.loadDashboardData();
+            
+            // Load user profile data for settings
+            await loadUserProfile();
+            
+            // Initialize theme
             const savedTheme = localStorage.getItem('theme');
             console.log('Saved theme:', savedTheme);
             
@@ -6788,37 +7055,82 @@ How it works:
             document.getElementById('profile-upload').value = '';
         }
 
-        function saveProfile() {
+        async function saveProfile() {
             const profileData = {
-                firstName: document.getElementById('profileFirstName').value,
-                lastName: document.getElementById('profileLastName').value,
+                first_name: document.getElementById('profileFirstName').value,
+                last_name: document.getElementById('profileLastName').value,
                 email: document.getElementById('profileEmail').value,
                 phone: document.getElementById('profilePhone').value,
-                dob: document.getElementById('profileDob').value,
+                date_of_birth: document.getElementById('profileDob').value,
                 gender: document.getElementById('profileGender').value,
                 address: document.getElementById('profileAddress').value,
-                bio: document.getElementById('profileBio').value,
-                updatedAt: new Date().toISOString()
+                bio: document.getElementById('profileBio').value
             };
 
-            // Save to localStorage
-            localStorage.setItem('userProfile', JSON.stringify(profileData));
+            try {
+                // Save to API
+                const response = await window.ZimCrowdAPI.updateProfile(profileData);
+                
+                if (response.success) {
+                    // Update local storage
+                    const updatedUser = { ...dashboardAuth.user, ...profileData };
+                    dashboardAuth.user = updatedUser;
+                    localStorage.setItem('userData', JSON.stringify(updatedUser));
+                    
+                    // Update UI
+                    await dashboardAuth.updateUserProfile();
+                    
+                    // Show success message
+                    showToast('success', 'Profile Updated', 'Your profile has been updated successfully!');
+                    
+                    // Update initials if no avatar
+                    const avatarDiv = document.getElementById('profileAvatar');
+                    if (!avatarDiv.style.backgroundImage) {
+                        const initials = (profileData.first_name.charAt(0) + profileData.last_name.charAt(0)).toUpperCase();
+                        const initialsEl = document.getElementById('profile-initials');
+                        if (initialsEl) {
+                            initialsEl.textContent = initials;
+                        }
+                    }
+                } else {
+                    showToast('error', 'Update Failed', response.message || 'Failed to update profile');
+                }
+            } catch (error) {
+                console.error('Profile update error:', error);
+                showToast('error', 'Update Failed', 'Failed to update profile. Please try again.');
+            }
+        }
 
-            // Show success message
-            showSuccess('Profile updated successfully!');
-
-            // Update initials if no avatar
-            const avatarDiv = document.getElementById('profileAvatar');
-            if (!avatarDiv.style.backgroundImage) {
-                const initials = (profileData.firstName.charAt(0) + profileData.lastName.charAt(0)).toUpperCase();
-                document.getElementById('profile-initials').textContent = initials;
+        async function loadUserProfile() {
+            try {
+                const response = await window.ZimCrowdAPI.getProfile();
+                if (response.success) {
+                    const user = response.data;
+                    
+                    // Update form fields
+                    document.getElementById('profileFirstName').value = user.first_name || '';
+                    document.getElementById('profileLastName').value = user.last_name || '';
+                    document.getElementById('profileEmail').value = user.email || '';
+                    document.getElementById('profilePhone').value = user.phone || '';
+                    document.getElementById('profileDob').value = user.date_of_birth || '';
+                    document.getElementById('profileGender').value = user.gender || '';
+                    document.getElementById('profileAddress').value = user.address || '';
+                    document.getElementById('profileBio').value = user.bio || '';
+                    
+                    // Update user data in auth
+                    dashboardAuth.user = user;
+                    localStorage.setItem('userData', JSON.stringify(user));
+                }
+            } catch (error) {
+                console.error('Error loading user profile:', error);
+                showToast('error', 'Load Failed', 'Failed to load profile data');
             }
         }
 
         function resetProfile() {
-            // Reload profile data
+            // Reload profile data from API
             loadUserProfile();
-            showSuccess('Profile reset to saved data');
+            showToast('info', 'Profile Reset', 'Profile reset to saved data');
         }
 
         function showSuccess(message) {
@@ -6952,29 +7264,19 @@ How it works:
             });
         }
 
-        // Logout functionality
+        // Enhanced logout functionality using DashboardAuth
         async function handleLogout() {
             if (!confirm('Are you sure you want to logout?')) {
                 return;
             }
 
             try {
-                // Call logout API
-                await window.ZimCrowdAPI.logout();
-                
-                // Clear local storage
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('user');
-                
-                // Redirect to login
-                window.location.href = 'login.html';
+                await dashboardAuth.logout();
             } catch (error) {
                 console.error('Logout error:', error);
-                
-                // Even if API fails, clear local data and redirect
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('user');
-                window.location.href = 'login.html';
+                // Force logout even if API fails
+                dashboardAuth.clearAuth();
+                dashboardAuth.redirectToLogin();
             }
         }
 
@@ -8859,19 +9161,19 @@ How it works:
             }
         }
 
-        // Security Tab Functions
+        // Enhanced Security Tab Functions with API integration
         async function changePassword() {
             const currentPassword = document.getElementById('currentPassword')?.value;
             const newPassword = document.getElementById('newPassword')?.value;
             const confirmPassword = document.getElementById('confirmPassword')?.value;
             
             if (!currentPassword || !newPassword || !confirmPassword) {
-                alert('Please fill in all password fields');
+                showToast('error', 'Validation Error', 'Please fill in all password fields');
                 return;
             }
             
             if (newPassword !== confirmPassword) {
-                alert('New passwords do not match');
+                showToast('error', 'Validation Error', 'New passwords do not match');
                 return;
             }
             
