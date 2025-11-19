@@ -111,124 +111,440 @@ const LoansModule = {
         const modal = document.createElement('div');
         modal.className = 'modal open';
         modal.innerHTML = `
-            <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-content" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header">
-                    <h2 class="modal-title">Request Loan</h2>
+                    <h2 class="modal-title"><i class="fas fa-dollar-sign"></i> Loan Application</h2>
                     <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
                 </div>
                 <div class="modal-body">
-                    <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
-                        <button class="btn btn-primary" style="flex: 1;" onclick="LoansModule.showDTNILoan()">
-                            <i class="fas fa-chart-line"></i> DTNI Loan
-                        </button>
-                        <button class="btn btn-secondary" style="flex: 1;" onclick="LoansModule.showColdStartLoan()">
-                            <i class="fas fa-rocket"></i> Cold Start
-                        </button>
-                    </div>
-                    
-                    <div id="loanRequestForm">
-                        <p style="text-align: center; color: var(--text-secondary); padding: 2rem;">
-                            Select a loan type to continue
-                        </p>
+                    <div class="loan-application-container">
+                        <div class="loan-form-grid">
+                            <!-- Left Column - Form -->
+                            <div class="loan-form-section">
+                                <div class="section-header">
+                                    <h3><i class="fas fa-edit"></i> Loan Details</h3>
+                                </div>
+                                
+                                <form id="loanApplicationForm" class="loan-form">
+                                    <!-- Amount -->
+                                    <div class="form-group">
+                                        <label class="form-label">Loan Amount ($)</label>
+                                        <input type="number" id="loanAmount" class="form-input" 
+                                               min="50" max="100000" step="1" 
+                                               placeholder="Enter loan amount">
+                                        <div id="maxLoanHint" class="form-hint" style="display: none;">
+                                            <button type="button" class="max-loan-btn" onclick="LoansModule.setMaxAmount()">
+                                                <i class="fas fa-arrow-up"></i> Use Max: $<span id="maxAmountValue">0</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Term -->
+                                    <div class="form-group">
+                                        <label class="form-label">Loan Term</label>
+                                        <select id="loanTerm" class="form-select">
+                                            <option value="90">3 months (90 days)</option>
+                                            <option value="180">6 months (180 days)</option>
+                                            <option value="270">9 months (270 days)</option>
+                                            <option value="360">12 months (360 days)</option>
+                                            <option value="540">18 months (540 days)</option>
+                                            <option value="720">24 months (720 days)</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Interest Rate -->
+                                    <div class="form-group">
+                                        <label class="form-label">Interest Rate (%)</label>
+                                        <input type="range" id="interestRate" class="form-range" 
+                                               min="0" max="10" step="0.5" value="5">
+                                        <div class="range-display">
+                                            <span id="interestRateValue">5</span>% annual
+                                        </div>
+                                    </div>
+
+                                    <!-- Purpose -->
+                                    <div class="form-group">
+                                        <label class="form-label">Loan Purpose</label>
+                                        <textarea id="loanPurpose" class="form-textarea" 
+                                                  placeholder="Describe how you plan to use this loan..." 
+                                                  rows="3" maxlength="500"></textarea>
+                                        <div class="char-count">
+                                            <span id="purposeCharCount">0</span>/500
+                                        </div>
+                                    </div>
+
+                                    <!-- Validate Button -->
+                                    <button type="button" id="validateLoanBtn" class="btn btn-primary" 
+                                            onclick="LoansModule.validateLoan()" disabled>
+                                        <i class="fas fa-calculator"></i> Validate Loan
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Right Column - Results -->
+                            <div class="loan-results-section">
+                                <!-- Max Loan Capacity -->
+                                <div id="maxLoanCapacity" class="result-card" style="display: none;">
+                                    <div class="card-header">
+                                        <h4><i class="fas fa-calculator"></i> Maximum Loan Capacity</h4>
+                                    </div>
+                                    <div class="card-content">
+                                        <div class="capacity-section">
+                                            <h5>DTNI Analysis</h5>
+                                            <div class="capacity-grid">
+                                                <div class="capacity-item">
+                                                    <span>Net Salary:</span>
+                                                    <span id="netSalary">$0</span>
+                                                </div>
+                                                <div class="capacity-item">
+                                                    <span>Max Installment (40%):</span>
+                                                    <span id="maxInstallment">$0</span>
+                                                </div>
+                                                <div class="capacity-item">
+                                                    <span>Available Capacity:</span>
+                                                    <span id="availableCapacity">$0</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="capacity-section">
+                                            <h5>Loan Limits</h5>
+                                            <div class="capacity-grid">
+                                                <div class="capacity-item">
+                                                    <span>From DTNI:</span>
+                                                    <span id="maxFromDTNI">$0</span>
+                                                </div>
+                                                <div class="capacity-item">
+                                                    <span>Employment Cap:</span>
+                                                    <span id="employmentCap">$0</span>
+                                                </div>
+                                                <div class="capacity-item highlight">
+                                                    <span>Final Maximum:</span>
+                                                    <span id="finalMaxAmount">$0</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="capacity-section">
+                                            <h5>Repayment Details</h5>
+                                            <div class="capacity-grid">
+                                                <div class="capacity-item">
+                                                    <span>Monthly Payment:</span>
+                                                    <span id="monthlyPayment">$0</span>
+                                                </div>
+                                                <div class="capacity-item">
+                                                    <span>Total Interest:</span>
+                                                    <span id="totalInterest">$0</span>
+                                                </div>
+                                                <div class="capacity-item">
+                                                    <span>Total Repayment:</span>
+                                                    <span id="totalRepayment">$0</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Validation Results -->
+                                <div id="validationResults" class="result-card" style="display: none;">
+                                    <div class="card-header">
+                                        <h4 id="validationTitle">
+                                            <i id="validationIcon" class="fas fa-check-circle"></i> 
+                                            Validation Result
+                                        </h4>
+                                    </div>
+                                    <div class="card-content">
+                                        <div id="validationMessage" class="validation-alert"></div>
+                                        
+                                        <div id="approvedDetails" style="display: none;">
+                                            <div class="capacity-grid">
+                                                <div class="capacity-item">
+                                                    <span>Monthly Payment:</span>
+                                                    <span id="approvedMonthly">$0</span>
+                                                </div>
+                                                <div class="capacity-item">
+                                                    <span>Total Amount:</span>
+                                                    <span id="approvedTotal">$0</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <button id="submitApplicationBtn" class="btn btn-success" 
+                                                    onclick="LoansModule.submitApplication()" style="width: 100%; margin-top: 1rem;">
+                                                <i class="fas fa-file-text"></i> Submit Application
+                                            </button>
+                                        </div>
+
+                                        <div id="dtniBreakdown" style="display: none;">
+                                            <h5>DTNI Breakdown</h5>
+                                            <div class="capacity-grid">
+                                                <div class="capacity-item">
+                                                    <span>Installment Utilization:</span>
+                                                    <span id="installmentUtilization">0%</span>
+                                                </div>
+                                                <div class="capacity-item">
+                                                    <span>Remaining Capacity:</span>
+                                                    <span id="remainingCapacity">$0</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Loading State -->
+                                <div id="loadingState" class="result-card" style="display: none;">
+                                    <div class="loading-content">
+                                        <div class="spinner"></div>
+                                        <p id="loadingText">Calculating...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Help Section -->
+                        <div class="help-section">
+                            <h4><i class="fas fa-info-circle"></i> How it works:</h4>
+                            <ol>
+                                <li>Enter your desired loan amount and terms</li>
+                                <li>System validates against your DTNI capacity</li>
+                                <li>Get instant pre-approval or suggestions</li>
+                                <li>Submit application for final processing</li>
+                            </ol>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
         
         document.getElementById('modalsContainer').appendChild(modal);
+        this.initializeLoanForm();
     },
     
-    showDTNILoan() {
-        document.getElementById('loanRequestForm').innerHTML = `
-            <h3 style="margin-bottom: 1rem;">DTNI (Data-to-Next-Income) Loan</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                Upload your bank statement for instant loan approval based on your income data.
-            </p>
-            
-            <div class="form-group">
-                <label class="form-label">Loan Amount (USD)</label>
-                <input type="number" class="form-input" id="loanAmount" placeholder="Enter amount" min="50" step="10">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Loan Purpose</label>
-                <select class="form-select" id="loanPurpose">
-                    <option value="">Select purpose</option>
-                    <option value="business">Business</option>
-                    <option value="education">Education</option>
-                    <option value="medical">Medical</option>
-                    <option value="personal">Personal</option>
-                    <option value="emergency">Emergency</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Bank Statement (PDF)</label>
-                <input type="file" class="form-input" id="bankStatement" accept=".pdf">
-                <small style="color: var(--text-secondary);">Upload your last 3 months bank statement</small>
-            </div>
-            
-            <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" onclick="LoansModule.submitDTNILoan()">
-                <i class="fas fa-check"></i> Submit Application
-            </button>
-        `;
-    },
-    
-    showColdStartLoan() {
-        document.getElementById('loanRequestForm').innerHTML = `
-            <h3 style="margin-bottom: 1rem;">Cold Start Loan</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                For new users without bank statement. Start with a smaller loan to build your credit history.
-            </p>
-            
-            <div class="form-group">
-                <label class="form-label">Loan Amount (USD)</label>
-                <input type="number" class="form-input" id="loanAmount" placeholder="Max $100 for first loan" min="50" max="100" step="10">
-                <small style="color: var(--text-secondary);">First-time limit: $100</small>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Loan Purpose</label>
-                <select class="form-select" id="loanPurpose">
-                    <option value="">Select purpose</option>
-                    <option value="business">Business</option>
-                    <option value="education">Education</option>
-                    <option value="personal">Personal</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Repayment Term</label>
-                <select class="form-select" id="loanTerm">
-                    <option value="1">1 month</option>
-                    <option value="2">2 months</option>
-                    <option value="3">3 months</option>
-                </select>
-            </div>
-            
-            <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" onclick="LoansModule.submitColdStartLoan()">
-                <i class="fas fa-check"></i> Submit Application
-            </button>
-        `;
-    },
-    
-    async submitDTNILoan() {
-        const amount = document.getElementById('loanAmount').value;
-        const purpose = document.getElementById('loanPurpose').value;
-        const bankStatement = document.getElementById('bankStatement').files[0];
+    // Initialize the loan application form
+    initializeLoanForm() {
+        this.formData = {
+            amount: '',
+            termDays: '90',
+            interestRate: '5',
+            purpose: ''
+        };
         
-        if (!amount || !purpose || !bankStatement) {
-            window.DashboardCore.showError('Please fill in all fields');
+        this.maxLoanData = null;
+        this.validationResult = null;
+        
+        // Set up event listeners
+        this.setupFormEventListeners();
+        
+        // Calculate max loan on load
+        this.calculateMaxLoan();
+    },
+    
+    setupFormEventListeners() {
+        const amountInput = document.getElementById('loanAmount');
+        const termSelect = document.getElementById('loanTerm');
+        const interestRange = document.getElementById('interestRate');
+        const purposeTextarea = document.getElementById('loanPurpose');
+        const validateBtn = document.getElementById('validateLoanBtn');
+        
+        // Amount input
+        amountInput.addEventListener('input', (e) => {
+            this.formData.amount = e.target.value;
+            this.updateValidateButton();
+        });
+        
+        // Term select
+        termSelect.addEventListener('change', (e) => {
+            this.formData.termDays = e.target.value;
+            this.calculateMaxLoan();
+        });
+        
+        // Interest rate range
+        interestRange.addEventListener('input', (e) => {
+            this.formData.interestRate = e.target.value;
+            document.getElementById('interestRateValue').textContent = e.target.value;
+            this.calculateMaxLoan();
+        });
+        
+        // Purpose textarea
+        purposeTextarea.addEventListener('input', (e) => {
+            this.formData.purpose = e.target.value;
+            document.getElementById('purposeCharCount').textContent = e.target.value.length;
+            this.updateValidateButton();
+        });
+    },
+    
+    updateValidateButton() {
+        const validateBtn = document.getElementById('validateLoanBtn');
+        const hasAmount = this.formData.amount && parseFloat(this.formData.amount) >= 50;
+        const hasPurpose = this.formData.purpose && this.formData.purpose.length >= 5;
+        
+        validateBtn.disabled = !hasAmount || !hasPurpose;
+    },
+    
+    async calculateMaxLoan() {
+        try {
+            this.showLoading('Calculating maximum loan...');
+            
+            const response = await fetch('/api/loans/calculate-max', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+                body: JSON.stringify({
+                    termDays: parseInt(this.formData.termDays),
+                    interestRate: parseFloat(this.formData.interestRate)
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                this.maxLoanData = result.data;
+                this.displayMaxLoanData();
+            }
+        } catch (error) {
+            console.error('Max loan calculation error:', error);
+        } finally {
+            this.hideLoading();
+        }
+    },
+    
+    displayMaxLoanData() {
+        if (!this.maxLoanData) return;
+        
+        const maxLoanCard = document.getElementById('maxLoanCapacity');
+        maxLoanCard.style.display = 'block';
+        
+        // DTNI Analysis
+        const dtni = this.maxLoanData.dtniAnalysis || {};
+        document.getElementById('netSalary').textContent = `$${dtni.netSalary || 0}`;
+        document.getElementById('maxInstallment').textContent = `$${dtni.maxInstallmentCapacity || 0}`;
+        document.getElementById('availableCapacity').textContent = `$${dtni.availableCapacity || 0}`;
+        
+        // Loan Limits
+        const loan = this.maxLoanData.loanCalculation || {};
+        document.getElementById('maxFromDTNI').textContent = `$${loan.maxLoanFromDTNI || 0}`;
+        document.getElementById('employmentCap').textContent = `$${loan.employmentCap || 0}`;
+        document.getElementById('finalMaxAmount').textContent = `$${loan.finalMaxLoanAmount || 0}`;
+        
+        // Repayment Details
+        const repayment = this.maxLoanData.repaymentDetails || {};
+        document.getElementById('monthlyPayment').textContent = `$${repayment.monthlyRepayment || 0}`;
+        document.getElementById('totalInterest').textContent = `$${repayment.totalInterest || 0}`;
+        document.getElementById('totalRepayment').textContent = `$${repayment.totalRepayment || 0}`;
+        
+        // Show max amount button
+        const maxHint = document.getElementById('maxLoanHint');
+        const maxAmountValue = document.getElementById('maxAmountValue');
+        if (loan.finalMaxLoanAmount) {
+            maxAmountValue.textContent = loan.finalMaxLoanAmount;
+            maxHint.style.display = 'block';
+        }
+    },
+    
+    setMaxAmount() {
+        if (this.maxLoanData?.loanCalculation?.finalMaxLoanAmount) {
+            document.getElementById('loanAmount').value = this.maxLoanData.loanCalculation.finalMaxLoanAmount;
+            this.formData.amount = this.maxLoanData.loanCalculation.finalMaxLoanAmount;
+            this.updateValidateButton();
+        }
+    },
+    
+    async validateLoan() {
+        if (!this.formData.amount || !this.formData.purpose) {
+            window.DashboardCore.showError('Please fill in all required fields');
             return;
         }
         
         try {
-            const result = await window.DashboardData.requestLoan({
-                amount: parseFloat(amount),
-                purpose,
-                type: 'dtni',
-                bankStatement: bankStatement.name
+            this.showLoading('Validating loan application...');
+            
+            const response = await fetch('/api/loans/validate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+                body: JSON.stringify({
+                    amount: parseFloat(this.formData.amount),
+                    termDays: parseInt(this.formData.termDays),
+                    interestRate: parseFloat(this.formData.interestRate)
+                })
             });
+
+            const result = await response.json();
+            this.validationResult = result;
+            this.displayValidationResult();
+        } catch (error) {
+            console.error('Validation error:', error);
+            window.DashboardCore.showError('Failed to validate loan');
+        } finally {
+            this.hideLoading();
+        }
+    },
+    
+    displayValidationResult() {
+        if (!this.validationResult) return;
+        
+        const resultsCard = document.getElementById('validationResults');
+        const validationIcon = document.getElementById('validationIcon');
+        const validationMessage = document.getElementById('validationMessage');
+        const approvedDetails = document.getElementById('approvedDetails');
+        const dtniBreakdown = document.getElementById('dtniBreakdown');
+        
+        resultsCard.style.display = 'block';
+        
+        // Update icon and message
+        if (this.validationResult.approved) {
+            validationIcon.className = 'fas fa-check-circle';
+            validationIcon.style.color = '#22c55e';
+            validationMessage.className = 'validation-alert success';
+            validationMessage.textContent = this.validationResult.message;
+            
+            // Show approved details
+            approvedDetails.style.display = 'block';
+            document.getElementById('approvedMonthly').textContent = `$${this.validationResult.data?.monthlyInstallment || 0}`;
+            document.getElementById('approvedTotal').textContent = `$${this.validationResult.data?.totalAmount || 0}`;
+        } else {
+            validationIcon.className = 'fas fa-times-circle';
+            validationIcon.style.color = '#ef4444';
+            validationMessage.className = 'validation-alert error';
+            validationMessage.textContent = this.validationResult.message;
+            
+            approvedDetails.style.display = 'none';
+        }
+        
+        // Show DTNI breakdown if available
+        if (this.validationResult.data?.dtni) {
+            dtniBreakdown.style.display = 'block';
+            document.getElementById('installmentUtilization').textContent = this.validationResult.data.dtni.installmentUtilization || '0%';
+            document.getElementById('remainingCapacity').textContent = `$${this.validationResult.data.dtni.remainingCapacity || 0}`;
+        }
+    },
+    
+    async submitApplication() {
+        if (!this.validationResult?.approved) {
+            window.DashboardCore.showError('Please validate your loan first');
+            return;
+        }
+        
+        try {
+            this.showLoading('Submitting application...');
+            
+            const response = await fetch('/api/loans/apply', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+                body: JSON.stringify({
+                    amount: parseFloat(this.formData.amount),
+                    termDays: parseInt(this.formData.termDays),
+                    interestRate: parseFloat(this.formData.interestRate),
+                    purpose: this.formData.purpose
+                })
+            });
+
+            const result = await response.json();
             
             if (result.success) {
                 window.DashboardCore.showSuccess('Loan application submitted successfully!');
@@ -238,45 +554,23 @@ const LoansModule = {
                 window.DashboardCore.showError(result.message || 'Application failed');
             }
         } catch (error) {
-            console.error('Loan application error:', error);
+            console.error('Application error:', error);
             window.DashboardCore.showError('Failed to submit application');
+        } finally {
+            this.hideLoading();
         }
     },
     
-    async submitColdStartLoan() {
-        const amount = document.getElementById('loanAmount').value;
-        const purpose = document.getElementById('loanPurpose').value;
-        const term = document.getElementById('loanTerm').value;
-        
-        if (!amount || !purpose || !term) {
-            window.DashboardCore.showError('Please fill in all fields');
-            return;
-        }
-        
-        if (parseFloat(amount) > 100) {
-            window.DashboardCore.showError('First-time loan limit is $100');
-            return;
-        }
-        
-        try {
-            const result = await window.DashboardData.requestLoan({
-                amount: parseFloat(amount),
-                purpose,
-                term: parseInt(term),
-                type: 'cold_start'
-            });
-            
-            if (result.success) {
-                window.DashboardCore.showSuccess('Loan application submitted successfully!');
-                document.querySelector('.modal').remove();
-                this.loadLoans();
-            } else {
-                window.DashboardCore.showError(result.message || 'Application failed');
-            }
-        } catch (error) {
-            console.error('Loan application error:', error);
-            window.DashboardCore.showError('Failed to submit application');
-        }
+    showLoading(text = 'Loading...') {
+        const loadingState = document.getElementById('loadingState');
+        const loadingText = document.getElementById('loadingText');
+        loadingText.textContent = text;
+        loadingState.style.display = 'block';
+    },
+    
+    hideLoading() {
+        const loadingState = document.getElementById('loadingState');
+        loadingState.style.display = 'none';
     },
     
     showRepaymentModal(loanId, amount) {
