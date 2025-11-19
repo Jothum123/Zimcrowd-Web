@@ -188,8 +188,8 @@ socialRouter.get('/callback', async (req, res) => {
             // Redirect based on mode with social auth data
             let redirectUrl;
             if (mode === 'signup') {
-                // New signup - go directly to onboarding splash screens
-                redirectUrl = '/onboarding.html?source=social';
+                // New signup - go directly to dashboard (no onboarding)
+                redirectUrl = '/dashboard.html?source=social&newUser=true';
             } else {
                 // Existing login - go to dashboard
                 redirectUrl = '/dashboard.html';

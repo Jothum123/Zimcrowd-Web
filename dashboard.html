@@ -7102,6 +7102,9 @@ How it works:
             // Load user profile data for settings
             await loadUserProfile();
             
+            // Update main user display with social auth data
+            await updateMainUserDisplay();
+            
             // Initialize theme
             const savedTheme = localStorage.getItem('theme');
             console.log('Saved theme:', savedTheme);
@@ -7181,6 +7184,61 @@ How it works:
             }
 
             return "I'm not sure I understand that. Could you rephrase? I can help with ZimScore, payments, investments, loans, balance, and market insights. What would you like to know? ";
+        }
+
+        // Update main user display (name and avatar) with social auth data
+        async function updateMainUserDisplay() {
+            try {
+                // Get social auth data and userData from localStorage
+                const socialAuthData = JSON.parse(localStorage.getItem('socialAuthData') || '{}');
+                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                
+                // Combine data sources (social auth takes priority)
+                const userInfo = {
+                    firstName: socialAuthData.first_name || userData.first_name || userData.firstName,
+                    lastName: socialAuthData.last_name || userData.last_name || userData.lastName,
+                    email: socialAuthData.email || userData.email,
+                    avatarUrl: socialAuthData.avatar_url || userData.avatar_url,
+                    provider: socialAuthData.auth_provider || socialAuthData.provider
+                };
+                
+                // Update user name display
+                const userNameEl = document.getElementById('userName');
+                if (userNameEl) {
+                    const displayName = userInfo.firstName || 
+                                      `${userInfo.firstName} ${userInfo.lastName}`.trim() || 
+                                      userInfo.email || 
+                                      'User';
+                    userNameEl.textContent = displayName;
+                    console.log('Updated user name:', displayName);
+                }
+                
+                // Update user avatar
+                const userAvatarEl = document.getElementById('userAvatar');
+                if (userAvatarEl) {
+                    if (userInfo.avatarUrl) {
+                        // Create image element for social auth avatar
+                        userAvatarEl.innerHTML = `<img src="${userInfo.avatarUrl}" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+                        console.log('Updated user avatar with social auth image');
+                    } else {
+                        // Use initials as fallback
+                        const initial = (userInfo.firstName || userInfo.email || 'U')[0].toUpperCase();
+                        userAvatarEl.textContent = initial;
+                        userAvatarEl.innerHTML = initial; // Clear any existing image
+                        console.log('Updated user avatar with initial:', initial);
+                    }
+                }
+                
+                // Show welcome message for new social auth users
+                if (socialAuthData.provider && window.location.search.includes('newUser=true')) {
+                    setTimeout(() => {
+                        showNotification(`Welcome to ZimCrowd! Your ${socialAuthData.provider} account has been connected successfully.`, 'success');
+                    }, 1000);
+                }
+                
+            } catch (error) {
+                console.error('Error updating main user display:', error);
+            }
         }
 
         // Load user profile data from social auth and localStorage
