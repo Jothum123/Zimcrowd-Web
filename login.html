@@ -497,8 +497,14 @@
     </div>
 
     <script>
+        // Debug script loading
+        console.log('🔍 Login page scripts loading...');
+        console.log('API_CONFIG available:', typeof API_CONFIG !== 'undefined');
+        console.log('ZimCrowdAPI available:', typeof window.ZimCrowdAPI !== 'undefined');
+        
         // Use centralized API configuration
         const API_URL = API_CONFIG.BASE_URL + '/api/auth';
+        console.log('🌐 API_URL set to:', API_URL);
 
         // Toggle password visibility
         function togglePassword() {

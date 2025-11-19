@@ -97,6 +97,14 @@ class ZimCrowdAPI {
         });
     }
 
+    // Generic login method (for backward compatibility)
+    async login(emailOrPhone, password) {
+        return this.request('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ emailOrPhone, password })
+        });
+    }
+
     async loginPhone(phone, password) {
         return this.request('/phone-auth/login-phone', {
             method: 'POST',
