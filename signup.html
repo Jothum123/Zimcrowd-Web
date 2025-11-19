@@ -191,6 +191,48 @@
             opacity: 1;
         }
 
+        .registration-method {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .method-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #F3F3F3;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .method-btn:hover {
+            border-color: rgba(56, 224, 123, 0.5);
+            background: rgba(56, 224, 123, 0.1);
+        }
+
+        .method-btn.active {
+            border-color: #38e07b;
+            background: rgba(56, 224, 123, 0.2);
+            color: #38e07b;
+        }
+
+        .help-text {
+            display: block;
+            font-size: 12px;
+            color: rgba(243, 243, 243, 0.7);
+            margin-top: 5px;
+            font-style: italic;
+        }
+
         .btn-signup {
             width: 100%;
             padding: 15px;
@@ -459,27 +501,43 @@
                 >
             </div>
 
+            <!-- Registration Method Selection -->
             <div class="form-group">
+                <label>Choose Registration Method</label>
+                <div class="registration-method">
+                    <button type="button" class="method-btn active" id="phoneMethodBtn" onclick="selectMethod('phone')">
+                        <i class="fas fa-phone"></i> Phone Number
+                    </button>
+                    <button type="button" class="method-btn" id="emailMethodBtn" onclick="selectMethod('email')">
+                        <i class="fas fa-envelope"></i> Email Address
+                    </button>
+                </div>
+            </div>
+
+            <!-- Phone Registration -->
+            <div class="form-group" id="phoneGroup">
                 <label for="phone">Phone Number</label>
                 <input 
                     type="tel" 
                     id="phone" 
                     name="phone" 
                     placeholder="+263771234567"
-                    required
                     autocomplete="tel"
                 >
+                <small class="help-text">You'll receive an SMS with verification code</small>
             </div>
 
-            <div class="form-group">
-                <label for="email">Email Address (Optional)</label>
+            <!-- Email Registration -->
+            <div class="form-group" id="emailGroup" style="display: none;">
+                <label for="email">Email Address</label>
                 <input 
                     type="email" 
                     id="email" 
                     name="email" 
-                    placeholder="Enter your email"
+                    placeholder="Enter your email address"
                     autocomplete="email"
                 >
+                <small class="help-text">You'll receive an email with verification code</small>
             </div>
 
             <div class="form-group">
@@ -525,6 +583,29 @@
     <script>
         // Use centralized API configuration
         const API_URL = API_CONFIG.BASE_URL + '/api/auth';
+        
+        // Track selected registration method
+        let selectedMethod = 'phone'; // Default to phone
+
+        // Handle registration method selection
+        function selectMethod(method) {
+            selectedMethod = method;
+            
+            // Update button states
+            document.getElementById('phoneMethodBtn').classList.toggle('active', method === 'phone');
+            document.getElementById('emailMethodBtn').classList.toggle('active', method === 'email');
+            
+            // Show/hide appropriate input groups
+            document.getElementById('phoneGroup').style.display = method === 'phone' ? 'block' : 'none';
+            document.getElementById('emailGroup').style.display = method === 'email' ? 'block' : 'none';
+            
+            // Clear the other field
+            if (method === 'phone') {
+                document.getElementById('email').value = '';
+            } else {
+                document.getElementById('phone').value = '';
+            }
+        }
 
         // Toggle password visibility
         function togglePassword() {
@@ -589,17 +670,34 @@
             const password = document.getElementById('password').value;
             const signupBtn = document.getElementById('signupBtn');
 
-            // Validate
-            if (!fullName || !phone || !password) {
+            // Validate based on selected method
+            if (!fullName || !password) {
                 showAlert('Please fill in all required fields');
                 return;
             }
 
-            // Validate phone number format
-            const phoneRegex = /^\+?263[0-9]{9}$/;
-            if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
-                showAlert('Please enter a valid Zimbabwean phone number (+263771234567)');
-                return;
+            if (selectedMethod === 'phone') {
+                if (!phone) {
+                    showAlert('Please enter your phone number');
+                    return;
+                }
+                // Validate phone number format
+                const phoneRegex = /^\+?263[0-9]{9}$/;
+                if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
+                    showAlert('Please enter a valid Zimbabwean phone number (+263771234567)');
+                    return;
+                }
+            } else if (selectedMethod === 'email') {
+                if (!email) {
+                    showAlert('Please enter your email address');
+                    return;
+                }
+                // Validate email format
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    showAlert('Please enter a valid email address');
+                    return;
+                }
             }
 
             if (!validatePassword(password)) {
@@ -612,44 +710,85 @@
             signupBtn.innerHTML = '<span class="loading"></span>Creating account...';
 
             try {
-                // Use phone registration endpoint since phone is required
-                const response = await fetch(`${API_CONFIG.BASE_URL}/api/phone-auth/register-phone`, {
+                // Choose appropriate endpoint based on registration method
+                let endpoint, requestBody;
+                
+                if (selectedMethod === 'phone') {
+                    endpoint = `${API_CONFIG.BASE_URL}/api/phone-auth/register-phone`;
+                    requestBody = {
+                        phone,
+                        password,
+                        fullName,
+                        email: email || null
+                    };
+                } else {
+                    endpoint = `${API_CONFIG.BASE_URL}/api/email-auth/register-email`;
+                    requestBody = {
+                        email,
+                        password,
+                        fullName,
+                        phone: phone || null
+                    };
+                }
+                
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ 
-                        phone,
-                        password, 
-                        fullName,
-                        email: email || null
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    // Phone registration successful, redirect to OTP verification
-                    showAlert('Account created! Please verify your phone number.', 'success');
-                    
-                    // Store signup data for verification
-                    localStorage.setItem('signupPhone', phone);
-                    localStorage.setItem('verificationPhone', phone);
-                    localStorage.setItem('signupData', JSON.stringify({
-                        fullName,
-                        email,
-                        phone
-                    }));
-                    
-                    // Store temp token if provided
-                    if (data.tempToken) {
-                        localStorage.setItem('tempToken', data.tempToken);
+                    // Registration successful, redirect to appropriate OTP verification
+                    if (selectedMethod === 'phone') {
+                        showAlert('Account created! Please verify your phone number.', 'success');
+                        
+                        // Store phone verification data
+                        localStorage.setItem('signupPhone', phone);
+                        localStorage.setItem('verificationPhone', phone);
+                        localStorage.setItem('signupData', JSON.stringify({
+                            fullName,
+                            email,
+                            phone,
+                            method: 'phone'
+                        }));
+                        
+                        // Store temp token if provided
+                        if (data.tempToken) {
+                            localStorage.setItem('tempToken', data.tempToken);
+                        }
+                        
+                        // Redirect to phone OTP verification
+                        setTimeout(() => {
+                            window.location.href = `/verify-otp.html?phone=${encodeURIComponent(phone)}&type=signup`;
+                        }, 1500);
+                        
+                    } else {
+                        showAlert('Account created! Please check your email for verification code.', 'success');
+                        
+                        // Store email verification data
+                        localStorage.setItem('signupEmail', email);
+                        localStorage.setItem('verificationEmail', email);
+                        localStorage.setItem('signupData', JSON.stringify({
+                            fullName,
+                            email,
+                            phone,
+                            method: 'email'
+                        }));
+                        
+                        // Store temp token if provided
+                        if (data.tempToken) {
+                            localStorage.setItem('tempToken', data.tempToken);
+                        }
+                        
+                        // Redirect to email OTP verification
+                        setTimeout(() => {
+                            window.location.href = `/verify-email.html?email=${encodeURIComponent(email)}&type=signup`;
+                        }, 1500);
                     }
-                    
-                    // Redirect to OTP verification
-                    setTimeout(() => {
-                        window.location.href = `/verify-otp.html?phone=${encodeURIComponent(phone)}&type=signup`;
-                    }, 1500);
                 } else {
                     // Handle specific error cases
                     if (data.code === 'PHONE_EXISTS' || data.code === 'EMAIL_EXISTS') {
