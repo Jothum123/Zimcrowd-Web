@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Debug</title>
+</head>
+<body>
+    <h1>Simple Dashboard Debug</h1>
+    <div id="status">Checking...</div>
+    
+    <script>
+        document.getElementById('status').innerHTML = `
+            <h3>localStorage Contents:</h3>
+            <pre>${JSON.stringify(localStorage, null, 2)}</pre>
+            
+            <h3>Current URL:</h3>
+            <p>${window.location.href}</p>
+            
+            <h3>Auth Check:</h3>
+            <p>authToken: ${localStorage.getItem('authToken') ? 'Present' : 'Missing'}</p>
+            <p>userData: ${localStorage.getItem('userData') ? 'Present' : 'Missing'}</p>
+            
+            <h3>Actions:</h3>
+            <button onclick="localStorage.clear(); location.reload();">Clear All</button>
+            <button onclick="window.location.href='login.html'">Go to Login</button>
+            <button onclick="window.location.href='dashboard-production.html'">Try Dashboard</button>
+        `;
+    </script>
+</body>
+</html>
