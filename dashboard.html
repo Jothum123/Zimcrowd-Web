@@ -2517,6 +2517,433 @@
                 font-size: 14px;
             }
         }
+
+        /* Kairo AI Floating Chat Styles */
+        .kairo-floating-chat {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .kairo-chat-toggle {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(56, 231, 123, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .kairo-chat-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(56, 231, 123, 0.4);
+        }
+
+        .kairo-chat-icon {
+            color: white;
+            font-size: 24px;
+        }
+
+        .kairo-unread-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .kairo-chat-window {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 350px;
+            height: 500px;
+            background: #1a1a1a;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        body.light-mode .kairo-chat-window {
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .kairo-chat-header {
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .kairo-header-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .kairo-avatar {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        .kairo-header-text h4 {
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .kairo-header-text p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .kairo-header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .kairo-minimize-btn,
+        .kairo-close-btn {
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .kairo-minimize-btn:hover,
+        .kairo-close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .kairo-chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .kairo-message {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .kairo-message.kairo-user-message {
+            flex-direction: row-reverse;
+        }
+
+        .kairo-message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .kairo-ai-message .kairo-message-avatar {
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            color: white;
+        }
+
+        .kairo-user-message .kairo-message-avatar {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .kairo-message-content {
+            max-width: 80%;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 15px;
+            border-radius: 12px;
+            color: white;
+        }
+
+        body.light-mode .kairo-message-content {
+            background: rgba(0, 0, 0, 0.05);
+            color: #1f2937;
+        }
+
+        .kairo-user-message .kairo-message-content {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .kairo-message-content p {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .kairo-message-time {
+            font-size: 11px;
+            opacity: 0.6;
+            margin-top: 5px;
+        }
+
+        .kairo-chat-input {
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        body.light-mode .kairo-chat-input {
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .kairo-input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .kairo-input-container input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 10px 15px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+
+        body.light-mode .kairo-input-container input {
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #1f2937;
+        }
+
+        .kairo-input-container input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        body.light-mode .kairo-input-container input::placeholder {
+            color: rgba(0, 0, 0, 0.5);
+        }
+
+        .kairo-send-btn {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .kairo-send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .kairo-typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+        }
+
+        body.light-mode .kairo-typing-indicator {
+            color: rgba(0, 0, 0, 0.6);
+        }
+
+        .kairo-typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .kairo-typing-dots span {
+            width: 6px;
+            height: 6px;
+            background: #38e77b;
+            border-radius: 50%;
+            animation: kairoTyping 1.4s infinite ease-in-out;
+        }
+
+        .kairo-typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .kairo-typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes kairoTyping {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .kairo-chat-window {
+                width: 300px;
+                height: 450px;
+            }
+
+            .kairo-floating-chat {
+                bottom: 15px;
+                right: 15px;
+            }
+        }
+
+        /* Toast Notification Styles */
+        .toast-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1a1a1a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            max-width: 400px;
+            z-index: 1001;
+            animation: slideInToast 0.3s ease-out;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        body.light-mode .toast-notification {
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .toast-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .toast-icon.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .toast-icon.warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .toast-icon.info {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-content h4 {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0 0 4px 0;
+        }
+
+        body.light-mode .toast-content h4 {
+            color: #1f2937;
+        }
+
+        .toast-content p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        body.light-mode .toast-content p {
+            color: rgba(0, 0, 0, 0.7);
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        body.light-mode .toast-close {
+            color: rgba(0, 0, 0, 0.6);
+        }
+
+        .toast-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        body.light-mode .toast-close:hover {
+            background: rgba(0, 0, 0, 0.1);
+            color: rgba(0, 0, 0, 0.9);
+        }
+
+        @keyframes slideInToast {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .toast-notification {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -9173,6 +9600,68 @@ How it works:
         </div>
     </div>
 
+    <!-- Kairo AI Floating Chat Widget -->
+    <div id="kairoFloatingChat" class="kairo-floating-chat">
+        <div class="kairo-chat-toggle" id="kairoChatToggle" onclick="toggleKairoChat()">
+            <div class="kairo-chat-icon">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="kairo-unread-badge" id="kairoUnreadBadge" style="display: none;">0</div>
+        </div>
+        
+        <div class="kairo-chat-window" id="kairoChatWindow" style="display: none;">
+            <div class="kairo-chat-header">
+                <div class="kairo-header-info">
+                    <div class="kairo-avatar">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="kairo-header-text">
+                        <h4>Kairo AI</h4>
+                        <p>Your Financial Assistant</p>
+                    </div>
+                </div>
+                <div class="kairo-header-actions">
+                    <button class="kairo-minimize-btn" onclick="minimizeKairoChat()">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button class="kairo-close-btn" onclick="closeKairoChat()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="kairo-chat-messages" id="kairoChatMessages">
+                <div class="kairo-message kairo-ai-message">
+                    <div class="kairo-message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="kairo-message-content">
+                        <p>Hello! I'm Kairo, your AI financial assistant. How can I help you today?</p>
+                        <div class="kairo-message-time">Just now</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="kairo-chat-input">
+                <div class="kairo-input-container">
+                    <input type="text" id="kairoChatInput" placeholder="Ask me anything about your finances..." 
+                           onkeypress="handleKairoChatKeyPress(event)">
+                    <button class="kairo-send-btn" onclick="sendKairoMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="kairo-typing-indicator" id="kairoTypingIndicator" style="display: none;">
+                    <div class="kairo-typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <span>Kairo is thinking...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Analytics Charts and Functionality
         let portfolioChart = null;
@@ -9407,6 +9896,325 @@ How it works:
             if (document.getElementById('analytics-section').classList.contains('active')) {
                 initializeAnalytics();
             }
+        });
+
+        // Kairo AI Chat Functionality
+        let kairoIsOpen = false;
+        let kairoIsMinimized = false;
+        let kairoUnreadCount = 0;
+
+        function toggleKairoChat() {
+            const chatWindow = document.getElementById('kairoChatWindow');
+            const chatToggle = document.getElementById('kairoChatToggle');
+            
+            if (kairoIsOpen) {
+                closeKairoChat();
+            } else {
+                openKairoChat();
+            }
+        }
+
+        function openKairoChat() {
+            const chatWindow = document.getElementById('kairoChatWindow');
+            const unreadBadge = document.getElementById('kairoUnreadBadge');
+            
+            chatWindow.style.display = 'flex';
+            kairoIsOpen = true;
+            kairoUnreadCount = 0;
+            unreadBadge.style.display = 'none';
+            
+            // Load chat history
+            loadKairoChatHistory();
+        }
+
+        function closeKairoChat() {
+            const chatWindow = document.getElementById('kairoChatWindow');
+            chatWindow.style.display = 'none';
+            kairoIsOpen = false;
+            kairoIsMinimized = false;
+        }
+
+        function minimizeKairoChat() {
+            const chatWindow = document.getElementById('kairoChatWindow');
+            if (kairoIsMinimized) {
+                chatWindow.style.height = '500px';
+                kairoIsMinimized = false;
+            } else {
+                chatWindow.style.height = '60px';
+                kairoIsMinimized = true;
+            }
+        }
+
+        function handleKairoChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendKairoMessage();
+            }
+        }
+
+        async function sendKairoMessage() {
+            const input = document.getElementById('kairoChatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message to chat
+            addKairoMessage(message, 'user');
+            input.value = '';
+            
+            // Show typing indicator
+            showKairoTyping();
+            
+            try {
+                // Send message to Kairo AI API
+                const response = await fetch('/api/kairo/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        context: 'dashboard'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Add AI response to chat
+                    addKairoMessage(data.response, 'ai');
+                } else {
+                    addKairoMessage('Sorry, I encountered an error. Please try again.', 'ai');
+                }
+            } catch (error) {
+                console.error('Kairo chat error:', error);
+                addKairoMessage('I\'m having trouble connecting right now. Please try again later.', 'ai');
+            } finally {
+                hideKairoTyping();
+            }
+        }
+
+        function addKairoMessage(message, sender) {
+            const messagesContainer = document.getElementById('kairoChatMessages');
+            const messageDiv = document.createElement('div');
+            const isUser = sender === 'user';
+            
+            messageDiv.className = `kairo-message ${isUser ? 'kairo-user-message' : 'kairo-ai-message'}`;
+            messageDiv.innerHTML = `
+                <div class="kairo-message-avatar">
+                    <i class="fas ${isUser ? 'fa-user' : 'fa-robot'}"></i>
+                </div>
+                <div class="kairo-message-content">
+                    <p>${message}</p>
+                    <div class="kairo-message-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // Update unread count if chat is closed
+            if (!kairoIsOpen && !isUser) {
+                kairoUnreadCount++;
+                updateKairoUnreadBadge();
+            }
+        }
+
+        function showKairoTyping() {
+            const typingIndicator = document.getElementById('kairoTypingIndicator');
+            typingIndicator.style.display = 'flex';
+        }
+
+        function hideKairoTyping() {
+            const typingIndicator = document.getElementById('kairoTypingIndicator');
+            typingIndicator.style.display = 'none';
+        }
+
+        function updateKairoUnreadBadge() {
+            const unreadBadge = document.getElementById('kairoUnreadBadge');
+            if (kairoUnreadCount > 0) {
+                unreadBadge.textContent = kairoUnreadCount;
+                unreadBadge.style.display = 'flex';
+            } else {
+                unreadBadge.style.display = 'none';
+            }
+        }
+
+        async function loadKairoChatHistory() {
+            try {
+                const response = await fetch('/api/kairo/chat-history', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.messages) {
+                    const messagesContainer = document.getElementById('kairoChatMessages');
+                    // Clear existing messages except welcome message
+                    const welcomeMessage = messagesContainer.querySelector('.kairo-ai-message');
+                    messagesContainer.innerHTML = '';
+                    messagesContainer.appendChild(welcomeMessage);
+                    
+                    // Add historical messages
+                    data.messages.forEach(msg => {
+                        addKairoMessage(msg.message, msg.sender);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading chat history:', error);
+            }
+        }
+
+        // Enhanced Notification System
+        let notificationCount = 3;
+        let notifications = [
+            {
+                id: 1,
+                type: 'success',
+                icon: 'fa-chart-line',
+                title: 'Investment Return Received',
+                message: 'You received $75.00 from Tendai M.\'s education loan',
+                time: '2 hours ago',
+                unread: true
+            },
+            {
+                id: 2,
+                type: 'warning',
+                icon: 'fa-exclamation-triangle',
+                title: 'Payment Due Soon',
+                message: 'Your loan payment of $250.00 is due in 3 days',
+                time: '5 hours ago',
+                unread: true
+            },
+            {
+                id: 3,
+                type: 'info',
+                icon: 'fa-lightbulb',
+                title: 'New Investment Opportunity',
+                message: 'A new business loan opportunity matching your criteria is available',
+                time: '1 day ago',
+                unread: true
+            }
+        ];
+
+        function toggleNotifications() {
+            const panel = document.getElementById('notification-panel');
+            const isVisible = panel.style.opacity === '1';
+            
+            if (isVisible) {
+                panel.style.opacity = '0';
+                panel.style.visibility = 'hidden';
+                panel.style.transform = 'translateY(-10px)';
+            } else {
+                panel.style.opacity = '1';
+                panel.style.visibility = 'visible';
+                panel.style.transform = 'translateY(0)';
+                updateNotificationCount();
+            }
+        }
+
+        function markAsRead(element) {
+            element.classList.remove('unread');
+            const notificationId = parseInt(element.dataset.id);
+            const notification = notifications.find(n => n.id === notificationId);
+            if (notification) {
+                notification.unread = false;
+            }
+            updateNotificationCount();
+        }
+
+        function markAllAsRead() {
+            document.querySelectorAll('.notification-item.unread').forEach(item => {
+                item.classList.remove('unread');
+            });
+            notifications.forEach(n => n.unread = false);
+            updateNotificationCount();
+        }
+
+        function updateNotificationCount() {
+            const unreadCount = notifications.filter(n => n.unread).length;
+            const badge = document.getElementById('notification-count');
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function addNotification(notification) {
+            notifications.unshift({
+                ...notification,
+                id: Date.now(),
+                time: 'Just now',
+                unread: true
+            });
+            
+            // Update UI
+            updateNotificationCount();
+            renderNotifications();
+            
+            // Show toast notification
+            showToastNotification(notification);
+        }
+
+        function showToastNotification(notification) {
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.innerHTML = `
+                <div class="toast-icon ${notification.type}">
+                    <i class="fas ${notification.icon}"></i>
+                </div>
+                <div class="toast-content">
+                    <h4>${notification.title}</h4>
+                    <p>${notification.message}</p>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 5000);
+        }
+
+        function renderNotifications() {
+            const container = document.querySelector('.notification-list');
+            container.innerHTML = notifications.map(n => `
+                <div class="notification-item ${n.unread ? 'unread' : ''}" data-id="${n.id}" onclick="markAsRead(this)">
+                    <div class="notification-icon ${n.type}">
+                        <i class="fas ${n.icon}"></i>
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-title">${n.title}</div>
+                        <div class="notification-message">${n.message}</div>
+                        <div class="notification-time">${n.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Initialize notifications on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateNotificationCount();
+            
+            // Simulate receiving new notifications
+            setTimeout(() => {
+                addNotification({
+                    type: 'success',
+                    icon: 'fa-check-circle',
+                    title: 'Loan Payment Received',
+                    message: 'Payment of $125.00 received for loan #LN-2024-001'
+                });
+            }, 10000); // After 10 seconds
         });
     </script>
 </body>
