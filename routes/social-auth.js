@@ -105,12 +105,8 @@ socialRouter.get('/callback', async (req, res) => {
                 console.error('Profile check error:', profileError);
             }
 
-            // If profile doesn't exist and this is a signup, create it
-            if (!existingProfile && mode === 'signup') {
-                console.log(`Creating profile for new social signup user: ${user.id}`);
-                
-                // Extract comprehensive user details from social provider
-                const userDetails = {
+            // Extract comprehensive user details from social provider (for all users)
+            const userDetails = {
                     first_name: user.user_metadata?.first_name || 
                               user.user_metadata?.given_name || 
                               user.user_metadata?.full_name?.split(' ')[0] || 
@@ -151,8 +147,12 @@ socialRouter.get('/callback', async (req, res) => {
                     
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
-                };
+            };
 
+            // If profile doesn't exist and this is a signup, create it
+            if (!existingProfile && mode === 'signup') {
+                console.log(`Creating profile for new social signup user: ${user.id}`);
+                
                 const { error: insertError } = await supabase
                     .from('profiles')
                     .insert(userDetails);

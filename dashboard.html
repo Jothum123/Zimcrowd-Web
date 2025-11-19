@@ -6774,13 +6774,25 @@ How it works:
 
             async checkAuthentication() {
                 console.log('🔐 Checking authentication...');
+                console.log('🔍 localStorage contents:', {
+                    authToken: !!localStorage.getItem('authToken'),
+                    socialAuthData: !!localStorage.getItem('socialAuthData'),
+                    socialSignupCompleted: localStorage.getItem('socialSignupCompleted'),
+                    userData: !!localStorage.getItem('userData'),
+                    isAuthenticated: localStorage.getItem('isAuthenticated')
+                });
                 
                 // Check for social auth data first
                 const socialAuthData = JSON.parse(localStorage.getItem('socialAuthData') || '{}');
                 const socialSignupCompleted = localStorage.getItem('socialSignupCompleted');
+                const isAuthenticated = localStorage.getItem('isAuthenticated');
                 
-                if (socialAuthData.provider && socialSignupCompleted) {
-                    console.log('✅ Social auth detected:', socialAuthData.provider);
+                // More flexible social auth check
+                if ((socialAuthData.provider && socialSignupCompleted) || 
+                    (socialAuthData.provider && isAuthenticated === 'true') ||
+                    (socialAuthData.email && socialAuthData.first_name)) {
+                    console.log('✅ Social auth detected:', socialAuthData.provider || 'social');
+                    console.log('📋 Social auth data:', socialAuthData);
                     this.user = socialAuthData;
                     this.isAuthenticated = true;
                     
@@ -7125,7 +7137,8 @@ How it works:
         window.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 Initializing ZimCrowd Dashboard...');
             
-            // Check authentication first
+            // Check authentication first (with small delay for social auth callback)
+            await new Promise(resolve => setTimeout(resolve, 500));
             const isAuthenticated = await dashboardAuth.checkAuthentication();
             if (!isAuthenticated) {
                 return; // Will redirect to login
