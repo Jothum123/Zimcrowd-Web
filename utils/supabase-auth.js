@@ -116,10 +116,23 @@ const registerUser = async (userData) => {
 // Sign in user with Supabase
 const signInUser = async (emailOrPhone, password, rememberMe = false) => {
     try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: emailOrPhone,
-            password: password
-        });
+        // Determine if input is email or phone
+        const isPhone = isValidPhone(emailOrPhone);
+        
+        let authOptions;
+        if (isPhone) {
+            authOptions = {
+                phone: emailOrPhone,
+                password: password
+            };
+        } else {
+            authOptions = {
+                email: emailOrPhone,
+                password: password
+            };
+        }
+        
+        const { data, error } = await supabase.auth.signInWithPassword(authOptions);
 
         if (error) {
             throw error;
@@ -155,7 +168,18 @@ const signInUser = async (emailOrPhone, password, rememberMe = false) => {
         };
     } catch (error) {
         console.error('Supabase login error:', error);
-        return { success: false, message: error.message };
+        
+        // Provide more specific error messages
+        let message = 'Login failed. Please try again.';
+        if (error.message?.includes('Invalid login credentials')) {
+            message = 'Invalid email/phone or password. Please check your credentials.';
+        } else if (error.message?.includes('Email not confirmed')) {
+            message = 'Please verify your email address before logging in.';
+        } else if (error.message?.includes('Too many requests')) {
+            message = 'Too many login attempts. Please try again later.';
+        }
+        
+        return { success: false, message };
     }
 };
 

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Signup - ZimCrowd</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .code-block {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Signup Debug Information</h1>
+    
+    <div class="debug-section">
+        <h2>Current Page Info</h2>
+        <div id="pageInfo"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>API Configuration</h2>
+        <div id="apiInfo"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>Available Scripts</h2>
+        <div id="scriptInfo"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>Test API Endpoints</h2>
+        <button onclick="testPhoneRegister()">Test Phone Registration Endpoint</button>
+        <button onclick="testOldSignup()">Test Old Signup Endpoint</button>
+        <div id="testResults"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>Navigation</h2>
+        <button onclick="goToSignup()">Go to Signup Page</button>
+        <button onclick="goToLogin()">Go to Login Page</button>
+    </div>
+
+    <script src="js/api-config-new.js"></script>
+    <script src="js/api-helper.js"></script>
+    <script src="js/api-client.js"></script>
+    <script>
+        function updatePageInfo() {
+            const pageInfo = document.getElementById('pageInfo');
+            pageInfo.innerHTML = `
+                <div class="info">
+                    <strong>URL:</strong> ${window.location.href}<br>
+                    <strong>Hostname:</strong> ${window.location.hostname}<br>
+                    <strong>Protocol:</strong> ${window.location.protocol}<br>
+                    <strong>User Agent:</strong> ${navigator.userAgent.split(' ')[0]}<br>
+                    <strong>Timestamp:</strong> ${new Date().toISOString()}
+                </div>
+            `;
+        }
+
+        function updateApiInfo() {
+            const apiInfo = document.getElementById('apiInfo');
+            if (typeof API_CONFIG !== 'undefined') {
+                apiInfo.innerHTML = `
+                    <div class="success">✅ API_CONFIG loaded</div>
+                    <div class="code-block">Base URL: ${API_CONFIG.BASE_URL}
+Environment: ${API_CONFIG.BASE_URL.includes('localhost') ? 'Development' : 'Production'}
+Phone Register: ${API_CONFIG.getEndpoint('PHONE_REGISTER') || 'Not found'}
+Email Register: ${API_CONFIG.getEndpoint('EMAIL_REGISTER') || 'Not found'}</div>
+                `;
+            } else {
+                apiInfo.innerHTML = '<div class="error">❌ API_CONFIG not loaded</div>';
+            }
+        }
+
+        function updateScriptInfo() {
+            const scriptInfo = document.getElementById('scriptInfo');
+            const scripts = Array.from(document.scripts).map(script => script.src || script.innerHTML.substring(0, 50));
+            
+            let info = '<div class="info">Loaded Scripts:</div>';
+            scripts.forEach(script => {
+                if (script.includes('api-config') || script.includes('api-client') || script.includes('api-helper')) {
+                    info += `<div class="success">✅ ${script}</div>`;
+                } else if (script.length > 0) {
+                    info += `<div class="info">📄 ${script}</div>`;
+                }
+            });
+            
+            scriptInfo.innerHTML = info;
+        }
+
+        async function testPhoneRegister() {
+            const results = document.getElementById('testResults');
+            results.innerHTML = '<div class="info">Testing phone registration endpoint...</div>';
+            
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/api/phone-auth/register-phone`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: '+263777123456',
+                        password: 'TestPass123!',
+                        fullName: 'Test User'
+                    })
+                });
+                
+                const data = await response.json();
+                results.innerHTML = `
+                    <div class="success">✅ Phone registration endpoint exists</div>
+                    <div class="code-block">Status: ${response.status}
+Response: ${JSON.stringify(data, null, 2)}</div>
+                `;
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="error">❌ Phone registration endpoint failed</div>
+                    <div class="code-block">Error: ${error.message}</div>
+                `;
+            }
+        }
+
+        async function testOldSignup() {
+            const results = document.getElementById('testResults');
+            results.innerHTML = '<div class="info">Testing old signup endpoint...</div>';
+            
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: '+263777123456',
+                        password: 'TestPass123!',
+                        fullName: 'Test User'
+                    })
+                });
+                
+                const data = await response.json();
+                results.innerHTML = `
+                    <div class="error">⚠️ Old signup endpoint still exists</div>
+                    <div class="code-block">Status: ${response.status}
+Response: ${JSON.stringify(data, null, 2)}</div>
+                `;
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="success">✅ Old signup endpoint correctly returns 404</div>
+                    <div class="code-block">Error: ${error.message}</div>
+                `;
+            }
+        }
+
+        function goToSignup() {
+            window.location.href = 'signup.html';
+        }
+
+        function goToLogin() {
+            window.location.href = 'login.html';
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', function() {
+            updatePageInfo();
+            updateApiInfo();
+            updateScriptInfo();
+        });
+    </script>
+</body>
+</html>
