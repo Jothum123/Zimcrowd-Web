@@ -607,6 +607,8 @@
             padding: 25px;
             border-radius: 12px;
             border: 1px solid #334155;
+            position: relative;
+            overflow: hidden;
         }
 
         body.light-mode .stat-card {
@@ -615,6 +617,108 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .stat-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        body.light-mode .stat-title {
+            color: #6b7280;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .stat-icon.wallet {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+
+        .stat-icon.loans {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .stat-icon.investments {
+            background: rgba(168, 85, 247, 0.1);
+            color: #a855f7;
+        }
+
+        .stat-icon.zimscore {
+            background: rgba(251, 191, 36, 0.1);
+            color: #fbbf24;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+
+        body.light-mode .stat-value {
+            color: #1e293b;
+        }
+
+        .stat-change {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .stat-change.positive {
+            color: #22c55e;
+        }
+
+        .stat-change.negative {
+            color: #ef4444;
+        }
+
+        .stat-change i {
+            font-size: 12px;
+        }
+
+        .change-period {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        body.light-mode .change-period {
+            color: #6b7280;
+        }
+
+        .stat-amount {
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        body.light-mode .stat-amount {
+            color: #6b7280;
+        }
+
+        /* Legacy stat card styles for backward compatibility */
         .stat-card h3 {
             font-size: 32px;
             color: #38e77b;
@@ -3234,20 +3338,67 @@
 
             <div class="stats-grid">
                 <div class="stat-card">
-                    <h3>$15,450</h3>
-                    <p>Total Balance</p>
+                    <div class="stat-header">
+                        <div class="stat-title">
+                            <div class="stat-icon wallet">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <span>Wallet Balance</span>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="walletBalance">$0.00</div>
+                    <div class="stat-change positive" id="walletChange">
+                        <i class="fas fa-arrow-up"></i>
+                        <span id="walletChangePercent">0%</span>
+                        <span class="change-period">from last month</span>
+                    </div>
                 </div>
+
                 <div class="stat-card">
-                    <h3>$12,450</h3>
-                    <p>Total Loans</p>
+                    <div class="stat-header">
+                        <div class="stat-title">
+                            <div class="stat-icon loans">
+                                <i class="fas fa-hand-holding-dollar"></i>
+                            </div>
+                            <span>Active Loans</span>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="activeLoans">0</div>
+                    <div class="stat-amount" id="loanAmount">$0.00 total borrowed</div>
                 </div>
+
                 <div class="stat-card">
-                    <h3>$8,200</h3>
-                    <p>Investments</p>
+                    <div class="stat-header">
+                        <div class="stat-title">
+                            <div class="stat-icon investments">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <span>Investments</span>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="investmentValue">$0.00</div>
+                    <div class="stat-change positive" id="investmentChange">
+                        <i class="fas fa-arrow-up"></i>
+                        <span id="investmentReturn">0%</span>
+                        <span class="change-period">returns</span>
+                    </div>
                 </div>
+
                 <div class="stat-card">
-                    <h3>5</h3>
-                    <p>Active Loans</p>
+                    <div class="stat-header">
+                        <div class="stat-title">
+                            <div class="stat-icon zimscore">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <span>ZimScore</span>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="zimScore">0</div>
+                    <div class="stat-change positive" id="zimScoreChange">
+                        <i class="fas fa-arrow-up"></i>
+                        <span id="scoreChange">+0</span>
+                        <span class="change-period">this month</span>
+                    </div>
                 </div>
             </div>
 
@@ -6696,39 +6847,110 @@ How it works:
                     if (response.success) {
                         const stats = response.data;
                         
-                        // Update wallet balance
+                        // Update wallet balance with percentage change
                         const walletBalanceEl = document.getElementById('walletBalance');
+                        const walletChangeEl = document.getElementById('walletChange');
+                        const walletChangePercentEl = document.getElementById('walletChangePercent');
+                        
                         if (walletBalanceEl) {
                             walletBalanceEl.textContent = `$${(stats.wallet_balance || 0).toFixed(2)}`;
                         }
                         
-                        // Update active loans
+                        if (walletChangeEl && walletChangePercentEl) {
+                            const walletChange = stats.wallet_change_percent || 0;
+                            walletChangePercentEl.textContent = `${Math.abs(walletChange).toFixed(1)}%`;
+                            
+                            if (walletChange >= 0) {
+                                walletChangeEl.className = 'stat-change positive';
+                                walletChangeEl.querySelector('i').className = 'fas fa-arrow-up';
+                            } else {
+                                walletChangeEl.className = 'stat-change negative';
+                                walletChangeEl.querySelector('i').className = 'fas fa-arrow-down';
+                            }
+                        }
+                        
+                        // Update active loans with total amount
                         const activeLoansEl = document.getElementById('activeLoans');
+                        const loanAmountEl = document.getElementById('loanAmount');
+                        
                         if (activeLoansEl) {
                             activeLoansEl.textContent = stats.active_loans || 0;
                         }
                         
-                        // Update loan amount
-                        const loanAmountEl = document.getElementById('loanAmount');
                         if (loanAmountEl) {
-                            loanAmountEl.textContent = `$${(stats.total_loan_amount || 0).toFixed(2)}`;
+                            loanAmountEl.textContent = `$${(stats.total_loan_amount || 0).toFixed(2)} total borrowed`;
                         }
                         
-                        // Update investment value
+                        // Update investment value with returns
                         const investmentValueEl = document.getElementById('investmentValue');
+                        const investmentChangeEl = document.getElementById('investmentChange');
+                        const investmentReturnEl = document.getElementById('investmentReturn');
+                        
                         if (investmentValueEl) {
                             investmentValueEl.textContent = `$${(stats.investment_value || 0).toFixed(2)}`;
                         }
                         
-                        // Update ZimScore
+                        if (investmentChangeEl && investmentReturnEl) {
+                            const investmentReturn = stats.investment_return || 0;
+                            investmentReturnEl.textContent = `${Math.abs(investmentReturn).toFixed(1)}%`;
+                            
+                            if (investmentReturn >= 0) {
+                                investmentChangeEl.className = 'stat-change positive';
+                                investmentChangeEl.querySelector('i').className = 'fas fa-arrow-up';
+                            } else {
+                                investmentChangeEl.className = 'stat-change negative';
+                                investmentChangeEl.querySelector('i').className = 'fas fa-arrow-down';
+                            }
+                        }
+                        
+                        // Update ZimScore with monthly change
                         const zimScoreEl = document.getElementById('zimScore');
+                        const zimScoreChangeEl = document.getElementById('zimScoreChange');
+                        const scoreChangeEl = document.getElementById('scoreChange');
+                        
                         if (zimScoreEl) {
                             zimScoreEl.textContent = stats.zim_score || 0;
+                        }
+                        
+                        if (zimScoreChangeEl && scoreChangeEl) {
+                            const scoreChange = stats.score_change || 0;
+                            scoreChangeEl.textContent = scoreChange >= 0 ? `+${scoreChange}` : `${scoreChange}`;
+                            
+                            if (scoreChange >= 0) {
+                                zimScoreChangeEl.className = 'stat-change positive';
+                                zimScoreChangeEl.querySelector('i').className = 'fas fa-arrow-up';
+                            } else {
+                                zimScoreChangeEl.className = 'stat-change negative';
+                                zimScoreChangeEl.querySelector('i').className = 'fas fa-arrow-down';
+                            }
                         }
                     }
                 } catch (error) {
                     console.error('Error loading dashboard stats:', error);
+                    // Set default values if API fails
+                    this.setDefaultStats();
                 }
+            }
+
+            setDefaultStats() {
+                // Set default values for enhanced stats
+                const defaults = {
+                    walletBalance: '$0.00',
+                    walletChangePercent: '0%',
+                    activeLoans: '0',
+                    loanAmount: '$0.00 total borrowed',
+                    investmentValue: '$0.00',
+                    investmentReturn: '0%',
+                    zimScore: '0',
+                    scoreChange: '+0'
+                };
+
+                Object.entries(defaults).forEach(([id, value]) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = value;
+                    }
+                });
             }
 
             async loadWalletBalance() {
