@@ -8,14 +8,30 @@ import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { Calculator, TrendingUp, DollarSign, Calendar, Percent } from 'lucide-react';
 
-const LoanCalculator = ({ user, compact = false }) => {
+const LoanCalculator = ({ 
+    user, 
+    compact = false, 
+    initialTermDays = '360',
+    initialInterestRate = '5',
+    onCalculationChange,
+    onTermChange,
+    onInterestRateChange
+}) => {
     const [formData, setFormData] = useState({
-        termDays: '360',
-        interestRate: '5'
+        termDays: initialTermDays,
+        interestRate: initialInterestRate
     });
     
     const [maxLoanData, setMaxLoanData] = useState(null);
     const [loading, setLoading] = useState(false);
+
+    // Sync with parent component's initial values
+    useEffect(() => {
+        setFormData({
+            termDays: initialTermDays,
+            interestRate: initialInterestRate
+        });
+    }, [initialTermDays, initialInterestRate]);
 
     useEffect(() => {
         if (user?.token) {
@@ -43,6 +59,10 @@ const LoanCalculator = ({ user, compact = false }) => {
             const result = await response.json();
             if (result.success) {
                 setMaxLoanData(result.data);
+                // Notify parent component of the calculation change
+                if (onCalculationChange) {
+                    onCalculationChange(result.data);
+                }
             }
         } catch (error) {
             console.error('Max loan calculation error:', error);
@@ -53,6 +73,13 @@ const LoanCalculator = ({ user, compact = false }) => {
 
     const handleInputChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
+        
+        // Notify parent component of changes
+        if (field === 'termDays' && onTermChange) {
+            onTermChange(value);
+        } else if (field === 'interestRate' && onInterestRateChange) {
+            onInterestRateChange(value);
+        }
     };
 
     if (compact) {

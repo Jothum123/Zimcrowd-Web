@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from './ui/alert';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { Calculator, DollarSign, Calendar, Percent, FileText, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import LoanCalculator from './LoanCalculator';
 
 const LoanApplication = ({ user, onSuccess }) => {
     const [formData, setFormData] = useState({
@@ -23,35 +24,7 @@ const LoanApplication = ({ user, onSuccess }) => {
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState('form'); // 'form', 'validation', 'submit'
 
-    // Calculate max loan on component mount
-    useEffect(() => {
-        if (formData.termDays && formData.interestRate) {
-            calculateMaxLoan();
-        }
-    }, [formData.termDays, formData.interestRate]);
-
-    const calculateMaxLoan = async () => {
-        try {
-            const response = await fetch('/api/loans/calculate-max', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${user.token}`
-                },
-                body: JSON.stringify({
-                    termDays: parseInt(formData.termDays),
-                    interestRate: parseFloat(formData.interestRate)
-                })
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                setMaxLoanData(result.data);
-            }
-        } catch (error) {
-            console.error('Max loan calculation error:', error);
-        }
-    };
+    // Max loan data will be provided by the LoanCalculator component
 
     const validateLoan = async () => {
         setLoading(true);
@@ -157,9 +130,20 @@ const LoanApplication = ({ user, onSuccess }) => {
                                 placeholder="Enter loan amount"
                             />
                             {maxLoanData && (
-                                <p className="text-sm text-muted-foreground">
-                                    Maximum: ${maxLoanData.loanCalculation?.finalMaxLoanAmount}
-                                </p>
+                                <div className="flex items-center justify-between">
+                                    <p className="text-sm text-muted-foreground">
+                                        Maximum: ${maxLoanData.loanCalculation?.finalMaxLoanAmount}
+                                    </p>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleInputChange('amount', maxLoanData.loanCalculation?.finalMaxLoanAmount)}
+                                        className="text-xs"
+                                    >
+                                        Use Max
+                                    </Button>
+                                </div>
                             )}
                         </div>
 
@@ -223,64 +207,16 @@ const LoanApplication = ({ user, onSuccess }) => {
 
                 {/* Right Column - Results */}
                 <div className="space-y-6">
-                    {/* Max Loan Calculation */}
-                    {maxLoanData && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg flex items-center gap-2">
-                                    <Calculator className="h-5 w-5" />
-                                    Maximum Loan Capacity
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {/* DTNI Analysis */}
-                                <div>
-                                    <h4 className="font-medium mb-2">DTNI Analysis</h4>
-                                    <div className="grid grid-cols-2 gap-2 text-sm">
-                                        <div>Net Salary:</div>
-                                        <div className="font-medium">${maxLoanData.dtniAnalysis?.netSalary}</div>
-                                        <div>Max Installment (40%):</div>
-                                        <div className="font-medium">${maxLoanData.dtniAnalysis?.maxInstallmentCapacity}</div>
-                                        <div>Available Capacity:</div>
-                                        <div className="font-medium">${maxLoanData.dtniAnalysis?.availableCapacity}</div>
-                                    </div>
-                                </div>
-
-                                <Separator />
-
-                                {/* Loan Calculation */}
-                                <div>
-                                    <h4 className="font-medium mb-2">Loan Limits</h4>
-                                    <div className="grid grid-cols-2 gap-2 text-sm">
-                                        <div>From DTNI:</div>
-                                        <div className="font-medium">${maxLoanData.loanCalculation?.maxLoanFromDTNI}</div>
-                                        <div>Employment Cap:</div>
-                                        <div className="font-medium">${maxLoanData.loanCalculation?.employmentCap}</div>
-                                        <div>Final Maximum:</div>
-                                        <div className="font-bold text-green-600">${maxLoanData.loanCalculation?.finalMaxLoanAmount}</div>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-2">
-                                        {maxLoanData.loanCalculation?.limitation}
-                                    </p>
-                                </div>
-
-                                <Separator />
-
-                                {/* Repayment Details */}
-                                <div>
-                                    <h4 className="font-medium mb-2">Repayment Details</h4>
-                                    <div className="grid grid-cols-2 gap-2 text-sm">
-                                        <div>Monthly Payment:</div>
-                                        <div className="font-medium">${maxLoanData.repaymentDetails?.monthlyRepayment}</div>
-                                        <div>Total Interest:</div>
-                                        <div className="font-medium">${maxLoanData.repaymentDetails?.totalInterest}</div>
-                                        <div>Total Repayment:</div>
-                                        <div className="font-medium">${maxLoanData.repaymentDetails?.totalRepayment}</div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
+                    {/* Integrated Loan Calculator */}
+                    <LoanCalculator 
+                        user={user} 
+                        compact={false}
+                        initialTermDays={formData.termDays}
+                        initialInterestRate={formData.interestRate}
+                        onCalculationChange={(data) => setMaxLoanData(data)}
+                        onTermChange={(termDays) => handleInputChange('termDays', termDays)}
+                        onInterestRateChange={(interestRate) => handleInputChange('interestRate', interestRate)}
+                    />
 
                     {/* Validation Results */}
                     {validation && (

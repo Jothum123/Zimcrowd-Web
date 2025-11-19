@@ -54,6 +54,7 @@
         <button class="btn-primary" onclick="testDashboard()">Test Dashboard Auth</button>
         <button class="btn-primary" onclick="goToLogin()">Go to Login</button>
         <button class="btn-primary" onclick="goToDashboard()">Go to Dashboard</button>
+        <button class="btn-success" onclick="doRealSocialLogin()">🔑 Do Real Social Login</button>
     </div>
 
     <div class="section">
@@ -124,8 +125,21 @@
             } else {
                 keys.forEach(key => {
                     const value = localStorage.getItem(key);
-                    const displayValue = value.length > 100 ? value.substring(0, 100) + '...' : value;
-                    html += `${key}: ${displayValue}\n`;
+                    let displayValue;
+                    
+                    if (key === 'authToken') {
+                        // Show more of the token to identify if it's real or simulated
+                        displayValue = value.length > 50 ? value.substring(0, 50) + '...' : value;
+                        html += `${key}: ${displayValue} (${value.length} chars)\n`;
+                        
+                        // Check if it's the mock token
+                        if (value.startsWith('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkw')) {
+                            html += '  ⚠️  WARNING: This is a MOCK token, not real!\n';
+                        }
+                    } else {
+                        displayValue = value.length > 100 ? value.substring(0, 100) + '...' : value;
+                        html += `${key}: ${displayValue}\n`;
+                    }
                 });
             }
             
