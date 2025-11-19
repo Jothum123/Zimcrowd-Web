@@ -36,25 +36,33 @@ const DashboardState = {
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Initializing ZimCrowd Dashboard...');
     
-    // Check authentication
-    if (!checkAuth()) {
-        redirectToLogin();
-        return;
+    try {
+        // Check authentication
+        if (!checkAuth()) {
+            console.log('❌ Authentication failed, redirecting to login');
+            redirectToLogin();
+            return;
+        }
+        
+        console.log('✅ Authentication passed');
+        
+        // Load user data
+        await loadUserData();
+        
+        // Initialize navigation
+        initializeNavigation();
+        
+        // Initialize event listeners
+        initializeEventListeners();
+        
+        // Load initial section
+        await loadSection('overview');
+        
+        console.log('✅ Dashboard initialized successfully');
+    } catch (error) {
+        console.error('❌ Dashboard initialization error:', error);
+        // Don't redirect on error, just log it
     }
-    
-    // Load user data
-    await loadUserData();
-    
-    // Initialize navigation
-    initializeNavigation();
-    
-    // Initialize event listeners
-    initializeEventListeners();
-    
-    // Load initial section
-    await loadSection('overview');
-    
-    console.log('✅ Dashboard initialized successfully');
 });
 
 // Authentication
@@ -90,19 +98,27 @@ function logout() {
 async function loadUserData() {
     try {
         const user = DashboardState.user;
+        console.log('📝 Loading user data:', user);
         
-        // Update UI with user info
-        document.getElementById('userName').textContent = user.fullName || user.email;
+        // Update UI with user info (with null checks)
+        const userNameEl = document.getElementById('userName');
+        if (userNameEl) {
+            userNameEl.textContent = user.first_name || user.fullName || user.email || 'User';
+        }
         
         // Set avatar initial
-        const initial = (user.fullName || user.email || 'U')[0].toUpperCase();
-        document.getElementById('userAvatar').textContent = initial;
+        const userAvatarEl = document.getElementById('userAvatar');
+        if (userAvatarEl) {
+            const initial = (user.first_name || user.fullName || user.email || 'U')[0].toUpperCase();
+            userAvatarEl.textContent = initial;
+        }
         
         // Load notifications count
         await loadNotificationsCount();
         
     } catch (error) {
         console.error('Error loading user data:', error);
+        // Don't throw, just log the error
     }
 }
 

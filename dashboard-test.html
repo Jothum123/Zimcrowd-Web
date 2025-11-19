@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Test - ZimCrowd</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .debug { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <h1>Dashboard Authentication Test</h1>
+    
+    <div id="authStatus" class="debug">Checking authentication...</div>
+    <div id="tokenInfo" class="debug"></div>
+    <div id="userInfo" class="debug"></div>
+    <div id="apiTest" class="debug"></div>
+    
+    <button onclick="clearAuth()">Clear Auth Data</button>
+    <button onclick="testLogin()">Test Login</button>
+    <button onclick="goToDashboard()">Go to Production Dashboard</button>
+    
+    <script>
+        function checkAuthDebug() {
+            const authToken = localStorage.getItem('authToken');
+            const userData = localStorage.getItem('userData');
+            const isAuthenticated = localStorage.getItem('isAuthenticated');
+            
+            document.getElementById('tokenInfo').innerHTML = `
+                <strong>Auth Token:</strong> ${authToken ? 'Present (' + authToken.length + ' chars)' : 'Missing'}<br>
+                <strong>User Data:</strong> ${userData ? 'Present' : 'Missing'}<br>
+                <strong>Is Authenticated:</strong> ${isAuthenticated}<br>
+                <strong>All localStorage keys:</strong> ${Object.keys(localStorage).join(', ')}
+            `;
+            
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    document.getElementById('userInfo').innerHTML = `
+                        <strong>User Info:</strong><br>
+                        Email: ${user.email || 'N/A'}<br>
+                        Name: ${user.first_name || user.fullName || 'N/A'}<br>
+                        Provider: ${user.provider || 'N/A'}
+                    `;
+                } catch (e) {
+                    document.getElementById('userInfo').innerHTML = `<span class="error">Error parsing user data: ${e.message}</span>`;
+                }
+            }
+            
+            if (authToken && userData) {
+                document.getElementById('authStatus').innerHTML = '<span class="success">✅ Authentication data found</span>';
+                testAPI();
+            } else {
+                document.getElementById('authStatus').innerHTML = '<span class="error">❌ Missing authentication data</span>';
+            }
+        }
+        
+        async function testAPI() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('https://zimcrowd-backend.vercel.app/api/dashboard/stats', {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    document.getElementById('apiTest').innerHTML = '<span class="success">✅ API call successful</span>';
+                } else {
+                    document.getElementById('apiTest').innerHTML = `<span class="error">❌ API call failed: ${response.status} ${response.statusText}</span>`;
+                }
+            } catch (error) {
+                document.getElementById('apiTest').innerHTML = `<span class="error">❌ API error: ${error.message}</span>`;
+            }
+        }
+        
+        function clearAuth() {
+            localStorage.clear();
+            checkAuthDebug();
+        }
+        
+        function testLogin() {
+            // Simulate login data
+            localStorage.setItem('authToken', 'test-token-123');
+            localStorage.setItem('userData', JSON.stringify({
+                email: 'test@example.com',
+                first_name: 'Test',
+                last_name: 'User'
+            }));
+            localStorage.setItem('isAuthenticated', 'true');
+            checkAuthDebug();
+        }
+        
+        function goToDashboard() {
+            window.location.href = 'dashboard-production.html';
+        }
+        
+        // Run check on load
+        checkAuthDebug();
+    </script>
+</body>
+</html>
