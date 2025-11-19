@@ -6775,6 +6775,24 @@ How it works:
             async checkAuthentication() {
                 console.log('🔐 Checking authentication...');
                 
+                // Check for social auth data first
+                const socialAuthData = JSON.parse(localStorage.getItem('socialAuthData') || '{}');
+                const socialSignupCompleted = localStorage.getItem('socialSignupCompleted');
+                
+                if (socialAuthData.provider && socialSignupCompleted) {
+                    console.log('✅ Social auth detected:', socialAuthData.provider);
+                    this.user = socialAuthData;
+                    this.isAuthenticated = true;
+                    
+                    // Ensure userData is set for consistency
+                    if (!localStorage.getItem('userData')) {
+                        localStorage.setItem('userData', JSON.stringify(socialAuthData));
+                    }
+                    
+                    console.log('✅ Social authentication successful:', this.user);
+                    return true;
+                }
+                
                 if (!this.token) {
                     console.log('❌ No auth token found');
                     this.redirectToLogin();
@@ -6782,19 +6800,36 @@ How it works:
                 }
 
                 try {
-                    // Verify token with backend
-                    const response = await window.ZimCrowdAPI.getProfile();
+                    // Verify token with backend (with timeout for social auth)
+                    const timeoutPromise = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Timeout')), 5000)
+                    );
+                    
+                    const response = await Promise.race([
+                        window.ZimCrowdAPI.getProfile(),
+                        timeoutPromise
+                    ]);
+                    
                     if (response.success) {
                         this.user = response.data;
                         this.isAuthenticated = true;
                         localStorage.setItem('userData', JSON.stringify(this.user));
-                        console.log('✅ Authentication successful:', this.user);
+                        console.log('✅ Backend authentication successful:', this.user);
                         return true;
                     } else {
                         throw new Error('Invalid token');
                     }
                 } catch (error) {
-                    console.error('❌ Authentication failed:', error);
+                    console.error('❌ Backend authentication failed:', error);
+                    
+                    // For social auth users, don't redirect immediately - try to use social data
+                    if (socialAuthData.provider) {
+                        console.log('🔄 Backend failed but social auth available, using social data');
+                        this.user = socialAuthData;
+                        this.isAuthenticated = true;
+                        return true;
+                    }
+                    
                     this.clearAuth();
                     this.redirectToLogin();
                     return false;
@@ -10212,9 +10247,15 @@ How it works:
             // Handle OAuth callback and get token
             const authToken = handleAuthCallback();
             
-            if (authToken) {
-                // User is authenticated, load real data
-                window.ZimCrowdAPI.setToken(authToken);
+            // Check for social auth data as well
+            const socialAuthData = JSON.parse(localStorage.getItem('socialAuthData') || '{}');
+            const socialSignupCompleted = localStorage.getItem('socialSignupCompleted');
+            
+            if (authToken || (socialAuthData.provider && socialSignupCompleted)) {
+                // User is authenticated (either regular or social auth), load real data
+                if (authToken) {
+                    window.ZimCrowdAPI.setToken(authToken);
+                }
                 console.log('🔄 Loading real data from backend...');
 
                 // Load all dashboard data
@@ -10226,7 +10267,7 @@ How it works:
                 loadReferralsData();
                 loadNotifications();
             } else {
-                console.log('⚠️ No auth token found, showing mock data');
+                console.log('⚠️ No auth token or social auth found, showing mock data');
                 // Show login prompt or redirect to login
                 if (confirm('You need to be logged in to view your dashboard. Go to login page?')) {
                     window.location.href = 'login.html';
