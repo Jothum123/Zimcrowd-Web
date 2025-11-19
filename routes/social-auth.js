@@ -208,7 +208,7 @@ socialRouter.get('/callback', async (req, res) => {
                         localStorage.setItem('isAuthenticated', 'true');
 
                         // Store auth token and user data for dashboard
-                        ${user.access_token ? `localStorage.setItem('authToken', '${user.access_token}');` : ''}
+                        ${data.session?.access_token ? `localStorage.setItem('authToken', '${data.session.access_token}');` : ''}
                         localStorage.setItem('userData', JSON.stringify(${JSON.stringify(socialAuthData).replace(/'/g, "\\'")}));
 
                         // Redirect to destination

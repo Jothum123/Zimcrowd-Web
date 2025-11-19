@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Debug - ZimCrowd</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background: #e8f5e8; border-color: #4caf50; }
+        .error { background: #ffebee; border-color: #f44336; }
+        .warning { background: #fff3e0; border-color: #ff9800; }
+        .info { background: #e3f2fd; border-color: #2196f3; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { padding: 10px 15px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; }
+        .btn-primary { background: #2196f3; color: white; }
+        .btn-danger { background: #f44336; color: white; }
+        .btn-success { background: #4caf50; color: white; }
+        .step { margin: 10px 0; padding: 10px; background: #f9f9f9; border-left: 4px solid #2196f3; }
+    </style>
+</head>
+<body>
+    <h1>🔍 ZimCrowd Authentication Debug</h1>
+    
+    <div class="section info">
+        <h3>📋 Debug Steps</h3>
+        <div class="step">1. Check localStorage data</div>
+        <div class="step">2. Test authentication function</div>
+        <div class="step">3. Test API connectivity</div>
+        <div class="step">4. Simulate login flow</div>
+        <div class="step">5. Test dashboard initialization</div>
+    </div>
+
+    <div class="section">
+        <h3>🔑 Authentication Status</h3>
+        <div id="authStatus">Checking...</div>
+    </div>
+
+    <div class="section">
+        <h3>💾 localStorage Contents</h3>
+        <div id="localStorageData">Loading...</div>
+    </div>
+
+    <div class="section">
+        <h3>🌐 API Test</h3>
+        <div id="apiTest">Not tested</div>
+        <button class="btn-primary" onclick="testAPI()">Test API Connection</button>
+    </div>
+
+    <div class="section">
+        <h3>🔧 Actions</h3>
+        <button class="btn-danger" onclick="clearAllData()">Clear All Data</button>
+        <button class="btn-success" onclick="simulateLogin()">Simulate Login</button>
+        <button class="btn-primary" onclick="testDashboard()">Test Dashboard Auth</button>
+        <button class="btn-primary" onclick="goToLogin()">Go to Login</button>
+        <button class="btn-primary" onclick="goToDashboard()">Go to Dashboard</button>
+    </div>
+
+    <div class="section">
+        <h3>📊 Test Results</h3>
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        let testResults = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            testResults.push(`[${timestamp}] ${type.toUpperCase()}: ${message}`);
+            updateTestResults();
+            console.log(`[AUTH DEBUG] ${message}`);
+        }
+
+        function updateTestResults() {
+            document.getElementById('testResults').innerHTML = 
+                '<pre>' + testResults.slice(-20).join('\n') + '</pre>';
+        }
+
+        function checkAuth() {
+            const authToken = localStorage.getItem('authToken');
+            const userData = localStorage.getItem('userData');
+            const isAuthenticated = localStorage.getItem('isAuthenticated');
+
+            log(`Auth check: token=${!!authToken}, userData=${!!userData}, isAuth=${isAuthenticated}`);
+
+            let status = '';
+            let statusClass = '';
+
+            if (!authToken) {
+                status = '❌ No authToken found';
+                statusClass = 'error';
+                log('Missing authToken', 'error');
+            } else if (!userData) {
+                status = '❌ No userData found';
+                statusClass = 'error';
+                log('Missing userData', 'error');
+            } else {
+                try {
+                    const user = JSON.parse(userData);
+                    status = `✅ Authentication data found<br>
+                             Token: ${authToken.substring(0, 20)}...<br>
+                             User: ${user.email || user.first_name || 'Unknown'}`;
+                    statusClass = 'success';
+                    log('Authentication data valid', 'success');
+                    return true;
+                } catch (e) {
+                    status = '❌ Invalid userData format';
+                    statusClass = 'error';
+                    log(`Invalid userData: ${e.message}`, 'error');
+                }
+            }
+
+            document.getElementById('authStatus').innerHTML = status;
+            document.getElementById('authStatus').parentElement.className = `section ${statusClass}`;
+            return false;
+        }
+
+        function updateLocalStorageDisplay() {
+            const keys = Object.keys(localStorage);
+            let html = '<pre>';
+            
+            if (keys.length === 0) {
+                html += 'localStorage is empty';
+            } else {
+                keys.forEach(key => {
+                    const value = localStorage.getItem(key);
+                    const displayValue = value.length > 100 ? value.substring(0, 100) + '...' : value;
+                    html += `${key}: ${displayValue}\n`;
+                });
+            }
+            
+            html += '</pre>';
+            document.getElementById('localStorageData').innerHTML = html;
+            log(`localStorage has ${keys.length} keys: ${keys.join(', ')}`);
+        }
+
+        async function testAPI() {
+            const token = localStorage.getItem('authToken');
+            
+            if (!token) {
+                document.getElementById('apiTest').innerHTML = '❌ No token to test with';
+                document.getElementById('apiTest').parentElement.className = 'section error';
+                log('Cannot test API - no token', 'error');
+                return;
+            }
+
+            try {
+                log('Testing API connection...', 'info');
+                const response = await fetch('https://zimcrowd-backend.vercel.app/api/dashboard/stats', {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const responseText = await response.text();
+                log(`API response: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+
+                if (response.ok) {
+                    document.getElementById('apiTest').innerHTML = '✅ API connection successful';
+                    document.getElementById('apiTest').parentElement.className = 'section success';
+                } else {
+                    document.getElementById('apiTest').innerHTML = `❌ API failed: ${response.status} ${response.statusText}<br><pre>${responseText}</pre>`;
+                    document.getElementById('apiTest').parentElement.className = 'section error';
+                }
+            } catch (error) {
+                log(`API error: ${error.message}`, 'error');
+                document.getElementById('apiTest').innerHTML = `❌ API error: ${error.message}`;
+                document.getElementById('apiTest').parentElement.className = 'section error';
+            }
+        }
+
+        function clearAllData() {
+            localStorage.clear();
+            log('Cleared all localStorage data', 'info');
+            updateLocalStorageDisplay();
+            checkAuth();
+        }
+
+        function simulateLogin() {
+            // Simulate what social login should store
+            const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+            const mockUser = {
+                email: 'test@example.com',
+                first_name: 'Test',
+                last_name: 'User',
+                provider: 'google'
+            };
+
+            localStorage.setItem('authToken', mockToken);
+            localStorage.setItem('userData', JSON.stringify(mockUser));
+            localStorage.setItem('isAuthenticated', 'true');
+            
+            log('Simulated login data stored', 'success');
+            updateLocalStorageDisplay();
+            checkAuth();
+        }
+
+        function testDashboard() {
+            // Test the same logic as dashboard-core.js
+            const token = localStorage.getItem('authToken');
+            const userData = localStorage.getItem('userData');
+            
+            log('Testing dashboard authentication logic...', 'info');
+            
+            if (!token || !userData) {
+                log('Dashboard would redirect to login - missing data', 'error');
+                alert('❌ Dashboard would redirect to login - missing authentication data');
+                return;
+            }
+            
+            try {
+                const user = JSON.parse(userData);
+                log('Dashboard authentication would pass', 'success');
+                alert('✅ Dashboard authentication would pass');
+            } catch (error) {
+                log(`Dashboard would redirect to login - invalid userData: ${error.message}`, 'error');
+                alert('❌ Dashboard would redirect to login - invalid userData format');
+            }
+        }
+
+        function goToLogin() {
+            window.location.href = 'login.html';
+        }
+
+        function goToDashboard() {
+            window.location.href = 'dashboard-production.html';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            log('Auth debug page loaded', 'info');
+            updateLocalStorageDisplay();
+            checkAuth();
+        });
+    </script>
+</body>
+</html>
