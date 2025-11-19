@@ -207,8 +207,9 @@ socialRouter.get('/callback', async (req, res) => {
                         localStorage.setItem('socialSignupCompleted', 'true');
                         localStorage.setItem('isAuthenticated', 'true');
 
-                        // Store auth token if available
+                        // Store auth token and user data for dashboard
                         ${user.access_token ? `localStorage.setItem('authToken', '${user.access_token}');` : ''}
+                        localStorage.setItem('userData', JSON.stringify(${JSON.stringify(socialAuthData).replace(/'/g, "\\'")}));
 
                         // Redirect to destination
                         window.location.href = '${redirectUrl}';
