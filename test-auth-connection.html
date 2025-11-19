@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Auth Connection - ZimCrowd</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .token-display {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔐 ZimCrowd Authentication Connection Test</h1>
+    
+    <div class="test-section">
+        <h2>Current Authentication Status</h2>
+        <div id="authStatus"></div>
+        <button onclick="checkAuthStatus()">Check Auth Status</button>
+        <button onclick="clearAuth()">Clear Auth Data</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Token Information</h2>
+        <div id="tokenInfo"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Navigation Tests</h2>
+        <button onclick="goToLogin()">Go to Login Page</button>
+        <button onclick="goToSignup()">Go to Signup Page</button>
+        <button onclick="goToDashboard()">Go to Dashboard</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        function checkAuthStatus() {
+            const authToken = localStorage.getItem('authToken');
+            const userData = localStorage.getItem('userData');
+            const isAuthenticated = localStorage.getItem('isAuthenticated');
+            
+            let status = '';
+            
+            if (authToken) {
+                status += '<div class="status success">✅ authToken found in localStorage</div>';
+                document.getElementById('tokenInfo').innerHTML = `
+                    <strong>Auth Token:</strong>
+                    <div class="token-display">${authToken}</div>
+                `;
+            } else {
+                status += '<div class="status error">❌ No authToken found in localStorage</div>';
+                document.getElementById('tokenInfo').innerHTML = '<div class="status info">No token to display</div>';
+            }
+            
+            if (userData) {
+                status += '<div class="status success">✅ userData found in localStorage</div>';
+                try {
+                    const user = JSON.parse(userData);
+                    status += `<div class="status info">👤 User: ${user.email || user.fullName || 'Unknown'}</div>`;
+                } catch (e) {
+                    status += '<div class="status error">❌ userData is corrupted</div>';
+                }
+            } else {
+                status += '<div class="status error">❌ No userData found in localStorage</div>';
+            }
+            
+            if (isAuthenticated) {
+                status += '<div class="status success">✅ isAuthenticated flag set</div>';
+            } else {
+                status += '<div class="status info">ℹ️ isAuthenticated flag not set</div>';
+            }
+            
+            document.getElementById('authStatus').innerHTML = status;
+        }
+        
+        function clearAuth() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            localStorage.removeItem('isAuthenticated');
+            localStorage.removeItem('token'); // Legacy token key
+            localStorage.removeItem('user'); // Legacy user key
+            
+            document.getElementById('testResults').innerHTML = 
+                '<div class="status success">🧹 All authentication data cleared</div>';
+            
+            checkAuthStatus();
+        }
+        
+        function goToLogin() {
+            window.location.href = 'login.html';
+        }
+        
+        function goToSignup() {
+            window.location.href = 'signup.html';
+        }
+        
+        function goToDashboard() {
+            window.location.href = 'dashboard.html';
+        }
+        
+        // Run initial check
+        window.addEventListener('DOMContentLoaded', function() {
+            checkAuthStatus();
+            
+            // Test localStorage compatibility
+            const testResults = document.getElementById('testResults');
+            let results = '<h3>Compatibility Tests:</h3>';
+            
+            // Test if we can set/get localStorage
+            try {
+                localStorage.setItem('test', 'value');
+                const testValue = localStorage.getItem('test');
+                localStorage.removeItem('test');
+                
+                if (testValue === 'value') {
+                    results += '<div class="status success">✅ localStorage is working</div>';
+                } else {
+                    results += '<div class="status error">❌ localStorage read/write failed</div>';
+                }
+            } catch (e) {
+                results += '<div class="status error">❌ localStorage is not available</div>';
+            }
+            
+            // Check if we're on the correct domain
+            results += `<div class="status info">🌐 Current URL: ${window.location.href}</div>`;
+            results += `<div class="status info">🏠 Hostname: ${window.location.hostname}</div>`;
+            
+            testResults.innerHTML = results;
+        });
+    </script>
+</body>
+</html>

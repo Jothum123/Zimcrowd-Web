@@ -628,9 +628,9 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    // Store token and user data
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
+                    // Store token and user data (using authToken key for dashboard compatibility)
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('userData', JSON.stringify(data.user));
                     
                     // Show success message
                     showAlert('Account created successfully! Redirecting...', 'success');
@@ -654,7 +654,7 @@
 
         // Check if already logged in
         window.addEventListener('load', () => {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('authToken');
             if (token) {
                 // Verify token is still valid
                 fetch(`${API_URL}/verify-token`, {
