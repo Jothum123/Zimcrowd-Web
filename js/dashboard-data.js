@@ -297,6 +297,75 @@ const DashboardData = {
             console.error('Error exporting transactions:', error);
             throw error;
         }
+    },
+
+    // Analytics API calls
+    async getPortfolioAnalytics(timeframe = '30d') {
+        try {
+            const response = await fetch(
+                `${window.DashboardCore.API_CONFIG.BASE_URL}/analytics/portfolio?timeframe=${timeframe}`,
+                { headers: window.DashboardCore.API_CONFIG.HEADERS }
+            );
+            
+            if (!response.ok) throw new Error('Failed to fetch portfolio analytics');
+            
+            const data = await response.json();
+            return data.data;
+        } catch (error) {
+            console.error('Error fetching portfolio analytics:', error);
+            throw error;
+        }
+    },
+
+    async getTransactionAnalytics(timeframe = '30d') {
+        try {
+            const response = await fetch(
+                `${window.DashboardCore.API_CONFIG.BASE_URL}/analytics/transactions?timeframe=${timeframe}`,
+                { headers: window.DashboardCore.API_CONFIG.HEADERS }
+            );
+            
+            if (!response.ok) throw new Error('Failed to fetch transaction analytics');
+            
+            const data = await response.json();
+            return data.data;
+        } catch (error) {
+            console.error('Error fetching transaction analytics:', error);
+            throw error;
+        }
+    },
+
+    async getFinancialInsights() {
+        try {
+            const response = await fetch(
+                `${window.DashboardCore.API_CONFIG.BASE_URL}/analytics/insights`,
+                { headers: window.DashboardCore.API_CONFIG.HEADERS }
+            );
+            
+            if (!response.ok) throw new Error('Failed to fetch financial insights');
+            
+            const data = await response.json();
+            return data.data;
+        } catch (error) {
+            console.error('Error fetching financial insights:', error);
+            throw error;
+        }
+    },
+
+    async getFinancialHealthScore() {
+        try {
+            const response = await fetch(
+                `${window.DashboardCore.API_CONFIG.BASE_URL}/analytics/health-score`,
+                { headers: window.DashboardCore.API_CONFIG.HEADERS }
+            );
+            
+            if (!response.ok) throw new Error('Failed to fetch health score');
+            
+            const data = await response.json();
+            return data.data;
+        } catch (error) {
+            console.error('Error fetching health score:', error);
+            throw error;
+        }
     }
 };
 
