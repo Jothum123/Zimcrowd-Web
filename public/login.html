@@ -896,7 +896,7 @@
                         // Show success and redirect
                         showSuccess('Login successful! Redirecting to dashboard...');
                         setTimeout(() => {
-                            window.location.href = 'dashboard.html';
+                            window.location.href = 'dashboard-production.html';
                         }, 1500);
                     } else {
                         // Show error
@@ -1033,7 +1033,7 @@
                         // Direct login success
                         showSuccess('Login successful! Redirecting to dashboard...');
                         setTimeout(() => {
-                            window.location.href = 'dashboard.html';
+                            window.location.href = 'dashboard-production.html';
                         }, 1500);
                     }
                 } else {
@@ -1075,7 +1075,7 @@
                 if (response.success) {
                     showSuccess('TOTP login successful! Redirecting to dashboard...');
                     setTimeout(() => {
-                        window.location.href = 'dashboard.html';
+                        window.location.href = 'dashboard-production.html';
                     }, 1500);
                 } else {
                     showError(response.message || 'Invalid TOTP code');
