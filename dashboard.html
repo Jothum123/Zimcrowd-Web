@@ -6786,19 +6786,23 @@ How it works:
                 const socialAuthData = JSON.parse(localStorage.getItem('socialAuthData') || '{}');
                 const socialSignupCompleted = localStorage.getItem('socialSignupCompleted');
                 const isAuthenticated = localStorage.getItem('isAuthenticated');
+                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
                 
-                // More flexible social auth check
+                // More flexible authentication check (social auth OR regular login)
                 if ((socialAuthData.provider && socialSignupCompleted) || 
                     (socialAuthData.provider && isAuthenticated === 'true') ||
-                    (socialAuthData.email && socialAuthData.first_name)) {
-                    console.log('✅ Social auth detected:', socialAuthData.provider || 'social');
-                    console.log('📋 Social auth data:', socialAuthData);
-                    this.user = socialAuthData;
+                    (socialAuthData.email && socialAuthData.first_name) ||
+                    (userData.email && isAuthenticated === 'true')) {
+                    console.log('✅ Authentication detected:', socialAuthData.provider || userData.email || 'authenticated');
+                    console.log('📋 Auth data:', socialAuthData.provider ? socialAuthData : userData);
+                    
+                    // Use social auth data if available, otherwise use regular login data
+                    this.user = socialAuthData.provider ? socialAuthData : userData;
                     this.isAuthenticated = true;
                     
                     // Ensure userData is set for consistency
                     if (!localStorage.getItem('userData')) {
-                        localStorage.setItem('userData', JSON.stringify(socialAuthData));
+                        localStorage.setItem('userData', JSON.stringify(this.user));
                     }
                     
                     console.log('✅ Social authentication successful:', this.user);
@@ -10260,11 +10264,23 @@ How it works:
             // Handle OAuth callback and get token
             const authToken = handleAuthCallback();
             
-            // Check for social auth data as well
+            // Check for social auth data and regular login data
             const socialAuthData = JSON.parse(localStorage.getItem('socialAuthData') || '{}');
             const socialSignupCompleted = localStorage.getItem('socialSignupCompleted');
+            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+            const isAuthenticated = localStorage.getItem('isAuthenticated');
             
-            if (authToken || (socialAuthData.provider && socialSignupCompleted)) {
+            console.log('🔍 Authentication check:', {
+                hasAuthToken: !!authToken,
+                hasSocialAuth: !!(socialAuthData.provider && socialSignupCompleted),
+                hasUserData: !!userData.email,
+                isAuthenticated: isAuthenticated
+            });
+            
+            if (authToken || 
+                (socialAuthData.provider && socialSignupCompleted) || 
+                userData.email || 
+                isAuthenticated === 'true') {
                 // User is authenticated (either regular or social auth), load real data
                 if (authToken) {
                     window.ZimCrowdAPI.setToken(authToken);
