@@ -7216,6 +7216,12 @@ How it works:
                     // Create profile in backend if this is a signup
                     if (authMode === 'signup') {
                         await createSupabaseUserProfile(userData);
+                        
+                        // Redirect new social users to onboarding
+                        localStorage.setItem('newUser', 'true');
+                        console.log('🔄 New social user, redirecting to onboarding...');
+                        window.location.href = 'onboarding.html';
+                        return; // Stop further execution
                     }
                 } else {
                     console.log('ℹ️ No Supabase OAuth session found');

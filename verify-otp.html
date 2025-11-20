@@ -858,16 +858,26 @@
                         localStorage.removeItem('verificationPhone');
 
                         if (verificationType === 'signup') {
-                            // Account created successfully - redirect to login
+                            // Account created successfully - redirect to onboarding
                             localStorage.setItem('signupSuccess', 'true');
+                            localStorage.setItem('newUser', 'true');
                             if (contactType === 'phone') {
                                 localStorage.setItem('userPhone', contactValue);
                             } else {
                                 localStorage.setItem('userEmail', contactValue);
                             }
-                            showSuccess('Account created! Redirecting to login...');
+                            
+                            // Store user data for onboarding
+                            if (response.user) {
+                                localStorage.setItem('userData', JSON.stringify(response.user));
+                            }
+                            if (response.token) {
+                                localStorage.setItem('authToken', response.token);
+                            }
+                            
+                            showSuccess('Account created! Redirecting to onboarding...');
                             setTimeout(() => {
-                                window.location.href = 'login.html';
+                                window.location.href = 'onboarding.html';
                             }, 2000);
                         } else {
                             // Password reset - redirect to reset password page

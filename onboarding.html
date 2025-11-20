@@ -752,6 +752,7 @@
         function completeOnboarding() {
             // Mark onboarding as completed
             localStorage.setItem('onboardingCompleted', 'true');
+            localStorage.removeItem('newUser'); // Clear new user flag
             
             // Check if this is a social auth signup
             const urlParams = new URLSearchParams(window.location.search);
@@ -760,20 +761,12 @@
             if (isSocialSignup) {
                 // Mark social signup as completed to prevent future redirects
                 localStorage.setItem('socialSignupCompleted', 'true');
-                // Don't mark profile as completed - let them complete it via the dashboard card
-                // localStorage.setItem('profileCompleted', 'true');
             }
             
-            // Check if profile is completed
-            const profileCompleted = localStorage.getItem('profileCompleted');
-            
-            if (profileCompleted === 'false' || !profileCompleted) {
-                // New user - go to dashboard (they'll see the completion prompt there)
-                window.location.href = 'dashboard.html';
-            } else {
-                // Returning user - go to post-registration
-                window.location.href = 'post-registration.html';
-            }
+            // Always redirect to dashboard after onboarding
+            // The red card system in dashboard will handle profile completion
+            console.log('✅ Onboarding completed, redirecting to dashboard...');
+            window.location.href = 'dashboard.html';
         }
     </script>
 </body>
