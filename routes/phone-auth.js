@@ -606,8 +606,12 @@ router.post('/verify-phone-signup', [
                 first_name: firstName,
                 last_name: lastName,
                 phone: phone,
+                phone_verified: true,
                 onboarding_completed: false,
                 profile_completed: false,
+                documents_verified: false,
+                employment_verified: false,
+                payment_setup: false,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             })

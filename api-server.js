@@ -36,6 +36,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const authRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
 const profileSetupRoutes = require('./routes/profile-setup');
+const profileCompletionRoutes = require('./routes/profile-completion');
 
 // Financial Routes
 const walletRoutes = require('./routes/wallet');
@@ -87,6 +88,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/profile-setup', profileSetupRoutes);
+app.use('/api/profile-completion', profileCompletionRoutes);
 
 // Financial Services
 app.use('/api/wallet', walletRoutes);
