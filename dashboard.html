@@ -3193,7 +3193,7 @@
                 <span id="theme-text">Dark Mode</span>
                 <i class="fas fa-moon" id="theme-icon"></i>
             </div>
-            <a href="login.html" class="logout-btn">
+            <a href="javascript:void(0)" class="logout-btn">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Logout</span>
             </a>
@@ -7049,13 +7049,23 @@ How it works:
             }
 
             async logout() {
+                console.log('🚪 Logging out...');
+                
+                // Always clear auth data first
+                this.clearAuth();
+                
+                // Try to notify the backend, but don't wait for it
                 try {
-                    await window.ZimCrowdAPI.request('/auth/logout', { method: 'POST' });
+                    await Promise.race([
+                        window.ZimCrowdAPI.logout(),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('Logout timeout')), 2000))
+                    ]);
+                    console.log('✅ Backend logout successful');
                 } catch (error) {
-                    console.error('Logout API error:', error);
+                    console.log('⚠️ Backend logout failed or timed out, but local auth cleared:', error.message);
                 }
                 
-                this.clearAuth();
+                // Always redirect to login
                 this.redirectToLogin();
             }
         }
