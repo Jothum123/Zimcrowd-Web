@@ -18,7 +18,7 @@ socialRouter.get('/google', async (req, res) => {
         // Use the current deployment URL for callback
         const baseUrl = process.env.VERCEL_URL 
             ? `https://${process.env.VERCEL_URL}` 
-            : 'https://zimcrowd-backend-8wzdvr8z4-jojola.vercel.app';
+            : 'https://zimcrowd-backend-1rk96yu9p-jojola.vercel.app';
         
         const redirectTo = `${baseUrl}/api/social-auth/callback`;
         
@@ -64,7 +64,7 @@ socialRouter.get('/facebook', async (req, res) => {
         // Use the current deployment URL for callback
         const baseUrl = process.env.VERCEL_URL 
             ? `https://${process.env.VERCEL_URL}` 
-            : 'https://zimcrowd-backend-8wzdvr8z4-jojola.vercel.app';
+            : 'https://zimcrowd-backend-1rk96yu9p-jojola.vercel.app';
         
         const redirectTo = `${baseUrl}/api/social-auth/callback`;
         
@@ -243,7 +243,7 @@ socialRouter.get('/callback', async (req, res) => {
             };
 
             // Redirect based on mode with social auth data
-            const frontendUrl = 'https://zimcrowd-backend-8wzdvr8z4-jojola.vercel.app';
+            const frontendUrl = 'https://zimcrowd-backend-1rk96yu9p-jojola.vercel.app';
             let redirectUrl;
             if (mode === 'signup') {
                 // New signup - go directly to dashboard (no onboarding)
