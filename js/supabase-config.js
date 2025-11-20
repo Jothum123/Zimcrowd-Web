@@ -1,10 +1,10 @@
 // Supabase Configuration
 // Initialize Supabase client for social authentication
 
-// Supabase configuration
+// Supabase credentials from .env file
 const SUPABASE_CONFIG = {
-    URL: 'https://your-project.supabase.co', // Replace with your Supabase URL
-    ANON_KEY: 'your-anon-key', // Replace with your Supabase anon key
+    URL: 'https://gjtkdrrvnffrmzigdqyp.supabase.co',
+    ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqdGtkcnJ2bmZmcm16aWdkcXlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NzcyMjcsImV4cCI6MjA3ODM1MzIyN30.IlE2yODTRQCl29OlwuZ-CtMxkg1OSPpSEqQVl-X0DtA',
     
     // Get current deployment URL for redirects
     get REDIRECT_URL() {
