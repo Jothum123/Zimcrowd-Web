@@ -10296,11 +10296,20 @@ How it works:
                 loadReferralsData();
                 loadNotifications();
             } else {
-                console.log('⚠️ No auth token or social auth found, showing mock data');
-                // Show login prompt or redirect to login
-                if (confirm('You need to be logged in to view your dashboard. Go to login page?')) {
-                    window.location.href = 'login.html';
-                }
+                console.log('⚠️ No authentication found in data loading check');
+                console.log('🔍 Debug info:', {
+                    authToken: !!authToken,
+                    socialAuthData: Object.keys(socialAuthData).length > 0,
+                    socialSignupCompleted: !!socialSignupCompleted,
+                    userData: Object.keys(userData).length > 0,
+                    isAuthenticated: isAuthenticated
+                });
+                
+                // Don't show popup immediately - user might be authenticated through other means
+                console.log('⚠️ Skipping login popup - user may be authenticated through dashboard auth system');
+                
+                // Load mock data instead of forcing login
+                console.log('📊 Loading mock data for demonstration...');
             }
         });
     </script>

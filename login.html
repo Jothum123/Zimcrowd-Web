@@ -558,6 +558,13 @@
                     // Store token and user data (using authToken key for dashboard compatibility)
                     localStorage.setItem('authToken', data.token);
                     localStorage.setItem('userData', JSON.stringify(data.user));
+                    localStorage.setItem('isAuthenticated', 'true');
+                    
+                    console.log('✅ Login successful - stored authentication data:', {
+                        hasToken: !!data.token,
+                        hasUserData: !!data.user,
+                        isAuthenticated: 'true'
+                    });
                     
                     // Show success message
                     showAlert('Login successful! Redirecting...', 'success');
