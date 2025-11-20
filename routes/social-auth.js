@@ -14,14 +14,26 @@ const socialRouter = express.Router();
 socialRouter.get('/google', async (req, res) => {
     try {
         const { mode = 'login' } = req.query; // 'login' or 'signup'
-        const redirectTo = mode === 'signup'
-            ? `https://www.zimcrowd.com/dashboard.html?mode=signup`
-            : `https://www.zimcrowd.com/dashboard.html`;
+        
+        // Use the current deployment URL for callback
+        const baseUrl = process.env.VERCEL_URL 
+            ? `https://${process.env.VERCEL_URL}` 
+            : 'https://zimcrowd-backend-8wzdvr8z4-jojola.vercel.app';
+        
+        const redirectTo = `${baseUrl}/api/social-auth/callback`;
+        
+        // Encode mode in state parameter
+        const state = Buffer.from(JSON.stringify({ mode })).toString('base64');
+
+        console.log('🔄 Initiating Google OAuth:', { mode, redirectTo, state });
 
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: redirectTo
+                redirectTo: redirectTo,
+                queryParams: {
+                    state: state
+                }
             }
         });
 
@@ -48,14 +60,26 @@ socialRouter.get('/google', async (req, res) => {
 socialRouter.get('/facebook', async (req, res) => {
     try {
         const { mode = 'login' } = req.query; // 'login' or 'signup'
-        const redirectTo = mode === 'signup'
-            ? `https://www.zimcrowd.com/dashboard.html?mode=signup`
-            : `https://www.zimcrowd.com/dashboard.html`;
+        
+        // Use the current deployment URL for callback
+        const baseUrl = process.env.VERCEL_URL 
+            ? `https://${process.env.VERCEL_URL}` 
+            : 'https://zimcrowd-backend-8wzdvr8z4-jojola.vercel.app';
+        
+        const redirectTo = `${baseUrl}/api/social-auth/callback`;
+        
+        // Encode mode in state parameter
+        const state = Buffer.from(JSON.stringify({ mode })).toString('base64');
+
+        console.log('🔄 Initiating Facebook OAuth:', { mode, redirectTo, state });
 
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'facebook',
             options: {
-                redirectTo: redirectTo
+                redirectTo: redirectTo,
+                queryParams: {
+                    state: state
+                }
             }
         });
 
@@ -81,18 +105,47 @@ socialRouter.get('/facebook', async (req, res) => {
 // OAuth callback handler
 socialRouter.get('/callback', async (req, res) => {
     try {
-        // Get the session from the URL hash or query params
-        const { data, error } = await supabase.auth.getSession();
+        console.log('🔄 Social auth callback received:', req.query);
+        
+        // Get the session from URL parameters (Supabase OAuth callback format)
+        const { code, state, error: authError } = req.query;
+        
+        if (authError) {
+            console.error('OAuth callback error:', authError);
+            return res.redirect('/login?error=oauth_failed');
+        }
+
+        if (!code) {
+            console.error('No authorization code received');
+            return res.redirect('/login?error=no_code');
+        }
+
+        // Exchange code for session
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (error) {
-            console.error('OAuth callback error:', error);
-            return res.redirect('/login?error=oauth_failed');
+            console.error('Code exchange error:', error);
+            return res.redirect('/login?error=exchange_failed');
         }
 
         if (data.session) {
             // User is authenticated, check if we need to create/update profile
             const user = data.session.user;
-            const { mode } = req.query; // Get mode from query params
+            
+            // Extract mode from state parameter or query params
+            let mode = 'login'; // default
+            try {
+                if (state) {
+                    const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+                    mode = stateData.mode || 'login';
+                } else if (req.query.mode) {
+                    mode = req.query.mode;
+                }
+            } catch (e) {
+                console.log('Could not parse state, using default mode');
+            }
+            
+            console.log('🔍 Social auth mode:', mode, 'for user:', user.email);
 
             // Check if profile exists
             const { data: existingProfile, error: profileError } = await supabase
@@ -149,9 +202,11 @@ socialRouter.get('/callback', async (req, res) => {
                     updated_at: new Date().toISOString()
             };
 
-            // If profile doesn't exist and this is a signup, create it
-            if (!existingProfile && mode === 'signup') {
-                console.log(`Creating profile for new social signup user: ${user.id}`);
+            // Create profile if it doesn't exist (for both signup and login)
+            if (!existingProfile) {
+                console.log(`Creating profile for social auth user: ${user.id} (mode: ${mode})`);
+                console.log('User metadata:', user.user_metadata);
+                console.log('App metadata:', user.app_metadata);
                 
                 const { error: insertError } = await supabase
                     .from('profiles')
@@ -161,14 +216,16 @@ socialRouter.get('/callback', async (req, res) => {
                     console.error('Profile creation error:', insertError);
                     // Continue anyway - profile can be created later
                 } else {
-                    console.log(`Profile created successfully for user: ${user.id} with provider: ${userDetails.auth_provider}`);
-                    console.log('Captured user details:', {
+                    console.log(`✅ Profile created successfully for user: ${user.id}`);
+                    console.log('📋 Profile details:', {
                         name: `${userDetails.first_name} ${userDetails.last_name}`,
                         email: userDetails.email,
                         provider: userDetails.auth_provider,
                         hasAvatar: !!userDetails.avatar_url
                     });
                 }
+            } else {
+                console.log(`✅ Profile already exists for user: ${user.id}`);
             }
 
             // Store social auth data for dashboard profile
@@ -186,14 +243,17 @@ socialRouter.get('/callback', async (req, res) => {
             };
 
             // Redirect based on mode with social auth data
+            const frontendUrl = 'https://zimcrowd-backend-8wzdvr8z4-jojola.vercel.app';
             let redirectUrl;
             if (mode === 'signup') {
                 // New signup - go directly to dashboard (no onboarding)
-                redirectUrl = '/dashboard.html?source=social&newUser=true';
+                redirectUrl = `${frontendUrl}/dashboard.html?source=social&newUser=true`;
             } else {
                 // Existing login - go to dashboard
-                redirectUrl = '/dashboard.html';
+                redirectUrl = `${frontendUrl}/dashboard.html`;
             }
+            
+            console.log('🔄 Redirecting to:', redirectUrl);
 
             // Send social auth data to frontend via localStorage script
             res.send(`
