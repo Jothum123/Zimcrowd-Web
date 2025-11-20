@@ -7024,9 +7024,24 @@ How it works:
                 this.token = null;
                 this.user = null;
                 this.isAuthenticated = false;
+                
+                // Clear all authentication data including social auth
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('userData');
                 localStorage.removeItem('isAuthenticated');
+                localStorage.removeItem('socialAuthData');
+                localStorage.removeItem('socialSignupCompleted');
+                localStorage.removeItem('auth_mode');
+                localStorage.removeItem('auth_provider');
+                
+                // Clear Supabase session if available
+                if (window.supabaseClient) {
+                    window.supabaseClient.auth.signOut().catch(err => {
+                        console.error('Error signing out from Supabase:', err);
+                    });
+                }
+                
+                console.log('✅ All authentication data cleared');
             }
 
             redirectToLogin() {
