@@ -649,28 +649,29 @@
             }
         }
 
-        // Check if already logged in
-        window.addEventListener('load', () => {
+        // Check if already logged in (Supabase approach)
+        window.addEventListener('load', async () => {
+            // Check for existing authentication
             const token = localStorage.getItem('authToken');
-            if (token) {
-                // Verify token is still valid
-                fetch(`${API_URL}/verify-token`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.valid) {
+            const socialAuthData = localStorage.getItem('socialAuthData');
+            const isAuthenticated = localStorage.getItem('isAuthenticated');
+            
+            if (token || socialAuthData || isAuthenticated === 'true') {
+                console.log('🔍 User appears to be already authenticated, redirecting to dashboard');
+                window.location.href = '/dashboard.html';
+            }
+            
+            // Also check Supabase session if client is available
+            if (window.supabaseClient) {
+                try {
+                    const { data: { session } } = await window.supabaseClient.auth.getSession();
+                    if (session) {
+                        console.log('✅ Active Supabase session found, redirecting to dashboard');
                         window.location.href = '/dashboard.html';
                     }
-                })
-                .catch(() => {
-                    // Token invalid, clear storage
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                });
+                } catch (error) {
+                    console.log('⚠️ Error checking Supabase session:', error);
+                }
             }
         });
     </script>
