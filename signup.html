@@ -7,6 +7,8 @@
     <link rel="icon" type="image/png" href="/favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
     <script src="js/api-config-new.js"></script>
     <script src="js/api-helper.js"></script>
     <script src="js/api-client.js"></script>
@@ -649,15 +651,65 @@
             }, 5000);
         }
 
-        // Social Signup Functions
-        function signupWithGoogle() {
-            showAlert('Redirecting to Google...', 'success');
-            window.location.href = API_CONFIG.getEndpoint('GOOGLE_AUTH') + '?mode=signup';
+        // Social Signup Functions (Following Supabase Guide)
+        async function signupWithGoogle() {
+            if (!window.supabaseClient) {
+                showAlert('Supabase client not initialized', 'error');
+                return;
+            }
+
+            try {
+                showAlert('Redirecting to Google...', 'success');
+                
+                // Store signup mode for dashboard to recognize
+                localStorage.setItem('auth_mode', 'signup');
+                localStorage.setItem('auth_provider', 'google');
+                
+                const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.SUPABASE_CONFIG.REDIRECT_URL + '?source=social&newUser=true'
+                    }
+                });
+
+                if (error) {
+                    console.error('Google OAuth error:', error);
+                    showAlert('Failed to initiate Google authentication', 'error');
+                }
+            } catch (err) {
+                console.error('Google signup error:', err);
+                showAlert('An error occurred during Google signup', 'error');
+            }
         }
 
-        function signupWithFacebook() {
-            showAlert('Redirecting to Facebook...', 'success');
-            window.location.href = API_CONFIG.getEndpoint('FACEBOOK_AUTH') + '?mode=signup';
+        async function signupWithFacebook() {
+            if (!window.supabaseClient) {
+                showAlert('Supabase client not initialized', 'error');
+                return;
+            }
+
+            try {
+                showAlert('Redirecting to Facebook...', 'success');
+                
+                // Store signup mode for dashboard to recognize
+                localStorage.setItem('auth_mode', 'signup');
+                localStorage.setItem('auth_provider', 'facebook');
+                
+                const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
+                    provider: 'facebook',
+                    options: {
+                        redirectTo: window.SUPABASE_CONFIG.REDIRECT_URL + '?source=social&newUser=true'
+                    }
+                });
+
+                if (error) {
+                    console.error('Facebook OAuth error:', error);
+                    showAlert('Failed to initiate Facebook authentication', 'error');
+                }
+            } catch (err) {
+                console.error('Facebook signup error:', err);
+                showAlert('An error occurred during Facebook signup', 'error');
+            }
         }
 
         // Handle signup form submission
