@@ -100,14 +100,22 @@ router.post('/register-email', [
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
         // Store OTP in database
-        const { error: otpError } = await supabase
+        console.log(`[Register Email] Generating OTP for ${normalizedEmail}: ${otp}`);
+        const { data: otpData, error: otpError } = await supabase
             .from('email_verifications')
             .insert({
                 email: normalizedEmail,
                 otp_code: otp,
                 purpose: 'signup',
-                expires_at: expiresAt.toISOString()
-            });
+                expires_at: expiresAt.toISOString(),
+                verified: false,
+                created_at: new Date().toISOString()
+            })
+            .select();
+        
+        if (otpData) {
+            console.log('[Register Email] OTP stored successfully in database:', otpData);
+        }
 
         if (otpError) {
             console.error('OTP storage error:', otpError);

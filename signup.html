@@ -858,9 +858,9 @@
                             localStorage.setItem('tempToken', data.tempToken);
                         }
                         
-                        // Redirect to email OTP verification
+                        // Redirect to email OTP verification (using verify-otp.html for OTP-based verification)
                         setTimeout(() => {
-                            window.location.href = `/verify-email.html?email=${encodeURIComponent(email)}&type=signup`;
+                            window.location.href = `/verify-otp.html?email=${encodeURIComponent(email)}&type=signup`;
                         }, 1500);
                     }
                 } else {

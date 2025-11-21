@@ -847,7 +847,8 @@
                     } else if (contactType === 'email' && verificationType === 'signup') {
                         // Email signup verification
                         const tempToken = localStorage.getItem('tempToken');
-                        response = await fetch('https://zimcrowd-backend.vercel.app/api/email-auth/verify-email-signup', {
+                        console.log('📧 Calling verifyEmailSignup with tempToken:', tempToken ? 'present' : 'missing');
+                        response = await fetch(`${window.API_CONFIG.BASE_URL}/api/email-auth/verify-email-signup`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -857,9 +858,10 @@
                                 otp: otp
                             })
                         }).then(res => res.json());
+                        console.log('✅ Email verification response:', response);
                     } else if (contactType === 'email' && verificationType === 'reset') {
                         // Email password reset verification
-                        response = await fetch('https://zimcrowd-backend.vercel.app/api/email-auth/verify-email-otp', {
+                        response = await fetch(`${window.API_CONFIG.BASE_URL}/api/email-auth/verify-email-otp`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
