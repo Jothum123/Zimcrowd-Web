@@ -791,6 +791,12 @@
                     };
                 }
                 
+                console.log('📤 Sending registration request:', {
+                    endpoint,
+                    method: 'POST',
+                    body: { ...requestBody, password: '***' }
+                });
+                
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
@@ -798,6 +804,8 @@
                     },
                     body: JSON.stringify(requestBody)
                 });
+                
+                console.log('📥 Response status:', response.status, response.statusText);
 
                 const data = await response.json();
 
@@ -851,6 +859,7 @@
                     }
                 } else {
                     // Handle specific error cases
+                    console.error('❌ Registration failed:', data);
                     if (data.code === 'PHONE_EXISTS' || data.code === 'EMAIL_EXISTS') {
                         showAlert(data.message + ' Would you like to login instead?');
                         // Optionally redirect to login after a delay
@@ -866,7 +875,7 @@
                     signupBtn.innerHTML = 'Create Account';
                 }
             } catch (error) {
-                console.error('Signup error:', error);
+                console.error('❌ Signup error:', error);
                 showAlert('An error occurred. Please try again.');
                 signupBtn.disabled = false;
                 signupBtn.innerHTML = 'Create Account';
