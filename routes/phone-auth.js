@@ -284,7 +284,7 @@ router.post('/smart-login', [
                 .eq('purpose', 'passwordless_login')
                 .eq('verified', false)
                 .gt('expires_at', new Date().toISOString())
-                .single();
+                .maybeSingle();
 
             if (verification && !verifyError) {
                 // Mark as verified
@@ -449,15 +449,20 @@ router.post('/register-phone', [
         let smsResult = { success: false, error: 'SMS not attempted' };
         try {
             const purpose = 'signup';
+            console.log(`[Register Phone] Sending SMS to ${formattedPhone} with OTP: ${otp}`);
             smsResult = await sendSMSOTP(formattedPhone, otp);
-            console.log('SMS result:', smsResult);
+            console.log(`[Register Phone] SMS send result:`, smsResult);
+            if (smsResult.success) {
+                console.log(`✅ [Register Phone] SMS sent successfully! User should receive OTP: ${otp}`);
+            }
         } catch (error) {
-            console.warn('SMS sending threw exception:', error.message, '- proceeding with database verification only');
+            console.warn('[Register Phone] SMS sending threw exception:', error.message, '- proceeding with database verification only');
             smsResult = { success: false, error: error.message };
         }
         
         if (!smsResult.success) {
-            console.log(`SMS failed for phone ${formattedPhone}:`, smsResult.error, '- but continuing with database verification');
+            console.log(`⚠️ [Register Phone] SMS failed for phone ${formattedPhone}:`, smsResult.error, '- but continuing with database verification');
+            console.log(`ℹ️ [Register Phone] User should check database for OTP: ${otp}`);
         }
         
         // Store user data temporarily (you might want to use Redis or similar)
@@ -526,6 +531,17 @@ router.post('/verify-phone-signup', [
         
         // Always use database verification for now
         console.log(`[Verify Signup] Using database verification for phone: ${phone}, OTP: ${otp}`);
+        
+        // First, check if any OTP exists for this phone (for debugging)
+        const { data: allOtps, error: debugError } = await supabase
+            .from('phone_verifications')
+            .select('otp_code, purpose, verified, expires_at, created_at')
+            .eq('phone_number', phone)
+            .order('created_at', { ascending: false })
+            .limit(5);
+        
+        console.log(`[Verify Signup] Recent OTPs for phone ${phone}:`, allOtps);
+        
         const { data: verification, error: verifyError } = await supabase
             .from('phone_verifications')
             .select('*')
@@ -534,12 +550,20 @@ router.post('/verify-phone-signup', [
             .eq('purpose', 'signup')
             .eq('verified', false)
             .gt('expires_at', new Date().toISOString())
-            .single();
+            .maybeSingle();
             
         console.log(`[Verify Signup] Database query result:`, { data: verification, error: verifyError });
             
-        if (verifyError || !verification) {
-            console.log(`[Verify Signup] Database verification failed:`, verifyError?.message || 'No matching verification found');
+        if (verifyError) {
+            console.log(`[Verify Signup] Database query error:`, verifyError);
+            return res.status(500).json({
+                success: false,
+                message: 'Verification failed. Please try again.'
+            });
+        }
+        
+        if (!verification) {
+            console.log(`[Verify Signup] No matching verification found. Possible reasons: wrong OTP, expired, or already used`);
             return res.status(400).json({
                 success: false,
                 message: 'Invalid or expired verification code'
@@ -712,9 +736,17 @@ router.post('/dev-verify-signup-no-limit', [
             .eq('purpose', 'signup')
             .eq('verified', false)
             .gt('expires_at', new Date().toISOString())
-            .single();
+            .maybeSingle();
             
-        if (verifyError || !verification) {
+        if (verifyError) {
+            console.log('[DEV VERIFY] Database error:', verifyError);
+            return res.status(500).json({
+                success: false,
+                message: 'Verification failed. Please try again.'
+            });
+        }
+        
+        if (!verification) {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid or expired verification code'
@@ -1101,9 +1133,16 @@ router.post('/verify-phone-otp', otpVerificationLimiter, [
                 .eq('purpose', purpose)
                 .eq('verified', false)
                 .gt('expires_at', new Date().toISOString())
-                .single();
+                .maybeSingle();
                 
-            if (verifyError || !verification) {
+            if (verifyError) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Verification failed. Please try again.'
+                });
+            }
+            
+            if (!verification) {
                 return res.status(400).json({
                     success: false,
                     message: 'Invalid or expired verification code'
@@ -1187,10 +1226,18 @@ router.post('/verify-reset-otp', [
             .eq('purpose', 'password_reset')
             .eq('verified', false)
             .gt('expires_at', new Date().toISOString())
-            .single();
+            .maybeSingle();
             
-        if (verifyError || !verification) {
-            console.log('[Verify Reset OTP] Database verification failed:', verifyError?.message || 'No matching verification found');
+        if (verifyError) {
+            console.log('[Verify Reset OTP] Database error:', verifyError);
+            return res.status(500).json({
+                success: false,
+                message: 'Verification failed. Please try again.'
+            });
+        }
+        
+        if (!verification) {
+            console.log('[Verify Reset OTP] No matching verification found');
             return res.status(400).json({
                 success: false,
                 message: 'Invalid or expired code'
@@ -1277,9 +1324,17 @@ router.post('/reset-password-phone', [
             .eq('purpose', 'password_reset')
             .eq('verified', true) // Already verified in previous step
             .gt('expires_at', new Date().toISOString())
-            .single();
+            .maybeSingle();
             
-        if (verifyError || !verification) {
+        if (verifyError) {
+            console.log('[Reset Password] Database error:', verifyError);
+            return res.status(500).json({
+                success: false,
+                message: 'Password reset failed. Please try again.'
+            });
+        }
+        
+        if (!verification) {
             console.log('[Reset Password] OTP not found or not verified');
             return res.status(400).json({
                 success: false,
@@ -1825,15 +1880,23 @@ router.post('/dev-debug-signup', async (req, res) => {
             .eq('purpose', 'signup')
             .eq('verified', false)
             .gt('expires_at', new Date().toISOString())
-            .single();
+            .maybeSingle();
             
         console.log('[DEBUG] OTP verification result:', { data: verification, error: verifyError });
         
-        if (verifyError || !verification) {
+        if (verifyError) {
+            return res.status(500).json({
+                success: false,
+                message: 'Database error',
+                debug: verifyError.message
+            });
+        }
+        
+        if (!verification) {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid or expired verification code',
-                debug: verifyError?.message || 'No matching verification found'
+                debug: 'No matching verification found'
             });
         }
         
@@ -1891,9 +1954,17 @@ router.post('/dev-simple-signup', async (req, res) => {
             .eq('purpose', 'signup')
             .eq('verified', false)
             .gt('expires_at', new Date().toISOString())
-            .single();
+            .maybeSingle();
             
-        if (verifyError || !verification) {
+        if (verifyError) {
+            console.log('[SIMPLE] Database error:', verifyError);
+            return res.status(500).json({
+                success: false,
+                message: 'Verification failed. Please try again.'
+            });
+        }
+        
+        if (!verification) {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid or expired verification code'
