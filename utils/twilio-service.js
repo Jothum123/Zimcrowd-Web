@@ -29,23 +29,24 @@ const sendSMSOTP = async (phoneNumber, otp) => {
             };
         }
 
-        // Use Twilio Verify API if Verify Service SID is available
-        if (process.env.TWILIO_VERIFY_SERVICE_SID) {
-            const verification = await client.verify.v2
-                .services(process.env.TWILIO_VERIFY_SERVICE_SID)
-                .verifications.create({
-                    to: phoneNumber,
-                    channel: 'sms'
-                });
-
-            console.log(`Verify SMS sent to ${phoneNumber}. SID: ${verification.sid}`);
-
-            return {
-                success: true,
-                verificationSid: verification.sid,
-                message: 'SMS sent successfully via Verify API'
-            };
-        }
+        // DISABLED: Twilio Verify API generates its own OTP which doesn't match our database
+        // We need to use Messaging Service to send our custom OTP
+        // if (process.env.TWILIO_VERIFY_SERVICE_SID) {
+        //     const verification = await client.verify.v2
+        //         .services(process.env.TWILIO_VERIFY_SERVICE_SID)
+        //         .verifications.create({
+        //             to: phoneNumber,
+        //             channel: 'sms'
+        //         });
+        //
+        //     console.log(`Verify SMS sent to ${phoneNumber}. SID: ${verification.sid}`);
+        //
+        //     return {
+        //         success: true,
+        //         verificationSid: verification.sid,
+        //         message: 'SMS sent successfully via Verify API'
+        //     };
+        // }
 
         // Fallback to Messaging Service SID
         if (process.env.TWILIO_MESSAGING_SERVICE_SID) {
