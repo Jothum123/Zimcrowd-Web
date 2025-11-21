@@ -766,20 +766,27 @@
                 // Choose appropriate endpoint based on registration method
                 let endpoint, requestBody;
                 
+                // Split fullName into firstName and lastName
+                const nameParts = fullName.trim().split(/\s+/);
+                const firstName = nameParts[0] || '';
+                const lastName = nameParts.slice(1).join(' ') || nameParts[0] || '';
+                
                 if (selectedMethod === 'phone') {
                     endpoint = `${API_CONFIG.BASE_URL}/api/phone-auth/register-phone`;
                     requestBody = {
+                        firstName,
+                        lastName,
                         phone,
                         password,
-                        fullName,
                         email: email || null
                     };
                 } else {
                     endpoint = `${API_CONFIG.BASE_URL}/api/email-auth/register-email`;
                     requestBody = {
+                        firstName,
+                        lastName,
                         email,
                         password,
-                        fullName,
                         phone: phone || null
                     };
                 }
