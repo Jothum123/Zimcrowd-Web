@@ -1,6 +1,6 @@
 // Phone-based authentication routes
 const express = require('express');
-console.log('[PHONE-AUTH] Module loaded');
+console.log('[PHONE-AUTH] Module loaded - VERSION 2.0 - OTP FIX DEPLOYED');
 const { body, validationResult } = require('express-validator');
 const rateLimit = require('express-rate-limit');
 
