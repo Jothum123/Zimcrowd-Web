@@ -5,7 +5,7 @@
 
 const API_BASE_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000'
-    : 'https://zimcrowd-backend-dinsjcwze-jojola.vercel.app';
+    : 'https://zimcrowd-backend.vercel.app';
 
 class PrimaryMarketApp {
     constructor() {
