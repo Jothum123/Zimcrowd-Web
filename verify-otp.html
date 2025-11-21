@@ -828,10 +828,18 @@
                     if (contactType === 'phone' && verificationType === 'signup') {
                         // Phone signup verification
                         console.log('📞 Calling verifyPhoneSignup with tempToken:', tempToken ? 'present' : 'missing');
-                        response = await window.ZimCrowdAPI.verifyPhoneSignup(
-                            tempToken,
-                            otp
-                        );
+                        
+                        if (!tempToken) {
+                            console.error('❌ No tempToken found! Trying alternative method with phone + OTP');
+                            // Fallback: try with phone and OTP directly
+                            response = await fetch(`${window.API_CONFIG.BASE_URL}/api/phone-auth/verify-phone-signup`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ phone: contactValue, otp })
+                            }).then(r => r.json());
+                        } else {
+                            response = await window.ZimCrowdAPI.verifyPhoneSignup(tempToken, otp);
+                        }
                         console.log('✅ Verification response:', response);
                     } else if (contactType === 'phone' && verificationType === 'reset') {
                         // Phone password reset verification

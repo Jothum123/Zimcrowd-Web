@@ -420,23 +420,30 @@ router.post('/register-phone', [
         const otp = generateOTP();
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
         
+        console.log(`[Register Phone] Generating OTP for ${formattedPhone}: ${otp}`);
+        
         // Store OTP in database
-        const { error: otpError } = await supabase
+        const { data: otpData, error: otpError } = await supabase
             .from('phone_verifications')
             .insert({
                 phone_number: formattedPhone,
                 otp_code: otp,
                 purpose: 'signup',
-                expires_at: expiresAt.toISOString()
-            });
+                expires_at: expiresAt.toISOString(),
+                verified: false,
+                created_at: new Date().toISOString()
+            })
+            .select();
             
         if (otpError) {
-            console.error('OTP storage error:', otpError);
+            console.error('[Register Phone] OTP storage error:', otpError);
             return res.status(500).json({
                 success: false,
                 message: 'Failed to generate verification code'
             });
         }
+        
+        console.log('[Register Phone] OTP stored successfully in database:', otpData);
         
         // Send SMS (don't fail if SMS fails - we use database verification as fallback)
         let smsResult = { success: false, error: 'SMS not attempted' };
