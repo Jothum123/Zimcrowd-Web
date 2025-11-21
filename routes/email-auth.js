@@ -228,21 +228,21 @@ router.post('/verify-email-signup', [
             .eq('id', verification.id);
 
         // Create user account with Supabase Auth
-        // IMPORTANT: We need to create user WITHOUT triggering Supabase's email confirmation
-        console.log('Creating user with email_confirm: false...');
+        // IMPORTANT: Mark email as confirmed since we already verified with OTP
+        console.log('Creating user with email_confirmed: true...');
 
         const { data: authData, error: authError } = await supabase.auth.admin.createUser({
             email: email,
             password: password,
+            email_confirm: true, // Mark email as already confirmed (we verified with OTP)
             user_metadata: {
                 first_name: firstName,
                 last_name: lastName,
                 country: country,
                 city: city,
                 signup_method: 'email_otp',
-                email_verified: true // Mark as verified since we verified with OTP
-            },
-            email_confirm: false // Don't send Supabase confirmation email
+                email_verified: true
+            }
         });
 
         console.log('Supabase createUser result:', { success: !authError, error: authError?.message });
