@@ -291,6 +291,18 @@ router.post('/verify-email-signup', [
             // Don't fail the whole process if profile update fails
         }
 
+        // Generate JWT token for authentication
+        const jwt = require('jsonwebtoken');
+        const token = jwt.sign(
+            { 
+                userId: authData.user.id,
+                email: email,
+                type: 'email'
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
         res.status(201).json({
             success: true,
             message: 'Account created successfully',
@@ -300,6 +312,11 @@ router.post('/verify-email-signup', [
                 firstName: firstName,
                 lastName: lastName,
                 verified: true
+            },
+            session: {
+                access_token: token,
+                token_type: 'bearer',
+                expires_in: 604800 // 7 days
             }
         });
 

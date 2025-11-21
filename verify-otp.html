@@ -896,8 +896,15 @@
                             if (response.user) {
                                 localStorage.setItem('userData', JSON.stringify(response.user));
                             }
-                            if (response.token) {
+                            // Store authentication token (check both formats)
+                            if (response.session && response.session.access_token) {
+                                localStorage.setItem('authToken', response.session.access_token);
+                                localStorage.setItem('isAuthenticated', 'true');
+                                console.log('✅ Auth token stored:', response.session.access_token.substring(0, 20) + '...');
+                            } else if (response.token) {
                                 localStorage.setItem('authToken', response.token);
+                                localStorage.setItem('isAuthenticated', 'true');
+                                console.log('✅ Auth token stored:', response.token.substring(0, 20) + '...');
                             }
                             
                             showSuccess('Account created! Redirecting to onboarding...');
