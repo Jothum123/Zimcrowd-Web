@@ -26,9 +26,17 @@ class ZimCrowdAPI {
             config.headers.Authorization = `Bearer ${this.token}`;
         }
 
+        // Log request details (excluding sensitive data)
+        const logBody = config.body ? JSON.parse(config.body) : null;
+        if (logBody && logBody.password) logBody.password = '***';
+        if (logBody && logBody.tempToken) logBody.tempToken = logBody.tempToken.substring(0, 20) + '...';
+        console.log(`🌐 API Request: ${config.method || 'GET'} ${endpoint}`, logBody);
+
         try {
             const response = await fetch(url, config);
             const data = await response.json();
+            
+            console.log(`📡 API Response: ${endpoint}`, { status: response.status, success: data.success });
 
             if (!response.ok) {
                 throw new Error(data.message || `HTTP error! status: ${response.status}`);

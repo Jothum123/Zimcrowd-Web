@@ -630,10 +630,11 @@
 
         // OTP Functionality
         document.addEventListener('DOMContentLoaded', function() {
-            // API Configuration
-            const API_URL = window.location.hostname === 'localhost'
-                ? 'http://localhost:3001/api'
-                : 'https://zimcrowd-backend.vercel.app/api';
+            // API Configuration - use centralized config
+            const API_URL = window.API_CONFIG ? window.API_CONFIG.BASE_URL + '/api' : 
+                (window.location.hostname === 'localhost'
+                    ? 'http://localhost:3001/api'
+                    : 'https://zimcrowd-backend.vercel.app/api');
 
             // Utility functions for messages
             function showError(message) {
@@ -813,12 +814,25 @@
                 try {
                     // Use ZimCrowdAPI client for OTP verification
                     let response;
+                    const tempToken = localStorage.getItem('tempToken');
+                    
+                    console.log('🔐 Verification attempt:', {
+                        contactType,
+                        verificationType,
+                        contactValue,
+                        otp,
+                        hasTempToken: !!tempToken,
+                        tempToken: tempToken ? tempToken.substring(0, 20) + '...' : 'null'
+                    });
+                    
                     if (contactType === 'phone' && verificationType === 'signup') {
                         // Phone signup verification
+                        console.log('📞 Calling verifyPhoneSignup with tempToken:', tempToken ? 'present' : 'missing');
                         response = await window.ZimCrowdAPI.verifyPhoneSignup(
-                            localStorage.getItem('tempToken'),
+                            tempToken,
                             otp
                         );
+                        console.log('✅ Verification response:', response);
                     } else if (contactType === 'phone' && verificationType === 'reset') {
                         // Phone password reset verification
                         response = await window.ZimCrowdAPI.verifyPhoneOTP(contactValue, otp);
@@ -906,11 +920,25 @@
                     }
                 } catch (error) {
                     console.error('OTP verification error:', error);
-                    errorMessage.textContent = error.message || 'Network error. Please try again.';
+                    
+                    // Provide helpful error messages
+                    let errorMsg = error.message || 'Network error. Please try again.';
+                    if (errorMsg.includes('Invalid or expired')) {
+                        errorMsg = 'This code has expired or is invalid. Please click "Resend Code" to get a new one.';
+                    }
+                    
+                    errorMessage.textContent = errorMsg;
                     errorMessage.classList.add('show');
                     verifyBtn.disabled = false;
                     verifyText.style.display = 'inline';
                     verifySpinner.style.display = 'none';
+                    
+                    // Clear inputs
+                    otpInputs.forEach(input => {
+                        input.value = '';
+                        input.classList.remove('filled');
+                    });
+                    otpInputs[0].focus();
                 }
             });
 
