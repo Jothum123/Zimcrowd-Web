@@ -967,6 +967,60 @@ router.post('/request-reset-otp', [
     }
 });
 
+// Alias: /verify-reset-otp - Verify password reset OTP
+router.post('/verify-reset-otp', [
+    body('email')
+        .isEmail()
+        .normalizeEmail()
+        .withMessage('Please provide a valid email address'),
+    body('otp')
+        .isLength({ min: 6, max: 6 })
+        .isNumeric()
+        .withMessage('OTP must be 6 digits'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        const normalizedEmail = email.toLowerCase();
+
+        // Verify OTP from database
+        const { data: verification, error: verifyError } = await supabase
+            .from('email_verifications')
+            .select('*')
+            .eq('email', normalizedEmail)
+            .eq('otp_code', otp)
+            .eq('purpose', 'password_reset')
+            .eq('verified', false)
+            .gt('expires_at', new Date().toISOString())
+            .single();
+
+        if (verifyError || !verification) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired reset code'
+            });
+        }
+
+        // Mark OTP as verified
+        await supabase
+            .from('email_verifications')
+            .update({ verified: true })
+            .eq('id', verification.id);
+
+        res.status(200).json({
+            success: true,
+            message: 'OTP verified successfully. You can now reset your password.'
+        });
+
+    } catch (error) {
+        console.error('Email OTP verification error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'OTP verification failed. Please try again.'
+        });
+    }
+});
+
 // Alias: /reset-password → /reset-password-email
 router.post('/reset-password', [
     body('email')
