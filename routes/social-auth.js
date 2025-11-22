@@ -160,6 +160,7 @@ socialRouter.get('/callback', async (req, res) => {
 
             // Extract comprehensive user details from social provider (for all users)
             const userDetails = {
+                    id: user.id,
                     first_name: user.user_metadata?.first_name || 
                               user.user_metadata?.given_name || 
                               user.user_metadata?.full_name?.split(' ')[0] || 
@@ -176,56 +177,33 @@ socialRouter.get('/callback', async (req, res) => {
                           user.user_metadata?.phone_number || 
                           user.user_metadata?.mobile || null,
                     
-                    avatar_url: user.user_metadata?.avatar_url || 
-                              user.user_metadata?.picture || 
-                              user.user_metadata?.profile_picture || 
-                              user.user_metadata?.image_url || null,
+                    role: 'user',
+                    onboarding_completed: existingProfile?.onboarding_completed || false,
+                    profile_completed: existingProfile?.profile_completed || false,
                     
-                    auth_provider: user.app_metadata?.provider || 'unknown',
-                    
-                    // Additional social profile data
-                    social_id: user.user_metadata?.sub || 
-                             user.user_metadata?.id || 
-                             user.user_metadata?.user_id || null,
-                    
-                    social_profile_url: user.user_metadata?.profile || 
-                                      user.user_metadata?.link || 
-                                      user.user_metadata?.url || null,
-                    
-                    // Basic profile completion status
-                    profile_completed: false, // Will be set to true after comprehensive registration
-                    documents_verified: false,
-                    employment_verified: false,
-                    payment_setup: false,
-                    
-                    created_at: new Date().toISOString(),
+                    created_at: existingProfile?.created_at || new Date().toISOString(),
                     updated_at: new Date().toISOString()
             };
 
-            // Create profile if it doesn't exist (for both signup and login)
-            if (!existingProfile) {
-                console.log(`Creating profile for social auth user: ${user.id} (mode: ${mode})`);
-                console.log('User metadata:', user.user_metadata);
-                console.log('App metadata:', user.app_metadata);
-                
-                const { error: insertError } = await supabase
-                    .from('profiles')
-                    .insert(userDetails);
+            // Upsert profile (create or update with fresh social data)
+            console.log(`${existingProfile ? 'Updating' : 'Creating'} profile for social auth user: ${user.id} (mode: ${mode})`);
+            console.log('User metadata:', user.user_metadata);
+            console.log('App metadata:', user.app_metadata);
+            
+            const { error: upsertError } = await supabase
+                .from('profiles')
+                .upsert(userDetails, { onConflict: 'id' });
 
-                if (insertError) {
-                    console.error('Profile creation error:', insertError);
-                    // Continue anyway - profile can be created later
-                } else {
-                    console.log(`✅ Profile created successfully for user: ${user.id}`);
-                    console.log('📋 Profile details:', {
-                        name: `${userDetails.first_name} ${userDetails.last_name}`,
-                        email: userDetails.email,
-                        provider: userDetails.auth_provider,
-                        hasAvatar: !!userDetails.avatar_url
-                    });
-                }
+            if (upsertError) {
+                console.error('Profile upsert error:', upsertError);
+                // Continue anyway - profile can be created later
             } else {
-                console.log(`✅ Profile already exists for user: ${user.id}`);
+                console.log(`✅ Profile ${existingProfile ? 'updated' : 'created'} successfully for user: ${user.id}`);
+                console.log('📋 Profile details:', {
+                    name: `${userDetails.first_name} ${userDetails.last_name}`,
+                    email: userDetails.email,
+                    provider: user.app_metadata?.provider
+                });
             }
 
             // Store social auth data for dashboard profile
