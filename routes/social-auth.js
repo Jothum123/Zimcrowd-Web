@@ -32,8 +32,11 @@ socialRouter.get('/google', async (req, res) => {
             options: {
                 redirectTo: redirectTo,
                 queryParams: {
-                    state: state
-                }
+                    state: state,
+                    access_type: 'offline',
+                    prompt: 'consent'
+                },
+                scopes: 'email profile' // Request email and profile info
             }
         });
 
@@ -79,7 +82,8 @@ socialRouter.get('/facebook', async (req, res) => {
                 redirectTo: redirectTo,
                 queryParams: {
                     state: state
-                }
+                },
+                scopes: 'email public_profile' // Request email and public profile info
             }
         });
 
@@ -158,30 +162,42 @@ socialRouter.get('/callback', async (req, res) => {
                 console.error('Profile check error:', profileError);
             }
 
+            // Log raw metadata for debugging
+            console.log('📦 Raw user metadata from provider:', JSON.stringify(user.user_metadata, null, 2));
+            console.log('📦 Raw app metadata:', JSON.stringify(user.app_metadata, null, 2));
+            
             // Extract comprehensive user details from social provider (for all users)
+            // Try multiple field names that different providers use
             const firstName = user.user_metadata?.first_name || 
                               user.user_metadata?.given_name || 
                               user.user_metadata?.full_name?.split(' ')[0] || 
-                              user.user_metadata?.name?.split(' ')[0] || '';
+                              user.user_metadata?.name?.split(' ')[0] || 
+                              user.email?.split('@')[0] || // Fallback to email username
+                              '';
             
             const lastName = user.user_metadata?.last_name || 
                              user.user_metadata?.family_name || 
                              user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || 
-                             user.user_metadata?.name?.split(' ').slice(1).join(' ') || '';
+                             user.user_metadata?.name?.split(' ').slice(1).join(' ') || 
+                             '';
             
             const avatarUrl = user.user_metadata?.avatar_url || 
                               user.user_metadata?.picture || 
                               user.user_metadata?.profile_picture || 
-                              user.user_metadata?.image_url || null;
+                              user.user_metadata?.image_url || 
+                              user.user_metadata?.photo || 
+                              null;
             
             const authProvider = user.app_metadata?.provider || 'unknown';
             
             console.log('🔍 Extracted social profile data:', {
                 firstName,
                 lastName,
+                fullName: `${firstName} ${lastName}`.trim(),
                 email: user.email,
                 avatarUrl,
-                provider: authProvider
+                provider: authProvider,
+                hasName: !!(firstName || lastName)
             });
             
             const userDetails = {
