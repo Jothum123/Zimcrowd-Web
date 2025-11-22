@@ -159,28 +159,42 @@ socialRouter.get('/callback', async (req, res) => {
             }
 
             // Extract comprehensive user details from social provider (for all users)
-            const userDetails = {
-                    id: user.id,
-                    first_name: user.user_metadata?.first_name || 
+            const firstName = user.user_metadata?.first_name || 
                               user.user_metadata?.given_name || 
                               user.user_metadata?.full_name?.split(' ')[0] || 
-                              user.user_metadata?.name?.split(' ')[0] || '',
-                    
-                    last_name: user.user_metadata?.last_name || 
+                              user.user_metadata?.name?.split(' ')[0] || '';
+            
+            const lastName = user.user_metadata?.last_name || 
                              user.user_metadata?.family_name || 
                              user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || 
-                             user.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
-                    
+                             user.user_metadata?.name?.split(' ').slice(1).join(' ') || '';
+            
+            const avatarUrl = user.user_metadata?.avatar_url || 
+                              user.user_metadata?.picture || 
+                              user.user_metadata?.profile_picture || 
+                              user.user_metadata?.image_url || null;
+            
+            const authProvider = user.app_metadata?.provider || 'unknown';
+            
+            console.log('🔍 Extracted social profile data:', {
+                firstName,
+                lastName,
+                email: user.email,
+                avatarUrl,
+                provider: authProvider
+            });
+            
+            const userDetails = {
+                    id: user.id,
+                    first_name: firstName,
+                    last_name: lastName,
                     email: user.email || user.user_metadata?.email,
-                    
                     phone: user.user_metadata?.phone || 
                           user.user_metadata?.phone_number || 
                           user.user_metadata?.mobile || null,
-                    
                     role: 'user',
                     onboarding_completed: existingProfile?.onboarding_completed || false,
                     profile_completed: existingProfile?.profile_completed || false,
-                    
                     created_at: existingProfile?.created_at || new Date().toISOString(),
                     updated_at: new Date().toISOString()
             };
@@ -208,17 +222,19 @@ socialRouter.get('/callback', async (req, res) => {
 
             // Store social auth data for dashboard profile
             const socialAuthData = {
-                provider: user.app_metadata?.provider || 'unknown',
-                first_name: userDetails.first_name,
-                last_name: userDetails.last_name,
+                provider: authProvider,
+                first_name: firstName,
+                last_name: lastName,
                 email: userDetails.email,
                 phone: userDetails.phone,
-                avatar_url: userDetails.avatar_url,
-                auth_provider: userDetails.auth_provider,
+                avatar_url: avatarUrl,
+                auth_provider: authProvider,
                 social_id: user.id,
                 created_at: userDetails.created_at,
                 updated_at: userDetails.updated_at
             };
+            
+            console.log('📦 Social auth data being sent to frontend:', socialAuthData);
 
             // Redirect based on mode with social auth data
             const frontendUrl = 'https://zimcrowd-backend-1rk96yu9p-jojola.vercel.app';
