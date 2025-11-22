@@ -1383,16 +1383,37 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
                     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqdGtkcnJ2bmZmcm16aWdkcXlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI2MTkzMjAsImV4cCI6MjA0ODE5NTMyMH0.Wh_qlVPJzlSvOgN-_kNh7RKoGBqNFrqxjAe6dOa9Xqc';
                     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
                     
-                    // Set the session manually
-                    const { data: { user }, error: userError } = await supabase.auth.getUser(accessToken);
+                    // Set the session with the tokens from URL
+                    const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+                        access_token: accessToken,
+                        refresh_token: refreshToken
+                    });
                     
-                    if (userError || !user) {
-                        console.error('❌ Failed to get user:', userError);
-                        window.location.href = '/login.html?error=auth_failed';
-                        return;
+                    if (sessionError || !sessionData.user) {
+                        console.error('❌ Failed to set session:', sessionError);
+                        // Try to decode JWT token manually as fallback
+                        try {
+                            const tokenParts = accessToken.split('.');
+                            const payload = JSON.parse(atob(tokenParts[1]));
+                            console.log('📦 JWT payload:', payload);
+                            
+                            // Use JWT payload data
+                            var user = {
+                                id: payload.sub,
+                                email: payload.email,
+                                user_metadata: payload.user_metadata || {},
+                                app_metadata: payload.app_metadata || {}
+                            };
+                            console.log('✅ User data from JWT:', user.email);
+                        } catch (jwtError) {
+                            console.error('❌ Failed to decode JWT:', jwtError);
+                            window.location.href = '/login.html?error=auth_failed';
+                            return;
+                        }
+                    } else {
+                        var user = sessionData.user;
+                        console.log('✅ User authenticated via session:', user.email);
                     }
-                    
-                    console.log('✅ User authenticated:', user.email);
                     
                     // Extract user data from OAuth provider
                     const firstName = user.user_metadata?.first_name || 
