@@ -652,65 +652,17 @@
             }, 5000);
         }
 
-        // Social Signup Functions (Following Supabase Guide)
-        async function signupWithGoogle() {
-            if (!window.supabaseClient) {
-                showAlert('Supabase client not initialized', 'error');
-                return;
-            }
-
-            try {
-                showAlert('Redirecting to Google...', 'success');
-                
-                // Store signup mode for dashboard to recognize
-                localStorage.setItem('auth_mode', 'signup');
-                localStorage.setItem('auth_provider', 'google');
-                
-                const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: {
-                        redirectTo: window.SUPABASE_CONFIG.REDIRECT_URL + '?source=social&newUser=true'
-                    }
-                });
-
-                if (error) {
-                    console.error('Google OAuth error:', error);
-                    showAlert('Failed to initiate Google authentication', 'error');
-                }
-            } catch (err) {
-                console.error('Google signup error:', err);
-                showAlert('An error occurred during Google signup', 'error');
-            }
+        // Social Signup Functions - Use backend API
+        function signupWithGoogle() {
+            showAlert('Redirecting to Google...', 'success');
+            // Redirect to backend API with signup mode
+            window.location.href = 'https://zimcrowd-backend.vercel.app/api/social-auth/google?mode=signup';
         }
 
-        async function signupWithFacebook() {
-            if (!window.supabaseClient) {
-                showAlert('Supabase client not initialized', 'error');
-                return;
-            }
-
-            try {
-                showAlert('Redirecting to Facebook...', 'success');
-                
-                // Store signup mode for dashboard to recognize
-                localStorage.setItem('auth_mode', 'signup');
-                localStorage.setItem('auth_provider', 'facebook');
-                
-                const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
-                    provider: 'facebook',
-                    options: {
-                        redirectTo: window.SUPABASE_CONFIG.REDIRECT_URL + '?source=social&newUser=true'
-                    }
-                });
-
-                if (error) {
-                    console.error('Facebook OAuth error:', error);
-                    showAlert('Failed to initiate Facebook authentication', 'error');
-                }
-            } catch (err) {
-                console.error('Facebook signup error:', err);
-                showAlert('An error occurred during Facebook signup', 'error');
-            }
+        function signupWithFacebook() {
+            showAlert('Redirecting to Facebook...', 'success');
+            // Redirect to backend API with signup mode
+            window.location.href = 'https://zimcrowd-backend.vercel.app/api/social-auth/facebook?mode=signup';
         }
 
         // Handle signup form submission
