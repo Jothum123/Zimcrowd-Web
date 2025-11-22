@@ -2,11 +2,21 @@
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 
+// Validate environment variables
+if (!process.env.SUPABASE_URL) {
+    console.error('❌ SUPABASE_URL is not set in environment variables');
+}
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.SUPABASE_ANON_KEY) {
+    console.error('❌ SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY is not set');
+}
+
 // Create Supabase client directly
 const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
 );
+
+console.log('✅ Social auth initialized with Supabase URL:', process.env.SUPABASE_URL?.substring(0, 30) + '...');
 
 const socialRouter = express.Router();
 
@@ -14,6 +24,16 @@ const socialRouter = express.Router();
 socialRouter.get('/google', async (req, res) => {
     try {
         const { mode = 'login' } = req.query; // 'login' or 'signup'
+        
+        // Check if Supabase is configured
+        if (!process.env.SUPABASE_URL || (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.SUPABASE_ANON_KEY)) {
+            console.error('❌ Supabase not configured for social auth');
+            return res.status(500).json({
+                success: false,
+                message: 'Social authentication is not configured. Please contact support.',
+                error: 'Missing Supabase credentials'
+            });
+        }
         
         // Use the current deployment URL for callback (production-ready)
         const baseUrl = process.env.VERCEL_URL 
@@ -41,13 +61,24 @@ socialRouter.get('/google', async (req, res) => {
         });
 
         if (error) {
-            console.error('Google OAuth error:', error);
+            console.error('❌ Google OAuth error:', error);
             return res.status(500).json({
                 success: false,
-                message: 'Failed to initiate Google authentication'
+                message: 'Failed to initiate Google authentication',
+                error: error.message
             });
         }
 
+        if (!data || !data.url) {
+            console.error('❌ No OAuth URL returned from Supabase');
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to get OAuth URL',
+                error: 'No URL returned'
+            });
+        }
+
+        console.log('✅ Redirecting to Google OAuth URL');
         // Redirect to OAuth provider
         res.redirect(data.url);
     } catch (error) {
@@ -63,6 +94,16 @@ socialRouter.get('/google', async (req, res) => {
 socialRouter.get('/facebook', async (req, res) => {
     try {
         const { mode = 'login' } = req.query; // 'login' or 'signup'
+        
+        // Check if Supabase is configured
+        if (!process.env.SUPABASE_URL || (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.SUPABASE_ANON_KEY)) {
+            console.error('❌ Supabase not configured for social auth');
+            return res.status(500).json({
+                success: false,
+                message: 'Social authentication is not configured. Please contact support.',
+                error: 'Missing Supabase credentials'
+            });
+        }
         
         // Use the current deployment URL for callback (production-ready)
         const baseUrl = process.env.VERCEL_URL 
@@ -88,13 +129,24 @@ socialRouter.get('/facebook', async (req, res) => {
         });
 
         if (error) {
-            console.error('Facebook OAuth error:', error);
+            console.error('❌ Facebook OAuth error:', error);
             return res.status(500).json({
                 success: false,
-                message: 'Failed to initiate Facebook authentication'
+                message: 'Failed to initiate Facebook authentication',
+                error: error.message
             });
         }
 
+        if (!data || !data.url) {
+            console.error('❌ No OAuth URL returned from Supabase');
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to get OAuth URL',
+                error: 'No URL returned'
+            });
+        }
+
+        console.log('✅ Redirecting to Facebook OAuth URL');
         // Redirect to OAuth provider
         res.redirect(data.url);
     } catch (error) {
