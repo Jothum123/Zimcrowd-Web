@@ -886,7 +886,9 @@ router.post('/google-auth-callback', [
     }
 });
 
-// Route alias: /request-reset-otp → /forgot-password-email (for frontend compatibility)
+// Route aliases for frontend compatibility
+
+// Alias: /request-reset-otp → /forgot-password-email
 router.post('/request-reset-otp', [
     body('email')
         .isEmail()
@@ -961,6 +963,94 @@ router.post('/request-reset-otp', [
         res.status(500).json({
             success: false,
             message: 'Reset request failed. Please try again.'
+        });
+    }
+});
+
+// Alias: /reset-password → /reset-password-email
+router.post('/reset-password', [
+    body('email')
+        .isEmail()
+        .normalizeEmail()
+        .withMessage('Please provide a valid email address'),
+    body('otp')
+        .isLength({ min: 6, max: 6 })
+        .isNumeric()
+        .withMessage('OTP must be 6 digits'),
+    body('newPassword')
+        .isLength({ min: 8 })
+        .withMessage('Password must be at least 8 characters long')
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+        .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+
+        const normalizedEmail = email.toLowerCase();
+
+        // Find user by email
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', normalizedEmail)
+            .single();
+
+        if (!profile) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid reset request'
+            });
+        }
+
+        // Verify OTP from database
+        const { data: verification, error: verifyError } = await supabase
+            .from('email_verifications')
+            .select('*')
+            .eq('email', normalizedEmail)
+            .eq('otp_code', otp)
+            .eq('purpose', 'password_reset')
+            .eq('verified', false)
+            .gt('expires_at', new Date().toISOString())
+            .single();
+
+        if (verifyError || !verification) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired reset code'
+            });
+        }
+
+        // Mark OTP as verified
+        await supabase
+            .from('email_verifications')
+            .update({ verified: true })
+            .eq('id', verification.id);
+
+        // Update password in Supabase Auth
+        const { error: updateError } = await supabase.auth.admin.updateUserById(
+            profile.id,
+            { password: newPassword }
+        );
+
+        if (updateError) {
+            console.error('Password update error:', updateError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to update password'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Password reset successfully'
+        });
+
+    } catch (error) {
+        console.error('Email password reset verification error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Password reset failed. Please try again.'
         });
     }
 });

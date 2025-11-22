@@ -2056,7 +2056,9 @@ router.post('/dev-simple-signup', async (req, res) => {
     }
 });
 
-// Route alias: /request-reset-otp → /forgot-password-phone (for frontend compatibility)
+// Route aliases for frontend compatibility
+
+// Alias: /request-reset-otp → /forgot-password-phone
 router.post('/request-reset-otp', [
     body('phone')
         .custom((value) => {
@@ -2137,6 +2139,108 @@ router.post('/request-reset-otp', [
         res.status(500).json({
             success: false,
             message: 'Reset request failed. Please try again.'
+        });
+    }
+});
+
+// Alias: /reset-password → /reset-password-phone
+router.post('/reset-password', [
+    body('phone')
+        .custom((value) => {
+            const validation = isValidPhoneNumber(value);
+            if (!validation.isValid) {
+                throw new Error('Please provide a valid phone number');
+            }
+            return true;
+        }),
+    body('otp')
+        .isLength({ min: 6, max: 6 })
+        .isNumeric()
+        .withMessage('OTP must be 6 digits'),
+    body('newPassword')
+        .isLength({ min: 8 })
+        .withMessage('Password must be at least 8 characters long')
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+        .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { phone, otp, newPassword } = req.body;
+        
+        // Validate and format phone number
+        const phoneValidation = isValidPhoneNumber(phone);
+        const formattedPhone = phoneValidation.formatted;
+        
+        // Find user by phone number
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('phone', formattedPhone)
+            .single();
+            
+        if (!profile) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid reset request'
+            });
+        }
+        
+        // Verify OTP - check if it was already verified in previous step
+        console.log(`[Reset Password] Checking OTP for phone: ${formattedPhone}`);
+        
+        // Check database for verified OTP (from previous verification step)
+        const { data: verification, error: verifyError } = await supabase
+            .from('phone_verifications')
+            .select('*')
+            .eq('phone_number', formattedPhone)
+            .eq('otp_code', otp)
+            .eq('purpose', 'password_reset')
+            .eq('verified', true) // Already verified in previous step
+            .gt('expires_at', new Date().toISOString())
+            .maybeSingle();
+            
+        if (verifyError) {
+            console.log('[Reset Password] Database error:', verifyError);
+            return res.status(500).json({
+                success: false,
+                message: 'Password reset failed. Please try again.'
+            });
+        }
+        
+        if (!verification) {
+            console.log('[Reset Password] OTP not found or not verified');
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired reset code. Please start the reset process again.'
+            });
+        }
+        
+        console.log('[Reset Password] OTP verified successfully');
+        
+        // Update password in Supabase Auth
+        const { error: updateError } = await supabase.auth.admin.updateUserById(
+            profile.id,
+            { password: newPassword }
+        );
+        
+        if (updateError) {
+            console.error('Password update error:', updateError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to update password'
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: 'Password reset successfully'
+        });
+        
+    } catch (error) {
+        console.error('Phone password reset verification error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Password reset failed. Please try again.'
         });
     }
 });
