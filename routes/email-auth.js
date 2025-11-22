@@ -266,22 +266,19 @@ router.post('/verify-email-signup', [
             });
         }
 
-        // Update profile with email verification status
+        // Update profile with email verification status (only use columns that exist)
         const { error: profileError } = await supabase
             .from('profiles')
             .upsert({
                 id: authData.user.id,
                 email: email,
-                email_verified: true,
                 first_name: firstName,
                 last_name: lastName,
                 country: country,
                 city: city,
                 onboarding_completed: false,
                 profile_completed: false,
-                documents_verified: false,
-                employment_verified: false,
-                payment_setup: false,
+                role: 'user',
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             });

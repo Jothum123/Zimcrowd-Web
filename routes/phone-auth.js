@@ -629,7 +629,7 @@ router.post('/verify-phone-signup', [
         const userId = authUser.user.id;
         console.log('[Phone Signup] Auth user created:', userId);
         
-        // Create profile in database (skip password hashing for now)
+        // Create profile in database (only use columns that exist in schema)
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .insert({
@@ -637,12 +637,9 @@ router.post('/verify-phone-signup', [
                 first_name: firstName,
                 last_name: lastName,
                 phone: phone,
-                phone_verified: true,
                 onboarding_completed: false,
                 profile_completed: false,
-                documents_verified: false,
-                employment_verified: false,
-                payment_setup: false,
+                role: 'user',
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             })
