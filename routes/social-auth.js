@@ -254,8 +254,8 @@ socialRouter.get('/callback', async (req, res) => {
             console.log('📦 Social auth data being sent to frontend:', socialAuthData);
 
             // Redirect based on mode with social auth data
-            // Frontend is on GitHub Pages, backend is on Vercel
-            const frontendUrl = process.env.FRONTEND_URL || 'https://jothum123.github.io/Zimcrowd-Web';
+            // Frontend is on GitHub Pages with custom domain, backend is on Vercel
+            const frontendUrl = process.env.FRONTEND_URL || 'https://zimcrowd.com';
             let redirectUrl;
             if (mode === 'signup') {
                 // New signup - go directly to dashboard (no onboarding)

@@ -8,8 +8,7 @@
 └─────────────────────────────────────────────────────────────┘
 
 Frontend (GitHub Pages)                Backend (Vercel)
-https://jothum123.github.io/           https://zimcrowd-backend.vercel.app
-Zimcrowd-Web/                          
+https://zimcrowd.com                   https://zimcrowd-backend.vercel.app                          
                                        
 ├── signup.html                        ├── /api/phone-auth/*
 ├── login.html                         ├── /api/email-auth/*
@@ -24,11 +23,11 @@ Zimcrowd-Web/
 
 ## 🔗 URL Structure
 
-### Frontend URLs (GitHub Pages):
-- **Signup:** `https://jothum123.github.io/Zimcrowd-Web/signup.html`
-- **Login:** `https://jothum123.github.io/Zimcrowd-Web/login.html`
-- **Dashboard:** `https://jothum123.github.io/Zimcrowd-Web/dashboard.html`
-- **Onboarding:** `https://jothum123.github.io/Zimcrowd-Web/onboarding.html`
+### Frontend URLs (GitHub Pages with Custom Domain):
+- **Signup:** `https://zimcrowd.com/signup.html`
+- **Login:** `https://zimcrowd.com/login.html`
+- **Dashboard:** `https://zimcrowd.com/dashboard.html`
+- **Onboarding:** `https://zimcrowd.com/onboarding.html`
 
 ### Backend URLs (Vercel):
 - **Base API:** `https://zimcrowd-backend.vercel.app/api`
@@ -40,8 +39,8 @@ Zimcrowd-Web/
 
 ### Phone/Email Registration:
 ```
-User visits GitHub Pages:
-https://jothum123.github.io/Zimcrowd-Web/signup.html
+User visits:
+https://zimcrowd.com/signup.html
                 ↓
 Frontend detects it's NOT localhost
 Uses API_CONFIG.PRODUCTION_URL
@@ -51,8 +50,8 @@ https://zimcrowd-backend.vercel.app/api/phone-auth/register-phone
                 ↓
 Backend sends OTP via Twilio/SendGrid
                 ↓
-User enters OTP on GitHub Pages:
-https://jothum123.github.io/Zimcrowd-Web/verify-otp.html
+User enters OTP:
+https://zimcrowd.com/verify-otp.html
                 ↓
 POST to Vercel Backend:
 https://zimcrowd-backend.vercel.app/api/phone-auth/verify-phone-signup
@@ -60,16 +59,16 @@ https://zimcrowd-backend.vercel.app/api/phone-auth/verify-phone-signup
 Backend creates profile, returns JWT + user data
                 ↓
 Frontend stores in localStorage, redirects to:
-https://jothum123.github.io/Zimcrowd-Web/onboarding.html
+https://zimcrowd.com/onboarding.html
                 ↓
 Then redirects to:
-https://jothum123.github.io/Zimcrowd-Web/dashboard.html
+https://zimcrowd.com/dashboard.html
 ```
 
 ### Social Authentication (Google/Facebook):
 ```
-User visits GitHub Pages:
-https://jothum123.github.io/Zimcrowd-Web/login.html
+User visits:
+https://zimcrowd.com/login.html
                 ↓
 Clicks "Continue with Google/Facebook"
                 ↓
@@ -89,10 +88,10 @@ Backend:
 - Generates HTML page with localStorage script
                 ↓
 HTML page stores data in localStorage and redirects to:
-https://jothum123.github.io/Zimcrowd-Web/onboarding.html
+https://zimcrowd.com/onboarding.html
                 ↓
 Then redirects to:
-https://jothum123.github.io/Zimcrowd-Web/dashboard.html
+https://zimcrowd.com/dashboard.html
 ```
 
 ## ⚙️ Configuration
@@ -113,7 +112,7 @@ const API_CONFIG = {
 
 **Result:**
 - On `localhost` → Uses `http://localhost:3001`
-- On `jothum123.github.io` → Uses `https://zimcrowd-backend.vercel.app`
+- On `zimcrowd.com` → Uses `https://zimcrowd-backend.vercel.app`
 
 ### Backend (routes/social-auth.js):
 ```javascript
@@ -122,9 +121,9 @@ const baseUrl = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}` 
     : 'https://zimcrowd-backend.vercel.app';
 
-// Frontend redirect URL (GitHub Pages)
+// Frontend redirect URL (GitHub Pages with custom domain)
 const frontendUrl = process.env.FRONTEND_URL 
-    || 'https://jothum123.github.io/Zimcrowd-Web';
+    || 'https://zimcrowd.com';
 ```
 
 **Result:**
@@ -150,11 +149,11 @@ https://YOUR_SUPABASE_PROJECT.supabase.co/auth/v1/callback
 ### Supabase Dashboard:
 **Authentication → Providers:**
 - Enable Google & Facebook
-- Set **Site URL:** `https://jothum123.github.io/Zimcrowd-Web`
+- Set **Site URL:** `https://zimcrowd.com`
 - Add **Redirect URLs:**
   ```
-  https://jothum123.github.io/Zimcrowd-Web/dashboard.html
-  https://jothum123.github.io/Zimcrowd-Web/onboarding.html
+  https://zimcrowd.com/dashboard.html
+  https://zimcrowd.com/onboarding.html
   ```
 
 ## 🚀 Deployment Process
@@ -167,7 +166,7 @@ git commit -m "Update frontend"
 git push origin main
 
 # GitHub Pages automatically deploys from main branch
-# Available at: https://jothum123.github.io/Zimcrowd-Web/
+# Available at: https://zimcrowd.com (custom domain)
 ```
 
 ### Deploy Backend (Vercel):
@@ -184,8 +183,8 @@ vercel --prod
 Set these in Vercel Dashboard → Project Settings → Environment Variables:
 
 ```bash
-# Frontend URL (GitHub Pages)
-FRONTEND_URL=https://jothum123.github.io/Zimcrowd-Web
+# Frontend URL (GitHub Pages with custom domain)
+FRONTEND_URL=https://zimcrowd.com
 
 # Backend URL (optional - auto-detected)
 BACKEND_URL=https://zimcrowd-backend.vercel.app
@@ -215,17 +214,17 @@ No environment variables needed - configuration is in `js/api-config-new.js`
 ### Test Frontend:
 ```
 1. Phone Signup:
-   https://jothum123.github.io/Zimcrowd-Web/signup.html
+   https://zimcrowd.com/signup.html
 
 2. Email Signup:
-   https://jothum123.github.io/Zimcrowd-Web/signup.html
+   https://zimcrowd.com/signup.html
 
 3. Social Login:
-   https://jothum123.github.io/Zimcrowd-Web/login.html
+   https://zimcrowd.com/login.html
    → Click "Continue with Google/Facebook"
 
 4. Dashboard:
-   https://jothum123.github.io/Zimcrowd-Web/dashboard.html
+   https://zimcrowd.com/dashboard.html
 ```
 
 ### Test Backend API:
@@ -255,7 +254,7 @@ vercel logs --follow
 
 # Look for:
 - "🔄 Initiating Google OAuth: { redirectTo: '...' }"
-- "🔄 Redirecting to: https://jothum123.github.io/..."
+- "🔄 Redirecting to: https://zimcrowd.com/..."
 ```
 
 ### Common Issues:
@@ -263,7 +262,7 @@ vercel logs --follow
 **Issue: Frontend shows localhost errors**
 - **Cause:** API config detecting localhost incorrectly
 - **Fix:** Check `window.location.hostname` in console
-- **Expected:** Should be `jothum123.github.io`
+- **Expected:** Should be `zimcrowd.com`
 
 **Issue: OAuth redirect fails**
 - **Cause:** Redirect URI not whitelisted
@@ -272,11 +271,11 @@ vercel logs --follow
   https://zimcrowd-backend.vercel.app/api/social-auth/callback
   ```
 
-**Issue: After OAuth, redirects to Vercel instead of GitHub Pages**
+**Issue: After OAuth, redirects to wrong domain**
 - **Cause:** `FRONTEND_URL` not set in Vercel
 - **Fix:** Set in Vercel environment variables:
   ```
-  FRONTEND_URL=https://jothum123.github.io/Zimcrowd-Web
+  FRONTEND_URL=https://zimcrowd.com
   ```
 
 ## 📊 Architecture Benefits
@@ -297,7 +296,7 @@ vercel logs --follow
 ## 🎯 Production Checklist
 
 ### Frontend (GitHub Pages):
-- [x] Deployed to `https://jothum123.github.io/Zimcrowd-Web/`
+- [x] Deployed to `https://zimcrowd.com` (custom domain)
 - [x] API config points to Vercel backend
 - [x] All HTML pages accessible
 - [x] JavaScript files loading correctly
@@ -322,7 +321,7 @@ vercel logs --follow
 ## 🚀 Summary
 
 **Frontend:** GitHub Pages (Free, CDN-backed)
-- URL: `https://jothum123.github.io/Zimcrowd-Web/`
+- URL: `https://zimcrowd.com` (custom domain)
 - Deployment: Push to GitHub main branch
 
 **Backend:** Vercel (Serverless, Auto-scaling)
