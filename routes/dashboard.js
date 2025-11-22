@@ -65,6 +65,120 @@ const authenticateUser = async (req, res, next) => {
     }
 };
 
+// @route   GET /api/dashboard/
+// @desc    Get complete dashboard overview with all key data
+// @access  Private
+router.get('/', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Execute all dashboard queries in parallel for performance
+        const [
+            { data: profile, error: profileError },
+            { data: wallet, error: walletError },
+            { data: stats, error: statsError },
+            { count: loansCount, error: loansCountError },
+            { count: investmentsCount, error: investmentsCountError },
+            { count: transactionsCount, error: transactionsCountError },
+            { data: recentTransactions, error: recentTransactionsError },
+            { data: recentLoans, error: recentLoansError },
+            { data: recentInvestments, error: recentInvestmentsError },
+            { data: notifications, error: notificationsError }
+        ] = await Promise.all([
+            // Profile data
+            supabase.from('user_profiles').select('*').eq('id', userId).single(),
+            
+            // Wallet balance
+            supabase.from('wallets').select('*').eq('user_id', userId).single(),
+            
+            // User statistics
+            supabase.from('user_statistics').select('*').eq('user_id', userId).single(),
+            
+            // Loans count
+            supabase.from('loans').select('*', { count: 'exact', head: true }).eq('borrower_id', userId),
+            
+            // Investments count
+            supabase.from('investments').select('*', { count: 'exact', head: true }).eq('investor_id', userId),
+            
+            // Transactions count
+            supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+            
+            // Recent transactions (last 5)
+            supabase.from('transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5),
+            
+            // Recent loans (last 3)
+            supabase.from('loans').select('*').eq('borrower_id', userId).order('created_at', { ascending: false }).limit(3),
+            
+            // Recent investments (last 3)
+            supabase.from('investment_details').select('*').eq('investor_id', userId).order('invested_at', { ascending: false }).limit(3),
+            
+            // Recent notifications (last 5)
+            supabase.from('notifications').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5)
+        ]);
+
+        // Check for critical errors (profile and wallet are essential)
+        if (profileError && profileError.code !== 'PGRST116') {
+            console.error('Profile fetch error:', profileError);
+        }
+        if (walletError && walletError.code !== 'PGRST116') {
+            console.error('Wallet fetch error:', walletError);
+        }
+
+        // Prepare dashboard data with fallbacks
+        const dashboardData = {
+            // User profile
+            profile: profile || null,
+            
+            // Wallet information
+            wallet: wallet || { balance: 0, available_balance: 0 },
+            
+            // Statistics overview
+            stats: stats || {
+                total_loans: 0,
+                total_investments: 0,
+                total_returns: 0,
+                portfolio_value: 0
+            },
+            
+            // Summary counts
+            summary: {
+                loans_count: loansCount || 0,
+                investments_count: investmentsCount || 0,
+                transactions_count: transactionsCount || 0,
+                notifications_count: notifications?.length || 0
+            },
+            
+            // Recent activity
+            recent: {
+                transactions: recentTransactions || [],
+                loans: recentLoans || [],
+                investments: recentInvestments || [],
+                notifications: notifications || []
+            }
+        };
+
+        console.log('✅ Dashboard overview loaded for user:', userId, {
+            profile_loaded: !!profile,
+            wallet_loaded: !!wallet,
+            stats_loaded: !!stats,
+            loans_count: loansCount,
+            investments_count: investmentsCount
+        });
+
+        res.json({
+            success: true,
+            data: dashboardData
+        });
+    } catch (error) {
+        console.error('Dashboard overview error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load dashboard overview',
+            error: error.message
+        });
+    }
+});
+
 // @route   GET /api/dashboard/profile
 // @desc    Get user profile
 // @access  Private
