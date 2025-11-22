@@ -331,31 +331,18 @@ socialRouter.get('/callback', async (req, res) => {
             
             console.log('🔄 Redirecting to:', redirectUrl, 'Mode:', mode, 'Existing profile:', !!existingProfile);
 
-            // Send social auth data to frontend via localStorage script
-            res.send(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Redirecting...</title>
-                    <script>
-                        // Store social auth data in localStorage
-                        localStorage.setItem('socialAuthData', JSON.stringify(${JSON.stringify(socialAuthData).replace(/'/g, "\\'")}));
-                        localStorage.setItem('socialSignupCompleted', 'true');
-                        localStorage.setItem('isAuthenticated', 'true');
-
-                        // Store auth token and user data for dashboard
-                        ${data.session?.access_token ? `localStorage.setItem('authToken', '${data.session.access_token}');` : ''}
-                        localStorage.setItem('userData', JSON.stringify(${JSON.stringify(socialAuthData).replace(/'/g, "\\'")}));
-
-                        // Redirect to destination
-                        window.location.href = '${redirectUrl}';
-                    </script>
-                </head>
-                <body>
-                    <p>Redirecting to ${redirectUrl.includes('signup') || redirectUrl.includes('onboarding') ? 'onboarding' : 'dashboard'}...</p>
-                </body>
-                </html>
-            `);
+            // Encode social auth data and token in URL for frontend to process
+            const authData = encodeURIComponent(JSON.stringify(socialAuthData));
+            const token = data.session?.access_token || '';
+            
+            // Add auth data to redirect URL
+            const separator = redirectUrl.includes('?') ? '&' : '?';
+            const finalRedirectUrl = `${redirectUrl}${separator}authData=${authData}&token=${token}`;
+            
+            console.log('📤 Final redirect URL:', finalRedirectUrl);
+            
+            // Direct server-side redirect
+            res.redirect(finalRedirectUrl);
         } else {
             const frontendUrl = process.env.FRONTEND_URL || 'https://zimcrowd.com';
             res.redirect(`${frontendUrl}/login.html?error=no_session`);

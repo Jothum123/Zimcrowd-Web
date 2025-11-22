@@ -665,6 +665,31 @@
             const isSocialSignup = urlParams.get('source') === 'social';
             const isNewUser = urlParams.get('newUser') === 'true';
             
+            // Process auth data from URL if present (from social auth callback)
+            const authDataParam = urlParams.get('authData');
+            const tokenParam = urlParams.get('token');
+            
+            if (authDataParam) {
+                try {
+                    const authData = JSON.parse(decodeURIComponent(authDataParam));
+                    console.log('📦 Storing auth data from URL:', authData);
+                    
+                    localStorage.setItem('socialAuthData', JSON.stringify(authData));
+                    localStorage.setItem('userData', JSON.stringify(authData));
+                    localStorage.setItem('isAuthenticated', 'true');
+                    localStorage.setItem('socialSignupCompleted', 'true');
+                    
+                    if (tokenParam) {
+                        localStorage.setItem('authToken', tokenParam);
+                    }
+                    
+                    // Clean URL
+                    window.history.replaceState({}, document.title, window.location.pathname + '?source=social&newUser=true');
+                } catch (error) {
+                    console.error('❌ Error processing auth data:', error);
+                }
+            }
+            
             // For social signup users (new users), always show onboarding (don't redirect)
             if (isSocialSignup && isNewUser) {
                 console.log('👤 New social user, showing onboarding...');

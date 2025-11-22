@@ -7281,6 +7281,32 @@ How it works:
         window.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 Initializing ZimCrowd Dashboard...');
             
+            // Process auth data from URL if present (from social auth callback)
+            const urlParams = new URLSearchParams(window.location.search);
+            const authDataParam = urlParams.get('authData');
+            const tokenParam = urlParams.get('token');
+            
+            if (authDataParam) {
+                try {
+                    const authData = JSON.parse(decodeURIComponent(authDataParam));
+                    console.log('📦 Storing auth data from URL:', authData);
+                    
+                    localStorage.setItem('socialAuthData', JSON.stringify(authData));
+                    localStorage.setItem('userData', JSON.stringify(authData));
+                    localStorage.setItem('isAuthenticated', 'true');
+                    localStorage.setItem('socialSignupCompleted', 'true');
+                    
+                    if (tokenParam) {
+                        localStorage.setItem('authToken', tokenParam);
+                    }
+                    
+                    // Clean URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                } catch (error) {
+                    console.error('❌ Error processing auth data:', error);
+                }
+            }
+            
             // Handle Supabase OAuth callback first (as per guide)
             await handleSupabaseOAuthCallback();
             
