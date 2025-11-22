@@ -192,6 +192,7 @@ socialRouter.get('/callback', async (req, res) => {
                     phone: user.user_metadata?.phone || 
                           user.user_metadata?.phone_number || 
                           user.user_metadata?.mobile || null,
+                    avatar_url: avatarUrl, // Save social profile picture
                     role: 'user',
                     onboarding_completed: existingProfile?.onboarding_completed || false,
                     profile_completed: existingProfile?.profile_completed || false,
