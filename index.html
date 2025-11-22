@@ -1352,5 +1352,135 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
             }, 30000); // Update every 30 seconds
         });
     </script>
+
+    <!-- OAuth Callback Handler -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Handle OAuth callback on page load
+        (async function handleOAuthCallback() {
+            // Check if URL contains OAuth tokens (hash fragment)
+            const hash = window.location.hash;
+            
+            if (hash && hash.includes('access_token')) {
+                console.log('🔐 OAuth callback detected on home page');
+                
+                try {
+                    // Parse hash parameters
+                    const params = new URLSearchParams(hash.substring(1));
+                    const accessToken = params.get('access_token');
+                    const refreshToken = params.get('refresh_token');
+                    const expiresIn = params.get('expires_in');
+                    
+                    if (!accessToken) {
+                        console.error('❌ No access token found in URL');
+                        return;
+                    }
+                    
+                    console.log('✅ Access token found, initializing Supabase...');
+                    
+                    // Initialize Supabase client
+                    const supabaseUrl = 'https://gjtkdrrvnffrmzigdqyp.supabase.co';
+                    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqdGtkcnJ2bmZmcm16aWdkcXlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI2MTkzMjAsImV4cCI6MjA0ODE5NTMyMH0.Wh_qlVPJzlSvOgN-_kNh7RKoGBqNFrqxjAe6dOa9Xqc';
+                    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+                    
+                    // Set the session manually
+                    const { data: { user }, error: userError } = await supabase.auth.getUser(accessToken);
+                    
+                    if (userError || !user) {
+                        console.error('❌ Failed to get user:', userError);
+                        window.location.href = '/login.html?error=auth_failed';
+                        return;
+                    }
+                    
+                    console.log('✅ User authenticated:', user.email);
+                    
+                    // Extract user data from OAuth provider
+                    const firstName = user.user_metadata?.first_name || 
+                                    user.user_metadata?.given_name || 
+                                    user.user_metadata?.full_name?.split(' ')[0] || 
+                                    user.user_metadata?.name?.split(' ')[0] || 
+                                    '';
+                    
+                    const lastName = user.user_metadata?.last_name || 
+                                   user.user_metadata?.family_name || 
+                                   user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || 
+                                   user.user_metadata?.name?.split(' ').slice(1).join(' ') || 
+                                   '';
+                    
+                    const avatarUrl = user.user_metadata?.avatar_url || 
+                                    user.user_metadata?.picture || 
+                                    user.user_metadata?.profile_picture || 
+                                    null;
+                    
+                    const authProvider = user.app_metadata?.provider || 'unknown';
+                    
+                    // Create social auth data object
+                    const socialAuthData = {
+                        provider: authProvider,
+                        first_name: firstName,
+                        last_name: lastName,
+                        email: user.email,
+                        phone: user.user_metadata?.phone || null,
+                        avatar_url: avatarUrl,
+                        auth_provider: authProvider,
+                        social_id: user.id,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    };
+                    
+                    console.log('📦 Social auth data:', socialAuthData);
+                    
+                    // Store authentication data in localStorage
+                    localStorage.setItem('socialAuthData', JSON.stringify(socialAuthData));
+                    localStorage.setItem('socialSignupCompleted', 'true');
+                    localStorage.setItem('isAuthenticated', 'true');
+                    localStorage.setItem('authToken', accessToken);
+                    localStorage.setItem('userData', JSON.stringify(socialAuthData));
+                    
+                    if (refreshToken) {
+                        localStorage.setItem('refreshToken', refreshToken);
+                    }
+                    
+                    console.log('✅ Auth data stored in localStorage');
+                    
+                    // Check if user profile exists in backend
+                    try {
+                        const backendUrl = 'https://zimcrowd-backend.vercel.app';
+                        const profileResponse = await fetch(`${backendUrl}/api/profile`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${accessToken}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (profileResponse.ok) {
+                            const profileData = await profileResponse.json();
+                            console.log('✅ Existing user profile found');
+                            
+                            // Existing user - redirect through onboarding to fetch profile
+                            window.location.href = '/onboarding.html?source=social&existingUser=true';
+                        } else {
+                            console.log('👤 New user - redirect to onboarding');
+                            
+                            // New user - show onboarding
+                            window.location.href = '/onboarding.html?source=social&newUser=true';
+                        }
+                    } catch (error) {
+                        console.error('⚠️ Profile check failed:', error);
+                        // Assume new user on error
+                        window.location.href = '/onboarding.html?source=social&newUser=true';
+                    }
+                    
+                    // Clean up URL hash
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    
+                } catch (error) {
+                    console.error('❌ OAuth callback error:', error);
+                    window.location.href = '/login.html?error=callback_failed';
+                }
+            }
+        })();
+    </script>
 </body>
 </html>
