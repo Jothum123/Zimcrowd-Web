@@ -318,7 +318,7 @@ socialRouter.get('/callback', async (req, res) => {
                 if (existingProfile) {
                     // User already exists - redirect to login page
                     console.log('⚠️ User already exists, redirecting to login page');
-                    redirectUrl = `${frontendUrl}/login.html?error=user_exists&message=Account already exists. Please sign in instead.`;
+                    redirectUrl = `${frontendUrl}/login.html?error=user_exists&message=Account already exists. Please use social auth on the login page to sign in.`;
                 } else {
                     // New user - go to onboarding
                     console.log('✅ New user, proceeding to onboarding');
