@@ -168,12 +168,14 @@ socialRouter.get('/callback', async (req, res) => {
         
         if (authError) {
             console.error('OAuth callback error:', authError);
-            return res.redirect('/login?error=oauth_failed');
+            const frontendUrl = process.env.FRONTEND_URL || 'https://zimcrowd.com';
+            return res.redirect(`${frontendUrl}/login.html?error=oauth_failed`);
         }
 
         if (!code) {
             console.error('No authorization code received');
-            return res.redirect('/login?error=no_code');
+            const frontendUrl = process.env.FRONTEND_URL || 'https://zimcrowd.com';
+            return res.redirect(`${frontendUrl}/login.html?error=no_code`);
         }
 
         // Exchange code for session
@@ -181,7 +183,8 @@ socialRouter.get('/callback', async (req, res) => {
 
         if (error) {
             console.error('Code exchange error:', error);
-            return res.redirect('/login?error=exchange_failed');
+            const frontendUrl = process.env.FRONTEND_URL || 'https://zimcrowd.com';
+            return res.redirect(`${frontendUrl}/login.html?error=exchange_failed`);
         }
 
         if (data.session) {
@@ -345,11 +348,13 @@ socialRouter.get('/callback', async (req, res) => {
                 </html>
             `);
         } else {
-            res.redirect('/login?error=no_session');
+            const frontendUrl = process.env.FRONTEND_URL || 'https://zimcrowd.com';
+            res.redirect(`${frontendUrl}/login.html?error=no_session`);
         }
     } catch (error) {
         console.error('OAuth callback handler error:', error);
-        res.redirect('/login?error=callback_error');
+        const frontendUrl = process.env.FRONTEND_URL || 'https://zimcrowd.com';
+        res.redirect(`${frontendUrl}/login.html?error=callback_error`);
     }
 });
 
