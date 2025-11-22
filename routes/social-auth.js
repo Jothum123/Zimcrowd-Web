@@ -260,12 +260,14 @@ socialRouter.get('/callback', async (req, res) => {
             console.log('User metadata:', user.user_metadata);
             console.log('App metadata:', user.app_metadata);
             
-            const { error: upsertError } = await supabase
+            const { data: upsertData, error: upsertError } = await supabase
                 .from('profiles')
-                .upsert(userDetails, { onConflict: 'id' });
+                .upsert(userDetails, { onConflict: 'id' })
+                .select();
 
             if (upsertError) {
-                console.error('Profile upsert error:', upsertError);
+                console.error('❌ Profile upsert error:', upsertError);
+                console.error('❌ User details that failed:', JSON.stringify(userDetails, null, 2));
                 // Continue anyway - profile can be created later
             } else {
                 console.log(`✅ Profile ${existingProfile ? 'updated' : 'created'} successfully for user: ${user.id}`);
@@ -274,6 +276,7 @@ socialRouter.get('/callback', async (req, res) => {
                     email: userDetails.email,
                     provider: user.app_metadata?.provider
                 });
+                console.log('📋 Upserted profile data:', upsertData);
             }
 
             // Store social auth data for dashboard profile
@@ -298,7 +301,7 @@ socialRouter.get('/callback', async (req, res) => {
             let redirectUrl;
             
             if (mode === 'signup') {
-                // Signup page - check if user already exists
+                // Signup page - check if user already exists (check BEFORE upsert)
                 if (existingProfile) {
                     // User already exists - redirect to login page
                     console.log('⚠️ User already exists, redirecting to login page');
@@ -309,11 +312,13 @@ socialRouter.get('/callback', async (req, res) => {
                     redirectUrl = `${frontendUrl}/onboarding.html?source=social&newUser=true`;
                 }
             } else {
-                // Signin page - always go directly to dashboard
+                // Login mode - always go directly to dashboard
+                // Profile is created/updated by upsert above, so no need to check
+                console.log('✅ Login mode - redirecting to dashboard');
                 redirectUrl = `${frontendUrl}/dashboard.html`;
             }
             
-            console.log('🔄 Redirecting to:', redirectUrl, 'Mode:', mode, 'Existing profile:', !!existingProfile);
+            console.log('🔄 Redirecting to:', redirectUrl, 'Mode:', mode, 'Existing profile before upsert:', !!existingProfile);
 
             // Encode social auth data and token in URL for frontend to process
             const authData = encodeURIComponent(JSON.stringify(socialAuthData));
