@@ -40,19 +40,16 @@ socialRouter.get('/google', async (req, res) => {
             ? `https://${process.env.VERCEL_URL}` 
             : process.env.BACKEND_URL || 'https://zimcrowd-backend.vercel.app';
         
-        const redirectTo = `${baseUrl}/api/social-auth/callback`;
-        
-        // Encode mode in state parameter
-        const state = Buffer.from(JSON.stringify({ mode })).toString('base64');
+        // Pass mode as query parameter in redirect URL
+        const redirectTo = `${baseUrl}/api/social-auth/callback?mode=${mode}`;
 
-        console.log('🔄 Initiating Google OAuth:', { mode, redirectTo, state });
+        console.log('🔄 Initiating Google OAuth:', { mode, redirectTo });
 
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
                 redirectTo: redirectTo,
                 queryParams: {
-                    state: state,
                     access_type: 'offline',
                     prompt: 'consent'
                 },
@@ -110,20 +107,15 @@ socialRouter.get('/facebook', async (req, res) => {
             ? `https://${process.env.VERCEL_URL}` 
             : process.env.BACKEND_URL || 'https://zimcrowd-backend.vercel.app';
         
-        const redirectTo = `${baseUrl}/api/social-auth/callback`;
-        
-        // Encode mode in state parameter
-        const state = Buffer.from(JSON.stringify({ mode })).toString('base64');
+        // Pass mode as query parameter in redirect URL
+        const redirectTo = `${baseUrl}/api/social-auth/callback?mode=${mode}`;
 
-        console.log('🔄 Initiating Facebook OAuth:', { mode, redirectTo, state });
+        console.log('🔄 Initiating Facebook OAuth:', { mode, redirectTo });
 
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'facebook',
             options: {
                 redirectTo: redirectTo,
-                queryParams: {
-                    state: state
-                },
                 scopes: 'email public_profile' // Request email and public profile info
             }
         });
@@ -191,18 +183,8 @@ socialRouter.get('/callback', async (req, res) => {
             // User is authenticated, check if we need to create/update profile
             const user = data.session.user;
             
-            // Extract mode from state parameter or query params
-            let mode = 'login'; // default
-            try {
-                if (state) {
-                    const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
-                    mode = stateData.mode || 'login';
-                } else if (req.query.mode) {
-                    mode = req.query.mode;
-                }
-            } catch (e) {
-                console.log('Could not parse state, using default mode');
-            }
+            // Extract mode from query params (passed in redirectTo URL)
+            const mode = req.query.mode || 'login'; // default to login
             
             console.log('🔍 Social auth mode:', mode, 'for user:', user.email);
 
