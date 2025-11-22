@@ -316,8 +316,8 @@ socialRouter.get('/callback', async (req, res) => {
                 // New signup - go to onboarding first
                 redirectUrl = `${frontendUrl}/onboarding.html?source=social&newUser=true`;
             } else {
-                // Existing login - go to dashboard
-                redirectUrl = `${frontendUrl}/dashboard.html`;
+                // Existing login - also go through onboarding to fetch profile data, then redirect to dashboard
+                redirectUrl = `${frontendUrl}/onboarding.html?source=social&existingUser=true`;
             }
             
             console.log('🔄 Redirecting to:', redirectUrl);
