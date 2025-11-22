@@ -312,15 +312,16 @@ socialRouter.get('/callback', async (req, res) => {
             // Frontend is on GitHub Pages with custom domain, backend is on Vercel
             const frontendUrl = process.env.FRONTEND_URL || 'https://zimcrowd.com';
             let redirectUrl;
-            if (mode === 'signup' || !existingProfile) {
-                // New signup - go to onboarding first
+            
+            if (mode === 'signup') {
+                // Signup page - always go to onboarding (new or existing user)
                 redirectUrl = `${frontendUrl}/onboarding.html?source=social&newUser=true`;
             } else {
-                // Existing login - also go through onboarding to fetch profile data, then redirect to dashboard
-                redirectUrl = `${frontendUrl}/onboarding.html?source=social&existingUser=true`;
+                // Signin page - always go directly to dashboard
+                redirectUrl = `${frontendUrl}/dashboard.html`;
             }
             
-            console.log('🔄 Redirecting to:', redirectUrl);
+            console.log('🔄 Redirecting to:', redirectUrl, 'Mode:', mode);
 
             // Send social auth data to frontend via localStorage script
             res.send(`
