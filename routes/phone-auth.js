@@ -2056,4 +2056,89 @@ router.post('/dev-simple-signup', async (req, res) => {
     }
 });
 
+// Route alias: /request-reset-otp → /forgot-password-phone (for frontend compatibility)
+router.post('/request-reset-otp', [
+    body('phone')
+        .custom((value) => {
+            const validation = isValidPhoneNumber(value);
+            if (!validation.isValid) {
+                throw new Error('Please provide a valid phone number');
+            }
+            return true;
+        }),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { phone } = req.body;
+        
+        // Validate and format phone number
+        const phoneValidation = isValidPhoneNumber(phone);
+        const formattedPhone = phoneValidation.formatted;
+        
+        // Check if phone number exists in profiles
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, phone')
+            .eq('phone', formattedPhone)
+            .single();
+            
+        if (!profile) {
+            // Don't reveal if phone exists or not for security
+            return res.status(200).json({
+                success: true,
+                message: 'If your phone number is registered, you will receive a reset code'
+            });
+        }
+        
+        // Generate OTP
+        const otp = generateOTP();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        
+        // Store OTP in database
+        const { error: otpError } = await supabase
+            .from('phone_verifications')
+            .insert({
+                phone_number: formattedPhone,
+                otp_code: otp,
+                purpose: 'password_reset',
+                expires_at: expiresAt.toISOString(),
+                verified: false,
+                created_at: new Date().toISOString()
+            });
+            
+        if (otpError) {
+            console.error('Password reset OTP storage error:', otpError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to send reset code'
+            });
+        }
+        
+        // Send SMS
+        const smsResult = await sendPasswordResetSMS(formattedPhone, otp);
+        
+        if (!smsResult.success) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to send reset SMS',
+                error: smsResult.error
+            });
+        }
+        
+        // Return success (don't reveal if phone exists)
+        res.status(200).json({
+            success: true,
+            message: 'If your phone number is registered, you will receive a reset code',
+            phone: formatPhoneForDisplay(formattedPhone)
+        });
+        
+    } catch (error) {
+        console.error('Phone password reset error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Reset request failed. Please try again.'
+        });
+    }
+});
+
 module.exports = router;

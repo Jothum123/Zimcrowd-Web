@@ -886,4 +886,83 @@ router.post('/google-auth-callback', [
     }
 });
 
+// Route alias: /request-reset-otp → /forgot-password-email (for frontend compatibility)
+router.post('/request-reset-otp', [
+    body('email')
+        .isEmail()
+        .normalizeEmail()
+        .withMessage('Please provide a valid email address'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        const normalizedEmail = email.toLowerCase();
+
+        // Check if email exists in profiles
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, email')
+            .eq('email', normalizedEmail)
+            .single();
+
+        if (!profile) {
+            // Don't reveal if email exists or not for security
+            return res.status(200).json({
+                success: true,
+                message: 'If your email is registered, you will receive a reset code'
+            });
+        }
+
+        // Generate OTP
+        const otp = generateOTP();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        // Store OTP in database
+        const { error: otpError } = await supabase
+            .from('email_verifications')
+            .insert({
+                email: normalizedEmail,
+                otp_code: otp,
+                purpose: 'password_reset',
+                expires_at: expiresAt.toISOString(),
+                verified: false,
+                created_at: new Date().toISOString()
+            });
+
+        if (otpError) {
+            console.error('Password reset OTP storage error:', otpError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to send reset code'
+            });
+        }
+
+        // Send email
+        const emailResult = await sendPasswordResetOTPEmail(normalizedEmail, otp);
+
+        if (!emailResult.success) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to send reset email',
+                error: emailResult.error
+            });
+        }
+
+        // Return success (don't reveal if email exists)
+        res.status(200).json({
+            success: true,
+            message: 'If your email is registered, you will receive a reset code',
+            email: formatEmailForDisplay(normalizedEmail)
+        });
+
+    } catch (error) {
+        console.error('Email password reset error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Reset request failed. Please try again.'
+        });
+    }
+});
+
 module.exports = router;
