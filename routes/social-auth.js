@@ -314,14 +314,22 @@ socialRouter.get('/callback', async (req, res) => {
             let redirectUrl;
             
             if (mode === 'signup') {
-                // Signup page - always go to onboarding (new or existing user)
-                redirectUrl = `${frontendUrl}/onboarding.html?source=social&newUser=true`;
+                // Signup page - check if user already exists
+                if (existingProfile) {
+                    // User already exists - redirect to login page
+                    console.log('⚠️ User already exists, redirecting to login page');
+                    redirectUrl = `${frontendUrl}/login.html?error=user_exists&message=Account already exists. Please sign in instead.`;
+                } else {
+                    // New user - go to onboarding
+                    console.log('✅ New user, proceeding to onboarding');
+                    redirectUrl = `${frontendUrl}/onboarding.html?source=social&newUser=true`;
+                }
             } else {
                 // Signin page - always go directly to dashboard
                 redirectUrl = `${frontendUrl}/dashboard.html`;
             }
             
-            console.log('🔄 Redirecting to:', redirectUrl, 'Mode:', mode);
+            console.log('🔄 Redirecting to:', redirectUrl, 'Mode:', mode, 'Existing profile:', !!existingProfile);
 
             // Send social auth data to frontend via localStorage script
             res.send(`
