@@ -184,6 +184,8 @@ socialRouter.get('/callback', async (req, res) => {
             const user = data.session.user;
             
             // Extract mode from query params (passed in redirectTo URL)
+            console.log('🔍 Callback query params:', req.query);
+            console.log('🔍 Full callback URL:', req.url);
             const mode = req.query.mode || 'login'; // default to login
             
             console.log('🔍 Social auth mode:', mode, 'for user:', user.email);
