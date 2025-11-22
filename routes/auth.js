@@ -275,4 +275,27 @@ router.post('/resend-otp', [
     }
 });
 
+// @route   POST /api/auth/logout
+// @desc    Logout user (client-side clears localStorage, this is for logging)
+// @access  Public
+router.post('/logout', async (req, res) => {
+    try {
+        // Log logout event (optional)
+        console.log('User logged out at:', new Date().toISOString());
+        
+        // In a JWT-based system, logout is handled client-side by removing the token
+        // This endpoint exists for logging purposes and to confirm logout
+        res.status(200).json({
+            success: true,
+            message: 'Logged out successfully'
+        });
+    } catch (error) {
+        console.error('Logout error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Logout failed'
+        });
+    }
+});
+
 module.exports = router;
