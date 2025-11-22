@@ -1477,14 +1477,14 @@ For Lenders: We provide a vital safety net. If a lender needs their funds back e
                         
                         if (profileResponse.ok) {
                             const profileData = await profileResponse.json();
-                            console.log('✅ Existing user profile found');
+                            console.log('✅ Existing user - redirect to dashboard');
                             
-                            // Existing user - redirect through onboarding to fetch profile
-                            window.location.href = '/onboarding.html?source=social&existingUser=true';
+                            // Existing user (login) - go directly to dashboard
+                            window.location.href = '/dashboard.html';
                         } else {
                             console.log('👤 New user - redirect to onboarding');
                             
-                            // New user - show onboarding
+                            // New user (signup) - go to onboarding first
                             window.location.href = '/onboarding.html?source=social&newUser=true';
                         }
                     } catch (error) {

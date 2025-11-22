@@ -653,17 +653,10 @@
         let currentScreen = 1;
         let selectedUserType = null;
 
-        // Check URL parameters first to determine if we should show splash screen
-        const urlParams = new URLSearchParams(window.location.search);
-        const isExistingUser = urlParams.get('existingUser') === 'true';
-        const isSocialSignup = urlParams.get('source') === 'social';
-
-        // Show onboarding after splash screen (skip splash for existing users)
-        if (!(isSocialSignup && isExistingUser)) {
-            setTimeout(() => {
-                document.getElementById('onboardingContainer').classList.add('active');
-            }, 3000);
-        }
+        // Show onboarding after splash screen
+        setTimeout(() => {
+            document.getElementById('onboardingContainer').classList.add('active');
+        }, 3000);
 
         // Check if user has completed onboarding
         window.addEventListener('DOMContentLoaded', async () => {
@@ -671,19 +664,6 @@
             const urlParams = new URLSearchParams(window.location.search);
             const isSocialSignup = urlParams.get('source') === 'social';
             const isNewUser = urlParams.get('newUser') === 'true';
-            const isExistingUser = urlParams.get('existingUser') === 'true';
-            
-            // For existing social auth users, fetch profile data and redirect to dashboard immediately
-            if (isSocialSignup && isExistingUser) {
-                console.log('🔄 Existing user detected, fetching profile data...');
-                // Hide splash screen immediately
-                const splashScreen = document.querySelector('.splash-screen');
-                if (splashScreen) {
-                    splashScreen.style.display = 'none';
-                }
-                await fetchUserProfileAndRedirect();
-                return;
-            }
             
             // For social signup users (new users), always show onboarding (don't redirect)
             if (isSocialSignup && isNewUser) {
@@ -696,71 +676,6 @@
                 window.location.href = 'dashboard.html';
             }
         });
-
-        // Function to fetch user profile data and redirect to dashboard
-        async function fetchUserProfileAndRedirect() {
-            try {
-                // Get social auth data from localStorage
-                const socialAuthData = JSON.parse(localStorage.getItem('socialAuthData') || '{}');
-                const authToken = localStorage.getItem('authToken');
-                
-                console.log('📦 Social auth data:', socialAuthData);
-                console.log('🔑 Auth token:', authToken ? 'Present' : 'Missing');
-                
-                if (!authToken) {
-                    console.error('❌ No auth token found, redirecting to login');
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
-                // Fetch user profile from backend
-                const backendUrl = 'https://zimcrowd-backend.vercel.app';
-                const response = await fetch(`${backendUrl}/api/profile`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const profileData = await response.json();
-                    console.log('✅ Profile data fetched:', profileData);
-                    
-                    // Merge profile data with social auth data
-                    const userData = {
-                        ...socialAuthData,
-                        ...profileData.data
-                    };
-                    
-                    // Update localStorage with complete user data
-                    localStorage.setItem('userData', JSON.stringify(userData));
-                    localStorage.setItem('isAuthenticated', 'true');
-                    
-                    console.log('✅ User data updated, redirecting to dashboard...');
-                } else {
-                    console.warn('⚠️ Profile fetch failed, using social auth data');
-                    // Use social auth data as fallback
-                    localStorage.setItem('userData', JSON.stringify(socialAuthData));
-                    localStorage.setItem('isAuthenticated', 'true');
-                }
-                
-                // Mark onboarding as completed for existing users
-                localStorage.setItem('onboardingCompleted', 'true');
-                
-                // Redirect to dashboard
-                window.location.href = 'dashboard.html';
-                
-            } catch (error) {
-                console.error('❌ Error fetching profile:', error);
-                // Fallback: use social auth data and redirect anyway
-                const socialAuthData = JSON.parse(localStorage.getItem('socialAuthData') || '{}');
-                localStorage.setItem('userData', JSON.stringify(socialAuthData));
-                localStorage.setItem('isAuthenticated', 'true');
-                localStorage.setItem('onboardingCompleted', 'true');
-                window.location.href = 'dashboard.html';
-            }
-        }
 
         function nextScreen() {
             if (currentScreen < 3) {
