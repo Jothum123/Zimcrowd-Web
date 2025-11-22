@@ -3210,9 +3210,9 @@
                     <span class="notification-badge" id="notification-count">3</span>
                 </div>
                 <div class="header-user">
-                    <div class="header-user-avatar" id="nav-avatar">TM</div>
+                    <div class="header-user-avatar" id="nav-avatar">U</div>
                     <div class="header-user-info">
-                        <h4>Tendai Moyo</h4>
+                        <h4 id="header-user-name">Loading...</h4>
                         <p>Premium Member</p>
                     </div>
                 </div>
@@ -7397,30 +7397,64 @@ How it works:
                     provider: socialAuthData.auth_provider || socialAuthData.provider
                 };
                 
-                // Update user name display
+                // Build display name
+                const displayName = `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim() || 
+                                  userInfo.email || 
+                                  'User';
+                
+                // Update user name display (sidebar)
                 const userNameEl = document.getElementById('userName');
                 if (userNameEl) {
-                    const displayName = userInfo.firstName || 
-                                      `${userInfo.firstName} ${userInfo.lastName}`.trim() || 
-                                      userInfo.email || 
-                                      'User';
                     userNameEl.textContent = displayName;
-                    console.log('Updated user name:', displayName);
+                    console.log('Updated sidebar user name:', displayName);
                 }
                 
-                // Update user avatar
+                // Update header user name
+                const headerUserNameEl = document.getElementById('header-user-name');
+                if (headerUserNameEl) {
+                    headerUserNameEl.textContent = displayName;
+                    console.log('Updated header user name:', displayName);
+                }
+                
+                // Get initials for avatar
+                const getInitials = () => {
+                    if (userInfo.firstName && userInfo.lastName) {
+                        return `${userInfo.firstName[0]}${userInfo.lastName[0]}`.toUpperCase();
+                    } else if (userInfo.firstName) {
+                        return userInfo.firstName[0].toUpperCase();
+                    } else if (userInfo.email) {
+                        return userInfo.email[0].toUpperCase();
+                    }
+                    return 'U';
+                };
+                
+                // Update user avatar (sidebar)
                 const userAvatarEl = document.getElementById('userAvatar');
                 if (userAvatarEl) {
                     if (userInfo.avatarUrl) {
                         // Create image element for social auth avatar
                         userAvatarEl.innerHTML = `<img src="${userInfo.avatarUrl}" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
-                        console.log('Updated user avatar with social auth image');
+                        console.log('Updated sidebar avatar with social auth image');
                     } else {
                         // Use initials as fallback
-                        const initial = (userInfo.firstName || userInfo.email || 'U')[0].toUpperCase();
-                        userAvatarEl.textContent = initial;
-                        userAvatarEl.innerHTML = initial; // Clear any existing image
-                        console.log('Updated user avatar with initial:', initial);
+                        const initials = getInitials();
+                        userAvatarEl.textContent = initials;
+                        userAvatarEl.innerHTML = initials; // Clear any existing image
+                        console.log('Updated sidebar avatar with initials:', initials);
+                    }
+                }
+                
+                // Update header avatar
+                const navAvatarEl = document.getElementById('nav-avatar');
+                if (navAvatarEl) {
+                    if (userInfo.avatarUrl) {
+                        navAvatarEl.innerHTML = `<img src="${userInfo.avatarUrl}" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+                        console.log('Updated header avatar with social auth image');
+                    } else {
+                        const initials = getInitials();
+                        navAvatarEl.textContent = initials;
+                        navAvatarEl.innerHTML = initials;
+                        console.log('Updated header avatar with initials:', initials);
                     }
                 }
                 
