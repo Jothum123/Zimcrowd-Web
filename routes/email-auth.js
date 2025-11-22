@@ -1057,29 +1057,47 @@ router.post('/reset-password', [
             });
         }
 
-        // Verify OTP from database
-        const { data: verification, error: verifyError } = await supabase
+        // Verify OTP from database (support both 1-step and 2-step flows)
+        // Try verified first (2-step: verify-reset-otp then reset-password)
+        let { data: verification } = await supabase
             .from('email_verifications')
             .select('*')
             .eq('email', normalizedEmail)
             .eq('otp_code', otp)
             .eq('purpose', 'password_reset')
-            .eq('verified', false)
+            .eq('verified', true)
             .gt('expires_at', new Date().toISOString())
-            .single();
+            .maybeSingle();
 
-        if (verifyError || !verification) {
+        // If not found, try unverified (1-step: reset-password directly)
+        if (!verification) {
+            const { data: unverifiedOtp } = await supabase
+                .from('email_verifications')
+                .select('*')
+                .eq('email', normalizedEmail)
+                .eq('otp_code', otp)
+                .eq('purpose', 'password_reset')
+                .eq('verified', false)
+                .gt('expires_at', new Date().toISOString())
+                .maybeSingle();
+            
+            verification = unverifiedOtp;
+            
+            // Mark as verified if found
+            if (verification) {
+                await supabase
+                    .from('email_verifications')
+                    .update({ verified: true })
+                    .eq('id', verification.id);
+            }
+        }
+
+        if (!verification) {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid or expired reset code'
             });
         }
-
-        // Mark OTP as verified
-        await supabase
-            .from('email_verifications')
-            .update({ verified: true })
-            .eq('id', verification.id);
 
         // Update password in Supabase Auth
         const { error: updateError } = await supabase.auth.admin.updateUserById(
