@@ -443,11 +443,63 @@ const SettingsDataLoader = {
             
             if (response.success && response.data) {
                 this.updateDocumentsList(response.data);
+                this.updateKYCDocumentBadges(response.data);
                 console.log('✅ Documents loaded');
             }
         } catch (error) {
             console.error('❌ Error loading documents:', error);
         }
+    },
+
+    /**
+     * Update KYC Document Status Badges
+     */
+    updateKYCDocumentBadges(documents) {
+        // Get all document upload areas
+        const uploadAreas = document.querySelectorAll('.document-upload-area[data-doc-type]');
+        
+        uploadAreas.forEach(area => {
+            const docType = area.getAttribute('data-doc-type');
+            const badge = area.querySelector('.doc-status-badge');
+            const icon = area.querySelector('i.fa-id-card, i.fa-file-invoice-dollar, i.fa-file-contract, i.fa-university, i.fa-home');
+            const button = area.querySelector('button');
+            
+            // Find matching document from API
+            const doc = documents.find(d => d.document_type === docType);
+            
+            if (doc && badge) {
+                // Show badge
+                badge.style.display = 'inline-block';
+                
+                const statusText = badge.querySelector('.status-text');
+                const badgeIcon = badge.querySelector('i');
+                
+                // Update based on status
+                if (doc.status === 'verified') {
+                    badge.style.background = 'rgba(56, 231, 123, 0.1)';
+                    badge.style.color = '#38e77b';
+                    badgeIcon.className = 'fas fa-check-circle';
+                    statusText.textContent = 'Verified';
+                    if (icon) icon.style.color = '#38e77b';
+                    if (button) button.innerHTML = '<i class="fas fa-cloud-arrow-up"></i> Update Document';
+                } else if (doc.status === 'pending') {
+                    badge.style.background = 'rgba(249, 115, 22, 0.1)';
+                    badge.style.color = '#f97316';
+                    badgeIcon.className = 'fas fa-clock';
+                    statusText.textContent = 'Pending Review';
+                    if (icon) icon.style.color = '#f97316';
+                    if (button) button.innerHTML = '<i class="fas fa-cloud-arrow-up"></i> Update Document';
+                } else if (doc.status === 'rejected') {
+                    badge.style.background = 'rgba(239, 68, 68, 0.1)';
+                    badge.style.color = '#ef4444';
+                    badgeIcon.className = 'fas fa-times-circle';
+                    statusText.textContent = 'Rejected';
+                    if (icon) icon.style.color = '#ef4444';
+                    if (button) button.innerHTML = '<i class="fas fa-cloud-arrow-up"></i> Re-upload Document';
+                }
+            }
+            // If no document found, badge stays hidden (display: none)
+        });
     },
 
     /**
