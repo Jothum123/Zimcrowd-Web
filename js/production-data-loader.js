@@ -178,26 +178,63 @@ const ProductionDataLoader = {
             ]);
             
             if (code.success && code.data) {
+                const shareUrl = code.data.share_url;
+                const referralCode = code.data.referral_code;
+                const qrUrl = code.data.qr_code_url;
+                
                 // Update referral link display
                 const linkElement = document.getElementById('referralLinkDisplay');
                 if (linkElement) {
-                    linkElement.textContent = code.data.share_url;
-                    linkElement.href = code.data.share_url;
+                    linkElement.textContent = shareUrl;
+                    linkElement.href = shareUrl;
                 }
                 
                 // Update QR code
                 const qrContainer = document.getElementById('referralQRCode');
-                if (qrContainer && code.data.qr_code_url) {
-                    qrContainer.innerHTML = `<img src="${code.data.qr_code_url}" alt="Referral QR Code" style="width: 100%; height: 100%; border-radius: 12px;">`;
+                if (qrContainer && qrUrl) {
+                    qrContainer.innerHTML = `<img src="${qrUrl}" alt="Referral QR Code" style="width: 100%; height: 100%; border-radius: 12px;">`;
+                }
+                
+                // Setup share buttons
+                const whatsappBtn = document.getElementById('shareWhatsApp');
+                if (whatsappBtn) {
+                    whatsappBtn.onclick = () => {
+                        const message = encodeURIComponent(`Join ZimCrowd and get instant loans! Use my referral link: ${shareUrl}`);
+                        window.open(`https://wa.me/?text=${message}`, '_blank');
+                    };
+                }
+                
+                const facebookBtn = document.getElementById('shareFacebook');
+                if (facebookBtn) {
+                    facebookBtn.onclick = () => {
+                        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
+                    };
+                }
+                
+                const twitterBtn = document.getElementById('shareTwitter');
+                if (twitterBtn) {
+                    twitterBtn.onclick = () => {
+                        const text = encodeURIComponent(`Join ZimCrowd with my referral link!`);
+                        window.open(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(shareUrl)}`, '_blank');
+                    };
+                }
+                
+                const emailBtn = document.getElementById('shareEmail');
+                if (emailBtn) {
+                    emailBtn.onclick = () => {
+                        const subject = encodeURIComponent('Join ZimCrowd');
+                        const body = encodeURIComponent(`Join ZimCrowd and get instant loans!\n\nUse my referral link: ${shareUrl}`);
+                        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+                    };
                 }
                 
                 // Store for copy function
                 if (typeof window !== 'undefined') {
-                    window.currentReferralLink = code.data.share_url;
-                    window.currentReferralCode = code.data.referral_code;
+                    window.currentReferralLink = shareUrl;
+                    window.currentReferralCode = referralCode;
                 }
                 
-                console.log('✅ Referral link updated:', code.data.share_url);
+                console.log('✅ Referral link and share buttons updated:', shareUrl);
             }
             
             if (stats.success && stats.data) {
