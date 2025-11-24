@@ -215,13 +215,43 @@ END $$;
 -- ============================================
 -- 12. VERIFICATION - CHECK EVERYTHING
 -- ============================================
-SELECT 
-    'Setup Complete!' as status,
-    (SELECT COUNT(*) FROM email_verifications) as email_verifications,
-    (SELECT COUNT(*) FROM phone_verifications) as phone_verifications,
-    (SELECT COUNT(*) FROM user_settings) as user_settings,
-    (SELECT COUNT(*) FROM login_activity) as login_activity,
-    (SELECT COUNT(*) FROM profiles) as total_profiles;
+DO $$ 
+DECLARE
+    email_ver_count INT;
+    phone_ver_count INT;
+    user_set_count INT;
+    login_act_count INT;
+    prof_count INT;
+BEGIN
+    -- Safely count records
+    SELECT COUNT(*) INTO email_ver_count FROM email_verifications;
+    SELECT COUNT(*) INTO phone_ver_count FROM phone_verifications;
+    
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'user_settings') THEN
+        SELECT COUNT(*) INTO user_set_count FROM user_settings;
+    ELSE
+        user_set_count := 0;
+    END IF;
+    
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'login_activity') THEN
+        SELECT COUNT(*) INTO login_act_count FROM login_activity;
+    ELSE
+        login_act_count := 0;
+    END IF;
+    
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'profiles') THEN
+        SELECT COUNT(*) INTO prof_count FROM profiles;
+    ELSE
+        prof_count := 0;
+    END IF;
+    
+    RAISE NOTICE '✅ Setup Complete!';
+    RAISE NOTICE 'email_verifications: %', email_ver_count;
+    RAISE NOTICE 'phone_verifications: %', phone_ver_count;
+    RAISE NOTICE 'user_settings: %', user_set_count;
+    RAISE NOTICE 'login_activity: %', login_act_count;
+    RAISE NOTICE 'total_profiles: %', prof_count;
+END $$;
 
 -- Show all policies
 SELECT 
