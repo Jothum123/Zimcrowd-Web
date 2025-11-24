@@ -63,6 +63,10 @@ try {
     console.log('✅ P2P Primary Market routes loaded');
     var p2pSecondaryMarketRoutes = require('./routes/p2p-secondary-market');
     console.log('✅ P2P Secondary Market routes loaded');
+    var settingsRoutes = require('./routes/settings');
+    console.log('✅ Settings routes loaded');
+    var securityRoutes = require('./routes/security');
+    console.log('✅ Security routes loaded');
     console.log('✅ All routes loaded successfully');
 } catch (error) {
     console.error('❌ Error loading routes:', error.message);
@@ -196,6 +200,10 @@ app.use('/api/p2p/primary', p2pPrimaryMarketRoutes);
 console.log('✅ P2P Primary Market routes registered at /api/p2p/primary');
 app.use('/api/p2p/secondary', p2pSecondaryMarketRoutes);
 console.log('✅ P2P Secondary Market routes registered at /api/p2p/secondary');
+app.use('/api/settings', settingsRoutes);
+console.log('✅ Settings routes registered');
+app.use('/api/security', securityRoutes);
+console.log('✅ Security routes registered');
 
 // Direct loans routes
 const directLoansRoutes = require('./routes/direct-loans');
