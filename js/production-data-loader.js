@@ -197,14 +197,14 @@ const ProductionDataLoader = {
                         this.updateInvestmentPagination(pagination);
                     } else {
                         container.innerHTML = `
-                            <div class="portfolio-card" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: rgba(15, 23, 42, 0.5);">
-                                <div style="display: inline-block;">
-                                    <div style="width: 80px; height: 80px; background: rgba(56, 231, 123, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 36px; color: #38e77b;">
-                                        <i class="fas fa-chart-line"></i>
+                            <div style="grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; min-height: 400px; padding: 60px 20px;">
+                                <div style="text-align: center; max-width: 500px;">
+                                    <div style="width: 120px; height: 120px; background: linear-gradient(135deg, rgba(56, 231, 123, 0.2), rgba(59, 130, 246, 0.2)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px; box-shadow: 0 10px 40px rgba(56, 231, 123, 0.2);">
+                                        <i class="fas fa-chart-line" style="font-size: 48px; color: #38e77b;"></i>
                                     </div>
-                                    <h3 style="margin: 0 0 10px 0;">No Investments Yet</h3>
-                                    <p style="color: #94a3b8; font-size: 16px; margin: 0 0 20px 0;">Start investing in loans to build your portfolio</p>
-                                    <button onclick="switchSection('overview')" class="btn-primary" style="padding: 12px 24px;">
+                                    <h3 style="margin: 0 0 15px 0; font-size: 28px; color: #fff;">No Investments Yet</h3>
+                                    <p style="color: #94a3b8; font-size: 18px; margin: 0 0 30px 0; line-height: 1.6;">Start investing in loans to build your portfolio and earn returns</p>
+                                    <button onclick="switchSection('overview')" class="btn-primary" style="padding: 14px 32px; font-size: 16px; display: inline-flex; align-items: center; gap: 10px;">
                                         <i class="fas fa-search"></i> Browse Opportunities
                                     </button>
                                 </div>
