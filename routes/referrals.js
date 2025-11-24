@@ -16,21 +16,29 @@ const authenticateUser = async (req, res, next) => {
             });
         }
 
-        // Verify JWT token
-        const jwt = require('jsonwebtoken');
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        let user = null;
 
-        if (!decoded || !decoded.userId) {
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid token'
-            });
+        // Try Supabase token first (for social auth)
+        try {
+            const { data: supabaseUser, error: supabaseError } = await supabase.auth.getUser(token);
+            if (!supabaseError && supabaseUser?.user) {
+                user = supabaseUser.user;
+            }
+        } catch (supabaseErr) {
+            // If Supabase fails, try JWT verification
+            try {
+                const jwt = require('jsonwebtoken');
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+                if (decoded && decoded.userId) {
+                    user = { id: decoded.userId };
+                }
+            } catch (jwtErr) {
+                console.error('Both auth methods failed:', { supabaseErr, jwtErr });
+            }
         }
 
-        // Get user from Supabase auth
-        const { data: { user }, error } = await supabase.auth.getUser(token);
-
-        if (error || !user) {
+        if (!user) {
             return res.status(401).json({
                 success: false,
                 message: 'Invalid or expired token'
@@ -74,23 +82,48 @@ const generateReferralCode = (userId) => {
 // @access  Private
 router.get('/code', authenticateUser, async (req, res) => {
     try {
-        // For now, generate code on the fly
-        // In production, this would be stored in database
-        const referralCode = generateReferralCode(req.user.id);
+        const userId = req.user.id;
+
+        // Get or create referral code from database
+        let { data: referralCode, error } = await supabase
+            .from('referral_codes')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+
+        // If no code exists, create one
+        if (error || !referralCode) {
+            const newCode = generateReferralCode(userId);
+            const { data: created, error: createError } = await supabase
+                .from('referral_codes')
+                .insert({
+                    user_id: userId,
+                    referral_code: newCode
+                })
+                .select()
+                .single();
+
+            if (createError) throw createError;
+            referralCode = created;
+        }
+
+        const code = referralCode.referral_code;
+        const shareUrl = `https://zimcrowd.com/signup?ref=${code}`;
 
         res.json({
             success: true,
             data: {
-                referral_code: referralCode,
-                share_url: `https://zimcrowd.com/signup?ref=${referralCode}`,
-                qr_code_url: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://zimcrowd.com/signup?ref=${referralCode}`
+                referral_code: code,
+                share_url: shareUrl,
+                qr_code_url: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(shareUrl)}`
             }
         });
     } catch (error) {
         console.error('Get referral code error:', error);
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: 'Failed to get referral code',
+            error: error.message
         });
     }
 });
@@ -100,27 +133,65 @@ router.get('/code', authenticateUser, async (req, res) => {
 // @access  Private
 router.get('/stats', authenticateUser, async (req, res) => {
     try {
-        // Mock data - in production this would query a referrals table
-        const mockStats = {
-            total_referrals: 12,
-            active_referrals: 8,
-            pending_referrals: 4,
-            total_earnings: 250.00,
-            this_month_earnings: 75.00,
-            active_loans_from_referrals: 5,
-            average_loan_amount: 3200.00,
-            conversion_rate: 66.7 // percentage
-        };
+        const userId = req.user.id;
+
+        // Get referral code stats
+        const { data: codeStats, error: codeError } = await supabase
+            .from('referral_codes')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+
+        if (codeError && codeError.code !== 'PGRST116') throw codeError;
+
+        // Get referral counts by status
+        const { data: referrals, error: refError } = await supabase
+            .from('referrals')
+            .select('status, earnings, loans_count')
+            .eq('referrer_id', userId);
+
+        if (refError) throw refError;
+
+        // Calculate stats
+        const totalReferrals = referrals?.length || 0;
+        const activeReferrals = referrals?.filter(r => r.status === 'active').length || 0;
+        const pendingReferrals = referrals?.filter(r => r.status === 'pending').length || 0;
+        const totalEarnings = codeStats?.total_earnings || 0;
+        const totalLoans = referrals?.reduce((sum, r) => sum + (r.loans_count || 0), 0) || 0;
+        const avgLoanAmount = totalLoans > 0 ? (totalEarnings / totalLoans * 100) : 0;
+
+        // Get this month's earnings
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+
+        const { data: monthEarnings, error: monthError } = await supabase
+            .from('referral_earnings')
+            .select('amount')
+            .eq('referrer_id', userId)
+            .gte('created_at', startOfMonth.toISOString());
+
+        const thisMonthEarnings = monthEarnings?.reduce((sum, e) => sum + parseFloat(e.amount), 0) || 0;
 
         res.json({
             success: true,
-            data: mockStats
+            data: {
+                total_referrals: totalReferrals,
+                active_referrals: activeReferrals,
+                pending_referrals: pendingReferrals,
+                total_earnings: parseFloat(totalEarnings),
+                this_month_earnings: thisMonthEarnings,
+                active_loans_from_referrals: totalLoans,
+                average_loan_amount: avgLoanAmount,
+                conversion_rate: totalReferrals > 0 ? ((activeReferrals / totalReferrals) * 100).toFixed(1) : 0
+            }
         });
     } catch (error) {
         console.error('Get referral stats error:', error);
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: 'Failed to get referral stats',
+            error: error.message
         });
     }
 });
@@ -130,71 +201,70 @@ router.get('/stats', authenticateUser, async (req, res) => {
 // @access  Private
 router.get('/my-referrals', authenticateUser, async (req, res) => {
     try {
+        const userId = req.user.id;
         const { page = 1, limit = 20 } = req.query;
         const offset = (page - 1) * limit;
 
-        // Mock data - in production this would query referrals table
-        const mockReferrals = [
-            {
-                id: 1,
-                name: 'Jane Smith',
-                email: 'jane.smith@example.com',
-                avatar: 'JS',
-                status: 'active',
-                joined_date: '2024-10-15',
-                loans_count: 3,
-                earnings: 75.00
-            },
-            {
-                id: 2,
-                name: 'Michael Brown',
-                email: 'michael.brown@example.com',
-                avatar: 'MB',
-                status: 'active',
-                joined_date: '2024-10-20',
-                loans_count: 2,
-                earnings: 50.00
-            },
-            {
-                id: 3,
-                name: 'Sarah Wilson',
-                email: 'sarah.wilson@example.com',
-                avatar: 'SW',
-                status: 'active',
-                joined_date: '2024-11-01',
-                loans_count: 1,
-                earnings: 25.00
-            },
-            {
-                id: 4,
-                name: 'David Lee',
-                email: 'david.lee@example.com',
-                avatar: 'DL',
-                status: 'pending',
-                joined_date: '2024-11-10',
-                loans_count: 0,
-                earnings: 0
-            }
-        ];
+        // Get referrals with referred user profile data
+        const { data: referrals, error, count } = await supabase
+            .from('referrals')
+            .select(`
+                id,
+                status,
+                earnings,
+                loans_count,
+                created_at,
+                referred_email,
+                profiles!referrals_referred_user_id_fkey(
+                    first_name,
+                    last_name,
+                    email
+                )
+            `, { count: 'exact' })
+            .eq('referrer_id', userId)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + parseInt(limit) - 1);
 
-        // Apply pagination
-        const paginatedReferrals = mockReferrals.slice(offset, offset + parseInt(limit));
+        if (error) throw error;
+
+        // Transform data for frontend
+        const formattedReferrals = (referrals || []).map(ref => {
+            const firstName = ref.profiles?.first_name || '';
+            const lastName = ref.profiles?.last_name || '';
+            const name = `${firstName} ${lastName}`.trim() || 'Anonymous';
+            const email = ref.profiles?.email || ref.referred_email || 'N/A';
+            const initials = firstName && lastName 
+                ? `${firstName[0]}${lastName[0]}`.toUpperCase()
+                : name.substring(0, 2).toUpperCase();
+
+            return {
+                id: ref.id,
+                name,
+                email,
+                avatar: initials,
+                status: ref.status,
+                joined_date: ref.created_at?.split('T')[0] || 'N/A',
+                loans_count: ref.loans_count || 0,
+                earnings: parseFloat(ref.earnings || 0)
+            };
+        });
 
         res.json({
             success: true,
-            data: paginatedReferrals,
+            data: formattedReferrals,
             pagination: {
                 page: parseInt(page),
                 limit: parseInt(limit),
-                total: mockReferrals.length,
-                pages: Math.ceil(mockReferrals.length / parseInt(limit))
+                total: count || 0,
+                pages: Math.ceil((count || 0) / parseInt(limit))
             }
         });
     } catch (error) {
         console.error('Get my referrals error:', error);
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: 'Failed to get referrals',
+            error: error.message
         });
     }
 });
