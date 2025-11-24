@@ -6250,61 +6250,11 @@
 
                 <div class="loan-card" style="margin-top: 20px;">
                     <h3 style="margin-bottom: 20px;">Document History</h3>
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr style="border-bottom: 1px solid #334155;">
-                                    <th style="padding: 12px; text-align: left; color: #94a3b8; font-size: 13px;">Document Type</th>
-                                    <th style="padding: 12px; text-align: left; color: #94a3b8; font-size: 13px;">Upload Date</th>
-                                    <th style="padding: 12px; text-align: left; color: #94a3b8; font-size: 13px;">Status</th>
-                                    <th style="padding: 12px; text-align: left; color: #94a3b8; font-size: 13px;">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr style="border-bottom: 1px solid #334155;">
-                                    <td style="padding: 16px;"><i class="fas fa-id-card" style="margin-right: 8px; color: #38e77b;"></i> National ID</td>
-                                    <td style="padding: 16px;">2024-11-01</td>
-                                    <td style="padding: 16px;"><span style="padding: 4px 12px; background: rgba(56, 231, 123, 0.1); color: #38e77b; border-radius: 12px; font-size: 12px;">Verified</span></td>
-                                    <td style="padding: 16px;">
-                                        <button class="btn-secondary btn-sm" style="margin-right: 8px;"><i class="fas fa-eye"></i> View</button>
-                                        <button class="btn-secondary btn-sm"><i class="fas fa-arrow-down-to-line"></i> Download</button>
-                                    </td>
-                                </tr>
-                                <tr style="border-bottom: 1px solid #334155;">
-                                    <td style="padding: 16px;"><i class="fas fa-file-invoice-dollar" style="margin-right: 8px; color: #f97316;"></i> Payslip</td>
-                                    <td style="padding: 16px;">2024-11-08</td>
-                                    <td style="padding: 16px;"><span style="padding: 4px 12px; background: rgba(249, 115, 22, 0.1); color: #f97316; border-radius: 12px; font-size: 12px;">Pending</span></td>
-                                    <td style="padding: 16px;">
-                                        <button class="btn-secondary btn-sm" style="margin-right: 8px;"><i class="fas fa-eye"></i> View</button>
-                                        <button class="btn-secondary btn-sm"><i class="fas fa-arrow-down-to-line"></i> Download</button>
-                                    </td>
-                                </tr>
-                                <tr style="border-bottom: 1px solid #334155;">
-                                    <td style="padding: 16px;"><i class="fas fa-university" style="margin-right: 8px; color: #38e77b;"></i> Bank Statement</td>
-                                    <td style="padding: 16px;">2024-10-28</td>
-                                    <td style="padding: 16px;"><span style="padding: 4px 12px; background: rgba(56, 231, 123, 0.1); color: #38e77b; border-radius: 12px; font-size: 12px;">Verified</span></td>
-                                    <td style="padding: 16px;">
-                                        <button class="btn-secondary btn-sm" style="margin-right: 8px;"><i class="fas fa-eye"></i> View</button>
-                                        <button class="btn-secondary btn-sm"><i class="fas fa-arrow-down-to-line"></i> Download</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination for Document History -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 20px; padding: 15px 0;" data-pagination="documents">
-                        <button class="btn-primary" style="display: flex; align-items: center; gap: 8px;" onclick="changePage('documents', 'prev')" data-prev-btn>
-                            <i class="fas fa-chevron-left"></i> Previous
-                        </button>
-                        <div style="display: flex; align-items: center; gap: 8px;" data-page-buttons>
-                            <button onclick="goToPage('documents', 1)" class="page-number-btn active" data-page-btn="1">1</button>
-                            <button onclick="goToPage('documents', 2)" class="page-number-btn" data-page-btn="2">2</button>
-                            <span style="color: #94a3b8; font-size: 13px; margin-left: 10px;">Page <span style="font-weight: 600; color: #38e77b;" data-page-number>1</span> of 2 (8 documents)</span>
+                    <div id="documentHistoryContainer">
+                        <div style="text-align: center; padding: 40px; color: #64748b;">
+                            <i class="fas fa-file-alt" style="font-size: 48px; margin-bottom: 15px;"></i>
+                            <p>Loading document history...</p>
                         </div>
-                        <button class="btn-primary" style="display: flex; align-items: center; gap: 8px;" onclick="changePage('documents', 'next')" data-next-btn>
-                            Next <i class="fas fa-chevron-right"></i>
-                        </button>
                     </div>
                 </div>
             </div>

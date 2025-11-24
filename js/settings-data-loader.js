@@ -455,6 +455,8 @@ const SettingsDataLoader = {
      */
     updateDocumentsList(documents) {
         const container = document.getElementById('documentsContainer');
+        const historyContainer = document.getElementById('documentHistoryContainer');
+        
         if (!container) return;
         
         if (documents.length === 0) {
@@ -464,9 +466,19 @@ const SettingsDataLoader = {
                     <p>No documents uploaded yet</p>
                 </div>
             `;
+            
+            if (historyContainer) {
+                historyContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #64748b;">
+                        <i class="fas fa-file-alt" style="font-size: 48px; margin-bottom: 15px;"></i>
+                        <p>No document history available</p>
+                    </div>
+                `;
+            }
             return;
         }
         
+        // Update "My Uploaded Documents" section
         const html = documents.map(doc => {
             const statusColor = doc.status === 'verified' ? '#38e77b' : doc.status === 'pending' ? '#f59e0b' : '#ef4444';
             const statusIcon = doc.status === 'verified' ? 'fa-check-circle' : doc.status === 'pending' ? 'fa-clock' : 'fa-times-circle';
@@ -494,6 +506,65 @@ const SettingsDataLoader = {
         }).join('');
         
         container.innerHTML = html;
+        
+        // Update "Document History" table
+        if (historyContainer) {
+            const iconMap = {
+                'National ID': 'fa-id-card',
+                'Payslip': 'fa-file-invoice-dollar',
+                'Bank Statement': 'fa-university',
+                'Employment Contract': 'fa-file-contract',
+                'Proof of Address': 'fa-home',
+                'Additional Documents': 'fa-folder-plus'
+            };
+            
+            const tableHtml = `
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid #334155;">
+                                <th style="padding: 12px; text-align: left; color: #94a3b8; font-size: 13px;">Document Type</th>
+                                <th style="padding: 12px; text-align: left; color: #94a3b8; font-size: 13px;">Upload Date</th>
+                                <th style="padding: 12px; text-align: left; color: #94a3b8; font-size: 13px;">Status</th>
+                                <th style="padding: 12px; text-align: left; color: #94a3b8; font-size: 13px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${documents.map(doc => {
+                                const statusColor = doc.status === 'verified' ? '#38e77b' : doc.status === 'pending' ? '#f59e0b' : '#ef4444';
+                                const icon = iconMap[doc.document_type] || 'fa-file-alt';
+                                const iconColor = doc.status === 'verified' ? '#38e77b' : doc.status === 'pending' ? '#f97316' : '#ef4444';
+                                
+                                return `
+                                    <tr style="border-bottom: 1px solid #334155;">
+                                        <td style="padding: 16px;">
+                                            <i class="fas ${icon}" style="margin-right: 8px; color: ${iconColor};"></i> 
+                                            ${doc.document_type || 'Document'}
+                                        </td>
+                                        <td style="padding: 16px;">${new Date(doc.uploaded_at).toISOString().split('T')[0]}</td>
+                                        <td style="padding: 16px;">
+                                            <span style="padding: 4px 12px; background: rgba(${statusColor === '#38e77b' ? '56, 231, 123' : statusColor === '#f59e0b' ? '245, 158, 11' : '239, 68, 68'}, 0.1); color: ${statusColor}; border-radius: 12px; font-size: 12px; text-transform: capitalize;">
+                                                ${doc.status}
+                                            </span>
+                                        </td>
+                                        <td style="padding: 16px;">
+                                            <button class="btn-secondary btn-sm" style="margin-right: 8px;" onclick="viewDocument('${doc.id}')">
+                                                <i class="fas fa-eye"></i> View
+                                            </button>
+                                            <button class="btn-secondary btn-sm" onclick="downloadDocument('${doc.id}')">
+                                                <i class="fas fa-arrow-down-to-line"></i> Download
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            historyContainer.innerHTML = tableHtml;
+        }
     },
 
     /**
