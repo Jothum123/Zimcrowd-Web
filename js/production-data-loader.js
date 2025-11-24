@@ -128,22 +128,132 @@ const ProductionDataLoader = {
         try {
             console.log('📈 Loading investments data...');
             
-            const [myInvestments, opportunities] = await Promise.all([
-                this.apiRequest('/investments/my-investments'),
-                this.apiRequest('/investments/opportunities')
+            const [portfolio, performance, myInvestments] = await Promise.all([
+                this.apiRequest('/investments/portfolio'),
+                this.apiRequest('/investments/performance'),
+                this.apiRequest('/investments/my-investments')
             ]);
             
-            if (myInvestments.success) {
-                this.updateMyInvestmentsUI(myInvestments.data);
+            // Update Portfolio Tab
+            if (portfolio.success && portfolio.data) {
+                const data = portfolio.data;
+                
+                // Update portfolio stats
+                const totalInvested = document.getElementById('portfolioTotalInvested');
+                const avgReturn = document.getElementById('portfolioAvgReturn');
+                const activeCount = document.getElementById('portfolioActiveCount');
+                const totalReturns = document.getElementById('portfolioTotalReturns');
+                
+                if (totalInvested) totalInvested.textContent = `$${parseFloat(data.total_invested || 0).toLocaleString()}`;
+                if (avgReturn) avgReturn.textContent = `${parseFloat(data.average_return || 0).toFixed(1)}%`;
+                if (activeCount) activeCount.textContent = data.active_investments || 0;
+                if (totalReturns) totalReturns.textContent = `$${parseFloat(data.total_returns || 0).toLocaleString()}`;
+                
+                // Update header stats
+                const headerInvested = document.getElementById('portfolioHeaderInvested');
+                const headerReturns = document.getElementById('portfolioHeaderReturns');
+                const headerAvgReturn = document.getElementById('portfolioHeaderAvgReturn');
+                
+                if (headerInvested) headerInvested.textContent = `$${parseFloat(data.total_invested || 0).toFixed(2)} Total Invested`;
+                if (headerReturns) headerReturns.textContent = `$${parseFloat(data.total_returns || 0).toFixed(2)} Total Returns`;
+                if (headerAvgReturn) headerAvgReturn.textContent = `${parseFloat(data.average_return || 0).toFixed(1)}% Avg. Return`;
+                
+                console.log('✅ Portfolio stats updated');
             }
             
-            if (opportunities.success) {
-                this.updateInvestmentOpportunitiesUI(opportunities.data);
+            // Update Performance Tab
+            if (performance.success && performance.data) {
+                const data = performance.data;
+                
+                const perfTotalEarnings = document.getElementById('perfTotalEarnings');
+                const perfThisMonth = document.getElementById('perfThisMonth');
+                const perfAvgReturn = document.getElementById('perfAvgReturn');
+                const perfOnTimePayments = document.getElementById('perfOnTimePayments');
+                
+                if (perfTotalEarnings) perfTotalEarnings.textContent = `+$${parseFloat(data.total_earnings || 0).toLocaleString()}`;
+                if (perfThisMonth) perfThisMonth.textContent = `+$${parseFloat(data.earnings_this_month || 0).toLocaleString()}`;
+                if (perfAvgReturn) perfAvgReturn.textContent = `${parseFloat(data.average_annual_return || 0).toFixed(1)}%`;
+                if (perfOnTimePayments) perfOnTimePayments.textContent = `${parseFloat(data.on_time_payment_rate || 0).toFixed(0)}%`;
+                
+                console.log('✅ Performance stats updated');
             }
+            
+            // Update My Investments list
+            if (myInvestments.success && myInvestments.data) {
+                const container = document.getElementById('portfolioCardsContainer');
+                if (container && myInvestments.data.length > 0) {
+                    container.innerHTML = myInvestments.data.map(inv => this.createInvestmentCard(inv)).join('');
+                    console.log('✅ Investment cards updated:', myInvestments.data.length);
+                }
+            }
+            
         } catch (error) {
             console.error('Failed to load investments:', error);
             this.showFallbackData('investments');
         }
+    },
+    
+    createInvestmentCard(investment) {
+        const borrowerInitial = investment.borrower_name ? investment.borrower_name[0].toUpperCase() : 'B';
+        const principal = parseFloat(investment.amount || 0);
+        const returns = parseFloat(investment.returns || 0);
+        const returnPercent = principal > 0 ? ((returns / principal) * 100).toFixed(1) : 0;
+        const monthlyReturn = parseFloat(investment.monthly_return || 0);
+        const progress = parseFloat(investment.progress || 0);
+        const status = investment.status || 'active';
+        
+        const statusColors = {
+            active: { bg: 'rgba(56, 231, 123, 0.1)', color: '#38e77b', text: 'Active' },
+            completed: { bg: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', text: 'Completed' },
+            defaulted: { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', text: 'Defaulted' }
+        };
+        
+        const statusStyle = statusColors[status] || statusColors.active;
+        
+        return `
+            <div class="portfolio-card">
+                <div class="card-header">
+                    <div class="borrower-info">
+                        <div class="borrower-avatar">${borrowerInitial}</div>
+                        <div class="borrower-details">
+                            <div class="borrower-name">${investment.borrower_name || 'Anonymous'}</div>
+                            <div class="borrower-purpose">${investment.purpose || 'Personal Loan'}</div>
+                        </div>
+                    </div>
+                    <span style="padding: 6px 12px; background: ${statusStyle.bg}; color: ${statusStyle.color}; border-radius: 8px; font-size: 12px; font-weight: 600;">
+                        ${statusStyle.text}
+                    </span>
+                </div>
+                
+                <div class="card-body">
+                    <div class="card-metrics">
+                        <div class="metric-item">
+                            <span class="metric-label">Principal</span>
+                            <span class="metric-value">$${principal.toFixed(2)}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Returns</span>
+                            <span class="metric-value returns-positive">+$${returns.toFixed(2)} (${returnPercent}%)</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Monthly Return</span>
+                            <span class="metric-value">$${monthlyReturn.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progress}%"></div>
+                        </div>
+                        <div class="progress-text">${progress.toFixed(0)}% completed</div>
+                    </div>
+                </div>
+                
+                <div class="card-actions">
+                    <button class="btn-secondary" style="flex: 1;">View Details</button>
+                </div>
+            </div>
+        `;
     },
 
     /**
