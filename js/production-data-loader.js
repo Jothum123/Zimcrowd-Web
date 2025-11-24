@@ -201,6 +201,10 @@ const ProductionDataLoader = {
         const monthlyReturn = parseFloat(investment.monthly_return || 0);
         const progress = parseFloat(investment.progress || 0);
         const status = investment.status || 'active';
+        const investmentId = investment.id || investment.investment_id;
+        const loanId = investment.loan_id;
+        const riskLevel = investment.risk_level || 'medium';
+        const interestRate = parseFloat(investment.interest_rate || 0);
         
         const statusColors = {
             active: { bg: 'rgba(56, 231, 123, 0.1)', color: '#38e77b', text: 'Active' },
@@ -210,14 +214,40 @@ const ProductionDataLoader = {
         
         const statusStyle = statusColors[status] || statusColors.active;
         
+        // Generate star rating based on risk level
+        const riskRatings = {
+            low: 4.5,
+            medium: 3.5,
+            high: 2.5
+        };
+        const rating = riskRatings[riskLevel] || 3.5;
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating % 1 !== 0;
+        
+        let starsHTML = '';
+        for (let i = 0; i < fullStars; i++) {
+            starsHTML += '<i class="fas fa-star"></i>';
+        }
+        if (hasHalfStar) {
+            starsHTML += '<i class="fas fa-star-half-alt"></i>';
+        }
+        const emptyStars = 5 - Math.ceil(rating);
+        for (let i = 0; i < emptyStars; i++) {
+            starsHTML += '<i class="far fa-star"></i>';
+        }
+        
         return `
-            <div class="portfolio-card">
+            <div class="portfolio-card" data-investment-id="${investmentId}">
                 <div class="card-header">
                     <div class="borrower-info">
                         <div class="borrower-avatar">${borrowerInitial}</div>
                         <div class="borrower-details">
                             <div class="borrower-name">${investment.borrower_name || 'Anonymous'}</div>
                             <div class="borrower-purpose">${investment.purpose || 'Personal Loan'}</div>
+                            <span class="risk-badge ${riskLevel}">
+                                ${starsHTML}
+                                <span class="rating-text">${rating}/5</span>
+                            </span>
                         </div>
                     </div>
                     <span style="padding: 6px 12px; background: ${statusStyle.bg}; color: ${statusStyle.color}; border-radius: 8px; font-size: 12px; font-weight: 600;">
@@ -242,15 +272,23 @@ const ProductionDataLoader = {
                     </div>
                     
                     <div class="card-progress">
+                        <div class="progress-info">
+                            <span>Progress</span>
+                            <span>${progress.toFixed(0)}%</span>
+                        </div>
                         <div class="progress-bar">
                             <div class="progress-fill" style="width: ${progress}%"></div>
                         </div>
-                        <div class="progress-text">${progress.toFixed(0)}% completed</div>
                     </div>
                 </div>
                 
                 <div class="card-actions">
-                    <button class="btn-secondary" style="flex: 1;">View Details</button>
+                    <button class="btn-secondary" style="flex: 1;" onclick="viewInvestmentDetails('${investmentId}')">
+                        <i class="fas fa-eye"></i> View Details
+                    </button>
+                    <button class="btn-primary" style="flex: 1;" onclick="autoInvestSimilar('${loanId}', '${riskLevel}', ${interestRate})">
+                        <i class="fas fa-robot"></i> Auto-Invest Similar
+                    </button>
                 </div>
             </div>
         `;

@@ -11870,6 +11870,239 @@ How it works:
                 icon.className = 'fas fa-eye';
             }
         }
+
+        // View Investment Details
+        async function viewInvestmentDetails(investmentId) {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE_URL}/api/investments/${investmentId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    showInvestmentDetailsModal(result.data);
+                } else {
+                    alert('Failed to load investment details');
+                }
+            } catch (error) {
+                console.error('Error loading investment details:', error);
+                alert('Error loading investment details');
+            }
+        }
+
+        function showInvestmentDetailsModal(investment) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px;';
+            
+            const principal = parseFloat(investment.amount || 0);
+            const returns = parseFloat(investment.returns || 0);
+            const returnPercent = principal > 0 ? ((returns / principal) * 100).toFixed(1) : 0;
+            const progress = parseFloat(investment.progress || 0);
+            
+            modal.innerHTML = `
+                <div style="background: #1e293b; border-radius: 16px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 30px; position: relative;">
+                    <button onclick="this.closest('.modal-overlay').remove()" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; color: white; font-size: 20px;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    
+                    <h2 style="margin-bottom: 20px; color: #38e77b;">Investment Details</h2>
+                    
+                    <div style="background: #0f172a; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                            <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #38e77b, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: white;">
+                                ${investment.borrower_name ? investment.borrower_name[0].toUpperCase() : 'B'}
+                            </div>
+                            <div>
+                                <h3 style="margin: 0 0 5px 0;">${investment.borrower_name || 'Anonymous'}</h3>
+                                <p style="margin: 0; color: #94a3b8;">${investment.purpose || 'Personal Loan'}</p>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                            <div>
+                                <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Principal Amount</p>
+                                <p style="margin: 0; font-size: 24px; font-weight: 700; color: #38e77b;">$${principal.toFixed(2)}</p>
+                            </div>
+                            <div>
+                                <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Total Returns</p>
+                                <p style="margin: 0; font-size: 24px; font-weight: 700; color: #3b82f6;">+$${returns.toFixed(2)}</p>
+                            </div>
+                            <div>
+                                <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Return Rate</p>
+                                <p style="margin: 0; font-size: 20px; font-weight: 700;">${returnPercent}%</p>
+                            </div>
+                            <div>
+                                <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Monthly Return</p>
+                                <p style="margin: 0; font-size: 20px; font-weight: 700;">$${parseFloat(investment.monthly_return || 0).toFixed(2)}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #0f172a; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <h3 style="margin: 0 0 15px 0;">Loan Progress</h3>
+                        <div style="margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="color: #94a3b8;">Progress</span>
+                                <span style="font-weight: 700;">${progress.toFixed(0)}%</span>
+                            </div>
+                            <div style="background: #1e293b; height: 12px; border-radius: 6px; overflow: hidden;">
+                                <div style="background: linear-gradient(90deg, #38e77b, #3b82f6); height: 100%; width: ${progress}%; transition: width 0.3s;"></div>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px;">
+                            <div>
+                                <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Start Date</p>
+                                <p style="margin: 0;">${investment.start_date ? new Date(investment.start_date).toLocaleDateString() : 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">End Date</p>
+                                <p style="margin: 0;">${investment.end_date ? new Date(investment.end_date).toLocaleDateString() : 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Interest Rate</p>
+                                <p style="margin: 0;">${parseFloat(investment.interest_rate || 0).toFixed(1)}% APR</p>
+                            </div>
+                            <div>
+                                <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Risk Level</p>
+                                <p style="margin: 0; text-transform: capitalize;">${investment.risk_level || 'Medium'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #0f172a; padding: 20px; border-radius: 12px;">
+                        <h3 style="margin: 0 0 15px 0;">Investment Status</h3>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="padding: 8px 16px; background: rgba(56, 231, 123, 0.1); color: #38e77b; border-radius: 8px; font-weight: 600; text-transform: capitalize;">
+                                ${investment.status || 'Active'}
+                            </span>
+                            <span style="color: #94a3b8;">Last updated: ${investment.updated_at ? new Date(investment.updated_at).toLocaleDateString() : 'N/A'}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button onclick="this.closest('.modal-overlay').remove()" class="btn-secondary" style="flex: 1;">
+                            Close
+                        </button>
+                        <button onclick="autoInvestSimilar('${investment.loan_id}', '${investment.risk_level}', ${investment.interest_rate}); this.closest('.modal-overlay').remove();" class="btn-primary" style="flex: 1;">
+                            <i class="fas fa-robot"></i> Auto-Invest Similar
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        // Auto-Invest Similar
+        async function autoInvestSimilar(loanId, riskLevel, interestRate) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px;';
+            
+            modal.innerHTML = `
+                <div style="background: #1e293b; border-radius: 16px; max-width: 500px; width: 100%; padding: 30px; position: relative;">
+                    <button onclick="this.closest('.modal-overlay').remove()" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; color: white; font-size: 20px;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #38e77b, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 36px;">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <h2 style="margin: 0 0 10px 0; color: #38e77b;">Auto-Invest Setup</h2>
+                        <p style="color: #94a3b8; margin: 0;">Automatically invest in similar opportunities</p>
+                    </div>
+                    
+                    <div style="background: #0f172a; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <h3 style="margin: 0 0 15px 0; font-size: 16px;">Investment Criteria</h3>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; color: #94a3b8; margin-bottom: 8px; font-size: 14px;">Amount per Investment</label>
+                            <input type="number" id="autoInvestAmount" value="100" min="10" step="10" style="width: 100%; padding: 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: white;">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; color: #94a3b8; margin-bottom: 8px; font-size: 14px;">Risk Level</label>
+                            <select id="autoInvestRisk" style="width: 100%; padding: 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: white;">
+                                <option value="low" ${riskLevel === 'low' ? 'selected' : ''}>Low Risk</option>
+                                <option value="medium" ${riskLevel === 'medium' ? 'selected' : ''}>Medium Risk</option>
+                                <option value="high" ${riskLevel === 'high' ? 'selected' : ''}>High Risk</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; color: #94a3b8; margin-bottom: 8px; font-size: 14px;">Minimum Interest Rate (%)</label>
+                            <input type="number" id="autoInvestRate" value="${interestRate || 10}" min="1" max="50" step="0.5" style="width: 100%; padding: 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: white;">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; color: #94a3b8; margin-bottom: 8px; font-size: 14px;">Maximum Monthly Investment</label>
+                            <input type="number" id="autoInvestMax" value="500" min="100" step="100" style="width: 100%; padding: 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: white;">
+                        </div>
+                        
+                        <div style="background: rgba(56, 231, 123, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #38e77b;">
+                            <p style="margin: 0; color: #38e77b; font-size: 14px;">
+                                <i class="fas fa-info-circle"></i> Auto-invest will automatically fund loans matching your criteria
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="this.closest('.modal-overlay').remove()" class="btn-secondary" style="flex: 1;">
+                            Cancel
+                        </button>
+                        <button onclick="confirmAutoInvest()" class="btn-primary" style="flex: 1;">
+                            <i class="fas fa-check"></i> Enable Auto-Invest
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        async function confirmAutoInvest() {
+            const amount = document.getElementById('autoInvestAmount').value;
+            const risk = document.getElementById('autoInvestRisk').value;
+            const rate = document.getElementById('autoInvestRate').value;
+            const maxMonthly = document.getElementById('autoInvestMax').value;
+            
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE_URL}/api/investments/auto-invest/setup`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        amount_per_investment: parseFloat(amount),
+                        risk_level: risk,
+                        min_interest_rate: parseFloat(rate),
+                        max_monthly_investment: parseFloat(maxMonthly),
+                        enabled: true
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.querySelector('.modal-overlay').remove();
+                    alert('✅ Auto-invest enabled successfully! We\'ll automatically invest in matching opportunities.');
+                } else {
+                    alert('Failed to enable auto-invest: ' + (result.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error enabling auto-invest:', error);
+                alert('Error enabling auto-invest. Please try again.');
+            }
+        }
     </script>
 </body>
 </html>
