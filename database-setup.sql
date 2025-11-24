@@ -300,37 +300,60 @@ ALTER TABLE wallet ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 -- User Settings Policies
+DROP POLICY IF EXISTS "Users can view own settings" ON user_settings;
 CREATE POLICY "Users can view own settings" ON user_settings FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own settings" ON user_settings;
 CREATE POLICY "Users can update own settings" ON user_settings FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own settings" ON user_settings;
 CREATE POLICY "Users can insert own settings" ON user_settings FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Login Activity Policies
+DROP POLICY IF EXISTS "Users can view own login activity" ON login_activity;
 CREATE POLICY "Users can view own login activity" ON login_activity FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "System can insert login activity" ON login_activity;
 CREATE POLICY "System can insert login activity" ON login_activity FOR INSERT WITH CHECK (true);
 
 -- Loans Policies
+DROP POLICY IF EXISTS "Users can view own loans" ON loans;
 CREATE POLICY "Users can view own loans" ON loans FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can create loans" ON loans;
 CREATE POLICY "Users can create loans" ON loans FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Investments Policies
+DROP POLICY IF EXISTS "Users can view own investments" ON investments;
 CREATE POLICY "Users can view own investments" ON investments FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can create investments" ON investments;
 CREATE POLICY "Users can create investments" ON investments FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Transactions Policies
+DROP POLICY IF EXISTS "Users can view own transactions" ON transactions;
 CREATE POLICY "Users can view own transactions" ON transactions FOR SELECT USING (auth.uid() = user_id);
 
 -- Referrals Policies
+DROP POLICY IF EXISTS "Users can view own referrals" ON referrals;
 CREATE POLICY "Users can view own referrals" ON referrals FOR SELECT USING (auth.uid() = referrer_id OR auth.uid() = referred_id);
 
 -- Documents Policies
+DROP POLICY IF EXISTS "Users can view own documents" ON documents;
 CREATE POLICY "Users can view own documents" ON documents FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can upload documents" ON documents;
 CREATE POLICY "Users can upload documents" ON documents FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Wallet Policies
+DROP POLICY IF EXISTS "Users can view own wallet" ON wallet;
 CREATE POLICY "Users can view own wallet" ON wallet FOR SELECT USING (auth.uid() = user_id);
 
 -- Notifications Policies
+DROP POLICY IF EXISTS "Users can view own notifications" ON notifications;
 CREATE POLICY "Users can view own notifications" ON notifications FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own notifications" ON notifications;
 CREATE POLICY "Users can update own notifications" ON notifications FOR UPDATE USING (auth.uid() = user_id);
 
 -- ============================================
@@ -347,10 +370,12 @@ END;
 $$ language 'plpgsql';
 
 -- Trigger for user_settings
+DROP TRIGGER IF EXISTS update_user_settings_updated_at ON user_settings;
 CREATE TRIGGER update_user_settings_updated_at BEFORE UPDATE ON user_settings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Trigger for wallet
+DROP TRIGGER IF EXISTS update_wallet_updated_at ON wallet;
 CREATE TRIGGER update_wallet_updated_at BEFORE UPDATE ON wallet
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
