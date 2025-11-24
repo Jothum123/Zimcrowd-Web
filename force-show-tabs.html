@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Force Show Settings Tabs</title>
+    <script>
+        // This script will force all settings tabs to be visible
+        window.addEventListener('load', () => {
+            console.log('🔧 Force showing all settings tabs...');
+            
+            // Find all tab content divs in settings section
+            const tabContents = document.querySelectorAll('#settings-section .tab-content');
+            
+            console.log(`Found ${tabContents.length} tab contents`);
+            
+            tabContents.forEach((tab, index) => {
+                // Force display
+                tab.style.display = 'block !important';
+                tab.style.visibility = 'visible !important';
+                tab.style.opacity = '1 !important';
+                tab.classList.add('active');
+                
+                console.log(`Tab ${index + 1} (${tab.id}):`, {
+                    display: window.getComputedStyle(tab).display,
+                    visibility: window.getComputedStyle(tab).visibility,
+                    opacity: window.getComputedStyle(tab).opacity,
+                    hasContent: tab.innerHTML.length > 0,
+                    contentPreview: tab.innerHTML.substring(0, 100)
+                });
+            });
+            
+            console.log('✅ All tabs should now be visible');
+        });
+    </script>
+</head>
+<body>
+    <h1>Settings Tabs Force Show Script</h1>
+    <p>Copy this script and paste it into your browser console while on the dashboard page:</p>
+    <pre style="background: #f5f5f5; padding: 20px; border-radius: 8px; overflow-x: auto;">
+// Force show all settings tabs
+document.querySelectorAll('#settings-section .tab-content').forEach((tab, index) => {
+    tab.style.display = 'block';
+    tab.style.visibility = 'visible';
+    tab.style.opacity = '1';
+    tab.classList.add('active');
+    console.log(`✅ Forced ${tab.id} to show`);
+});
+    </pre>
+    
+    <h2>Or click this button after opening dashboard:</h2>
+    <button onclick="forceShowTabs()" style="padding: 12px 24px; background: #38e77b; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
+        Force Show All Tabs
+    </button>
+    
+    <script>
+        function forceShowTabs() {
+            const script = `
+document.querySelectorAll('#settings-section .tab-content').forEach((tab) => {
+    tab.style.display = 'block';
+    tab.style.visibility = 'visible';
+    tab.style.opacity = '1';
+    tab.classList.add('active');
+    console.log('✅ Forced ' + tab.id + ' to show');
+});
+            `;
+            
+            navigator.clipboard.writeText(script).then(() => {
+                alert('Script copied to clipboard! Paste it into your browser console on the dashboard page.');
+            });
+        }
+    </script>
+</body>
+</html>
