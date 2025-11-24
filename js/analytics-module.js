@@ -33,24 +33,56 @@ class AnalyticsModule {
 
     async loadAnalyticsData() {
         try {
-            const [portfolioData, transactionData, insightsData] = await Promise.all([
-                DashboardData.getPortfolioAnalytics(),
-                DashboardData.getTransactionAnalytics(),
-                DashboardData.getFinancialInsights()
+            const token = this.getAuthToken();
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            const baseUrl = 'https://zimcrowd-backend.vercel.app/api';
+            
+            const [portfolioRes, loansRes, investmentsRes, transactionsRes] = await Promise.all([
+                fetch(`${baseUrl}/analytics/portfolio-history?days=30`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                fetch(`${baseUrl}/analytics/loan-distribution`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                fetch(`${baseUrl}/investments`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                fetch(`${baseUrl}/analytics/monthly-activity?months=6`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
             ]);
 
+            const [portfolioData, loansData, investmentsData, transactionsData] = await Promise.all([
+                portfolioRes.json(),
+                loansRes.json(),
+                investmentsRes.json(),
+                transactionsRes.json()
+            ]);
+
+            console.log('📊 Analytics data loaded:', { portfolioData, loansData, investmentsData, transactionsData });
+
             this.analyticsData = {
-                portfolio: portfolioData,
-                transactions: transactionData,
-                insights: insightsData,
+                portfolio: portfolioData.success ? portfolioData.data : [],
+                loans: loansData.success ? loansData.data : {},
+                investments: investmentsData.success ? investmentsData.data : [],
+                transactions: transactionsData.success ? transactionsData.data : {},
                 lastUpdated: new Date()
             };
 
         } catch (error) {
             console.error('Error loading analytics data:', error);
-            // Use mock data for development
+            // Use mock data as fallback
             this.analyticsData = this.getMockAnalyticsData();
         }
+    }
+
+    getAuthToken() {
+        return localStorage.getItem('authToken') || 
+               localStorage.getItem('access_token') ||
+               JSON.parse(localStorage.getItem('authData') || '{}').access_token;
     }
 
     initializeCharts() {
@@ -389,31 +421,72 @@ class AnalyticsModule {
 
     // Chart data methods
     getPortfolioChartData(timeframe = '30d') {
-        const days = this.timeframes[timeframe];
-        const data = this.analyticsData.portfolio?.performanceData || [];
+        const days = this.timeframes[timeframe] || 30;
+        const portfolioHistory = this.analyticsData.portfolio || [];
         
+        if (Array.isArray(portfolioHistory) && portfolioHistory.length > 0) {
+            return {
+                labels: portfolioHistory.map(item => {
+                    const date = new Date(item.date);
+                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                }),
+                values: portfolioHistory.map(item => item.value)
+            };
+        }
+        
+        // Fallback to generated data
         return {
             labels: this.generateDateLabels(days),
-            values: this.generatePortfolioValues(days, data)
+            values: this.generatePortfolioValues(days, [])
         };
     }
 
     getIncomeChartData(timeframe = '30d') {
-        const data = this.analyticsData.transactions?.monthlyData || [];
+        const monthlyData = this.analyticsData.transactions || {};
         
+        if (Object.keys(monthlyData).length > 0) {
+            const months = Object.keys(monthlyData).sort();
+            return {
+                labels: months.map(m => {
+                    const [year, month] = m.split('-');
+                    const date = new Date(year, month - 1);
+                    return date.toLocaleDateString('en-US', { month: 'short' });
+                }),
+                income: months.map(m => monthlyData[m].deposits || 0),
+                expenses: months.map(m => (monthlyData[m].withdrawals || 0) + (monthlyData[m].investments || 0))
+            };
+        }
+        
+        // Fallback data
         return {
             labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            income: [5000, 5200, 4800, 5500, 5300, 5600],
-            expenses: [3200, 3400, 3100, 3600, 3300, 3500]
+            income: [0, 0, 0, 0, 0, 0],
+            expenses: [0, 0, 0, 0, 0, 0]
         };
     }
 
     getInvestmentBreakdownData() {
-        const investments = this.analyticsData.portfolio?.breakdown || [];
+        const loans = this.analyticsData.loans || {};
         
+        // Calculate total from loan distribution
+        const total = (loans.active || 0) + (loans.pending || 0) + (loans.completed || 0);
+        
+        if (total > 0) {
+            return {
+                labels: ['Active Loans', 'Pending Loans', 'Completed Loans', 'Defaulted Loans'],
+                values: [
+                    loans.active || 0,
+                    loans.pending || 0,
+                    loans.completed || 0,
+                    loans.defaulted || 0
+                ]
+            };
+        }
+        
+        // Fallback: show zero state
         return {
-            labels: ['Stocks', 'Bonds', 'Real Estate', 'Crypto', 'Commodities'],
-            values: [45000, 25000, 15000, 8000, 7000]
+            labels: ['Loans', 'Bonds', 'Cash'],
+            values: [0, 0, 0]
         };
     }
 
