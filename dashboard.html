@@ -12023,28 +12023,62 @@ How it works:
             try {
                 showToast('info', 'Downloading', `Preparing ${doc.title}...`);
                 
-                // Fetch the markdown document
-                const response = await fetch(`documents/${doc.file}`);
-                if (!response.ok) throw new Error('Document not found');
+                // Try multiple paths for the document
+                const paths = [
+                    `documents/${doc.file}`,
+                    `./documents/${doc.file}`,
+                    `/documents/${doc.file}`
+                ];
                 
-                const markdown = await response.text();
+                let markdown = null;
+                let lastError = null;
+                
+                for (const path of paths) {
+                    try {
+                        console.log(`Trying to fetch from: ${path}`);
+                        const response = await fetch(path);
+                        if (response.ok) {
+                            markdown = await response.text();
+                            console.log(`Successfully fetched from: ${path}`);
+                            break;
+                        }
+                    } catch (err) {
+                        lastError = err;
+                        console.warn(`Failed to fetch from ${path}:`, err);
+                    }
+                }
+                
+                if (!markdown) {
+                    throw new Error(lastError || 'Document not found in any path');
+                }
                 
                 // Create a blob and download
-                const blob = new Blob([markdown], { type: 'text/markdown' });
+                const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
+                a.style.display = 'none';
                 a.href = url;
                 a.download = doc.file;
+                
+                // Add to document, click, and remove
                 document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
+                
+                // Small delay to ensure the element is in the DOM
+                setTimeout(() => {
+                    a.click();
+                    
+                    // Cleanup after a short delay
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(url);
+                    }, 100);
+                }, 10);
                 
                 showToast('success', 'Downloaded', `${doc.title} downloaded successfully`);
                 
             } catch (error) {
                 console.error('Error downloading document:', error);
-                showToast('error', 'Error', 'Failed to download document');
+                showToast('error', 'Download Failed', `Could not download ${doc.title}. Please try again.`);
             }
         }
 
