@@ -169,6 +169,7 @@ const ProductionDataLoader = {
             if (performance.success && performance.data) {
                 const data = performance.data;
                 
+                // Main stats
                 const perfTotalEarnings = document.getElementById('perfTotalEarnings');
                 const perfThisMonth = document.getElementById('perfThisMonth');
                 const perfAvgReturn = document.getElementById('perfAvgReturn');
@@ -178,6 +179,46 @@ const ProductionDataLoader = {
                 if (perfThisMonth) perfThisMonth.textContent = `+$${parseFloat(data.earnings_this_month || 0).toLocaleString()}`;
                 if (perfAvgReturn) perfAvgReturn.textContent = `${parseFloat(data.average_annual_return || 0).toFixed(1)}%`;
                 if (perfOnTimePayments) perfOnTimePayments.textContent = `${parseFloat(data.on_time_payment_rate || 0).toFixed(0)}%`;
+                
+                // Monthly Performance
+                const perfLastMonth = document.getElementById('perfLastMonth');
+                const perfThisMonthDetail = document.getElementById('perfThisMonthDetail');
+                const perfGrowthRate = document.getElementById('perfGrowthRate');
+                
+                if (perfLastMonth) perfLastMonth.textContent = `+$${parseFloat(data.earnings_last_month || 0).toFixed(2)}`;
+                if (perfThisMonthDetail) perfThisMonthDetail.textContent = `+$${parseFloat(data.earnings_this_month || 0).toFixed(2)}`;
+                if (perfGrowthRate) {
+                    const growth = parseFloat(data.growth_rate || 0);
+                    perfGrowthRate.textContent = `${growth >= 0 ? '+' : ''}${growth.toFixed(1)}%`;
+                    perfGrowthRate.style.color = growth >= 0 ? '#38e77b' : '#ef4444';
+                }
+                
+                // Best Performing
+                const perfHighestReturn = document.getElementById('perfHighestReturn');
+                const perfBestInvestment = document.getElementById('perfBestInvestment');
+                const perfTotalProfit = document.getElementById('perfTotalProfit');
+                
+                if (perfHighestReturn) perfHighestReturn.textContent = `${parseFloat(data.highest_return_rate || 0).toFixed(1)}%`;
+                if (perfBestInvestment) perfBestInvestment.textContent = `$${parseFloat(data.best_investment_amount || 0).toFixed(2)}`;
+                if (perfTotalProfit) perfTotalProfit.textContent = `+$${parseFloat(data.total_profit || 0).toFixed(2)}`;
+                
+                // Investment Duration
+                const perfAvgDuration = document.getElementById('perfAvgDuration');
+                const perfActiveCount = document.getElementById('perfActiveCount');
+                const perfCompletedCount = document.getElementById('perfCompletedCount');
+                
+                if (perfAvgDuration) perfAvgDuration.textContent = `${Math.round(data.average_duration_months || 0)} months`;
+                if (perfActiveCount) perfActiveCount.textContent = data.active_investments_count || 0;
+                if (perfCompletedCount) perfCompletedCount.textContent = data.completed_investments_count || 0;
+                
+                // Risk Distribution
+                const riskData = data.risk_distribution || {};
+                this.updateRiskDistribution(riskData);
+                
+                // Top Performing Investments
+                if (data.top_performers && data.top_performers.length > 0) {
+                    this.updateTopPerformers(data.top_performers);
+                }
                 
                 console.log('✅ Performance stats updated');
             }
@@ -222,6 +263,104 @@ const ProductionDataLoader = {
             console.error('Failed to load investments:', error);
             this.showFallbackData('investments');
         }
+    },
+    
+    updateRiskDistribution(riskData) {
+        const low = riskData.low || { percentage: 0, amount: 0, count: 0 };
+        const medium = riskData.medium || { percentage: 0, amount: 0, count: 0 };
+        const high = riskData.high || { percentage: 0, amount: 0, count: 0 };
+        
+        // Update Low Risk
+        const riskLowPercent = document.getElementById('riskLowPercent');
+        const riskLowBar = document.getElementById('riskLowBar');
+        const riskLowAmount = document.getElementById('riskLowAmount');
+        const riskLowCount = document.getElementById('riskLowCount');
+        
+        if (riskLowPercent) riskLowPercent.textContent = `${parseFloat(low.percentage || 0).toFixed(1)}%`;
+        if (riskLowBar) riskLowBar.style.width = `${parseFloat(low.percentage || 0)}%`;
+        if (riskLowAmount) riskLowAmount.textContent = `$${parseFloat(low.amount || 0).toFixed(2)}`;
+        if (riskLowCount) riskLowCount.textContent = `${low.count || 0} investments`;
+        
+        // Update Medium Risk
+        const riskMediumPercent = document.getElementById('riskMediumPercent');
+        const riskMediumBar = document.getElementById('riskMediumBar');
+        const riskMediumAmount = document.getElementById('riskMediumAmount');
+        const riskMediumCount = document.getElementById('riskMediumCount');
+        
+        if (riskMediumPercent) riskMediumPercent.textContent = `${parseFloat(medium.percentage || 0).toFixed(1)}%`;
+        if (riskMediumBar) riskMediumBar.style.width = `${parseFloat(medium.percentage || 0)}%`;
+        if (riskMediumAmount) riskMediumAmount.textContent = `$${parseFloat(medium.amount || 0).toFixed(2)}`;
+        if (riskMediumCount) riskMediumCount.textContent = `${medium.count || 0} investments`;
+        
+        // Update High Risk
+        const riskHighPercent = document.getElementById('riskHighPercent');
+        const riskHighBar = document.getElementById('riskHighBar');
+        const riskHighAmount = document.getElementById('riskHighAmount');
+        const riskHighCount = document.getElementById('riskHighCount');
+        
+        if (riskHighPercent) riskHighPercent.textContent = `${parseFloat(high.percentage || 0).toFixed(1)}%`;
+        if (riskHighBar) riskHighBar.style.width = `${parseFloat(high.percentage || 0)}%`;
+        if (riskHighAmount) riskHighAmount.textContent = `$${parseFloat(high.amount || 0).toFixed(2)}`;
+        if (riskHighCount) riskHighCount.textContent = `${high.count || 0} investments`;
+        
+        // Update Portfolio Summary
+        const totalInvested = parseFloat(low.amount || 0) + parseFloat(medium.amount || 0) + parseFloat(high.amount || 0);
+        const totalReturns = parseFloat(riskData.total_returns || 0);
+        const roi = totalInvested > 0 ? ((totalReturns / totalInvested) * 100).toFixed(1) : 0;
+        
+        const riskTotalInvested = document.getElementById('riskTotalInvested');
+        const riskTotalReturns = document.getElementById('riskTotalReturns');
+        const riskROI = document.getElementById('riskROI');
+        
+        if (riskTotalInvested) riskTotalInvested.textContent = `$${totalInvested.toFixed(2)}`;
+        if (riskTotalReturns) riskTotalReturns.textContent = `+$${totalReturns.toFixed(2)}`;
+        if (riskROI) riskROI.textContent = `${roi}%`;
+    },
+    
+    updateTopPerformers(topPerformers) {
+        const container = document.getElementById('topPerformingInvestments');
+        if (!container) return;
+        
+        if (topPerformers.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #64748b;">
+                    <i class="fas fa-chart-bar" style="font-size: 48px; margin-bottom: 15px;"></i>
+                    <p>No performance data available yet</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const html = topPerformers.map((inv, index) => {
+            const returnPercent = parseFloat(inv.return_percentage || 0);
+            const returns = parseFloat(inv.returns || 0);
+            const principal = parseFloat(inv.principal || 0);
+            
+            const medals = ['🥇', '🥈', '🥉'];
+            const medal = medals[index] || '🏆';
+            
+            return `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: #0f172a; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid ${index === 0 ? '#f59e0b' : index === 1 ? '#94a3b8' : '#cd7f32'};">
+                    <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
+                        <span style="font-size: 32px;">${medal}</span>
+                        <div>
+                            <h4 style="margin: 0 0 5px 0;">${inv.borrower_name || 'Anonymous'}</h4>
+                            <p style="margin: 0; color: #94a3b8; font-size: 14px;">${inv.purpose || 'Personal Loan'}</p>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 24px; font-weight: 700; color: #38e77b; margin-bottom: 5px;">
+                            ${returnPercent.toFixed(1)}%
+                        </div>
+                        <div style="color: #94a3b8; font-size: 14px;">
+                            +$${returns.toFixed(2)} on $${principal.toFixed(2)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        container.innerHTML = html;
     },
     
     updateInvestmentPagination(pagination) {
