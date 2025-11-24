@@ -40,49 +40,79 @@ CREATE INDEX IF NOT EXISTS idx_phone_verifications_otp ON phone_verifications(ot
 -- ============================================
 -- 3. USER SETTINGS TABLE
 -- ============================================
-CREATE TABLE IF NOT EXISTS user_settings (
-    user_id UUID PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
-    notifications_email BOOLEAN DEFAULT true,
-    notifications_sms BOOLEAN DEFAULT false,
-    notifications_push BOOLEAN DEFAULT true,
-    language VARCHAR(10) DEFAULT 'en',
-    currency VARCHAR(10) DEFAULT 'USD',
-    theme VARCHAR(20) DEFAULT 'dark',
-    auto_invest_enabled BOOLEAN DEFAULT false,
-    auto_invest_amount DECIMAL(12, 2),
-    risk_preference VARCHAR(20) DEFAULT 'moderate',
-    portfolio_public BOOLEAN DEFAULT false,
-    two_factor_enabled BOOLEAN DEFAULT false,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
+-- Only create if profiles table exists
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'profiles') THEN
+        CREATE TABLE IF NOT EXISTS user_settings (
+            user_id UUID PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
+            notifications_email BOOLEAN DEFAULT true,
+            notifications_sms BOOLEAN DEFAULT false,
+            notifications_push BOOLEAN DEFAULT true,
+            language VARCHAR(10) DEFAULT 'en',
+            currency VARCHAR(10) DEFAULT 'USD',
+            theme VARCHAR(20) DEFAULT 'dark',
+            auto_invest_enabled BOOLEAN DEFAULT false,
+            auto_invest_amount DECIMAL(12, 2),
+            risk_preference VARCHAR(20) DEFAULT 'moderate',
+            portfolio_public BOOLEAN DEFAULT false,
+            two_factor_enabled BOOLEAN DEFAULT false,
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW()
+        );
 
-CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings(user_id);
+        CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings(user_id);
+        RAISE NOTICE 'user_settings table created';
+    ELSE
+        RAISE NOTICE 'profiles table does not exist, skipping user_settings';
+    END IF;
+END $$;
 
 -- ============================================
 -- 4. LOGIN ACTIVITY TABLE
 -- ============================================
-CREATE TABLE IF NOT EXISTS login_activity (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    activity_type VARCHAR(50) DEFAULT 'login',
-    ip_address VARCHAR(45),
-    device TEXT,
-    location TEXT,
-    user_agent TEXT,
-    created_at TIMESTAMP DEFAULT NOW()
-);
+-- Only create if profiles table exists
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'profiles') THEN
+        CREATE TABLE IF NOT EXISTS login_activity (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+            activity_type VARCHAR(50) DEFAULT 'login',
+            ip_address VARCHAR(45),
+            device TEXT,
+            location TEXT,
+            user_agent TEXT,
+            created_at TIMESTAMP DEFAULT NOW()
+        );
 
-CREATE INDEX IF NOT EXISTS idx_login_activity_user_id ON login_activity(user_id);
-CREATE INDEX IF NOT EXISTS idx_login_activity_created_at ON login_activity(created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_login_activity_user_id ON login_activity(user_id);
+        CREATE INDEX IF NOT EXISTS idx_login_activity_created_at ON login_activity(created_at DESC);
+        RAISE NOTICE 'login_activity table created';
+    ELSE
+        RAISE NOTICE 'profiles table does not exist, skipping login_activity';
+    END IF;
+END $$;
 
 -- ============================================
 -- 5. ENABLE ROW LEVEL SECURITY
 -- ============================================
 ALTER TABLE email_verifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE phone_verifications ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE login_activity ENABLE ROW LEVEL SECURITY;
+
+-- Only enable RLS if tables exist
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'user_settings') THEN
+        ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
+        RAISE NOTICE 'RLS enabled on user_settings';
+    END IF;
+    
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'login_activity') THEN
+        ALTER TABLE login_activity ENABLE ROW LEVEL SECURITY;
+        RAISE NOTICE 'RLS enabled on login_activity';
+    END IF;
+END $$;
 
 -- ============================================
 -- 6. RLS POLICIES - EMAIL VERIFICATIONS
@@ -155,18 +185,32 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-DROP TRIGGER IF EXISTS update_user_settings_updated_at ON user_settings;
-CREATE TRIGGER update_user_settings_updated_at 
-BEFORE UPDATE ON user_settings
-FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Only create trigger if table exists
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'user_settings') THEN
+        DROP TRIGGER IF EXISTS update_user_settings_updated_at ON user_settings;
+        CREATE TRIGGER update_user_settings_updated_at 
+        BEFORE UPDATE ON user_settings
+        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+        RAISE NOTICE 'Trigger created for user_settings';
+    END IF;
+END $$;
 
 -- ============================================
 -- 11. CREATE DEFAULT SETTINGS FOR EXISTING USERS
 -- ============================================
-INSERT INTO user_settings (user_id)
-SELECT id FROM profiles
-WHERE id NOT IN (SELECT user_id FROM user_settings)
-ON CONFLICT (user_id) DO NOTHING;
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'user_settings') 
+       AND EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'profiles') THEN
+        INSERT INTO user_settings (user_id)
+        SELECT id FROM profiles
+        WHERE id NOT IN (SELECT user_id FROM user_settings)
+        ON CONFLICT (user_id) DO NOTHING;
+        RAISE NOTICE 'Default settings created for existing users';
+    END IF;
+END $$;
 
 -- ============================================
 -- 12. VERIFICATION - CHECK EVERYTHING
