@@ -940,11 +940,22 @@
         }
 
         .tab-content {
-            display: none;
+            display: none !important;
         }
 
         .tab-content.active {
-            display: block;
+            display: block !important;
+        }
+        
+        /* Settings tabs specific override */
+        #settings-section .tab-content {
+            display: none !important;
+        }
+        
+        #settings-section .tab-content.active {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
 
         /* Form Elements */
