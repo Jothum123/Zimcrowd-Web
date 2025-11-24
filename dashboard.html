@@ -5594,51 +5594,13 @@
 
                 <!-- Recent Notifications -->
                 <div class="loan-card">
-                    <h3 style="margin-bottom: 20px;">📋 Recent Notifications</h3>
-                    <div style="display: flex; flex-direction: column; gap: 12px; max-height: 300px; overflow-y: auto;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <i class="fas fa-dollar-sign" style="color: #10b981; font-size: 16px;"></i>
-                                <div>
-                                    <p style="margin: 0; font-weight: 600;">Investment Return Received</p>
-                                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">You received $75.00 from Education Loan #EL-2024-001</p>
-                                </div>
-                            </div>
-                            <div style="text-align: right;">
-                                <p style="margin: 0; color: #94a3b8; font-size: 11px;">2 hours ago</p>
-                                <button class="btn-secondary" style="font-size: 10px; padding: 4px 8px;" onclick="markNotificationRead(1)">Mark Read</button>
-                            </div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <i class="fas fa-exclamation-triangle" style="color: #f59e0b; font-size: 16px;"></i>
-                                <div>
-                                    <p style="margin: 0; font-weight: 600;">Payment Due Reminder</p>
-                                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">Your loan payment of $250.00 is due in 3 days</p>
-                                </div>
-                            </div>
-                            <div style="text-align: right;">
-                                <p style="margin: 0; color: #94a3b8; font-size: 11px;">5 hours ago</p>
-                                <button class="btn-secondary" style="font-size: 10px; padding: 4px 8px;" onclick="markNotificationRead(2)">Mark Read</button>
-                            </div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <i class="fas fa-lightbulb" style="color: #3b82f6; font-size: 16px;"></i>
-                                <div>
-                                    <p style="margin: 0; font-weight: 600;">New Investment Opportunity</p>
-                                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">A new business loan matching your criteria is available</p>
-                                </div>
-                            </div>
-                            <div style="text-align: right;">
-                                <p style="margin: 0; color: #94a3b8; font-size: 11px;">1 day ago</p>
-                                <button class="btn-secondary" style="font-size: 10px; padding: 4px 8px;" onclick="markNotificationRead(3)">Mark Read</button>
-                            </div>
+                    <h3 style="margin-bottom: 20px;">📬 Recent Notifications</h3>
+                    <div id="recentNotificationsContainer" style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="text-align: center; padding: 40px; color: #64748b;">
+                            <i class="fas fa-bell" style="font-size: 48px; margin-bottom: 15px;"></i>
+                            <p>Loading recent notifications...</p>
                         </div>
                     </div>
-                    <button class="btn-primary" style="margin-top: 20px;" onclick="saveNotificationSettings()">
-                        <i class="fas fa-save"></i> Save Notification Preferences
-                    </button>
                 </div>
             </div>
 

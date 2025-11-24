@@ -312,10 +312,13 @@ const SettingsDataLoader = {
     async loadNotificationSettings() {
         try {
             console.log('🔔 Loading notification settings...');
-            const response = await this.apiRequest('/api/user/notification-settings');
+            const [settingsResponse, notificationsResponse] = await Promise.all([
+                this.apiRequest('/api/user/notification-settings'),
+                this.apiRequest('/api/user/notifications/recent')
+            ]);
             
-            if (response.success && response.data) {
-                const settings = response.data;
+            if (settingsResponse.success && settingsResponse.data) {
+                const settings = settingsResponse.data;
                 
                 // Update notification toggles
                 Object.keys(settings).forEach(key => {
@@ -326,6 +329,12 @@ const SettingsDataLoader = {
                 });
                 
                 console.log('✅ Notification settings loaded');
+            }
+
+            // Update recent notifications
+            if (notificationsResponse.success && notificationsResponse.data) {
+                this.updateRecentNotifications(notificationsResponse.data);
+                console.log('✅ Recent notifications loaded');
             }
         } catch (error) {
             console.error('❌ Error loading notifications:', error);
@@ -684,6 +693,135 @@ const SettingsDataLoader = {
                     window.pendingProfilePicture = file;
                 }
             });
+        }
+
+        // Notification toggles - auto-save on change
+        const notificationToggles = [
+            'emailLoanReminders', 'emailInvestmentReturns', 'emailLoanOpportunities',
+            'emailSecurityAlerts', 'emailWeeklySummary', 'emailMarketing',
+            'pushTransactionAlerts', 'pushAccountActivity', 'pushInvestmentUpdates',
+            'pushPaymentReminders', 'smsTransactionAlerts', 'smsSecurityAlerts'
+        ];
+
+        notificationToggles.forEach(id => {
+            const toggle = document.getElementById(id);
+            if (toggle) {
+                toggle.addEventListener('change', () => {
+                    this.saveNotificationSettings({
+                        [id]: toggle.checked
+                    });
+                });
+            }
+        });
+
+        // Display settings - auto-save on change
+        const displaySelects = ['displayLanguage', 'displayCurrency', 'displayDateFormat'];
+        displaySelects.forEach(id => {
+            const select = document.getElementById(id);
+            if (select) {
+                select.addEventListener('change', () => {
+                    this.saveDisplaySettings();
+                });
+            }
+        });
+
+        const displayCheckboxes = ['displayAnimations', 'displayCompactView'];
+        displayCheckboxes.forEach(id => {
+            const checkbox = document.getElementById(id);
+            if (checkbox) {
+                checkbox.addEventListener('change', () => {
+                    this.saveDisplaySettings();
+                });
+            }
+        });
+    },
+
+    /**
+     * Save Display Settings
+     */
+    async saveDisplaySettings() {
+        try {
+            const settings = {
+                language: this.getInputValue('displayLanguage'),
+                currency: this.getInputValue('displayCurrency'),
+                date_format: this.getInputValue('displayDateFormat'),
+                animations_enabled: document.getElementById('displayAnimations')?.checked || false,
+                compact_view: document.getElementById('displayCompactView')?.checked || false
+            };
+
+            const response = await this.apiRequest('/api/user/display-settings', {
+                method: 'PUT',
+                body: JSON.stringify(settings)
+            });
+
+            if (response.success) {
+                console.log('✅ Display settings saved');
+            }
+        } catch (error) {
+            console.error('❌ Error saving display settings:', error);
+        }
+    },
+
+    /**
+     * Update Recent Notifications
+     */
+    updateRecentNotifications(notifications) {
+        const container = document.getElementById('recentNotificationsContainer');
+        if (!container) return;
+
+        if (notifications.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #64748b;">
+                    <i class="fas fa-bell-slash" style="font-size: 48px; margin-bottom: 15px;"></i>
+                    <p>No recent notifications</p>
+                </div>
+            `;
+            return;
+        }
+
+        const html = notifications.map(notif => {
+            const iconMap = {
+                'investment_return': { icon: 'fa-dollar-sign', color: '#10b981' },
+                'payment_due': { icon: 'fa-exclamation-triangle', color: '#f59e0b' },
+                'new_opportunity': { icon: 'fa-lightbulb', color: '#3b82f6' },
+                'security_alert': { icon: 'fa-shield-alt', color: '#ef4444' },
+                'loan_approved': { icon: 'fa-check-circle', color: '#38e77b' }
+            };
+
+            const iconInfo = iconMap[notif.type] || { icon: 'fa-bell', color: '#94a3b8' };
+
+            return `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <i class="fas ${iconInfo.icon}" style="color: ${iconInfo.color}; font-size: 16px;"></i>
+                        <div>
+                            <p style="margin: 0; font-weight: 600;">${notif.title}</p>
+                            <p style="margin: 0; color: #94a3b8; font-size: 12px;">${notif.message}</p>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <p style="margin: 0; color: #94a3b8; font-size: 11px;">${this.formatTimeAgo(notif.created_at)}</p>
+                        ${!notif.read ? `<button class="btn-secondary" style="font-size: 10px; padding: 4px 8px;" onclick="SettingsDataLoader.markNotificationRead('${notif.id}')">Mark Read</button>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = html;
+    },
+
+    /**
+     * Mark Notification as Read
+     */
+    async markNotificationRead(notificationId) {
+        try {
+            await this.apiRequest(`/api/user/notifications/${notificationId}/read`, {
+                method: 'POST'
+            });
+            // Reload notifications
+            await this.loadNotificationSettings();
+        } catch (error) {
+            console.error('❌ Error marking notification as read:', error);
         }
     }
 };
