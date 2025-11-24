@@ -5086,7 +5086,7 @@
                             <button onclick="document.getElementById('profile-upload').click()" style="position: absolute; bottom: 0; right: 0; width: 40px; height: 40px; border-radius: 50%; background: var(--color-green); border: 3px solid #1e293b; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition-normal);" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Upload Photo">
                                 <i class="fas fa-camera" style="color: white; font-size: 16px;"></i>
                             </button>
-                            <button id="remove-icon-btn" onclick="removeProfilePicture()" style="position: absolute; top: 0; right: 0; width: 40px; height: 40px; border-radius: 50%; background: #ef4444; border: 3px solid #1e293b; display: none; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition-normal);" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Remove Photo">
+                            <button id="remove-icon-btn" onclick="SettingsDataLoader.removeProfilePicture()" style="position: absolute; top: 0; right: 0; width: 40px; height: 40px; border-radius: 50%; background: #ef4444; border: 3px solid #1e293b; display: none; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition-normal);" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Remove Photo">
                                 <i class="fas fa-times" style="color: white; font-size: 16px;"></i>
                             </button>
                         </div>
@@ -5099,11 +5099,11 @@
                                     <span>Upload New</span>
                                     <input type="file" id="profile-upload" accept="image/*" style="display: none;">
                                 </label>
-                                <button class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;" onclick="saveProfilePicture()">
+                                <button class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;" onclick="if(window.pendingProfilePicture) SettingsDataLoader.saveProfilePicture(window.pendingProfilePicture)">
                                     <i class="fas fa-save"></i>
                                     <span>Save</span>
                                 </button>
-                                <button style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: #ef4444; color: white; border: none; border-radius: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(239, 68, 68, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(239, 68, 68, 0.3)';" onclick="removeProfilePicture()">
+                                <button style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: #ef4444; color: white; border: none; border-radius: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(239, 68, 68, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(239, 68, 68, 0.3)';" onclick="SettingsDataLoader.removeProfilePicture()">
                                     <i class="fas fa-trash"></i>
                                     <span>Remove</span>
                                 </button>
@@ -5136,6 +5136,16 @@
                             <input type="date" id="dateOfBirth">
                         </div>
                         <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Gender</label>
+                            <select id="profileGender">
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                                <option value="prefer-not-to-say">Prefer not to say</option>
+                            </select>
+                        </div>
+                        <div>
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Country</label>
                             <select id="country">
                                 <option value="">Select country</option>
@@ -5156,8 +5166,12 @@
                                 <option value="MA">Morocco</option>
                             </select>
                         </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Bio</label>
+                            <textarea id="profileBio" rows="3" placeholder="Tell us a bit about yourself..." style="width: 100%; padding: 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-family: 'Space Grotesk', sans-serif; resize: vertical;"></textarea>
+                        </div>
                     </div>
-                    <button class="btn-primary" style="margin-top: 20px;" onclick="saveProfileInfo()">Save Changes</button>
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="SettingsDataLoader.saveProfile()">Save Changes</button>
                 </div>
 
                 <div class="loan-card" style="margin-top: 20px;">
@@ -5195,53 +5209,8 @@
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Postal Code</label>
                             <input type="text" id="postalCode" placeholder="Enter postal code">
                         </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Email Address</label>
-                            <input type="email" class="form-input" id="profileEmail" placeholder="your.email@example.com">
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Phone Number</label>
-                            <input type="tel" class="form-input" id="profilePhone" placeholder="+263 77 123 4567">
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Date of Birth</label>
-                                <input type="date" class="form-input" id="profileDob">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Gender</label>
-                                <select class="form-select" id="profileGender">
-                                    <option value="">Select Gender</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="other">Other</option>
-                                    <option value="prefer-not-to-say">Prefer not to say</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Address</label>
-                            <input type="text" class="form-input" id="profileAddress" placeholder="Your current address">
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Bio</label>
-                            <textarea class="form-input" id="profileBio" rows="3" placeholder="Tell us a bit about yourself..."></textarea>
-                        </div>
-
-                        <div style="margin-top: 30px;">
-                            <button type="button" class="btn btn-primary" onclick="saveProfile()">
-                                <i class="fas fa-save"></i> Save Profile Changes
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="resetProfile()" style="margin-left: 10px;">
-                                <i class="fas fa-undo"></i> Reset
-                            </button>
-                        </div>
                     </div>
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="SettingsDataLoader.saveProfile()">Save Changes</button>
                 </div>
 
                 <!-- Social Login Info -->
@@ -5338,7 +5307,7 @@
                             </ul>
                         </div>
                     </div>
-                    <button class="btn-primary" style="margin-top: 20px;" onclick="changePassword()">
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="const curr = document.getElementById('currentPassword').value; const newP = document.getElementById('newPassword').value; const conf = document.getElementById('confirmPassword').value; if(newP !== conf) { alert('Passwords do not match'); return; } SettingsDataLoader.changePassword(curr, newP);">
                         <i class="fas fa-key"></i> Update Password
                     </button>
                 </div>
@@ -6302,6 +6271,17 @@
                             </span>
                             <input type="file" accept="image/*,application/pdf" multiple style="display: none;" id="additionalDocs">
                             <button onclick="document.getElementById('additionalDocs').click()" class="btn-secondary" style="margin-top: 15px; width: 100%;"><i class="fas fa-cloud-arrow-up"></i> Upload Documents</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Uploaded Documents -->
+                <div class="loan-card" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 20px;">📁 My Uploaded Documents</h3>
+                    <div id="documentsContainer">
+                        <div style="text-align: center; padding: 40px; color: #64748b;">
+                            <i class="fas fa-file-alt" style="font-size: 48px; margin-bottom: 15px;"></i>
+                            <p>Loading documents...</p>
                         </div>
                     </div>
                 </div>
@@ -12275,4 +12255,5 @@ How it works:
 <script src="js/dashboard-filters.js"></script>
 <script src="js/dashboard-realtime.js"></script>
 <script src="js/production-data-loader.js"></script>
+<script src="js/settings-data-loader.js"></script>
 <script src="js/settings-debug.js"></script>
