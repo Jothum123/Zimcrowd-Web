@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Settings Tabs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: white;
+            padding: 40px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 12px 24px;
+            background: #1e293b;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background: #38e77b;
+            color: #000;
+        }
+        .tab-content {
+            display: none;
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 12px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .loan-card {
+            background: #1a1a1a;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Settings Tab Test</h1>
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('profile')">Profile</button>
+        <button class="tab-btn" onclick="switchTab('security')">Security</button>
+        <button class="tab-btn" onclick="switchTab('notifications')">Notifications</button>
+        <button class="tab-btn" onclick="switchTab('display')">Display</button>
+        <button class="tab-btn" onclick="switchTab('investment')">Investment</button>
+        <button class="tab-btn" onclick="switchTab('privacy')">Privacy</button>
+        <button class="tab-btn" onclick="switchTab('documents')">Documents</button>
+    </div>
+
+    <div id="profile-tab" class="tab-content active">
+        <div class="loan-card">
+            <h2>Profile Settings</h2>
+            <p>This is the profile tab content.</p>
+        </div>
+    </div>
+
+    <div id="security-tab" class="tab-content">
+        <div class="loan-card">
+            <h2>🔒 Security Settings</h2>
+            <p>This is the security tab content.</p>
+            <p>Password management, 2FA, login activity, etc.</p>
+        </div>
+    </div>
+
+    <div id="notifications-tab" class="tab-content">
+        <div class="loan-card">
+            <h2>🔔 Notification Settings</h2>
+            <p>This is the notifications tab content.</p>
+            <p>Email, push, SMS notification preferences.</p>
+        </div>
+    </div>
+
+    <div id="display-tab" class="tab-content">
+        <div class="loan-card">
+            <h2>🎨 Display Settings</h2>
+            <p>This is the display tab content.</p>
+            <p>Language, currency, date format, theme options.</p>
+        </div>
+    </div>
+
+    <div id="investment-tab" class="tab-content">
+        <div class="loan-card">
+            <h2>💰 Investment Settings</h2>
+            <p>This is the investment tab content.</p>
+            <p>Auto-invest, risk preferences, portfolio settings.</p>
+        </div>
+    </div>
+
+    <div id="privacy-tab" class="tab-content">
+        <div class="loan-card">
+            <h2>🔒 Privacy Settings</h2>
+            <p>This is the privacy tab content.</p>
+            <p>Data control, visibility settings, privacy options.</p>
+        </div>
+    </div>
+
+    <div id="documents-tab" class="tab-content">
+        <div class="loan-card">
+            <h2>📄 Documents</h2>
+            <p>This is the documents tab content.</p>
+            <p>Upload, verify, and manage your documents.</p>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            console.log('Switching to tab:', tabName);
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Add active class to selected tab button
+            event.target.classList.add('active');
+            
+            // Show the selected tab content
+            const tabContent = document.getElementById(tabName + '-tab');
+            if (tabContent) {
+                tabContent.classList.add('active');
+                console.log('Tab activated:', tabName);
+            } else {
+                console.error('Tab not found:', tabName + '-tab');
+            }
+        }
+    </script>
+</body>
+</html>
