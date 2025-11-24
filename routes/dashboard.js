@@ -65,34 +65,24 @@ const authenticateUser = async (req, res, next) => {
     }
 };
 
-// @route   GET /api/dashboard/
+// @route   GET /api/dashboard/ or /api/dashboard/overview
 // @desc    Get complete dashboard overview with all key data
 // @access  Private
-router.get('/', authenticateUser, async (req, res) => {
+const getDashboardOverview = async (req, res) => {
     try {
         const userId = req.user.id;
 
         // Execute all dashboard queries in parallel for performance
         const [
             { data: profile, error: profileError },
-            { data: wallet, error: walletError },
-            { data: stats, error: statsError },
             { count: loansCount, error: loansCountError },
             { count: investmentsCount, error: investmentsCountError },
             { count: transactionsCount, error: transactionsCountError },
             { data: recentTransactions, error: recentTransactionsError },
-            { data: recentLoans, error: recentLoansError },
-            { data: recentInvestments, error: recentInvestmentsError },
-            { data: notifications, error: notificationsError }
+            { data: recentLoans, error: recentLoansError }
         ] = await Promise.all([
             // Profile data
-            supabase.from('user_profiles').select('*').eq('id', userId).single(),
-            
-            // Wallet balance
-            supabase.from('wallets').select('*').eq('user_id', userId).single(),
-            
-            // User statistics
-            supabase.from('user_statistics').select('*').eq('user_id', userId).single(),
+            supabase.from('profiles').select('*').eq('id', userId).single(),
             
             // Loans count
             supabase.from('loans').select('*', { count: 'exact', head: true }).eq('borrower_id', userId),
@@ -107,21 +97,12 @@ router.get('/', authenticateUser, async (req, res) => {
             supabase.from('transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5),
             
             // Recent loans (last 3)
-            supabase.from('loans').select('*').eq('borrower_id', userId).order('created_at', { ascending: false }).limit(3),
-            
-            // Recent investments (last 3)
-            supabase.from('investment_details').select('*').eq('investor_id', userId).order('invested_at', { ascending: false }).limit(3),
-            
-            // Recent notifications (last 5)
-            supabase.from('notifications').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5)
+            supabase.from('loans').select('*').eq('borrower_id', userId).order('created_at', { ascending: false }).limit(3)
         ]);
 
-        // Check for critical errors (profile and wallet are essential)
+        // Check for critical errors
         if (profileError && profileError.code !== 'PGRST116') {
             console.error('Profile fetch error:', profileError);
-        }
-        if (walletError && walletError.code !== 'PGRST116') {
-            console.error('Wallet fetch error:', walletError);
         }
 
         // Prepare dashboard data with fallbacks
@@ -129,13 +110,17 @@ router.get('/', authenticateUser, async (req, res) => {
             // User profile
             profile: profile || null,
             
-            // Wallet information
-            wallet: wallet || { balance: 0, available_balance: 0 },
+            // Wallet information (mock for now)
+            wallet: {
+                balance: 0,
+                available_balance: 0,
+                pending_balance: 0
+            },
             
             // Statistics overview
-            stats: stats || {
-                total_loans: 0,
-                total_investments: 0,
+            stats: {
+                total_loans: loansCount || 0,
+                total_investments: investmentsCount || 0,
                 total_returns: 0,
                 portfolio_value: 0
             },
@@ -145,22 +130,20 @@ router.get('/', authenticateUser, async (req, res) => {
                 loans_count: loansCount || 0,
                 investments_count: investmentsCount || 0,
                 transactions_count: transactionsCount || 0,
-                notifications_count: notifications?.length || 0
+                notifications_count: 0
             },
             
             // Recent activity
             recent: {
                 transactions: recentTransactions || [],
                 loans: recentLoans || [],
-                investments: recentInvestments || [],
-                notifications: notifications || []
+                investments: [],
+                notifications: []
             }
         };
 
         console.log('✅ Dashboard overview loaded for user:', userId, {
             profile_loaded: !!profile,
-            wallet_loaded: !!wallet,
-            stats_loaded: !!stats,
             loans_count: loansCount,
             investments_count: investmentsCount
         });
@@ -177,7 +160,10 @@ router.get('/', authenticateUser, async (req, res) => {
             error: error.message
         });
     }
-});
+};
+
+router.get('/', authenticateUser, getDashboardOverview);
+router.get('/overview', authenticateUser, getDashboardOverview);
 
 // @route   GET /api/dashboard/profile
 // @desc    Get user profile
@@ -214,17 +200,20 @@ router.get('/wallet', authenticateUser, async (req, res) => {
     try {
         const userId = req.user.id;
 
-        const { data, error } = await supabase
-            .from('wallets')
-            .select('*')
-            .eq('user_id', userId)
-            .single();
-
-        if (error) throw error;
+        // For now, return mock wallet data
+        // TODO: Create wallets table and implement real wallet functionality
+        const mockWallet = {
+            user_id: userId,
+            balance: 0,
+            available_balance: 0,
+            pending_balance: 0,
+            currency: 'USD',
+            updated_at: new Date().toISOString()
+        };
 
         res.json({
             success: true,
-            data
+            data: mockWallet
         });
     } catch (error) {
         console.error('Wallet error:', error);
@@ -412,33 +401,16 @@ router.get('/notifications', authenticateUser, async (req, res) => {
         const userId = req.user.id;
         const unreadOnly = req.query.unread === 'true';
 
-        let query = supabase
-            .from('notifications')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false });
-
-        if (unreadOnly) {
-            query = query.eq('read', false);
-        }
-
-        const { data: notifications, error } = await query;
-
-        if (error) throw error;
-
-        // Get unread count
-        const { count: unreadCount } = await supabase
-            .from('notifications')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', userId)
-            .eq('read', false);
+        // For now, return empty notifications
+        // TODO: Create notifications table and implement real notifications
+        const mockNotifications = [];
 
         res.json({
             success: true,
             data: {
-                notifications,
-                unread_count: unreadCount || 0,
-                total: notifications.length
+                notifications: mockNotifications,
+                unread_count: 0,
+                total: 0
             }
         });
     } catch (error) {

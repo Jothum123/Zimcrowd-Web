@@ -977,4 +977,59 @@ router.post('/create', [
     }
 });
 
+// @route   GET /api/investments/opportunities
+// @desc    Get available investment opportunities (loans available for funding)
+// @access  Private
+router.get('/opportunities', authenticateUser, async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+
+        // Get loans that are pending and available for investment
+        const { data: loans, error, count } = await supabase
+            .from('loans')
+            .select('*, profiles!loans_borrower_id_fkey(first_name, last_name, email)', { count: 'exact' })
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
+
+        if (error) throw error;
+
+        // Transform loans into investment opportunities
+        const opportunities = (loans || []).map(loan => ({
+            id: loan.id,
+            borrower: {
+                name: `${loan.profiles?.first_name || ''} ${loan.profiles?.last_name || ''}`.trim() || 'Anonymous',
+                email: loan.profiles?.email
+            },
+            amount: loan.amount,
+            purpose: loan.purpose || 'Personal loan',
+            interest_rate: loan.interest_rate || 12,
+            term_months: loan.term_months || 12,
+            risk_level: loan.risk_level || 'medium',
+            created_at: loan.created_at,
+            expected_return: ((loan.amount * (loan.interest_rate || 12) / 100) / 12 * (loan.term_months || 12)).toFixed(2)
+        }));
+
+        res.json({
+            success: true,
+            data: {
+                opportunities,
+                total: count || 0,
+                page,
+                limit,
+                totalPages: Math.ceil((count || 0) / limit)
+            }
+        });
+    } catch (error) {
+        console.error('Investment opportunities error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load investment opportunities',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

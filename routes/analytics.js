@@ -458,4 +458,131 @@ router.get('/reports/:id', authenticateUser, authenticateAdmin, async (req, res)
     }
 });
 
+// @route   GET /api/analytics/portfolio-history
+// @desc    Get portfolio value history
+// @access  Private
+router.get('/portfolio-history', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const days = parseInt(req.query.days) || 30;
+        
+        // For now, return mock data since we don't have historical tracking yet
+        const mockData = [];
+        const today = new Date();
+        
+        for (let i = days; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            mockData.push({
+                date: date.toISOString().split('T')[0],
+                value: 10000 + Math.random() * 5000
+            });
+        }
+        
+        res.json({
+            success: true,
+            data: mockData
+        });
+    } catch (error) {
+        console.error('Portfolio history error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch portfolio history'
+        });
+    }
+});
+
+// @route   GET /api/analytics/loan-distribution
+// @desc    Get loan distribution by status
+// @access  Private
+router.get('/loan-distribution', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        // Get loan counts by status
+        const { data: loans, error } = await supabase
+            .from('loans')
+            .select('status')
+            .eq('borrower_id', userId);
+        
+        if (error) throw error;
+        
+        // Count by status
+        const distribution = {
+            active: 0,
+            pending: 0,
+            completed: 0,
+            defaulted: 0
+        };
+        
+        loans?.forEach(loan => {
+            if (distribution.hasOwnProperty(loan.status)) {
+                distribution[loan.status]++;
+            }
+        });
+        
+        res.json({
+            success: true,
+            data: distribution
+        });
+    } catch (error) {
+        console.error('Loan distribution error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch loan distribution'
+        });
+    }
+});
+
+// @route   GET /api/analytics/monthly-activity
+// @desc    Get monthly transaction activity
+// @access  Private
+router.get('/monthly-activity', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const months = parseInt(req.query.months) || 12;
+        
+        // Get transactions for the last N months
+        const startDate = new Date();
+        startDate.setMonth(startDate.getMonth() - months);
+        
+        const { data: transactions, error } = await supabase
+            .from('transactions')
+            .select('amount, type, created_at')
+            .eq('user_id', userId)
+            .gte('created_at', startDate.toISOString());
+        
+        if (error) throw error;
+        
+        // Group by month
+        const monthlyData = {};
+        
+        transactions?.forEach(tx => {
+            const month = new Date(tx.created_at).toISOString().slice(0, 7); // YYYY-MM
+            if (!monthlyData[month]) {
+                monthlyData[month] = { deposits: 0, withdrawals: 0, investments: 0 };
+            }
+            
+            if (tx.type === 'deposit') {
+                monthlyData[month].deposits += parseFloat(tx.amount);
+            } else if (tx.type === 'withdrawal') {
+                monthlyData[month].withdrawals += parseFloat(tx.amount);
+            } else if (tx.type === 'investment') {
+                monthlyData[month].investments += parseFloat(tx.amount);
+            }
+        });
+        
+        res.json({
+            success: true,
+            data: monthlyData
+        });
+    } catch (error) {
+        console.error('Monthly activity error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch monthly activity'
+        });
+    }
+});
+
 module.exports = router;
