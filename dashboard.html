@@ -11881,12 +11881,213 @@ How it works:
             showToast('info', 'Data Deletion', 'Data deletion request feature will be implemented with backend integration');
         }
 
-        function viewDocument(docType) {
-            showToast('info', 'Document Viewer', `Opening ${docType} document...`);
+        // Document mapping
+        const documentMap = {
+            'terms': {
+                file: 'terms-of-service.md',
+                title: 'Terms of Service',
+                icon: 'fa-gavel',
+                color: '#3b82f6'
+            },
+            'privacy': {
+                file: 'privacy-policy.md',
+                title: 'Privacy Policy',
+                icon: 'fa-user-shield',
+                color: '#10b981'
+            },
+            'loan-agreement': {
+                file: 'loan-agreement-template.md',
+                title: 'Loan Agreement Template',
+                icon: 'fa-handshake',
+                color: '#f59e0b'
+            },
+            'investment-disclosure': {
+                file: 'investment-disclosure.md',
+                title: 'Investment Disclosure',
+                icon: 'fa-chart-line',
+                color: '#a855f7'
+            },
+            'compliance': {
+                file: 'regulatory-compliance.md',
+                title: 'Regulatory Compliance',
+                icon: 'fa-balance-scale',
+                color: '#ef4444'
+            }
+        };
+
+        // View Document in Modal
+        async function viewDocument(docType) {
+            const doc = documentMap[docType];
+            if (!doc) {
+                showToast('error', 'Error', 'Document not found');
+                return;
+            }
+
+            try {
+                // Fetch the markdown document
+                const response = await fetch(`documents/${doc.file}`);
+                if (!response.ok) throw new Error('Document not found');
+                
+                const markdown = await response.text();
+                
+                // Convert markdown to HTML (basic conversion)
+                const html = convertMarkdownToHTML(markdown);
+                
+                // Create modal
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10000;
+                    padding: 20px;
+                `;
+                
+                modal.innerHTML = `
+                    <div style="
+                        background: #1e293b;
+                        border-radius: 12px;
+                        max-width: 900px;
+                        width: 100%;
+                        max-height: 90vh;
+                        display: flex;
+                        flex-direction: column;
+                        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                    ">
+                        <!-- Header -->
+                        <div style="
+                            padding: 20px 30px;
+                            border-bottom: 1px solid #334155;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                        ">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <i class="fas ${doc.icon}" style="font-size: 24px; color: ${doc.color};"></i>
+                                <h2 style="margin: 0; font-size: 20px;">${doc.title}</h2>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="downloadDocument('${docType}')" class="btn-secondary" style="padding: 8px 16px;">
+                                    <i class="fas fa-download"></i> Download
+                                </button>
+                                <button onclick="this.closest('.modal-overlay').remove()" class="btn-secondary" style="padding: 8px 16px;">
+                                    <i class="fas fa-times"></i> Close
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Content -->
+                        <div style="
+                            padding: 30px;
+                            overflow-y: auto;
+                            flex: 1;
+                            line-height: 1.8;
+                        " class="document-content">
+                            ${html}
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+                // Close on overlay click
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                    }
+                });
+                
+                showToast('success', 'Document Loaded', `${doc.title} opened successfully`);
+                
+            } catch (error) {
+                console.error('Error loading document:', error);
+                showToast('error', 'Error', 'Failed to load document');
+            }
         }
 
-        function downloadDocument(docType) {
-            showToast('success', 'Download', `Downloading ${docType} document...`);
+        // Download Document
+        async function downloadDocument(docType) {
+            const doc = documentMap[docType];
+            if (!doc) {
+                showToast('error', 'Error', 'Document not found');
+                return;
+            }
+
+            try {
+                showToast('info', 'Downloading', `Preparing ${doc.title}...`);
+                
+                // Fetch the markdown document
+                const response = await fetch(`documents/${doc.file}`);
+                if (!response.ok) throw new Error('Document not found');
+                
+                const markdown = await response.text();
+                
+                // Create a blob and download
+                const blob = new Blob([markdown], { type: 'text/markdown' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = doc.file;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                showToast('success', 'Downloaded', `${doc.title} downloaded successfully`);
+                
+            } catch (error) {
+                console.error('Error downloading document:', error);
+                showToast('error', 'Error', 'Failed to download document');
+            }
+        }
+
+        // Basic Markdown to HTML converter
+        function convertMarkdownToHTML(markdown) {
+            let html = markdown
+                // Headers
+                .replace(/^### (.*$)/gim, '<h3 style="color: #38e77b; margin: 25px 0 15px 0; font-size: 18px;">$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2 style="color: #38e77b; margin: 30px 0 20px 0; font-size: 22px;">$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1 style="color: #38e77b; margin: 35px 0 25px 0; font-size: 28px; text-align: center;">$1</h1>')
+                // Bold
+                .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #38e77b;">$1</strong>')
+                // Italic
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                // Links
+                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color: #38e77b; text-decoration: underline;" target="_blank">$1</a>')
+                // Horizontal rules
+                .replace(/^---$/gim, '<hr style="border: none; border-top: 1px solid #334155; margin: 30px 0;">')
+                // Lists (unordered)
+                .replace(/^\- (.*$)/gim, '<li style="margin: 8px 0; color: #cbd5e1;">$1</li>')
+                // Lists (ordered)
+                .replace(/^\d+\. (.*$)/gim, '<li style="margin: 8px 0; color: #cbd5e1;">$1</li>')
+                // Checkboxes
+                .replace(/^☐ (.*$)/gim, '<div style="margin: 10px 0;"><input type="checkbox" style="margin-right: 10px;"> <span style="color: #cbd5e1;">$1</span></div>')
+                .replace(/^✅ (.*$)/gim, '<div style="margin: 10px 0; color: #38e77b;"><i class="fas fa-check-circle" style="margin-right: 8px;"></i> $1</div>')
+                .replace(/^❌ (.*$)/gim, '<div style="margin: 10px 0; color: #ef4444;"><i class="fas fa-times-circle" style="margin-right: 8px;"></i> $1</div>')
+                .replace(/^⚠️ (.*$)/gim, '<div style="margin: 10px 0; color: #f59e0b;"><i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i> $1</div>')
+                // Paragraphs
+                .replace(/^(?!<[h|l|d|i])(.*$)/gim, '<p style="margin: 15px 0; color: #cbd5e1;">$1</p>')
+                // Tables (basic support)
+                .replace(/\|/g, '</td><td style="padding: 12px; border: 1px solid #334155; color: #cbd5e1;">')
+                .replace(/^<\/td>/gim, '<tr><td style="padding: 12px; border: 1px solid #334155; color: #cbd5e1;">')
+                .replace(/<\/td>$/gim, '</td></tr>');
+            
+            // Wrap lists in ul tags
+            html = html.replace(/(<li.*?<\/li>\s*)+/g, '<ul style="list-style: disc; padding-left: 30px; margin: 15px 0;">$&</ul>');
+            
+            // Wrap table rows in table tags
+            if (html.includes('<tr>')) {
+                html = html.replace(/(<tr>.*?<\/tr>\s*)+/gs, '<table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: rgba(255,255,255,0.03); border-radius: 8px; overflow: hidden;">$&</table>');
+            }
+            
+            return html;
         }
 
         function togglePasswordVisibility(inputId) {
