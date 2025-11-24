@@ -11739,6 +11739,23 @@ How it works:
             }, 5000);
         }
 
+        // Wrapper function for showToast (used throughout the app)
+        function showToast(type, title, message) {
+            const iconMap = {
+                'success': 'fa-check-circle',
+                'error': 'fa-times-circle',
+                'warning': 'fa-exclamation-triangle',
+                'info': 'fa-info-circle'
+            };
+            
+            showToastNotification({
+                type: type,
+                icon: iconMap[type] || 'fa-info-circle',
+                title: title,
+                message: message
+            });
+        }
+
         function renderNotifications() {
             const container = document.querySelector('.notification-list');
             container.innerHTML = notifications.map(n => `
