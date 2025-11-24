@@ -124,14 +124,18 @@ const ProductionDataLoader = {
     /**
      * Load Investments Data
      */
-    async loadInvestmentsData() {
+    async loadInvestmentsData(page = 1, limit = 10) {
         try {
             console.log('📈 Loading investments data...');
+            
+            // Store current page
+            window.currentInvestmentPage = page;
+            window.investmentPageLimit = limit;
             
             const [portfolio, performance, myInvestments] = await Promise.all([
                 this.apiRequest('/investments/portfolio'),
                 this.apiRequest('/investments/performance'),
-                this.apiRequest('/investments/my-investments')
+                this.apiRequest(`/investments/my-investments?page=${page}&limit=${limit}`)
             ]);
             
             // Update Portfolio Tab
@@ -179,12 +183,18 @@ const ProductionDataLoader = {
             }
             
             // Update My Investments list
-            if (myInvestments.success && myInvestments.data) {
+            if (myInvestments.success) {
                 const container = document.getElementById('portfolioCardsContainer');
+                const investments = myInvestments.data || [];
+                const pagination = myInvestments.pagination || {};
+                
                 if (container) {
-                    if (myInvestments.data.length > 0) {
-                        container.innerHTML = myInvestments.data.map(inv => this.createInvestmentCard(inv)).join('');
-                        console.log('✅ Investment cards updated:', myInvestments.data.length);
+                    if (investments.length > 0) {
+                        container.innerHTML = investments.map(inv => this.createInvestmentCard(inv)).join('');
+                        console.log('✅ Investment cards updated:', investments.length);
+                        
+                        // Update pagination
+                        this.updateInvestmentPagination(pagination);
                     } else {
                         container.innerHTML = `
                             <div class="portfolio-card" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: rgba(15, 23, 42, 0.5);">
@@ -200,6 +210,9 @@ const ProductionDataLoader = {
                                 </div>
                             </div>
                         `;
+                        // Hide pagination if no investments
+                        const paginationEl = document.getElementById('portfolioPagination');
+                        if (paginationEl) paginationEl.style.display = 'none';
                         console.log('ℹ️ No investments found');
                     }
                 }
@@ -208,6 +221,68 @@ const ProductionDataLoader = {
         } catch (error) {
             console.error('Failed to load investments:', error);
             this.showFallbackData('investments');
+        }
+    },
+    
+    updateInvestmentPagination(pagination) {
+        const paginationEl = document.getElementById('portfolioPagination');
+        const pageButtonsContainer = document.getElementById('portfolioPageButtons');
+        const prevBtn = document.getElementById('portfolioPrevBtn');
+        const nextBtn = document.getElementById('portfolioNextBtn');
+        
+        if (!paginationEl || !pageButtonsContainer) return;
+        
+        const currentPage = pagination.current_page || 1;
+        const totalPages = pagination.total_pages || 1;
+        const totalItems = pagination.total || 0;
+        
+        // Show pagination if there are items
+        if (totalItems > 0) {
+            paginationEl.style.display = 'flex';
+            
+            // Generate page buttons
+            let buttonsHTML = '';
+            const maxButtons = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+            let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+            
+            if (endPage - startPage < maxButtons - 1) {
+                startPage = Math.max(1, endPage - maxButtons + 1);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const isActive = i === currentPage ? 'active' : '';
+                buttonsHTML += `
+                    <button onclick="loadInvestmentsPage(${i})" 
+                            class="page-number-btn ${isActive}" 
+                            style="padding: 8px 12px; background: ${i === currentPage ? '#38e77b' : 'rgba(255,255,255,0.05)'}; border: 1px solid ${i === currentPage ? '#38e77b' : '#334155'}; border-radius: 8px; color: ${i === currentPage ? '#000' : '#fff'}; cursor: pointer; font-weight: ${i === currentPage ? '700' : '400'};">
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            buttonsHTML += `
+                <span style="color: #94a3b8; font-size: 14px; margin-left: 10px;">
+                    Page <span style="font-weight: 600; color: #38e77b;">${currentPage}</span> of ${totalPages} (${totalItems} investments)
+                </span>
+            `;
+            
+            pageButtonsContainer.innerHTML = buttonsHTML;
+            
+            // Enable/disable prev/next buttons
+            if (prevBtn) {
+                prevBtn.disabled = currentPage === 1;
+                prevBtn.style.opacity = currentPage === 1 ? '0.5' : '1';
+                prevBtn.style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
+            }
+            
+            if (nextBtn) {
+                nextBtn.disabled = currentPage === totalPages;
+                nextBtn.style.opacity = currentPage === totalPages ? '0.5' : '1';
+                nextBtn.style.cursor = currentPage === totalPages ? 'not-allowed' : 'pointer';
+            }
+        } else {
+            paginationEl.style.display = 'none';
         }
     },
     

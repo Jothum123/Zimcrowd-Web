@@ -4299,21 +4299,16 @@
                 </div>
 
                 <!-- Pagination for Investment Portfolio -->
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 30px; padding: 20px; background: rgba(15, 23, 42, 0.5); border-radius: 12px;" data-pagination="myPortfolio">
-                    <button class="btn-primary" style="display: flex; align-items: center; gap: 8px;" onclick="changePage('myPortfolio', 'prev')" data-prev-btn>
+                <div id="portfolioPagination" style="display: none; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 30px; padding: 20px; background: rgba(15, 23, 42, 0.5); border-radius: 12px;">
+                    <button class="btn-primary" style="display: flex; align-items: center; gap: 8px;" onclick="loadInvestmentsPage(window.currentInvestmentPage - 1)" id="portfolioPrevBtn">
                         <i class="fas fa-chevron-left"></i> Previous
                     </button>
                     
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;" data-page-buttons>
-                        <button onclick="goToPage('myPortfolio', 1)" class="page-number-btn active" data-page-btn="1">1</button>
-                        <button onclick="goToPage('myPortfolio', 2)" class="page-number-btn" data-page-btn="2">2</button>
-                        <button onclick="goToPage('myPortfolio', 3)" class="page-number-btn" data-page-btn="3">3</button>
-                        <span style="color: #94a3b8; font-size: 14px; margin-left: 10px;">
-                            Page <span style="font-weight: 600; color: #38e77b;" data-page-number>1</span> of 3 (8 investments)
-                        </span>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;" id="portfolioPageButtons">
+                        <!-- Page buttons will be generated dynamically -->
                     </div>
                     
-                    <button class="btn-primary" style="display: flex; align-items: center; gap: 8px;" onclick="changePage('myPortfolio', 'next')" data-next-btn>
+                    <button class="btn-primary" style="display: flex; align-items: center; gap: 8px;" onclick="loadInvestmentsPage(window.currentInvestmentPage + 1)" id="portfolioNextBtn">
                         Next <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
@@ -11880,6 +11875,29 @@ How it works:
             } else {
                 input.type = 'password';
                 icon.className = 'fas fa-eye';
+            }
+        }
+
+        // Load Investments Page
+        async function loadInvestmentsPage(page) {
+            if (page < 1) return;
+            
+            // Show loading state
+            const container = document.getElementById('portfolioCardsContainer');
+            if (container) {
+                container.innerHTML = `
+                    <div class="portfolio-card" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: rgba(15, 23, 42, 0.5);">
+                        <div style="display: inline-block;">
+                            <div class="spinner" style="width: 50px; height: 50px; border: 4px solid rgba(56, 231, 123, 0.1); border-top-color: #38e77b; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                            <p style="color: #94a3b8; font-size: 16px;">Loading investments...</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Load the page
+            if (window.ProductionDataLoader) {
+                await window.ProductionDataLoader.loadInvestmentsData(page, window.investmentPageLimit || 10);
             }
         }
 
