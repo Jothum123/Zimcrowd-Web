@@ -177,16 +177,45 @@ const ProductionDataLoader = {
                 this.apiRequest('/referrals/my-referrals')
             ]);
             
-            if (code.success) {
-                this.updateReferralCodeUI(code.data);
+            if (code.success && code.data) {
+                // Update referral link display
+                const linkElement = document.getElementById('referralLinkDisplay');
+                if (linkElement) {
+                    linkElement.textContent = code.data.share_url;
+                    linkElement.href = code.data.share_url;
+                }
+                
+                // Update QR code
+                const qrContainer = document.getElementById('referralQRCode');
+                if (qrContainer && code.data.qr_code_url) {
+                    qrContainer.innerHTML = `<img src="${code.data.qr_code_url}" alt="Referral QR Code" style="width: 100%; height: 100%; border-radius: 12px;">`;
+                }
+                
+                // Store for copy function
+                if (typeof window !== 'undefined') {
+                    window.currentReferralLink = code.data.share_url;
+                    window.currentReferralCode = code.data.referral_code;
+                }
+                
+                console.log('✅ Referral link updated:', code.data.share_url);
             }
             
-            if (stats.success) {
-                this.updateReferralStatsUI(stats.data);
+            if (stats.success && stats.data) {
+                // Update stats if elements exist
+                const totalRef = document.getElementById('refTotalReferrals');
+                const totalEarn = document.getElementById('refTotalEarnings');
+                const activeLoans = document.getElementById('refActiveLoans');
+                
+                if (totalRef) totalRef.textContent = stats.data.total_referrals || 0;
+                if (totalEarn) totalEarn.textContent = `$${parseFloat(stats.data.total_earnings || 0).toLocaleString()}`;
+                if (activeLoans) activeLoans.textContent = stats.data.active_loans_from_referrals || 0;
             }
             
-            if (referrals.success) {
-                this.updateReferralListUI(referrals.data);
+            if (referrals.success && referrals.data) {
+                // Update referral list if function exists
+                if (typeof window.updateReferralHistory === 'function') {
+                    window.updateReferralHistory(referrals.data);
+                }
             }
         } catch (error) {
             console.error('Failed to load referrals:', error);
