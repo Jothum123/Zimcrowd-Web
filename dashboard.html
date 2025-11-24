@@ -4745,17 +4745,17 @@
                 </div>
             </div>
 
-            <!-- Referral Code & QR -->
+            <!-- Referral Link & QR -->
             <div class="loan-card" style="margin-bottom: 20px;">
-                <h3 style="margin-bottom: 20px;">Your Referral Code</h3>
+                <h3 style="margin-bottom: 20px;">Your Referral Link</h3>
                 <div style="display: grid; grid-template-columns: 1fr auto; gap: 30px; align-items: center;">
                     <div>
-                        <p style="color: #94a3b8; margin-bottom: 15px;">Share your unique code and earn rewards when friends join Zimcrowd!</p>
+                        <p style="color: #94a3b8; margin-bottom: 15px;">Share your unique link and earn rewards when friends join Zimcrowd!</p>
                         <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 20px;">
                             <div style="flex: 1; padding: 16px 20px; background: #0f172a; border: 2px solid #334155; border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
-                                <span id="referralCodeDisplay" style="font-size: 24px; font-weight: 700; letter-spacing: 2px; color: #38e77b;">Loading...</span>
-                                <button onclick="copyReferralCode()" style="background: rgba(56, 231, 123, 0.1); border: none; padding: 10px 20px; border-radius: 8px; color: #38e77b; cursor: pointer; font-weight: 600;">
-                                    <i class="fas fa-copy"></i> Copy
+                                <a id="referralLinkDisplay" href="#" target="_blank" style="font-size: 16px; font-weight: 600; color: #38e77b; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">Loading...</a>
+                                <button onclick="copyReferralLink()" style="background: rgba(56, 231, 123, 0.1); border: none; padding: 10px 20px; border-radius: 8px; color: #38e77b; cursor: pointer; font-weight: 600; margin-left: 10px;">
+                                    <i class="fas fa-copy"></i> Copy Link
                                 </button>
                             </div>
                         </div>
@@ -9354,7 +9354,12 @@ How it works:
             const shareUrl = data.share_url;
             const qrUrl = data.qr_code_url;
             
-            document.getElementById('referralCodeDisplay').textContent = code;
+            // Update referral link display
+            const linkElement = document.getElementById('referralLinkDisplay');
+            if (linkElement) {
+                linkElement.textContent = shareUrl;
+                linkElement.href = shareUrl;
+            }
             
             // Update QR code
             const qrContainer = document.getElementById('referralQRCode');
@@ -9377,15 +9382,32 @@ How it works:
                 window.location.href = `mailto:?subject=Join ZimCrowd&body=Join ZimCrowd and get instant loans! Use my referral code: ${code} - ${shareUrl}`;
             };
             
-            // Store code for copy function
+            // Store code and link for copy function
             window.currentReferralCode = code;
+            window.currentReferralLink = shareUrl;
         }
 
-        function copyReferralCode() {
-            const code = window.currentReferralCode || document.getElementById('referralCodeDisplay').textContent;
-            navigator.clipboard.writeText(code).then(() => {
-                alert('Referral code copied to clipboard!');
+        function copyReferralLink() {
+            const link = window.currentReferralLink || document.getElementById('referralLinkDisplay').href;
+            navigator.clipboard.writeText(link).then(() => {
+                // Show success message
+                const button = event.target.closest('button');
+                const originalHTML = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                button.style.background = 'rgba(56, 231, 123, 0.2)';
+                
+                setTimeout(() => {
+                    button.innerHTML = originalHTML;
+                    button.style.background = 'rgba(56, 231, 123, 0.1)';
+                }, 2000);
+            }).catch(err => {
+                alert('Failed to copy link. Please try again.');
             });
+        }
+
+        // Keep old function for backward compatibility
+        function copyReferralCode() {
+            copyReferralLink();
         }
 
         function updateReferralHistory(referrals) {
