@@ -181,9 +181,27 @@ const ProductionDataLoader = {
             // Update My Investments list
             if (myInvestments.success && myInvestments.data) {
                 const container = document.getElementById('portfolioCardsContainer');
-                if (container && myInvestments.data.length > 0) {
-                    container.innerHTML = myInvestments.data.map(inv => this.createInvestmentCard(inv)).join('');
-                    console.log('✅ Investment cards updated:', myInvestments.data.length);
+                if (container) {
+                    if (myInvestments.data.length > 0) {
+                        container.innerHTML = myInvestments.data.map(inv => this.createInvestmentCard(inv)).join('');
+                        console.log('✅ Investment cards updated:', myInvestments.data.length);
+                    } else {
+                        container.innerHTML = `
+                            <div class="portfolio-card" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: rgba(15, 23, 42, 0.5);">
+                                <div style="display: inline-block;">
+                                    <div style="width: 80px; height: 80px; background: rgba(56, 231, 123, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 36px; color: #38e77b;">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <h3 style="margin: 0 0 10px 0;">No Investments Yet</h3>
+                                    <p style="color: #94a3b8; font-size: 16px; margin: 0 0 20px 0;">Start investing in loans to build your portfolio</p>
+                                    <button onclick="switchSection('overview')" class="btn-primary" style="padding: 12px 24px;">
+                                        <i class="fas fa-search"></i> Browse Opportunities
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        console.log('ℹ️ No investments found');
+                    }
                 }
             }
             
