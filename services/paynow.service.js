@@ -793,6 +793,54 @@ class PayNowService {
     }
 
     /**
+     * Validate webhook hash from Paynow
+     * @param {Object} webhookData - Webhook data from Paynow
+     * @returns {boolean} True if hash is valid
+     */
+    validateWebhookHash(webhookData) {
+        const crypto = require('crypto');
+        
+        if (!webhookData.hash) {
+            console.error('❌ No hash provided in webhook');
+            return false;
+        }
+        
+        const receivedHash = webhookData.hash;
+        
+        // Get integration key based on currency or use USD as default
+        const config = this.getCurrencyConfig('USD');
+        const integrationKey = config.integrationKey;
+        
+        // Build hash string from webhook data (excluding hash field)
+        const sortedKeys = Object.keys(webhookData).sort();
+        let hashString = '';
+        
+        sortedKeys.forEach(key => {
+            if (key !== 'hash' && webhookData[key] !== undefined && webhookData[key] !== null) {
+                hashString += webhookData[key];
+            }
+        });
+        
+        hashString += integrationKey;
+        
+        // Generate hash and compare
+        const calculatedHash = crypto.createHash('sha512')
+            .update(hashString)
+            .digest('hex')
+            .toUpperCase();
+        
+        const isValid = calculatedHash === receivedHash.toUpperCase();
+        
+        if (!isValid) {
+            console.error('❌ Hash validation failed');
+            console.error('Received:', receivedHash);
+            console.error('Calculated:', calculatedHash);
+        }
+        
+        return isValid;
+    }
+
+    /**
      * Make HTTP request to PayNow
      * @param {string} url - Request URL
      * @param {Object} data - Request data

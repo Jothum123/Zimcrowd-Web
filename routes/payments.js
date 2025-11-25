@@ -298,38 +298,140 @@ router.get('/status/:reference', async (req, res) => {
 
 /**
  * POST /api/payments/result
- * PayNow result callback endpoint
+ * PayNow result callback endpoint (Webhook)
+ * Handles status updates from Paynow with full field support
  */
 router.post('/result', async (req, res) => {
     try {
-        const { reference, paynowreference, status, amount, pollurl } = req.body;
+        // Extract all possible webhook fields
+        const {
+            reference,
+            paynowreference,
+            amount,
+            pollurl,
+            status,
+            hash,
+            // Optional token fields
+            token,
+            tokenexpiry,
+            // Optional payment instrument fields
+            paymentchannel,
+            paymentinstrument,
+            paymentinstrumentname,
+            paymentinstrumentnationality,
+            paymentchannelreference,
+            paymentchanneleci,
+            paymentfraudscore,
+            paymentfrauddecision
+        } = req.body;
         
-        console.log('📥 PayNow result callback:', { reference, status });
+        console.log('📥 PayNow webhook received:', {
+            reference,
+            status,
+            amount,
+            paynowreference,
+            hasToken: !!token,
+            paymentChannel: paymentchannel
+        });
         
-        // Update transaction in database
+        // Validate hash to ensure message authenticity
+        const isValidHash = paynowService.validateWebhookHash(req.body);
+        if (!isValidHash) {
+            console.error('❌ Invalid webhook hash for reference:', reference);
+            return res.status(400).send('INVALID_HASH');
+        }
+        
+        // Get existing transaction
+        const { data: existingTx, error: fetchError } = await supabase
+            .from('payment_transactions')
+            .select('*')
+            .eq('reference', reference)
+            .single();
+        
+        if (fetchError || !existingTx) {
+            console.error('Transaction not found:', reference);
+            return res.status(404).send('TRANSACTION_NOT_FOUND');
+        }
+        
+        // Prepare update data with all fields
         const updateData = {
             status: status.toLowerCase(),
             paynow_reference: paynowreference,
-            last_checked_at: new Date().toISOString()
+            poll_url: pollurl,
+            last_checked_at: new Date().toISOString(),
+            webhook_data: {
+                amount,
+                status,
+                receivedAt: new Date().toISOString()
+            }
         };
         
-        if (status.toLowerCase() === 'paid') {
-            updateData.paid_at = new Date().toISOString();
+        // Handle payment completion statuses
+        const paidStatuses = ['paid', 'awaiting delivery', 'delivered'];
+        if (paidStatuses.includes(status.toLowerCase())) {
+            updateData.paid_at = updateData.paid_at || new Date().toISOString();
+            
+            // Store payment instrument details if provided
+            if (paymentchannel) {
+                updateData.payment_details = {
+                    channel: paymentchannel,
+                    instrument: paymentinstrument,
+                    instrumentName: paymentinstrumentname,
+                    nationality: paymentinstrumentnationality,
+                    channelReference: paymentchannelreference,
+                    eci: paymentchanneleci,
+                    fraudScore: paymentfraudscore,
+                    fraudDecision: paymentfrauddecision
+                };
+            }
+            
+            // Store token if provided (for recurring payments)
+            if (token) {
+                updateData.payment_token = token;
+                updateData.token_expiry = tokenexpiry;
+            }
+            
+            // Credit user wallet for paid transactions
+            if (status.toLowerCase() === 'paid' && !existingTx.wallet_credited) {
+                const { error: walletError } = await supabase.rpc('credit_wallet', {
+                    p_user_id: existingTx.user_id,
+                    p_amount: parseFloat(amount),
+                    p_transaction_ref: reference,
+                    p_description: `Deposit via ${paymentchannel || 'Paynow'}`
+                });
+                
+                if (!walletError) {
+                    updateData.wallet_credited = true;
+                    console.log('✅ Wallet credited:', existingTx.user_id, amount);
+                } else {
+                    console.error('❌ Wallet credit failed:', walletError);
+                }
+            }
         }
         
-        const { error } = await supabase
+        // Handle failed/cancelled statuses
+        if (['cancelled', 'refunded'].includes(status.toLowerCase())) {
+            updateData.failed_at = new Date().toISOString();
+        }
+        
+        // Update transaction in database
+        const { error: updateError } = await supabase
             .from('payment_transactions')
             .update(updateData)
             .eq('reference', reference);
         
-        if (error) {
-            console.error('Error updating transaction:', error);
+        if (updateError) {
+            console.error('❌ Error updating transaction:', updateError);
+            return res.status(500).send('DATABASE_ERROR');
         }
         
-        // Respond to PayNow
+        console.log('✅ Webhook processed successfully:', reference, status);
+        
+        // Respond to PayNow (200 OK prevents retries)
         res.status(200).send('OK');
+        
     } catch (error) {
-        console.error('Error processing PayNow result:', error);
+        console.error('❌ Error processing PayNow webhook:', error);
         res.status(500).send('ERROR');
     }
 });
