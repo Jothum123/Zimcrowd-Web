@@ -226,8 +226,12 @@ async function handleDeposit(event) {
             alert(`✅ Deposit request submitted successfully!\n\nAmount: $${amount}\nMethod: ${method}\nStatus: ${response.data.status}\nEstimated completion: ${response.data.estimated_completion}`);
             closeModal('depositModal');
             // Reload wallet data
-            loadDashboardOverview();
-            loadWalletTransactions();
+            if (window.ProductionDataLoader) {
+                window.ProductionDataLoader.loadOverviewData();
+                window.ProductionDataLoader.loadWalletPage(1);
+            } else if (window.DashboardLoader) {
+                window.DashboardLoader.loadDashboardOverview();
+            }
         } else {
             alert('❌ Deposit failed: ' + response.message);
         }
@@ -273,8 +277,12 @@ async function handleWithdraw(event) {
             alert(`✅ Withdrawal request submitted successfully!\n\nAmount: $${amount}\nMethod: ${method}\nStatus: ${response.data.status}\nEstimated completion: ${response.data.estimated_completion}\nFees: $${response.data.fees}`);
             closeModal('withdrawModal');
             // Reload wallet data
-            loadDashboardOverview();
-            loadWalletTransactions();
+            if (window.ProductionDataLoader) {
+                window.ProductionDataLoader.loadOverviewData();
+                window.ProductionDataLoader.loadWalletPage(1);
+            } else if (window.DashboardLoader) {
+                window.DashboardLoader.loadDashboardOverview();
+            }
         } else {
             alert('❌ Withdrawal failed: ' + response.message);
         }
@@ -308,8 +316,12 @@ async function handleTransfer(event) {
             alert(`✅ Transfer completed successfully!\n\nRecipient: ${response.data.recipient.name}\nAmount: $${amount}\n${description ? 'Description: ' + description : ''}`);
             closeModal('transferModal');
             // Reload wallet data
-            loadDashboardOverview();
-            loadWalletTransactions();
+            if (window.ProductionDataLoader) {
+                window.ProductionDataLoader.loadOverviewData();
+                window.ProductionDataLoader.loadWalletPage(1);
+            } else if (window.DashboardLoader) {
+                window.DashboardLoader.loadDashboardOverview();
+            }
         } else {
             alert('❌ Transfer failed: ' + response.message);
         }

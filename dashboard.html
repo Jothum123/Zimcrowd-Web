@@ -3762,29 +3762,36 @@
                     <div class="stat-icon" style="background: rgba(255, 255, 255, 0.2);">
                         <i class="fas fa-wallet" style="color: white;"></i>
                     </div>
-                    <h3 id="walletAvailableBalance">$0.00</h3>
-                    <p>Available Balance</p>
+                    <h3 id="walletAccountValue">$0.00</h3>
+                    <p>Account Value</p>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1);">
-                        <i class="fas fa-clock" style="color: #f59e0b;"></i>
+                    <div class="stat-icon" style="background: rgba(56, 231, 123, 0.1);">
+                        <i class="fas fa-money-bill-wave" style="color: #38e77b;"></i>
                     </div>
-                    <h3 id="walletPending">$0.00</h3>
-                    <p>Pending</p>
+                    <h3 id="walletAvailableBalance">$0.00</h3>
+                    <p>Available Funds</p>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(59, 130, 246, 0.1);">
-                        <i class="fas fa-receipt" style="color: #3b82f6;"></i>
+                        <i class="fas fa-chart-pie" style="color: #3b82f6;"></i>
                     </div>
-                    <h3 id="walletTotalTransactions">$0.00</h3>
-                    <p>Total Transactions</p>
+                    <h3 id="walletInvestedFunds">$0.00</h3>
+                    <p>Invested Funds</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1);">
+                        <i class="fas fa-lock" style="color: #f59e0b;"></i>
+                    </div>
+                    <h3 id="walletReservedFunds">$0.00</h3>
+                    <p>Reserved Funds</p>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(168, 85, 247, 0.1);">
-                        <i class="fas fa-calendar-check" style="color: #a855f7;"></i>
+                        <i class="fas fa-exchange-alt" style="color: #a855f7;"></i>
                     </div>
-                    <h3 id="walletThisMonth">$0.00</h3>
-                    <p>This Month</p>
+                    <h3 id="walletTotalTransactions">$0.00</h3>
+                    <p>Total Transactions</p>
                 </div>
             </div>
 
@@ -3814,76 +3821,26 @@
 
             <h3 style="margin: 40px 0 20px;">Recent Transactions</h3>
             <div id="walletRecentTransactions" class="transaction-list" style="display: flex; flex-direction: column; gap: 15px;">
-                <div class="loan-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <div style="width: 50px; height: 50px; background: rgba(56, 231, 123, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-arrow-down" style="color: #38e77b;"></i>
-                            </div>
-                            <div>
-                                <h4 style="margin-bottom: 5px;">Loan Disbursement</h4>
-                                <p style="color: #94a3b8; font-size: 14px;">Nov 20, 2024</p>
-                            </div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div class="loan-amount" style="font-size: 20px;">+$3,500</div>
-                        </div>
-                    </div>
+                <div style="text-align: center; padding: 40px;">
+                    <div class="spinner" style="width: 40px; height: 40px; margin: 0 auto 20px;"></div>
+                    <p style="color: #94a3b8;">Loading transactions...</p>
                 </div>
+            </div>
 
-                <div class="loan-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <div style="width: 50px; height: 50px; background: rgba(239, 68, 68, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-arrow-up" style="color: #ef4444;"></i>
-                            </div>
-                            <div>
-                                <h4 style="margin-bottom: 5px;">Loan Payment</h4>
-                                <p style="color: #94a3b8; font-size: 14px;">Nov 15, 2024</p>
-                            </div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 20px; font-weight: 700; color: #ef4444;">-$185.50</div>
-                        </div>
-                    </div>
+            <!-- Pagination for Wallet Transactions -->
+            <div style="display: none; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 30px; padding: 20px; background: rgba(15, 23, 42, 0.5); border-radius: 12px;" data-pagination="walletTransactions">
+                <button class="btn-primary" style="display: flex; align-items: center; gap: 8px;" data-prev-btn>
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+                
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;" data-page-buttons>
+                    <!-- Page buttons will be inserted here -->
                 </div>
-
-                <div class="loan-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <div style="width: 50px; height: 50px; background: rgba(56, 231, 123, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-arrow-down" style="color: #38e77b;"></i>
-                            </div>
-                            <div>
-                                <h4 style="margin-bottom: 5px;">Investment Return</h4>
-                                <p style="color: #94a3b8; font-size: 14px;">Nov 10, 2024</p>
-                            </div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div class="loan-amount" style="font-size: 20px;">+$125.00</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pagination for Wallet Transactions -->
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 30px; padding: 20px; background: rgba(15, 23, 42, 0.5); border-radius: 12px;" data-pagination="walletTransactions">
-                    <button class="btn-primary" style="display: flex; align-items: center; gap: 8px;" onclick="changePage('walletTransactions', 'prev')" data-prev-btn>
-                        <i class="fas fa-chevron-left"></i> Previous
-                    </button>
-                    
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;" data-page-buttons>
-                        <button onclick="goToPage('walletTransactions', 1)" class="page-number-btn active" data-page-btn="1">1</button>
-                        <button onclick="goToPage('walletTransactions', 2)" class="page-number-btn" data-page-btn="2">2</button>
-                        <button onclick="goToPage('walletTransactions', 3)" class="page-number-btn" data-page-btn="3">3</button>
-                        <span style="color: #94a3b8; font-size: 14px; margin-left: 10px;">
-                            Page <span style="font-weight: 600; color: #38e77b;" data-page-number>1</span> of 3 (18 transactions)
-                        </span>
-                    </div>
-                    
-                    <button class="btn-primary" style="display: flex; align-items: center; gap: 8px;" onclick="changePage('walletTransactions', 'next')" data-next-btn>
-                        Next <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
+                
+                <button class="btn-primary" style="display: flex; align-items: center; gap: 8px;" data-next-btn>
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
             </div>
         </section>
 
@@ -6580,18 +6537,39 @@
                 }
 
                 // Load section-specific data
-                if (section === 'loans') {
-                    loadLoansData();
-                } else if (section === 'wallet') {
-                    loadWalletData();
-                } else if (section === 'investments') {
-                    loadInvestmentsData();
-                } else if (section === 'transactions') {
-                    loadTransactionsData();
-                } else if (section === 'referrals') {
-                    loadReferralsData();
-                } else if (section === 'settings') {
-                    loadSettingsData();
+                if (window.ProductionDataLoader) {
+                    if (section === 'overview') {
+                        window.ProductionDataLoader.loadOverviewData();
+                    } else if (section === 'loans') {
+                        window.ProductionDataLoader.loadLoansData();
+                    } else if (section === 'wallet') {
+                        window.ProductionDataLoader.loadOverviewData(); // Refresh balance
+                        window.ProductionDataLoader.loadWalletPage(1);
+                    } else if (section === 'investments') {
+                        window.ProductionDataLoader.loadInvestmentsData();
+                    } else if (section === 'transactions') {
+                        window.ProductionDataLoader.loadTransactionsData();
+                    } else if (section === 'referrals') {
+                        window.ProductionDataLoader.loadReferralsData();
+                    } else if (section === 'settings') {
+                        window.ProductionDataLoader.loadSettingsData();
+                    } else if (section === 'analytics') {
+                        window.ProductionDataLoader.loadAnalyticsData();
+                    }
+                } else {
+                    if (section === 'loans') {
+                        if (typeof loadLoansData === 'function') loadLoansData();
+                    } else if (section === 'wallet') {
+                        if (typeof loadWalletData === 'function') loadWalletData();
+                    } else if (section === 'investments') {
+                        if (typeof loadInvestmentsData === 'function') loadInvestmentsData();
+                    } else if (section === 'transactions') {
+                        if (typeof loadTransactionsData === 'function') loadTransactionsData();
+                    } else if (section === 'referrals') {
+                        if (typeof loadReferralsData === 'function') loadReferralsData();
+                    } else if (section === 'settings') {
+                        if (typeof loadSettingsData === 'function') loadSettingsData();
+                    }
                 }
             });
         });
@@ -12525,6 +12503,7 @@ How it works:
 <script src="js/dashboard-charts.js"></script>
 <script src="js/dashboard-filters.js"></script>
 <script src="js/dashboard-realtime.js"></script>
+<script src="wallet-functions.js"></script>
 <script src="js/production-data-loader.js"></script>
 <script src="js/settings-data-loader.js"></script>
 <script src="js/settings-debug.js"></script>

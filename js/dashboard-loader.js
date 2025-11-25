@@ -197,34 +197,32 @@ const DashboardLoader = {
         
         console.log('💰 Updating wallet:', wallet);
         
-        // Main wallet balance
-        const walletBalance = document.getElementById('walletBalance');
-        if (walletBalance) {
-            walletBalance.textContent = this.formatCurrency(wallet.balance || 0);
-        }
+        const available = parseFloat(wallet.available_balance || wallet.balance || 0);
+        const pending = parseFloat(wallet.pending_balance || 0);
+        // Note: Invested amount might not be directly in wallet object in fallback mode, assume 0 if missing
+        const invested = parseFloat(wallet.invested_amount || 0);
+        const accountValue = available + pending + invested;
 
-        // Available balance
+        // Account Value
+        const accountValueEl = document.getElementById('walletAccountValue');
+        if (accountValueEl) accountValueEl.textContent = this.formatCurrency(accountValue);
+
+        // Available Balance
         const walletAvailableBalance = document.getElementById('walletAvailableBalance');
-        if (walletAvailableBalance) {
-            walletAvailableBalance.textContent = this.formatCurrency(wallet.available_balance || wallet.balance || 0);
-        }
+        if (walletAvailableBalance) walletAvailableBalance.textContent = this.formatCurrency(available);
 
-        // Pending balance
-        const walletPending = document.getElementById('walletPending');
-        if (walletPending) {
-            walletPending.textContent = this.formatCurrency(wallet.pending_balance || 0);
-        }
+        // Invested Funds
+        const walletInvestedFunds = document.getElementById('walletInvestedFunds');
+        if (walletInvestedFunds) walletInvestedFunds.textContent = this.formatCurrency(invested);
 
-        // Total transactions amount
+        // Reserved/Pending Funds
+        const walletReservedFunds = document.getElementById('walletReservedFunds');
+        if (walletReservedFunds) walletReservedFunds.textContent = this.formatCurrency(pending);
+
+        // Total Transactions
         const walletTotalTransactions = document.getElementById('walletTotalTransactions');
         if (walletTotalTransactions) {
             walletTotalTransactions.textContent = this.formatCurrency(wallet.total_transactions || 0);
-        }
-
-        // This month transactions
-        const walletThisMonth = document.getElementById('walletThisMonth');
-        if (walletThisMonth) {
-            walletThisMonth.textContent = this.formatCurrency(wallet.this_month || 0);
         }
     },
 

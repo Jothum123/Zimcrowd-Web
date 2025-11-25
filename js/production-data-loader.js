@@ -80,8 +80,8 @@ const ProductionDataLoader = {
             const data = await this.apiRequest('/dashboard/');
             
             if (data.success && data.data) {
-                // Update wallet balance
-                this.updateWalletUI(data.data.wallet);
+                // Update wallet balance with stats for invested amount
+                this.updateWalletUI(data.data.wallet, data.data.stats);
                 
                 // Update statistics
                 this.updateStatsUI(data.data.stats);
@@ -710,16 +710,182 @@ const ProductionDataLoader = {
     /**
      * Update Wallet UI
      */
-    updateWalletUI(walletData) {
-        const balanceEl = document.getElementById('wallet-balance');
-        const availableEl = document.getElementById('available-balance');
-        const pendingEl = document.getElementById('pending-balance');
+    updateWalletUI(walletData, stats = null) {
+        // Elements
+        const accountValueEl = document.getElementById('walletAccountValue');
+        const availableEl = document.getElementById('walletAvailableBalance');
+        const investedEl = document.getElementById('walletInvestedFunds');
+        const reservedEl = document.getElementById('walletReservedFunds');
+        const transactionsEl = document.getElementById('walletTotalTransactions');
         
-        if (balanceEl) balanceEl.textContent = `$${(walletData.balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-        if (availableEl) availableEl.textContent = `$${(walletData.available_balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-        if (pendingEl) pendingEl.textContent = `$${(walletData.pending_balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        // Values
+        const available = parseFloat(walletData.available_balance || walletData.balance || 0);
+        const reserved = parseFloat(walletData.pending_balance || walletData.reserved_amount || 0);
+        // Get invested from stats if available, otherwise check walletData, otherwise 0
+        const invested = stats ? parseFloat(stats.total_invested || 0) : parseFloat(walletData.invested_amount || 0);
+        const totalTransactions = parseFloat(walletData.total_transactions || 0);
         
-        console.log('✅ Wallet UI updated');
+        const accountValue = available + reserved + invested;
+        
+        // Update UI
+        if (accountValueEl) accountValueEl.textContent = `$${accountValue.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        if (availableEl) availableEl.textContent = `$${available.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        if (investedEl) investedEl.textContent = `$${invested.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        if (reservedEl) reservedEl.textContent = `$${reserved.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        if (transactionsEl) transactionsEl.textContent = `$${totalTransactions.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        
+        console.log('✅ Wallet UI updated with new fields');
+    },
+
+    /**
+     * Load Wallet Page Data
+     */
+    async loadWalletPage(page = 1) {
+        try {
+            console.log(`💰 Loading wallet transactions page ${page}...`);
+            
+            // Show loading state
+            const container = document.getElementById('walletRecentTransactions');
+            if (container) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <div class="spinner" style="width: 40px; height: 40px; margin: 0 auto 20px;"></div>
+                        <p style="color: #94a3b8;">Loading transactions...</p>
+                    </div>
+                `;
+            }
+
+            const response = await this.apiRequest(`/wallet/transactions?page=${page}&limit=10`);
+            
+            if (response.success && response.data) {
+                this.updateWalletTransactionsList(response.data.transactions);
+                this.updateWalletPagination(response.data.pagination);
+            }
+        } catch (error) {
+            console.error('Failed to load wallet transactions:', error);
+            // Fallback or error state
+            const container = document.getElementById('walletRecentTransactions');
+            if (container) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #ef4444;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 32px; margin-bottom: 15px;"></i>
+                        <p>Failed to load transactions</p>
+                        <button onclick="ProductionDataLoader.loadWalletPage(${page})" class="btn-secondary" style="margin-top: 10px;">Try Again</button>
+                    </div>
+                `;
+            }
+        }
+    },
+
+    /**
+     * Update Wallet Transactions List
+     */
+    updateWalletTransactionsList(transactions) {
+        const container = document.getElementById('walletRecentTransactions');
+        if (!container) return;
+
+        if (!transactions || transactions.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                    <i class="fas fa-receipt" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                    <p>No transactions found</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = transactions.map(tx => {
+            const isCredit = tx.type === 'deposit' || tx.type === 'credit' || tx.type === 'loan_disbursement' || tx.type === 'investment_return';
+            const icon = isCredit ? 'arrow-down' : 'arrow-up';
+            const color = isCredit ? '#38e77b' : '#ef4444';
+            const bg = isCredit ? 'rgba(56, 231, 123, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+            
+            return `
+                <div class="loan-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="width: 50px; height: 50px; background: ${bg}; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-${icon}" style="color: ${color};"></i>
+                            </div>
+                            <div>
+                                <h4 style="margin-bottom: 5px;">${tx.description || tx.type.replace(/_/g, ' ')}</h4>
+                                <p style="color: #94a3b8; font-size: 14px;">${new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 20px; font-weight: 700; color: ${color};">
+                                ${isCredit ? '+' : '-'}$${Math.abs(parseFloat(tx.amount)).toFixed(2)}
+                            </div>
+                            <span class="status-badge ${tx.status}" style="font-size: 12px; padding: 2px 8px; margin-top: 4px; display: inline-block;">${tx.status}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    /**
+     * Update Wallet Pagination
+     */
+    updateWalletPagination(pagination) {
+        const container = document.querySelector('[data-pagination="walletTransactions"]');
+        if (!container) return;
+
+        if (!pagination || pagination.total_pages <= 1) {
+            container.style.display = 'none';
+            return;
+        }
+
+        container.style.display = 'flex';
+        
+        const currentPage = pagination.current_page;
+        const totalPages = pagination.total_pages;
+        
+        // Update page numbers
+        const pageBtnContainer = container.querySelector('[data-page-buttons]');
+        if (pageBtnContainer) {
+            let html = '';
+            const maxButtons = 5;
+            let start = Math.max(1, currentPage - 2);
+            let end = Math.min(totalPages, start + maxButtons - 1);
+            
+            if (end - start < maxButtons - 1) {
+                start = Math.max(1, end - maxButtons + 1);
+            }
+
+            for (let i = start; i <= end; i++) {
+                html += `
+                    <button onclick="ProductionDataLoader.loadWalletPage(${i})" 
+                            class="page-number-btn ${i === currentPage ? 'active' : ''}">
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            html += `
+                <span style="color: #94a3b8; font-size: 14px; margin-left: 10px;">
+                    Page <span style="font-weight: 600; color: #38e77b;">${currentPage}</span> of ${totalPages}
+                </span>
+            `;
+            
+            pageBtnContainer.innerHTML = html;
+        }
+
+        // Update Prev/Next buttons
+        const prevBtn = container.querySelector('[data-prev-btn]');
+        const nextBtn = container.querySelector('[data-next-btn]');
+        
+        if (prevBtn) {
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => ProductionDataLoader.loadWalletPage(currentPage - 1);
+            prevBtn.style.opacity = currentPage === 1 ? '0.5' : '1';
+        }
+        
+        if (nextBtn) {
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => ProductionDataLoader.loadWalletPage(currentPage + 1);
+            nextBtn.style.opacity = currentPage === totalPages ? '0.5' : '1';
+        }
     },
 
     /**
