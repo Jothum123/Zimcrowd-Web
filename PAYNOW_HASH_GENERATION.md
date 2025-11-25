@@ -111,9 +111,182 @@ hash=2A033FC38798D913D42ECB786B9B19645ADEDBDE788862032F1BD82CF3B92DEF84F316385D5
 
 ## Validating Hash for Inbound Messages
 
-### Example Webhook
+### Example: Paynow Response
 
-**Received from Paynow:**
+**Raw message received from Paynow:**
+
+```
+status=Ok&browserurl=https%3a%2f%2fstaging.paynow.co.zw%2fPayment%2fConfirmPayment%2f9510&pollurl=https%3a%2f%2fstaging.paynow.co.zw%2fInterface%2fCheckPayment%2f%3fguid%3dc7ed41da-0159-46da-b428-69549f770413&paynowreference=9510&hash=750DD0B0DF374678707BB5AF915AF81C228B9058AD57BB7120569EC68BBB9C2EFC1B26C6375D2BC562AC909B3CD6B2AF1D42E1A5E479FFAC8F4FB3FDCE71DF4D
+```
+
+### Step 1: Split into Key/Value Pairs
+
+**Split by `&` character:**
+
+```javascript
+const pairs = message.split('&');
+// [
+//   'status=Ok',
+//   'browserurl=https%3a%2f%2fstaging.paynow.co.zw%2fPayment%2fConfirmPayment%2f9510',
+//   'pollurl=https%3a%2f%2fstaging.paynow.co.zw%2fInterface%2fCheckPayment%2f%3fguid%3dc7ed41da-0159-46da-b428-69549f770413',
+//   'paynowreference=9510',
+//   'hash=750DD0B0DF374678707BB5AF915AF81C228B9058AD57BB7120569EC68BBB9C2EFC1B26C6375D2BC562AC909B3CD6B2AF1D42E1A5E479FFAC8F4FB3FDCE71DF4D'
+// ]
+```
+
+### Step 2: Split Each Pair into Key and Value
+
+**Split by `=` character:**
+
+```javascript
+const data = {};
+pairs.forEach(pair => {
+    const [key, value] = pair.split('=');
+    data[key] = value;
+});
+```
+
+### Step 3: URL Decode Values and Concatenate
+
+**URL decode each value (except hash) and join:**
+
+```javascript
+const querystring = require('querystring');
+
+let hashString = '';
+Object.keys(data).forEach(key => {
+    if (key.toLowerCase() !== 'hash') {
+        // URL decode the value
+        const decodedValue = querystring.unescape(data[key]);
+        hashString += decodedValue;
+    }
+});
+
+// Result:
+// Okhttps://staging.paynow.co.zw/Payment/ConfirmPayment/9510https://staging.paynow.co.zw/Interface/CheckPayment/?guid=c7ed41da-0159-46da-b428-69549f7704139510
+```
+
+**Breakdown:**
+- `status` = `Ok`
+- `browserurl` = `https://staging.paynow.co.zw/Payment/ConfirmPayment/9510` (URL decoded)
+- `pollurl` = `https://staging.paynow.co.zw/Interface/CheckPayment/?guid=c7ed41da-0159-46da-b428-69549f770413` (URL decoded)
+- `paynowreference` = `9510`
+
+**Concatenated:** `Okhttps://staging.paynow.co.zw/Payment/ConfirmPayment/9510https://staging.paynow.co.zw/Interface/CheckPayment/?guid=c7ed41da-0159-46da-b428-69549f7704139510`
+
+### Step 4: Append Integration Key
+
+**Add integration key to end:**
+
+```javascript
+const integrationKey = '3e9fed89-60e1-4ce5-ab6e-6b1eb2d4f977';
+hashString += integrationKey;
+
+// Result:
+// Okhttps://staging.paynow.co.zw/Payment/ConfirmPayment/9510https://staging.paynow.co.zw/Interface/CheckPayment/?guid=c7ed41da-0159-46da-b428-69549f77041395103e9fed89-60e1-4ce5-ab6e-6b1eb2d4f977
+```
+
+### Step 5: Generate SHA512 Hash
+
+**Create hash and convert to uppercase:**
+
+```javascript
+const crypto = require('crypto');
+const expectedHash = crypto
+    .createHash('sha512')
+    .update(hashString, 'utf8')
+    .digest('hex')
+    .toUpperCase();
+
+// Result:
+// 750DD0B0DF374678707BB5AF915AF81C228B9058AD57BB7120569EC68BBB9C2EFC1B26C6375D2BC562AC909B3CD6B2AF1D42E1A5E479FFAC8F4FB3FDCE71DF4D
+```
+
+### Step 6: Compare Hashes
+
+**Extract received hash and compare:**
+
+```javascript
+const receivedHash = data.hash;
+// 750DD0B0DF374678707BB5AF915AF81C228B9058AD57BB7120569EC68BBB9C2EFC1B26C6375D2BC562AC909B3CD6B2AF1D42E1A5E479FFAC8F4FB3FDCE71DF4D
+
+if (receivedHash.toUpperCase() === expectedHash.toUpperCase()) {
+    // ✅ Valid - message is authentic from Paynow
+    console.log('✅ Hash validation passed');
+} else {
+    // ❌ Invalid - possible spoofing attempt
+    console.error('❌ Hash validation failed');
+}
+```
+
+**Result:** ✅ **Hashes match!** Message is authentic.
+
+### Complete Validation Function
+
+```javascript
+/**
+ * Validate inbound message from Paynow
+ * @param {string} rawMessage - Raw URL-encoded message
+ * @param {string} integrationKey - Integration key
+ * @returns {boolean} True if valid
+ */
+function validateInboundMessage(rawMessage, integrationKey) {
+    const querystring = require('querystring');
+    const crypto = require('crypto');
+    
+    // Step 1 & 2: Parse message into key/value pairs
+    const data = querystring.parse(rawMessage);
+    
+    // Extract received hash
+    const receivedHash = data.hash;
+    if (!receivedHash) {
+        console.error('❌ No hash in message');
+        return false;
+    }
+    
+    // Step 3: Concatenate URL-decoded values (exclude hash)
+    let hashString = '';
+    Object.keys(data).forEach(key => {
+        if (key.toLowerCase() !== 'hash') {
+            // querystring.parse already URL decodes values
+            hashString += data[key];
+        }
+    });
+    
+    // Step 4: Append integration key
+    hashString += integrationKey;
+    
+    // Step 5: Generate SHA512 hash
+    const expectedHash = crypto
+        .createHash('sha512')
+        .update(hashString, 'utf8')
+        .digest('hex')
+        .toUpperCase();
+    
+    // Step 6: Compare
+    const isValid = receivedHash.toUpperCase() === expectedHash.toUpperCase();
+    
+    if (!isValid) {
+        console.error('❌ Hash mismatch:', {
+            received: receivedHash.substring(0, 20) + '...',
+            expected: expectedHash.substring(0, 20) + '...'
+        });
+    }
+    
+    return isValid;
+}
+
+// Test with example
+const testMessage = 'status=Ok&browserurl=https%3a%2f%2fstaging.paynow.co.zw%2fPayment%2fConfirmPayment%2f9510&pollurl=https%3a%2f%2fstaging.paynow.co.zw%2fInterface%2fCheckPayment%2f%3fguid%3dc7ed41da-0159-46da-b428-69549f770413&paynowreference=9510&hash=750DD0B0DF374678707BB5AF915AF81C228B9058AD57BB7120569EC68BBB9C2EFC1B26C6375D2BC562AC909B3CD6B2AF1D42E1A5E479FFAC8F4FB3FDCE71DF4D';
+const testKey = '3e9fed89-60e1-4ce5-ab6e-6b1eb2d4f977';
+
+const isValid = validateInboundMessage(testMessage, testKey);
+console.log('Validation result:', isValid); // Should be true
+```
+
+### Example: Webhook Validation
+
+**Received webhook:**
 
 ```
 reference=ABC123&
@@ -124,49 +297,44 @@ pollurl=https%3A%2F%2Fwww.paynow.co.zw%2FInterface%2FCheckPayment%2F%3Fguid%3D..
 hash=785659BF4970D86C4F5B9357473B53F43AF3FFA28E6A622D8EF83B69B68E5464C6BBD0F4187D8C6FB31B71DB3700C415B2434DB8D6F670CDBB809502C339AB3C
 ```
 
-### Step 1: Parse Message
-
-**URL decode values:**
+**Validation:**
 
 ```javascript
-{
-    reference: 'ABC123',
-    paynowreference: '123456',
-    amount: '10.00',
-    status: 'Paid',
-    pollurl: 'https://www.paynow.co.zw/Interface/CheckPayment/?guid=...',
-    hash: '785659BF...'
-}
-```
-
-### Step 2: Extract Received Hash
-
-```javascript
-const receivedHash = data.hash;
-```
-
-### Step 3: Generate Expected Hash
-
-**Concatenate values (exclude hash):**
-
-```
-ABC12312345610.00Paidhttps://www.paynow.co.zw/Interface/CheckPayment/?guid=...
-```
-
-**Append integration key and hash:**
-
-```javascript
-const expectedHash = generateHash(data, integrationKey);
-```
-
-### Step 4: Compare Hashes
-
-```javascript
-if (receivedHash.toUpperCase() === expectedHash.toUpperCase()) {
-    // ✅ Valid - message is authentic
-} else {
-    // ❌ Invalid - possible spoofing attempt
-}
+// Express.js webhook handler
+router.post('/result', async (req, res) => {
+    // req.body is already parsed by body-parser
+    // Values are already URL decoded
+    
+    const receivedHash = req.body.hash;
+    
+    // Generate expected hash
+    let hashString = '';
+    Object.keys(req.body)
+        .sort() // Sort for consistency
+        .forEach(key => {
+            if (key.toLowerCase() !== 'hash') {
+                hashString += req.body[key];
+            }
+        });
+    
+    hashString += integrationKey;
+    
+    const expectedHash = crypto
+        .createHash('sha512')
+        .update(hashString, 'utf8')
+        .digest('hex')
+        .toUpperCase();
+    
+    if (receivedHash.toUpperCase() === expectedHash.toUpperCase()) {
+        // ✅ Valid webhook
+        await processPayment(req.body);
+        res.status(200).send('OK');
+    } else {
+        // ❌ Invalid webhook
+        console.error('Invalid webhook hash');
+        res.status(400).send('INVALID_HASH');
+    }
+});
 ```
 
 ---
@@ -518,7 +686,7 @@ const hash = crypto.createHash('sha512').update(hashString).digest('hex').toUppe
 
 ## Testing Hash Generation
 
-### Test Case 1: Basic Transaction
+### Test Case 1: Outbound Message (Transaction Initiation)
 
 **Input:**
 ```javascript
@@ -549,7 +717,50 @@ console.assert(
 );
 ```
 
-### Test Case 2: Webhook Validation
+### Test Case 2: Inbound Message (Paynow Response)
+
+**Input (Raw URL-encoded message):**
+```javascript
+const rawMessage = 'status=Ok&browserurl=https%3a%2f%2fstaging.paynow.co.zw%2fPayment%2fConfirmPayment%2f9510&pollurl=https%3a%2f%2fstaging.paynow.co.zw%2fInterface%2fCheckPayment%2f%3fguid%3dc7ed41da-0159-46da-b428-69549f770413&paynowreference=9510&hash=750DD0B0DF374678707BB5AF915AF81C228B9058AD57BB7120569EC68BBB9C2EFC1B26C6375D2BC562AC909B3CD6B2AF1D42E1A5E479FFAC8F4FB3FDCE71DF4D';
+
+const integrationKey = '3e9fed89-60e1-4ce5-ab6e-6b1eb2d4f977';
+```
+
+**Expected Result:** Hash should validate as **true**
+
+**Test:**
+```javascript
+const isValid = validateInboundMessage(rawMessage, integrationKey);
+console.assert(isValid === true, 'Inbound message validation failed!');
+
+// Detailed test
+const querystring = require('querystring');
+const data = querystring.parse(rawMessage);
+
+// Concatenated string should be:
+// Okhttps://staging.paynow.co.zw/Payment/ConfirmPayment/9510https://staging.paynow.co.zw/Interface/CheckPayment/?guid=c7ed41da-0159-46da-b428-69549f7704139510
+
+let hashString = '';
+Object.keys(data).forEach(key => {
+    if (key.toLowerCase() !== 'hash') {
+        hashString += data[key];
+    }
+});
+hashString += integrationKey;
+
+const expectedHash = crypto
+    .createHash('sha512')
+    .update(hashString, 'utf8')
+    .digest('hex')
+    .toUpperCase();
+
+console.assert(
+    expectedHash === '750DD0B0DF374678707BB5AF915AF81C228B9058AD57BB7120569EC68BBB9C2EFC1B26C6375D2BC562AC909B3CD6B2AF1D42E1A5E479FFAC8F4FB3FDCE71DF4D',
+    'Expected hash mismatch!'
+);
+```
+
+### Test Case 3: Webhook Validation
 
 **Input:**
 ```javascript
@@ -558,9 +769,12 @@ const webhookData = {
     paynowreference: '123456',
     amount: '10.00',
     status: 'Paid',
-    pollurl: 'https://www.paynow.co.zw/Interface/CheckPayment/?guid=test',
-    hash: 'VALID_HASH_HERE'
+    pollurl: 'https://www.paynow.co.zw/Interface/CheckPayment/?guid=test'
 };
+
+// Generate valid hash
+const validHash = generateHash(webhookData, integrationKey);
+webhookData.hash = validHash;
 ```
 
 **Test:**
