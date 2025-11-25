@@ -10,6 +10,8 @@ const {
     generateDepositLink,
     generateInvoiceLink,
     generateDonationLink,
+    generateAdvancedPaymentLink,
+    generateProductPurchaseLink,
     parsePaynowLink
 } = require('../utils/paynow-link-generator');
 
@@ -225,6 +227,118 @@ router.post('/parse', (req, res) => {
 });
 
 /**
+ * POST /api/paynow-links/advanced
+ * Generate an advanced payment button link with custom template
+ */
+router.post('/advanced', (req, res) => {
+    try {
+        const {
+            templateId,
+            amount,
+            quantity,
+            locked,
+            customFields,
+            customerEmail
+        } = req.body;
+
+        // Validate
+        if (!templateId) {
+            return res.status(400).json({
+                success: false,
+                error: 'templateId is required'
+            });
+        }
+
+        // Generate advanced payment link
+        const paymentLink = generateAdvancedPaymentLink({
+            templateId,
+            amount,
+            quantity,
+            locked: locked !== false, // Default to true
+            customFields: customFields || {},
+            customerEmail
+        });
+
+        res.json({
+            success: true,
+            paymentLink,
+            details: {
+                templateId,
+                amount,
+                quantity,
+                locked: locked !== false,
+                customFields,
+                customerEmail
+            },
+            message: 'Advanced payment link generated with custom template'
+        });
+
+    } catch (error) {
+        console.error('Error generating advanced payment link:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to generate advanced payment link'
+        });
+    }
+});
+
+/**
+ * POST /api/paynow-links/product
+ * Generate a product purchase link with custom fields
+ */
+router.post('/product', (req, res) => {
+    try {
+        const {
+            templateId,
+            unitPrice,
+            quantity,
+            productDetails,
+            customerEmail
+        } = req.body;
+
+        // Validate
+        if (!templateId || !unitPrice) {
+            return res.status(400).json({
+                success: false,
+                error: 'templateId and unitPrice are required'
+            });
+        }
+
+        // Generate product purchase link
+        const paymentLink = generateProductPurchaseLink({
+            templateId,
+            unitPrice,
+            quantity: quantity || 1,
+            productDetails: productDetails || {},
+            customerEmail
+        });
+
+        const totalAmount = unitPrice * (quantity || 1);
+
+        res.json({
+            success: true,
+            paymentLink,
+            details: {
+                templateId,
+                unitPrice,
+                quantity: quantity || 1,
+                totalAmount,
+                productDetails,
+                customerEmail
+            },
+            message: 'Product purchase link generated'
+        });
+
+    } catch (error) {
+        console.error('Error generating product purchase link:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to generate product purchase link'
+        });
+    }
+});
+
+/**
  * GET /api/paynow-links/example
  * Get example payment links
  */
@@ -254,6 +368,28 @@ router.get('/example', (req, res) => {
                 invoiceNumber: 'INV-12345',
                 amount: 150.00,
                 customerEmail: 'client@example.com'
+            }),
+            advancedPayment: generateAdvancedPaymentLink({
+                templateId: 1046,
+                amount: 75.50,
+                customFields: {
+                    f1: 'Red',
+                    f2: 'Pay when? Paynow!',
+                    f3: '32'
+                },
+                locked: true,
+                customerEmail: 'customer@example.com'
+            }),
+            productPurchase: generateProductPurchaseLink({
+                templateId: 1046,
+                unitPrice: 25.00,
+                quantity: 2,
+                productDetails: {
+                    color: 'Blue',
+                    size: 'Large',
+                    customText: 'ZimCrowd'
+                },
+                customerEmail: 'customer@example.com'
             })
         };
 
@@ -264,7 +400,9 @@ router.get('/example', (req, res) => {
                 simplePayment: 'Locked amount and reference',
                 unlocked: 'Customer can edit amount',
                 deposit: 'Wallet deposit link',
-                invoice: 'Invoice payment link'
+                invoice: 'Invoice payment link',
+                advancedPayment: 'Custom template with extra fields',
+                productPurchase: 'Product with quantity and custom fields'
             }
         });
 
