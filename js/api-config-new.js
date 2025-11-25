@@ -80,14 +80,14 @@ const API_CONFIG = {
       // Referrals
       REFERRALS: `${this.BASE_URL}/api/referrals`,
       
-      // Payments
+      // Payments (using existing SDK-based backend)
       PAYMENTS: `${this.BASE_URL}/api/payments`,
-      PAYNOW_INITIATE: `${this.BASE_URL}/api/payments/paynow/initiate`,
-      PAYNOW_EXPRESS: `${this.BASE_URL}/api/payments/paynow/express`,
-      PAYNOW_STATUS: `${this.BASE_URL}/api/payments/paynow/status`,
-      PAYNOW_VERIFY: `${this.BASE_URL}/api/payments/paynow/verify`,
-      PAYNOW_TRACE: `${this.BASE_URL}/api/payments/paynow/trace`,
-      PAYNOW_CALLBACK: `${this.BASE_URL}/api/payments/paynow/callback`,
+      PAYMENT_INITIATE_WEB: `${this.BASE_URL}/api/payments/initiate/web`,
+      PAYMENT_INITIATE_MOBILE: `${this.BASE_URL}/api/payments/initiate/mobile`,
+      PAYMENT_STATUS: `${this.BASE_URL}/api/payments/status`,
+      PAYMENT_RESULT: `${this.BASE_URL}/api/payments/result`,
+      PAYMENT_METHODS: `${this.BASE_URL}/api/payments/methods`,
+      PAYMENT_HISTORY: `${this.BASE_URL}/api/payments/history`,
       
       // Admin
       ADMIN: `${this.BASE_URL}/api/admin`,

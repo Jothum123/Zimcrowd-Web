@@ -155,11 +155,11 @@ async function handleDeposit(event) {
         const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-backend.vercel.app';
         const token = localStorage.getItem('authToken');
         
-        // Use Express Checkout endpoint for mobile money, regular initiate for web
-        const isExpressCheckout = ['ecocash', 'onemoney', 'innbucks'].includes(method);
-        const endpoint = isExpressCheckout 
-            ? `${apiBase}/api/payments/paynow/express`
-            : `${apiBase}/api/payments/paynow/initiate`;
+        // Use existing backend routes
+        const isMobileMoney = ['ecocash', 'onemoney', 'innbucks'].includes(method);
+        const endpoint = isMobileMoney 
+            ? `${apiBase}/api/payments/initiate/mobile`
+            : `${apiBase}/api/payments/initiate/web`;
         
         // Call backend Paynow endpoint (server handles all Paynow communication)
         const response = await fetch(endpoint, {
@@ -170,10 +170,16 @@ async function handleDeposit(event) {
             },
             body: JSON.stringify({
                 amount: parseFloat(amount),
-                method: method,
-                phone: phone || null,
-                email: email || null,
-                description: 'Wallet Top-up'
+                reference: `ZC-WALLET-${Date.now()}`,
+                description: 'Wallet Top-up',
+                userEmail: email || 'user@zimcrowd.com',
+                userPhone: phone || '',
+                currency: 'USD',
+                userId: localStorage.getItem('userId') || 'guest',
+                ...(isMobileMoney && {
+                    mobileNumber: phone,
+                    paymentMethod: method
+                })
             })
         });
         
@@ -246,7 +252,7 @@ function showInnBucksModal(paymentData) {
                         <i class="fas fa-mobile-alt"></i>&nbsp;Open App
                     </a>
                 </div>
-                <button onclick="checkPaymentStatus('${paymentData.pollUrl}')" class="btn-primary" style="width: 100%; margin-top: 10px;">
+                <button onclick="checkPaymentStatus('${paymentData.reference}')" class="btn-primary" style="width: 100%; margin-top: 10px;">
                     <i class="fas fa-sync-alt"></i> Check Status
                 </button>
             </div>
@@ -254,9 +260,9 @@ function showInnBucksModal(paymentData) {
     `;
     document.body.appendChild(modal);
     
-    // Start polling if pollUrl available
-    if (paymentData.pollUrl) {
-        pollPaymentStatus(paymentData.pollUrl);
+    // Start polling if reference available
+    if (paymentData.reference) {
+        pollPaymentStatus(paymentData.reference);
     }
 }
 
@@ -289,7 +295,7 @@ function showPaymentInstructionsModal(paymentData) {
                     <button onclick="closeModal('paymentInstructionsModal')" class="btn-secondary" style="flex: 1;">
                         Close
                     </button>
-                    <button onclick="checkPaymentStatus('${paymentData.pollUrl}')" class="btn-primary" style="flex: 1;">
+                    <button onclick="checkPaymentStatus('${paymentData.reference}')" class="btn-primary" style="flex: 1;">
                         <i class="fas fa-sync-alt"></i> Check Status
                     </button>
                 </div>
@@ -324,13 +330,13 @@ function showPaymentPendingModal(paymentData) {
     document.body.appendChild(modal);
     
     // Start polling for payment status
-    if (paymentData.pollUrl) {
-        pollPaymentStatus(paymentData.pollUrl);
+    if (paymentData.reference) {
+        pollPaymentStatus(paymentData.reference);
     }
 }
 
 // Poll payment status from backend
-async function pollPaymentStatus(pollUrl, attempts = 0) {
+async function pollPaymentStatus(reference, attempts = 0) {
     const maxAttempts = 30; // Poll for ~5 minutes (10 second intervals)
     
     if (attempts >= maxAttempts) {
@@ -345,13 +351,12 @@ async function pollPaymentStatus(pollUrl, attempts = 0) {
         const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-backend.vercel.app';
         const token = localStorage.getItem('authToken');
         
-        const response = await fetch(`${apiBase}/api/payments/paynow/status`, {
-            method: 'POST',
+        const response = await fetch(`${apiBase}/api/payments/status/${reference}`, {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ pollUrl })
+            }
         });
         
         const result = await response.json();
@@ -373,17 +378,17 @@ async function pollPaymentStatus(pollUrl, attempts = 0) {
             }
         } else {
             // Still pending, poll again after 10 seconds
-            setTimeout(() => pollPaymentStatus(pollUrl, attempts + 1), 10000);
+            setTimeout(() => pollPaymentStatus(reference, attempts + 1), 10000);
         }
     } catch (error) {
         console.error('Error polling payment status:', error);
-        setTimeout(() => pollPaymentStatus(pollUrl, attempts + 1), 10000);
+        setTimeout(() => pollPaymentStatus(reference, attempts + 1), 10000);
     }
 }
 
 // Check payment status manually
-async function checkPaymentStatus(pollUrl) {
-    if (!pollUrl) {
+async function checkPaymentStatus(reference) {
+    if (!reference) {
         alert('❌ No payment reference found');
         return;
     }
@@ -392,13 +397,12 @@ async function checkPaymentStatus(pollUrl) {
         const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-backend.vercel.app';
         const token = localStorage.getItem('authToken');
         
-        const response = await fetch(`${apiBase}/api/payments/paynow/status`, {
-            method: 'POST',
+        const response = await fetch(`${apiBase}/api/payments/status/${reference}`, {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ pollUrl })
+            }
         });
         
         const result = await response.json();
