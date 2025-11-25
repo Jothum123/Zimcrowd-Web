@@ -82,6 +82,12 @@ const API_CONFIG = {
       
       // Payments
       PAYMENTS: `${this.BASE_URL}/api/payments`,
+      PAYNOW_INITIATE: `${this.BASE_URL}/api/payments/paynow/initiate`,
+      PAYNOW_EXPRESS: `${this.BASE_URL}/api/payments/paynow/express`,
+      PAYNOW_STATUS: `${this.BASE_URL}/api/payments/paynow/status`,
+      PAYNOW_VERIFY: `${this.BASE_URL}/api/payments/paynow/verify`,
+      PAYNOW_TRACE: `${this.BASE_URL}/api/payments/paynow/trace`,
+      PAYNOW_CALLBACK: `${this.BASE_URL}/api/payments/paynow/callback`,
       
       // Admin
       ADMIN: `${this.BASE_URL}/api/admin`,
