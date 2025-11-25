@@ -1,0 +1,31 @@
+PRIVACY POLICY - FULLY EXPANDED CONTENT
+========================================
+
+This file contains the complete, AI-expanded privacy policy content.
+Use this as the source for integration into privacy-policy.html
+
+---
+
+[PASTE YOUR FULL EXPANDED CONTENT HERE]
+
+The content you provided starts with:
+"PRIVACY POLICY
+HEADER SECTION
+Last Updated: November 25, 2025..."
+
+And ends with:
+"...Other Contacts:
+General Support: support@zimcrowd.com
+Security Issues: security@zimcrowd.com
+Website: zimcrowd.com/contact"
+
+---
+
+INTEGRATION INSTRUCTIONS:
+1. This content needs to be formatted as HTML
+2. Replace lines 260-349 in privacy-policy.html
+3. Add proper HTML tags (<h2>, <h3>, <p>, <ul>, <li>, etc.)
+4. Add info-box and warning-box divs where indicated
+5. Format tables with proper HTML table tags
+
+I'll help you do this systematically.
