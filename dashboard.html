@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://use.fontawesome.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://zimcrowd-backend.vercel.app https://gjtkdrrvnffrmzigdqyp.supabase.co http://localhost:3000;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://use.fontawesome.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https: blob:; connect-src 'self' https://zimcrowd-backend.vercel.app https://gjtkdrrvnffrmzigdqyp.supabase.co http://localhost:3000;">
     <title>Dashboard - ZimCrowd</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome Icons - Try multiple CDNs for reliability -->
@@ -17,6 +17,8 @@
     <script src="js/api-client.js"></script>
     <!-- Chart.js for Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -12029,7 +12031,7 @@ How it works:
             }
         }
 
-        // Download Document
+        // Download Document as PDF
         async function downloadDocument(docType) {
             const doc = documentMap[docType];
             if (!doc) {
@@ -12038,7 +12040,7 @@ How it works:
             }
 
             try {
-                showToast('info', 'Downloading', `Preparing ${doc.title}...`);
+                showToast('info', 'Generating PDF', `Preparing ${doc.title}...`);
                 
                 // Try multiple paths for the document
                 const paths = [
@@ -12069,34 +12071,139 @@ How it works:
                     throw new Error(lastError || 'Document not found in any path');
                 }
                 
-                // Create a blob and download
-                const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = doc.file;
+                // Generate PDF from markdown
+                await generatePDF(markdown, doc);
                 
-                // Add to document, click, and remove
-                document.body.appendChild(a);
-                
-                // Small delay to ensure the element is in the DOM
-                setTimeout(() => {
-                    a.click();
-                    
-                    // Cleanup after a short delay
-                    setTimeout(() => {
-                        document.body.removeChild(a);
-                        window.URL.revokeObjectURL(url);
-                    }, 100);
-                }, 10);
-                
-                showToast('success', 'Downloaded', `${doc.title} downloaded successfully`);
+                showToast('success', 'Downloaded', `${doc.title} PDF downloaded successfully`);
                 
             } catch (error) {
                 console.error('Error downloading document:', error);
                 showToast('error', 'Download Failed', `Could not download ${doc.title}. Please try again.`);
             }
+        }
+
+        // Generate PDF from markdown content
+        async function generatePDF(markdown, doc) {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const margin = 20;
+            const maxWidth = pageWidth - (margin * 2);
+            let yPosition = margin;
+
+            // Add ZimCrowd header
+            pdf.setFillColor(15, 23, 42); // Dark background
+            pdf.rect(0, 0, pageWidth, 40, 'F');
+            
+            pdf.setTextColor(56, 231, 123); // Green color
+            pdf.setFontSize(24);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('ZimCrowd', margin, 20);
+            
+            pdf.setFontSize(14);
+            pdf.setTextColor(148, 163, 184); // Gray color
+            pdf.text(doc.title, margin, 30);
+            
+            yPosition = 50;
+
+            // Parse and add markdown content
+            const lines = markdown.split('\n');
+            pdf.setTextColor(0, 0, 0); // Black text for content
+            
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i];
+                
+                // Check if we need a new page
+                if (yPosition > pageHeight - margin) {
+                    pdf.addPage();
+                    yPosition = margin;
+                }
+                
+                // Handle headers
+                if (line.startsWith('# ')) {
+                    pdf.setFontSize(20);
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.setTextColor(56, 231, 123);
+                    line = line.substring(2);
+                    yPosition += 5;
+                } else if (line.startsWith('## ')) {
+                    pdf.setFontSize(16);
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.setTextColor(56, 231, 123);
+                    line = line.substring(3);
+                    yPosition += 4;
+                } else if (line.startsWith('### ')) {
+                    pdf.setFontSize(14);
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.setTextColor(56, 231, 123);
+                    line = line.substring(4);
+                    yPosition += 3;
+                } else if (line.startsWith('**') && line.endsWith('**')) {
+                    pdf.setFontSize(11);
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.setTextColor(0, 0, 0);
+                    line = line.substring(2, line.length - 2);
+                } else if (line.startsWith('- ') || line.startsWith('* ')) {
+                    pdf.setFontSize(10);
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.setTextColor(0, 0, 0);
+                    line = '  • ' + line.substring(2);
+                } else if (line.startsWith('✅') || line.startsWith('❌') || line.startsWith('⚠️')) {
+                    pdf.setFontSize(10);
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.setTextColor(0, 0, 0);
+                } else if (line.trim() === '---') {
+                    pdf.setDrawColor(200, 200, 200);
+                    pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+                    yPosition += 5;
+                    continue;
+                } else if (line.trim() === '') {
+                    yPosition += 3;
+                    continue;
+                } else {
+                    pdf.setFontSize(10);
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.setTextColor(0, 0, 0);
+                }
+                
+                // Clean markdown formatting
+                line = line.replace(/\*\*(.*?)\*\*/g, '$1'); // Bold
+                line = line.replace(/\*(.*?)\*/g, '$1'); // Italic
+                line = line.replace(/\[(.*?)\]\(.*?\)/g, '$1'); // Links
+                
+                // Split long lines
+                if (line.trim()) {
+                    const splitLines = pdf.splitTextToSize(line, maxWidth);
+                    for (const splitLine of splitLines) {
+                        if (yPosition > pageHeight - margin) {
+                            pdf.addPage();
+                            yPosition = margin;
+                        }
+                        pdf.text(splitLine, margin, yPosition);
+                        yPosition += 6;
+                    }
+                }
+            }
+
+            // Add footer on last page
+            const pageCount = pdf.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                pdf.setPage(i);
+                pdf.setFontSize(8);
+                pdf.setTextColor(128, 128, 128);
+                pdf.text(`© 2025 ZimCrowd Technologies (Pvt) Ltd`, margin, pageHeight - 10);
+                pdf.text(`Page ${i} of ${pageCount}`, pageWidth - margin - 20, pageHeight - 10);
+            }
+
+            // Download the PDF
+            const pdfFileName = doc.file.replace('.md', '.pdf');
+            pdf.save(pdfFileName);
         }
 
         // Basic Markdown to HTML converter
