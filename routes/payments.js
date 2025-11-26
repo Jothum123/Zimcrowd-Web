@@ -48,7 +48,7 @@ router.post('/initiate/web', async (req, res) => {
         }
         
         // Log payment initiation
-        await supabase
+        const { data: insertedTx, error: insertError } = await supabase
             .from('payment_transactions')
             .insert({
                 reference: paymentRequest.reference,
@@ -59,7 +59,19 @@ router.post('/initiate/web', async (req, res) => {
                 payment_method: 'web',
                 status: 'pending',
                 description: paymentRequest.description
+            })
+            .select()
+            .single();
+        
+        if (insertError) {
+            console.error('❌ Failed to create payment transaction:', insertError);
+            return res.status(500).json({
+                success: false,
+                error: 'Failed to create payment record'
             });
+        }
+        
+        console.log('✅ Payment transaction created:', paymentRequest.reference);
         
         // Initiate payment
         const response = await paynowService.initiateWebPayment(paymentRequest);
@@ -155,7 +167,7 @@ router.post('/initiate/mobile', async (req, res) => {
         }
         
         // Log payment initiation
-        await supabase
+        const { data: insertedTx, error: insertError } = await supabase
             .from('payment_transactions')
             .insert({
                 reference: paymentRequest.reference,
@@ -167,7 +179,19 @@ router.post('/initiate/mobile', async (req, res) => {
                 mobile_number: mobileNumber,
                 status: 'pending',
                 description: paymentRequest.description
+            })
+            .select()
+            .single();
+        
+        if (insertError) {
+            console.error('❌ Failed to create payment transaction:', insertError);
+            return res.status(500).json({
+                success: false,
+                error: 'Failed to create payment record'
             });
+        }
+        
+        console.log('✅ Payment transaction created:', paymentRequest.reference);
         
         // Initiate mobile money payment
         const response = await paynowService.initiateMobileMoneyPayment(
