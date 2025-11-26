@@ -187,7 +187,7 @@ async function handleDeposit(event) {
                 userEmail: email || 'user@zimcrowd.com',
                 ...(phone && { userPhone: phone }),
                 currency: 'USD',
-                userId: localStorage.getItem('userId') || 'guest',
+                userId: localStorage.getItem('userId') || null,
                 ...(isMobileMoney && {
                     mobileNumber: phone,
                     paymentMethod: method
