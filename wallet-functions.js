@@ -182,7 +182,7 @@ async function handleDeposit(event) {
                 reference: `ZC-WALLET-${Date.now()}`,
                 description: 'Wallet Top-up',
                 userEmail: email || 'user@zimcrowd.com',
-                userPhone: phone || '',
+                ...(phone && { userPhone: phone }),
                 currency: 'USD',
                 userId: localStorage.getItem('userId') || 'guest',
                 ...(isMobileMoney && {

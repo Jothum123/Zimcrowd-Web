@@ -38,6 +38,8 @@ router.post('/initiate/web', async (req, res) => {
         // Validate request
         const validation = validatorService.validatePaymentRequest(paymentRequest);
         if (!validation.valid) {
+            console.error('Payment validation failed:', validation.errors);
+            console.error('Payment request:', paymentRequest);
             return res.status(400).json({
                 success: false,
                 error: validation.errors.join(', '),
