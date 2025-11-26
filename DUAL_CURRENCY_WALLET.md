@@ -259,10 +259,14 @@ if (result.success) {
 
 ```javascript
 const rates = {
-    'ZWG-USD': 0.0001,  // 10,000 ZWG = 1 USD
-    'USD-ZWG': 10000     // 1 USD = 10,000 ZWG
+    'ZWG-USD': 0.0392,   // 1 ZWG = 0.0392 USD
+    'USD-ZWG': 25.51     // 1 USD = 25.51 ZWG
 };
 ```
+
+**Official Exchange Rate:**
+- **1 ZWG = $0.0392 USD**
+- **1 USD = Z$25.51 ZWG**
 
 ### **Update Exchange Rates:**
 
@@ -413,16 +417,16 @@ if (currency === 'USD') {
 // 5. Displays equivalent: "≈ Z$1,000,000"
 ```
 
-### **Example 2: Deposit Z$500,000 ZWG**
+### **Example 2: Deposit Z$500 ZWG**
 
 ```javascript
-// User selects ZWG and enters Z$500,000
+// User selects ZWG and enters Z$500
 // System:
 // 1. Shows ZWG limits (Z$200 - Z$10M)
 // 2. Processes payment via Paynow
 // 3. Credits ZWG wallet
-// 4. Shows: "ZWG Z$500,000 added"
-// 5. Displays equivalent: "≈ $50.00"
+// 4. Shows: "ZWG Z$500 added"
+// 5. Displays equivalent: "≈ $19.60"
 ```
 
 ### **Example 3: View Combined Balance**
@@ -430,10 +434,14 @@ if (currency === 'USD') {
 ```javascript
 // User has:
 // - USD: $150.50
-// - ZWG: Z$1,500,000
+// - ZWG: Z$1,000
 
-// Total in USD: $150.50 + ($150.00) = $300.50
-// Total in ZWG: Z$1,500,000 + (Z$1,505,000) = Z$3,005,000
+// Conversions:
+// Z$1,000 × 0.0392 = $39.20 USD
+// $150.50 ÷ 0.0392 = Z$3,839.80 ZWG
+
+// Total in USD: $150.50 + $39.20 = $189.70
+// Total in ZWG: Z$1,000 + Z$3,839.80 = Z$4,839.80
 ```
 
 ---

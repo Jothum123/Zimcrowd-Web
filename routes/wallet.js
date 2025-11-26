@@ -725,10 +725,10 @@ router.get('/exchange-rate/:pair', async (req, res) => {
         }
 
         // In production, fetch from a real exchange rate API
-        // For now, use a fixed rate
+        // Current official rate: 1 ZWG = 0.0392 USD
         const rates = {
-            'ZWG-USD': 0.0001,  // 10,000 ZWG = 1 USD
-            'USD-ZWG': 10000     // 1 USD = 10,000 ZWG
+            'ZWG-USD': 0.0392,   // 1 ZWG = 0.0392 USD (25.51 ZWG = 1 USD)
+            'USD-ZWG': 25.51     // 1 USD = 25.51 ZWG
         };
 
         const rate = rates[`${from}-${to}`] || 1;

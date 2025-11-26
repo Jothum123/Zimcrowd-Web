@@ -13,7 +13,7 @@ const WalletManager = {
     
     selectedCurrency: 'USD', // Default display currency
     
-    exchangeRate: 1, // ZWG to USD rate (will be fetched from API)
+    exchangeRate: 0.0392, // ZWG to USD rate: 1 ZWG = 0.0392 USD (25.51 ZWG = 1 USD)
     
     // Initialize wallet
     async init() {
@@ -55,8 +55,8 @@ const WalletManager = {
             }
         } catch (error) {
             console.error('Error loading exchange rate:', error);
-            // Use default rate if API fails
-            this.exchangeRate = 0.0001; // Example: 10,000 ZWG = 1 USD
+            // Use official rate if API fails
+            this.exchangeRate = 0.0392; // Official rate: 1 ZWG = 0.0392 USD
         }
     },
     
