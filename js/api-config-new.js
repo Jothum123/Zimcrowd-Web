@@ -3,7 +3,7 @@
 
 const API_CONFIG = {
   // Backend URLs
-  PRODUCTION_URL: 'https://zimcrowd-backend.vercel.app',
+  PRODUCTION_URL: 'https://zimcrowd-api.onrender.com',
   DEVELOPMENT_URL: 'http://localhost:3001',
   
   // Auto-detect environment
