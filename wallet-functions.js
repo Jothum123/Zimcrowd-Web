@@ -204,8 +204,11 @@ async function handleDeposit(event) {
             closeModal('depositModal');
             
             if (method === 'paynow_web' && result.redirectUrl) {
-                // Web checkout - redirect to Paynow
-                window.location.href = result.redirectUrl;
+                // Web checkout - open Paynow in new tab
+                window.open(result.redirectUrl, '_blank');
+                
+                // Show payment pending modal with polling
+                showPaymentPendingModal(result);
             } else if (method === 'innbucks' && result.authorizationCode) {
                 // InnBucks - show authorization code modal
                 showInnBucksModal(result);
