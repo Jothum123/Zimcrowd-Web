@@ -397,9 +397,10 @@ async function pollPaymentStatus(reference, attempts = 0) {
             const statusText = document.getElementById('paymentStatusText');
             if (statusText) {
                 const errorIcon = result.failureReason === 'cancelled' ? 'fa-ban' : 
-                                 result.failureReason === 'insufficient_funds' ? 'fa-wallet' :
-                                 result.failureReason === 'no_wallet' ? 'fa-exclamation-triangle' :
-                                 'fa-times-circle';
+                             result.failureReason === 'insufficient_funds' ? 'fa-wallet' :
+                             result.failureReason === 'no_wallet' ? 'fa-exclamation-triangle' :
+                             result.failureReason === 'service_unavailable' ? 'fa-server' :
+                             'fa-times-circle';
                 
                 const errorMessage = result.errorMessage || `Payment ${result.status}`;
                 statusText.innerHTML = `<i class="fas ${errorIcon}" style="color: #ef4444;"></i> ${errorMessage}`;
@@ -451,7 +452,8 @@ async function checkPaymentStatus(reference) {
             // Show specific error message
             const errorEmoji = result.failureReason === 'cancelled' ? '🚫' :
                               result.failureReason === 'insufficient_funds' ? '💰' :
-                              result.failureReason === 'no_wallet' ? '⚠️' : '❌';
+                              result.failureReason === 'no_wallet' ? '⚠️' :
+                              result.failureReason === 'service_unavailable' ? '🔧' : '❌';
             alert(`${errorEmoji} ${result.errorMessage || 'Payment failed'}`);
         } else {
             alert(`Payment Status: ${result.status || 'Pending'}\n\n${result.message || 'Please complete the payment on your phone.'}`);

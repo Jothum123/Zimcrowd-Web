@@ -953,6 +953,11 @@ class PayNowService {
                        status.status && status.status.toLowerCase().includes('not found')) {
                 failureReason = 'no_wallet';
                 console.log(`❌ No mobile wallet found: ${reference}`);
+            } else if (status.status && status.status.toLowerCase().includes('unavailable') ||
+                       status.status && status.status.toLowerCase().includes('service down') ||
+                       status.status && status.status.toLowerCase().includes('maintenance')) {
+                failureReason = 'service_unavailable';
+                console.log(`❌ Paynow service unavailable: ${reference}`);
             } else if (status.status && status.status.toLowerCase().includes('failed')) {
                 failureReason = 'failed';
                 console.log(`❌ Payment failed: ${reference}`);
@@ -1031,6 +1036,7 @@ class PayNowService {
             'cancelled': 'Payment was cancelled. You can try again when ready.',
             'insufficient_funds': 'Insufficient funds in your mobile wallet. Please top up and try again.',
             'no_wallet': 'Mobile wallet not found or not registered. Please ensure your mobile money account is active.',
+            'service_unavailable': 'Paynow payment service is currently unavailable. Please try again later or use an alternative payment method.',
             'failed': 'Payment failed. Please try again or contact support if the issue persists.',
             'timeout': 'Payment timed out. Please check your transaction history.',
             'network_error': 'Network error. Please check your connection and try again.'
