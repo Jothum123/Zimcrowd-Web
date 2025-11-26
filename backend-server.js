@@ -67,6 +67,8 @@ try {
     console.log('✅ Settings routes loaded');
     var securityRoutes = require('./routes/security');
     console.log('✅ Security routes loaded');
+    var userRoutes = require('./routes/user');
+    console.log('✅ User routes loaded');
     console.log('✅ All routes loaded successfully');
 } catch (error) {
     console.error('❌ Error loading routes:', error.message);
@@ -204,6 +206,8 @@ app.use('/api/settings', settingsRoutes);
 console.log('✅ Settings routes registered');
 app.use('/api/security', securityRoutes);
 console.log('✅ Security routes registered');
+app.use('/api/user', userRoutes);
+console.log('✅ User routes registered');
 
 // Direct loans routes
 const directLoansRoutes = require('./routes/direct-loans');
