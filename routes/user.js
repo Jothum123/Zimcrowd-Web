@@ -407,7 +407,7 @@ router.get('/notifications/recent', authenticateUser, async (req, res) => {
             .from('user_notifications')
             .select('*', { count: 'exact', head: true })
             .eq('user_id', userId)
-            .eq('read', false);
+            .eq('is_read', false);
 
         if (countError) throw countError;
 
