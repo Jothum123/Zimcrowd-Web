@@ -37,15 +37,14 @@ Where:
 
 ## 🏢 Network Prefixes
 
-### **EcoCash (Mobile Money):**
-- `+26377...` ✅ (Econet)
-- `+26378...` ✅ (NetOne)
+### **Mobile Networks:**
+- **Econet:** `+26377...` and `+26378...`
+- **NetOne:** `+26371...`
+- **Telecel:** `+26373...`
 
-### **OneMoney (Mobile Money):**
-- `+26371...` ✅ (NetOne)
-
-### **Other Networks:**
-- `+26373...` ✅ (Telecel)
+### **Mobile Money Services:**
+- **EcoCash (Econet's service):** `+26377...` or `+26378...` ✅
+- **OneMoney (NetOne's service):** `+26371...` ✅
 
 ---
 
@@ -116,14 +115,14 @@ The system will check:
 
 ---
 
-### **Error: "EcoCash requires an Econet or NetOne number"**
+### **Error: "EcoCash requires an Econet number"**
 
-**Cause:** You selected EcoCash but entered an invalid number
+**Cause:** You selected EcoCash but entered a non-Econet number
 
 **Solution:**
-- For EcoCash: Use `+26377...` (Econet) or `+26378...` (NetOne)
-- For OneMoney: Use `+26371...` (NetOne)
-- Select the correct payment method for your network
+- For EcoCash: Use Econet number `+26377...` or `+26378...`
+- For OneMoney: Use NetOne number `+26371...`
+- Make sure you select the payment method that matches your mobile network
 
 ---
 
