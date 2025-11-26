@@ -8387,12 +8387,13 @@ How it works:
             }
         }
 
-        // View all notifications (placeholder)
+        // View all notifications - Navigate to notifications section
         function viewAllNotifications() {
             console.log('View all notifications clicked');
-            // In a real app, this would navigate to a full notifications page
-            alert('This would open a full notifications page');
+            // Close the notification panel
             toggleNotifications();
+            // Navigate to notifications section
+            showSection('notifications');
         }
 
         // Close notification panel when clicking outside
