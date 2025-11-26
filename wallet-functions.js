@@ -358,7 +358,7 @@ function showPaymentPendingModal(paymentData) {
 
 // Poll payment status from backend
 async function pollPaymentStatus(reference, attempts = 0) {
-    const maxAttempts = 30; // Poll for ~5 minutes (10 second intervals)
+    const maxAttempts = 30; // Poll for ~5 minutes
     
     if (attempts >= maxAttempts) {
         const statusText = document.getElementById('paymentStatusText');
@@ -409,8 +409,20 @@ async function pollPaymentStatus(reference, attempts = 0) {
             // Stop polling for failed payments
             return;
         } else {
-            // Still pending, poll again after 10 seconds
-            setTimeout(() => pollPaymentStatus(reference, attempts + 1), 10000);
+            // Adaptive polling: faster initially to catch errors quickly
+            let pollInterval;
+            if (attempts < 6) {
+                // First 6 attempts: every 3 seconds (18 seconds total)
+                pollInterval = 3000;
+            } else if (attempts < 12) {
+                // Next 6 attempts: every 5 seconds (30 seconds)
+                pollInterval = 5000;
+            } else {
+                // Remaining attempts: every 10 seconds
+                pollInterval = 10000;
+            }
+            
+            setTimeout(() => pollPaymentStatus(reference, attempts + 1), pollInterval);
         }
     } catch (error) {
         console.error('Error polling payment status:', error);
