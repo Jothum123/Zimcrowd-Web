@@ -93,9 +93,9 @@ class PayNowService {
             errors.push('Valid email address required');
         }
         
-        // Phone validation (Zimbabwe format)
-        if (!request.userPhone || !this.isValidZimbabwePhone(request.userPhone)) {
-            errors.push('Valid Zimbabwe phone number required (+263...)');
+        // Phone validation (Zimbabwe format) - Optional for web payments
+        if (request.userPhone && !this.isValidZimbabwePhone(request.userPhone)) {
+            errors.push('Invalid Zimbabwe phone number format (+263...)');
         }
         
         // Description validation
