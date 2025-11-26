@@ -278,19 +278,22 @@ ON CONFLICT (template_key) DO UPDATE SET
 -- Default notification preferences for common notification types
 INSERT INTO user_notification_preferences (user_id, notification_type, email_enabled, sms_enabled, in_app_enabled, push_enabled)
 SELECT 
-    id as user_id,
-    unnest(ARRAY['loan_approved', 'loan_rejected', 'payment_reminder', 'investment_matured', 'referral_bonus', 'security_alert', 'marketing']) as notification_type,
+    u.id as user_id,
+    nt.notification_type,
     true as email_enabled,
     CASE 
-        WHEN unnest(ARRAY['loan_approved', 'loan_rejected', 'payment_reminder', 'investment_matured', 'referral_bonus', 'security_alert', 'marketing']) IN ('payment_reminder', 'security_alert') THEN true 
+        WHEN nt.notification_type IN ('payment_reminder', 'security_alert') THEN true 
         ELSE false 
     END as sms_enabled,
     true as in_app_enabled,
     true as push_enabled
-FROM auth.users
+FROM auth.users u
+CROSS JOIN (
+    SELECT unnest(ARRAY['loan_approved', 'loan_rejected', 'payment_reminder', 'investment_matured', 'referral_bonus', 'security_alert', 'marketing']) as notification_type
+) nt
 WHERE NOT EXISTS (
     SELECT 1 FROM user_notification_preferences 
-    WHERE user_notification_preferences.user_id = auth.users.id
+    WHERE user_notification_preferences.user_id = u.id
 );
 
 -- Views for common notification queries
