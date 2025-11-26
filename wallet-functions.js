@@ -52,8 +52,11 @@ function showDepositModal() {
                         <label style="display: block; margin-bottom: 8px; color: #94a3b8;">Mobile Number</label>
                         <input type="tel" id="depositPhone" 
                             style="width: 100%; padding: 12px; background: #0f172a; border: 2px solid #334155; border-radius: 12px; color: white; font-size: 16px;"
-                            placeholder="e.g. 0771234567">
-                        <small style="color: #94a3b8; display: block; margin-top: 5px;">Enter your EcoCash/OneMoney number</small>
+                            placeholder="+263771234567"
+                            pattern="\+2637[1-9]\d{7}">
+                        <small style="color: #64748b; display: block; margin-top: 5px;">
+                            <i class="fas fa-info-circle"></i> Format: +263771234567 or +263781234567
+                        </small>
                     </div>
                     
                     <!-- Email for Paynow Web -->
