@@ -782,45 +782,6 @@ function closeModal(modalId) {
     }
 }
 
-// Handle Deposit
-async function handleDeposit(event) {
-    event.preventDefault();
-    
-    const amount = document.getElementById('depositAmount').value;
-    const method = document.getElementById('depositMethod').value;
-    const reference = document.getElementById('depositReference').value;
-    
-    const btnText = document.getElementById('depositBtnText');
-    const btnSpinner = document.getElementById('depositBtnSpinner');
-    
-    btnText.style.display = 'none';
-    btnSpinner.style.display = 'inline';
-    
-    try {
-        const response = await window.ZimCrowdAPI.depositFunds(parseFloat(amount), method, reference);
-        
-        if (response.success) {
-            alert(`✅ Deposit request submitted successfully!\n\nAmount: $${amount}\nMethod: ${method}\nStatus: ${response.data.status}\nEstimated completion: ${response.data.estimated_completion}`);
-            closeModal('depositModal');
-            // Reload wallet data
-            if (window.ProductionDataLoader) {
-                window.ProductionDataLoader.loadOverviewData();
-                window.ProductionDataLoader.loadWalletPage(1);
-            } else if (window.DashboardLoader) {
-                window.DashboardLoader.loadDashboardOverview();
-            }
-        } else {
-            alert('❌ Deposit failed: ' + response.message);
-        }
-    } catch (error) {
-        console.error('Deposit error:', error);
-        alert('❌ Failed to process deposit. Please try again.');
-    } finally {
-        btnText.style.display = 'inline';
-        btnSpinner.style.display = 'none';
-    }
-}
-
 // Handle Withdraw
 async function handleWithdraw(event) {
     event.preventDefault();
