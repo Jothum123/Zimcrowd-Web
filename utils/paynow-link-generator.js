@@ -87,7 +87,7 @@ function generateDepositLink(options) {
         userEmail
     } = options;
 
-    const reference = `ZC-WALLET-${userId}-${Date.now()}`;
+    const reference = `ZC_WALLET_${userId}_${Date.now()}`;
     const merchantEmail = process.env.PAYNOW_MERCHANT_EMAIL || 'jothum@zimcrowd.co.zw';
 
     return generatePaynowLink({
@@ -139,7 +139,7 @@ function generateDonationLink(options) {
     } = options;
 
     const merchantEmail = process.env.PAYNOW_MERCHANT_EMAIL || 'jothum@zimcrowd.co.zw';
-    const reference = `DONATION-${campaignId}-${Date.now()}`;
+    const reference = `DONATION_${campaignId}_${Date.now()}`;
 
     return generatePaynowLink({
         merchantEmail,

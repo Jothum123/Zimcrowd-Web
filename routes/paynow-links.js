@@ -97,7 +97,7 @@ router.post('/deposit', (req, res) => {
             userEmail
         });
 
-        const reference = `ZC-WALLET-${userId}-${Date.now()}`;
+        const reference = `ZC_WALLET_${userId}_${Date.now()}`;
 
         res.json({
             success: true,

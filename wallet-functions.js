@@ -179,7 +179,7 @@ async function handleDeposit(event) {
             },
             body: JSON.stringify({
                 amount: parseFloat(amount),
-                reference: `ZC-WALLET-${Date.now()}`,
+                reference: `ZC_WALLET_${Date.now()}`,
                 description: 'Wallet Top-up',
                 userEmail: email || 'user@zimcrowd.com',
                 ...(phone && { userPhone: phone }),
