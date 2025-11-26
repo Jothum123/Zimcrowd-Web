@@ -267,6 +267,55 @@ router.get('/status/:reference', async (req, res) => {
             if (statusResponse.paid) {
                 updateData.paid_at = new Date().toISOString();
                 updateData.paynow_reference = statusResponse.paynowReference;
+                
+                // Credit wallet immediately
+                if (transaction.user_id && !transaction.wallet_credited) {
+                    try {
+                        // Get current wallet balance
+                        const { data: wallet } = await supabase
+                            .from('wallets')
+                            .select('balance')
+                            .eq('user_id', transaction.user_id)
+                            .single();
+                        
+                        const currentBalance = wallet?.balance || 0;
+                        const newBalance = currentBalance + transaction.amount;
+                        
+                        // Update wallet balance
+                        await supabase
+                            .from('wallets')
+                            .upsert({
+                                user_id: transaction.user_id,
+                                balance: newBalance,
+                                currency: transaction.currency,
+                                updated_at: new Date().toISOString()
+                            }, {
+                                onConflict: 'user_id'
+                            });
+                        
+                        // Record wallet transaction
+                        await supabase
+                            .from('wallet_transactions')
+                            .insert({
+                                user_id: transaction.user_id,
+                                type: 'deposit',
+                                amount: transaction.amount,
+                                currency: transaction.currency,
+                                balance_before: currentBalance,
+                                balance_after: newBalance,
+                                reference: reference,
+                                description: transaction.description || 'Wallet Top-up',
+                                payment_method: transaction.payment_method,
+                                status: 'completed'
+                            });
+                        
+                        updateData.wallet_credited = true;
+                        console.log(`✅ Wallet credited: ${transaction.user_id} +${transaction.amount} ${transaction.currency}`);
+                    } catch (walletError) {
+                        console.error('❌ Error crediting wallet:', walletError);
+                        // Don't fail the whole request, but log the error
+                    }
+                }
             }
             
             if (statusResponse.failureReason) {
@@ -402,19 +451,52 @@ router.post('/result', async (req, res) => {
             }
             
             // Credit user wallet for paid transactions
-            if (status.toLowerCase() === 'paid' && !existingTx.wallet_credited) {
-                const { error: walletError } = await supabase.rpc('credit_wallet', {
-                    p_user_id: existingTx.user_id,
-                    p_amount: parseFloat(amount),
-                    p_transaction_ref: reference,
-                    p_description: `Deposit via ${paymentchannel || 'Paynow'}`
-                });
-                
-                if (!walletError) {
+            if (status.toLowerCase() === 'paid' && !existingTx.wallet_credited && existingTx.user_id) {
+                try {
+                    // Get current wallet balance
+                    const { data: wallet } = await supabase
+                        .from('wallets')
+                        .select('balance')
+                        .eq('user_id', existingTx.user_id)
+                        .single();
+                    
+                    const currentBalance = wallet?.balance || 0;
+                    const depositAmount = parseFloat(amount);
+                    const newBalance = currentBalance + depositAmount;
+                    
+                    // Update wallet balance
+                    await supabase
+                        .from('wallets')
+                        .upsert({
+                            user_id: existingTx.user_id,
+                            balance: newBalance,
+                            currency: existingTx.currency,
+                            updated_at: new Date().toISOString()
+                        }, {
+                            onConflict: 'user_id'
+                        });
+                    
+                    // Record wallet transaction
+                    await supabase
+                        .from('wallet_transactions')
+                        .insert({
+                            user_id: existingTx.user_id,
+                            type: 'deposit',
+                            amount: depositAmount,
+                            currency: existingTx.currency,
+                            balance_before: currentBalance,
+                            balance_after: newBalance,
+                            reference: reference,
+                            description: `Deposit via ${paymentchannel || 'Paynow'}`,
+                            payment_method: existingTx.payment_method,
+                            status: 'completed'
+                        });
+                    
                     updateData.wallet_credited = true;
-                    console.log('✅ Wallet credited:', existingTx.user_id, amount);
-                } else {
+                    console.log(`✅ Wallet credited via webhook: ${existingTx.user_id} +${depositAmount} ${existingTx.currency}`);
+                } catch (walletError) {
                     console.error('❌ Wallet credit failed:', walletError);
+                    // Don't fail the webhook, but log the error
                 }
             }
         }
