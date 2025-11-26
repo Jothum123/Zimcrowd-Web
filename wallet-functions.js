@@ -194,6 +194,12 @@ async function handleDeposit(event) {
         
         const result = await response.json();
         
+        // Log error details for debugging
+        if (!result.success) {
+            console.error('Payment initiation failed:', result);
+            console.error('Validation errors:', result.errors);
+        }
+        
         if (result.success) {
             closeModal('depositModal');
             
