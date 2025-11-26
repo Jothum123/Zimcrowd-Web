@@ -95,9 +95,9 @@ app.use(helmet({
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://kit.fontawesome.com"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
-            fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://fonts.gstatic.com", "https://ka-f.fontawesome.com", "data:"],
+            fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://fonts.gstatic.com", "https://ka-f.fontawesome.com", "https://ka-p.fontawesome.com", "data:"],
             imgSrc: ["'self'", "data:", "https:", "blob:"],
-            connectSrc: ["'self'", "https://zimcrowd-backend.vercel.app", "https://zimcrowd.com", "https://www.zimcrowd.com", "http://localhost:3000", "https://*.supabase.co", "wss://*.supabase.co", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+            connectSrc: ["'self'", "https://zimcrowd-backend.vercel.app", "https://zimcrowd.com", "https://www.zimcrowd.com", "http://localhost:3000", "https://gjtkdrrvnffrmzigdqyp.supabase.co", "wss://gjtkdrrvnffrmzigdqyp.supabase.co", "https://*.supabase.co", "wss://*.supabase.co", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
             frameSrc: ["'self'", "https://accounts.google.com"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: []
