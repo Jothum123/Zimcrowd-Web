@@ -1,73 +1,17 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "backend-server.js",
-      "use": "@vercel/node"
-    }
-  ],
+  "buildCommand": "echo 'No build needed for static site'",
+  "outputDirectory": ".",
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "backend-server.js",
-      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+      "dest": "/backend-server.js"
     },
     {
-      "src": "/(.*\\.(css))$",
-      "dest": "/$1",
-      "headers": {
-        "Content-Type": "text/css",
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
+      "handle": "filesystem"
     },
     {
-      "src": "/(.*\\.(js))$",
-      "dest": "/$1",
-      "headers": {
-        "Content-Type": "application/javascript",
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "src": "/(.*\\.(png|jpg|jpeg|gif|svg|ico|webp))$",
-      "dest": "/$1",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "src": "/(.*\\.(woff|woff2|ttf|eot|otf))$",
-      "dest": "/$1",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "src": "/assets/(.*)",
-      "dest": "/assets/$1"
-    },
-    {
-      "src": "/images/(.*)",
-      "dest": "/images/$1"
-    },
-    {
-      "src": "/css/(.*)",
-      "dest": "/css/$1"
-    },
-    {
-      "src": "/js/(.*)",
-      "dest": "/js/$1"
-    },
-    {
-      "src": "/(.*\\.(html))$",
-      "dest": "/$1",
-      "headers": {
-        "Cache-Control": "public, max-age=0, must-revalidate"
-      }
-    },
-    {
-      "src": "/",
-      "dest": "/index.html"
+      "src": "/(.*)",
+      "dest": "/$1"
     }
   ]
 }
