@@ -1,9 +1,24 @@
+image: node:18
+
 pages:
   stage: deploy
   script:
     - mkdir -p public
-    - cp -r * public/ || true
-    - rm -rf public/.git public/.gitlab-ci.yml
+    - cp -r *.html public/ 2>/dev/null || true
+    - cp -r *.css public/ 2>/dev/null || true
+    - cp -r *.js public/ 2>/dev/null || true
+    - cp -r js public/ 2>/dev/null || true
+    - cp -r css public/ 2>/dev/null || true
+    - cp -r images public/ 2>/dev/null || true
+    - cp -r assets public/ 2>/dev/null || true
+    - cp -r fonts public/ 2>/dev/null || true
+    - cp -r backend-routes public/ 2>/dev/null || true
+    - cp -r config public/ 2>/dev/null || true
+    - cp -r routes public/ 2>/dev/null || true
+    - cp -r services public/ 2>/dev/null || true
+    - cp -r utils public/ 2>/dev/null || true
+    - cp -r *.md public/ 2>/dev/null || true
+    - ls -la public/
   artifacts:
     paths:
       - public
