@@ -86,7 +86,7 @@ const PayNowConfig = {
         referenceMaxLength: 50,
         descriptionMaxLength: 100,
         emailMaxLength: 254,
-        phoneRegex: /^\+263[17]\d{7}$/  // Zimbabwe phone format
+        phoneRegex: /^\+2637[1-9]\d{7}$/  // Zimbabwe mobile format: +26377... or +26378...
     }
 };
 
