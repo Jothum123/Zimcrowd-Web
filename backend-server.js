@@ -97,7 +97,7 @@ app.use(helmet({
             styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://fonts.gstatic.com", "https://ka-f.fontawesome.com", "data:"],
             imgSrc: ["'self'", "data:", "https:", "blob:"],
-            connectSrc: ["'self'", "https://zimcrowd-backend-fusmi0h9l-jojola.vercel.app", "https://zimcrowd-backend-dz18dm4h9-jojola.vercel.app", "http://localhost:3000", "https://*.supabase.co", "wss://*.supabase.co"],
+            connectSrc: ["'self'", "https://zimcrowd-backend.vercel.app", "https://zimcrowd.com", "https://www.zimcrowd.com", "http://localhost:3000", "https://*.supabase.co", "wss://*.supabase.co", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
             frameSrc: ["'self'", "https://accounts.google.com"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: []
