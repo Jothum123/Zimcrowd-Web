@@ -2,7 +2,31 @@
   "version": 2,
   "builds": [
     {
-      "src": "*.html",
+      "src": "**/*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "**/*.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "**/*.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "assets/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "images/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "js/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "css/**",
       "use": "@vercel/static"
     },
     {
@@ -16,28 +40,7 @@
       "dest": "/backend-server.js"
     },
     {
-      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot|otf))$",
-      "dest": "/$1"
-    },
-    {
-      "src": "/assets/(.*)",
-      "dest": "/assets/$1"
-    },
-    {
-      "src": "/images/(.*)",
-      "dest": "/images/$1"
-    },
-    {
-      "src": "/css/(.*)",
-      "dest": "/css/$1"
-    },
-    {
-      "src": "/js/(.*)",
-      "dest": "/js/$1"
-    },
-    {
-      "src": "/(.*\\.html)?$",
-      "dest": "/$1"
+      "handle": "filesystem"
     },
     {
       "src": "/",
