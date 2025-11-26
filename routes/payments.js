@@ -3,6 +3,22 @@ const router = express.Router();
 const PayNowService = require('../services/paynow.service');
 const PaymentValidatorService = require('../services/payment-validator.service');
 const { createClient } = require('@supabase/supabase-js');
+const jwt = require('jsonwebtoken');
+
+// Authentication middleware
+const authenticateUser = (req, res, next) => {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+            return res.status(401).json({ success: false, error: 'No token provided' });
+        }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (error) {
+        return res.status(401).json({ success: false, error: 'Invalid token' });
+    }
+};
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -16,9 +32,10 @@ const validatorService = new PaymentValidatorService();
  * POST /api/payments/initiate/web
  * Initiate web payment
  */
-router.post('/initiate/web', async (req, res) => {
+router.post('/initiate/web', authenticateUser, async (req, res) => {
     try {
-        const { amount, reference, description, userEmail, userPhone, currency, userId, loanId } = req.body;
+        const { amount, reference, description, userEmail, userPhone, currency, loanId } = req.body;
+        const userId = req.user.id; // Get from authenticated user
         
         // Build payment request
         const paymentRequest = {
@@ -121,7 +138,7 @@ router.post('/initiate/web', async (req, res) => {
  * POST /api/payments/initiate/mobile
  * Initiate mobile money payment (EcoCash or OneMoney)
  */
-router.post('/initiate/mobile', async (req, res) => {
+router.post('/initiate/mobile', authenticateUser, async (req, res) => {
     try {
         const { 
             amount, 
@@ -130,11 +147,11 @@ router.post('/initiate/mobile', async (req, res) => {
             userEmail, 
             userPhone, 
             currency, 
-            userId, 
             loanId,
             mobileNumber,
             paymentMethod 
         } = req.body;
+        const userId = req.user.id; // Get from authenticated user
         
         // Build payment request
         const paymentRequest = {
