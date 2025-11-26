@@ -4,7 +4,7 @@
  */
 
 const DashboardLoader = {
-    apiBase: 'https://zimcrowd-backend.vercel.app/api',
+    apiBase: 'https://zimcrowd-api.onrender.com/api',
     
     /**
      * Initialize dashboard and load all data

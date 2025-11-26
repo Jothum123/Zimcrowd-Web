@@ -12,7 +12,7 @@ let refreshInterval = null;
 // API Configuration
 const API_BASE_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3001' 
-    : 'https://zimcrowd-backend.vercel.app';
+    : 'https://zimcrowd-api.onrender.com';
 
 const API_ENDPOINTS = {
     // Admin Authentication

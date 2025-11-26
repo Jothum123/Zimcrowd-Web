@@ -7,7 +7,7 @@ const DataService = {
     // Configuration
     config: {
         useMockData: false, // Set to true to use mock data, false for real API
-        apiBaseUrl: 'https://zimcrowd-backend.vercel.app/api',
+        apiBaseUrl: 'https://zimcrowd-api.onrender.com/api',
         timeout: 10000 // 10 seconds
     },
 

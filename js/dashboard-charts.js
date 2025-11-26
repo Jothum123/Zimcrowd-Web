@@ -327,7 +327,7 @@ const DashboardCharts = {
         try {
             const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             if (token) {
-                const response = await fetch('https://zimcrowd-backend.vercel.app/api/analytics/portfolio-history', {
+                const response = await fetch('https://zimcrowd-api.onrender.com/api/analytics/portfolio-history', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (response.ok) {
@@ -356,7 +356,7 @@ const DashboardCharts = {
         try {
             const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             if (token) {
-                const response = await fetch('https://zimcrowd-backend.vercel.app/api/dashboard/loans', {
+                const response = await fetch('https://zimcrowd-api.onrender.com/api/dashboard/loans', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (response.ok) {
@@ -392,7 +392,7 @@ const DashboardCharts = {
         try {
             const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             if (token) {
-                const response = await fetch('https://zimcrowd-backend.vercel.app/api/analytics/monthly-activity', {
+                const response = await fetch('https://zimcrowd-api.onrender.com/api/analytics/monthly-activity', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (response.ok) {

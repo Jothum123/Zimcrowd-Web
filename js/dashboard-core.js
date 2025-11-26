@@ -7,7 +7,7 @@
 const API_CONFIG = {
     BASE_URL: window.location.hostname === 'localhost' 
         ? 'http://localhost:3001/api'
-        : 'https://zimcrowd-backend.vercel.app/api',
+        : 'https://zimcrowd-api.onrender.com/api',
     
     get HEADERS() {
         const token = localStorage.getItem('authToken');

@@ -38,7 +38,7 @@ class AnalyticsModule {
                 throw new Error('No authentication token found');
             }
 
-            const baseUrl = 'https://zimcrowd-backend.vercel.app/api';
+            const baseUrl = 'https://zimcrowd-api.onrender.com/api';
             
             const [portfolioRes, loansRes, investmentsRes, transactionsRes] = await Promise.all([
                 fetch(`${baseUrl}/analytics/portfolio-history?days=30`, {

@@ -170,7 +170,7 @@ const DashboardFilters = {
             }
 
             // Fetch filtered data
-            const response = await fetch(`https://zimcrowd-backend.vercel.app/api/dashboard/transactions?${params}`, {
+            const response = await fetch(`https://zimcrowd-api.onrender.com/api/dashboard/transactions?${params}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -203,7 +203,7 @@ const DashboardFilters = {
                 params.append('search', this.filters.loans.searchQuery);
             }
 
-            const response = await fetch(`https://zimcrowd-backend.vercel.app/api/dashboard/loans?${params}`, {
+            const response = await fetch(`https://zimcrowd-api.onrender.com/api/dashboard/loans?${params}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -236,7 +236,7 @@ const DashboardFilters = {
                 params.append('search', this.filters.investments.searchQuery);
             }
 
-            const response = await fetch(`https://zimcrowd-backend.vercel.app/api/dashboard/investments?${params}`, {
+            const response = await fetch(`https://zimcrowd-api.onrender.com/api/dashboard/investments?${params}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 

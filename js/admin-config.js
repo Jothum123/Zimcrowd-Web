@@ -9,7 +9,7 @@ const ADMIN_CONFIG = {
     api: {
         baseUrl: window.location.hostname === 'localhost' 
             ? 'http://localhost:3001' 
-            : 'https://zimcrowd-backend.vercel.app',
+            : 'https://zimcrowd-api.onrender.com',
         timeout: 30000,
         retryAttempts: 3
     },

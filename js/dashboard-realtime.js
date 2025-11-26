@@ -161,7 +161,7 @@ const DashboardRealtime = {
             if (!token) return;
 
             // Check for new notifications
-            const notificationsResponse = await fetch('https://zimcrowd-backend.vercel.app/api/dashboard/notifications?unread=true', {
+            const notificationsResponse = await fetch('https://zimcrowd-api.onrender.com/api/dashboard/notifications?unread=true', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -173,7 +173,7 @@ const DashboardRealtime = {
             }
 
             // Check for wallet balance changes
-            const walletResponse = await fetch('https://zimcrowd-backend.vercel.app/api/dashboard/wallet', {
+            const walletResponse = await fetch('https://zimcrowd-api.onrender.com/api/dashboard/wallet', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
