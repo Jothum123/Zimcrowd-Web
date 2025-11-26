@@ -392,11 +392,21 @@ async function pollPaymentStatus(reference, attempts = 0) {
                 window.ProductionDataLoader.loadOverviewData();
                 window.ProductionDataLoader.loadWalletPage(1);
             }
-        } else if (result.status === 'cancelled' || result.status === 'failed') {
+        } else if (result.failureReason || result.status === 'cancelled' || result.status === 'failed') {
+            // Payment failed with specific reason
             const statusText = document.getElementById('paymentStatusText');
             if (statusText) {
-                statusText.innerHTML = `<i class="fas fa-times-circle" style="color: #ef4444;"></i> Payment ${result.status}`;
+                const errorIcon = result.failureReason === 'cancelled' ? 'fa-ban' : 
+                                 result.failureReason === 'insufficient_funds' ? 'fa-wallet' :
+                                 result.failureReason === 'no_wallet' ? 'fa-exclamation-triangle' :
+                                 'fa-times-circle';
+                
+                const errorMessage = result.errorMessage || `Payment ${result.status}`;
+                statusText.innerHTML = `<i class="fas ${errorIcon}" style="color: #ef4444;"></i> ${errorMessage}`;
             }
+            
+            // Stop polling for failed payments
+            return;
         } else {
             // Still pending, poll again after 10 seconds
             setTimeout(() => pollPaymentStatus(reference, attempts + 1), 10000);
@@ -437,6 +447,12 @@ async function checkPaymentStatus(reference) {
                 window.ProductionDataLoader.loadOverviewData();
                 window.ProductionDataLoader.loadWalletPage(1);
             }
+        } else if (result.failureReason) {
+            // Show specific error message
+            const errorEmoji = result.failureReason === 'cancelled' ? '🚫' :
+                              result.failureReason === 'insufficient_funds' ? '💰' :
+                              result.failureReason === 'no_wallet' ? '⚠️' : '❌';
+            alert(`${errorEmoji} ${result.errorMessage || 'Payment failed'}`);
         } else {
             alert(`Payment Status: ${result.status || 'Pending'}\n\n${result.message || 'Please complete the payment on your phone.'}`);
         }

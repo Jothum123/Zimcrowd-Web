@@ -941,6 +941,23 @@ class PayNowService {
             paymentInfo.status = status.status;
             paymentInfo.lastChecked = new Date();
             
+            // Detect specific payment failures
+            let failureReason = null;
+            if (status.status && status.status.toLowerCase().includes('cancelled')) {
+                failureReason = 'cancelled';
+                console.log(`❌ Payment cancelled by user: ${reference}`);
+            } else if (status.status && status.status.toLowerCase().includes('insufficient')) {
+                failureReason = 'insufficient_funds';
+                console.log(`❌ Insufficient funds: ${reference}`);
+            } else if (status.status && status.status.toLowerCase().includes('invalid') || 
+                       status.status && status.status.toLowerCase().includes('not found')) {
+                failureReason = 'no_wallet';
+                console.log(`❌ No mobile wallet found: ${reference}`);
+            } else if (status.status && status.status.toLowerCase().includes('failed')) {
+                failureReason = 'failed';
+                console.log(`❌ Payment failed: ${reference}`);
+            }
+            
             if (status.paid) {
                 paymentInfo.paidAt = new Date();
                 paymentInfo.paynowReference = status.reference;
@@ -954,7 +971,9 @@ class PayNowService {
                 reference: reference,
                 paynowReference: status.reference,
                 amount: paymentInfo.amount,
-                currency: paymentInfo.currency
+                currency: paymentInfo.currency,
+                failureReason: failureReason,
+                errorMessage: failureReason ? this.getPaymentErrorMessage(failureReason) : null
             };
         } catch (error) {
             console.error('❌ Error checking payment status:', error);
@@ -1000,6 +1019,24 @@ class PayNowService {
      */
     isValidZimbabwePhone(phone) {
         return this.config.validation.phoneRegex.test(phone);
+    }
+    
+    /**
+     * Get user-friendly payment error message
+     * @param {string} failureReason - Failure reason code
+     * @returns {string} User-friendly error message
+     */
+    getPaymentErrorMessage(failureReason) {
+        const messages = {
+            'cancelled': 'Payment was cancelled. You can try again when ready.',
+            'insufficient_funds': 'Insufficient funds in your mobile wallet. Please top up and try again.',
+            'no_wallet': 'Mobile wallet not found or not registered. Please ensure your mobile money account is active.',
+            'failed': 'Payment failed. Please try again or contact support if the issue persists.',
+            'timeout': 'Payment timed out. Please check your transaction history.',
+            'network_error': 'Network error. Please check your connection and try again.'
+        };
+        
+        return messages[failureReason] || 'Payment could not be completed. Please try again.';
     }
     
     /**
