@@ -37,10 +37,12 @@ class PaymentValidatorService {
             errors.push(...emailValidation.errors);
         }
         
-        // Phone validation
-        const phoneValidation = this.validatePhone(request.userPhone);
-        if (!phoneValidation.valid) {
-            errors.push(...phoneValidation.errors);
+        // Phone validation (optional for web payments)
+        if (request.userPhone) {
+            const phoneValidation = this.validatePhone(request.userPhone);
+            if (!phoneValidation.valid) {
+                errors.push(...phoneValidation.errors);
+            }
         }
         
         // Currency validation
@@ -207,10 +209,9 @@ class PaymentValidatorService {
     validatePhone(phone) {
         const errors = [];
         
-        // Required check
+        // Optional - if not provided, it's valid
         if (!phone) {
-            errors.push('Phone number is required');
-            return { valid: false, errors };
+            return { valid: true, errors: [] };
         }
         
         // Type check
