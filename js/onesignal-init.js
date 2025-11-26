@@ -39,7 +39,7 @@
         
         async getAppId() {
             try {
-                const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-backend.vercel.app';
+                const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-api.onrender.com';
                 const response = await fetch(`${apiBase}/api/config/onesignal`);
                 
                 if (response.ok) {
@@ -164,7 +164,7 @@
         
         async saveSubscription(playerId, token) {
             try {
-                const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-backend.vercel.app';
+                const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-api.onrender.com';
                 const authToken = localStorage.getItem('authToken');
                 
                 if (!authToken) {
@@ -199,7 +199,7 @@
         
         async removeSubscription() {
             try {
-                const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-backend.vercel.app';
+                const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-api.onrender.com';
                 const authToken = localStorage.getItem('authToken');
                 
                 if (!authToken) return;

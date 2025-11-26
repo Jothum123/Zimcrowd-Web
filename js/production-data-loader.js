@@ -5,7 +5,7 @@
  */
 
 const ProductionDataLoader = {
-    apiBase: window.API_CONFIG?.baseURL || 'https://zimcrowd-backend.vercel.app/api',
+    apiBase: window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api',
     
     /**
      * Initialize all dashboard sections with real data

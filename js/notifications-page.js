@@ -48,7 +48,7 @@ const NotificationsPage = {
     
     async loadNotifications(page = 1) {
         try {
-            const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-backend.vercel.app';
+            const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-api.onrender.com';
             const token = localStorage.getItem('authToken');
             
             const params = new URLSearchParams({
@@ -224,7 +224,7 @@ const NotificationsPage = {
     
     async markAsRead(id) {
         try {
-            const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-backend.vercel.app';
+            const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-api.onrender.com';
             const token = localStorage.getItem('authToken');
             
             const response = await fetch(`${apiBase}/api/notifications/${id}/read`, {
@@ -254,7 +254,7 @@ const NotificationsPage = {
     
     async markAllAsRead() {
         try {
-            const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-backend.vercel.app';
+            const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-api.onrender.com';
             const token = localStorage.getItem('authToken');
             
             const response = await fetch(`${apiBase}/api/notifications/mark-all-read`, {
@@ -287,7 +287,7 @@ const NotificationsPage = {
         if (!confirm('Delete this notification?')) return;
         
         try {
-            const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-backend.vercel.app';
+            const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-api.onrender.com';
             const token = localStorage.getItem('authToken');
             
             const response = await fetch(`${apiBase}/api/notifications/${id}`, {
@@ -313,7 +313,7 @@ const NotificationsPage = {
         if (!confirm('Clear all notifications? This action cannot be undone.')) return;
         
         try {
-            const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-backend.vercel.app';
+            const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-api.onrender.com';
             const token = localStorage.getItem('authToken');
             
             const response = await fetch(`${apiBase}/api/notifications/clear-all`, {
@@ -438,7 +438,7 @@ const NotificationsPage = {
     
     async checkForNewNotifications() {
         try {
-            const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-backend.vercel.app';
+            const apiBase = window.API_CONFIG?.BASE_URL || 'https://zimcrowd-api.onrender.com';
             const token = localStorage.getItem('authToken');
             
             const response = await fetch(`${apiBase}/api/notifications/unread-count`, {

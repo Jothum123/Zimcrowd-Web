@@ -4,7 +4,7 @@
  */
 
 const SettingsDataLoader = {
-    API_BASE_URL: window.API_BASE_URL || 'https://zimcrowd-backend.vercel.app',
+    API_BASE_URL: window.API_BASE_URL || 'https://zimcrowd-api.onrender.com',
     
     /**
      * Initialize settings data loader

@@ -45,7 +45,7 @@ OneSignalDeferred.push(async function(OneSignal) {
                     return;
                 }
                 
-                const response = await fetch('https://zimcrowd-backend.vercel.app/api/notifications/push-subscription', {
+                const response = await fetch('https://zimcrowd-api.onrender.com/api/notifications/push-subscription', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
