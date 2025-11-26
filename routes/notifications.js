@@ -416,4 +416,109 @@ router.get('/templates', authenticateUser, async (req, res) => {
     }
 });
 
+// @route   POST /api/notifications/push-subscription
+// @desc    Save push notification subscription
+// @access  Private
+router.post('/push-subscription', authenticateUser, async (req, res) => {
+    try {
+        const { playerId, token, platform, deviceType, browser } = req.body;
+        
+        if (!playerId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Player ID is required'
+            });
+        }
+        
+        const { data, error } = await supabase
+            .from('push_subscriptions')
+            .upsert({
+                user_id: req.user.id,
+                player_id: playerId,
+                token: token,
+                platform: platform || 'web',
+                device_type: deviceType,
+                browser: browser,
+                is_active: true,
+                last_active_at: new Date().toISOString()
+            }, {
+                onConflict: 'user_id,player_id'
+            })
+            .select()
+            .single();
+            
+        if (error) throw error;
+        
+        console.log('✅ Push subscription saved for user:', req.user.id);
+        
+        res.json({
+            success: true,
+            message: 'Push subscription saved',
+            data: data
+        });
+    } catch (error) {
+        console.error('Save push subscription error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to save push subscription'
+        });
+    }
+});
+
+// @route   DELETE /api/notifications/push-subscription
+// @desc    Unsubscribe from push notifications
+// @access  Private
+router.delete('/push-subscription', authenticateUser, async (req, res) => {
+    try {
+        const { error } = await supabase
+            .from('push_subscriptions')
+            .update({
+                is_active: false,
+                unsubscribed_at: new Date().toISOString()
+            })
+            .eq('user_id', req.user.id);
+            
+        if (error) throw error;
+        
+        console.log('✅ User unsubscribed from push:', req.user.id);
+        
+        res.json({
+            success: true,
+            message: 'Unsubscribed from push notifications'
+        });
+    } catch (error) {
+        console.error('Unsubscribe error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to unsubscribe'
+        });
+    }
+});
+
+// @route   GET /api/notifications/push-status
+// @desc    Get push notification subscription status
+// @access  Private
+router.get('/push-status', authenticateUser, async (req, res) => {
+    try {
+        const { data: subscription } = await supabase
+            .from('push_subscriptions')
+            .select('*')
+            .eq('user_id', req.user.id)
+            .eq('is_active', true)
+            .single();
+            
+        res.json({
+            success: true,
+            subscribed: !!subscription,
+            data: subscription || null
+        });
+    } catch (error) {
+        console.error('Get push status error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to get push status'
+        });
+    }
+});
+
 module.exports = router;

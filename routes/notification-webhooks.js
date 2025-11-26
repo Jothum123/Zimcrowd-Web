@@ -6,6 +6,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const { supabase } = require('../utils/supabase-auth');
+const pushNotificationService = require('../services/push-notification.service');
 
 const router = express.Router();
 
@@ -144,6 +145,18 @@ router.post('/custom', async (req, res) => {
                     action_url: '/dashboard#loans',
                     data: data
                 });
+                
+                // Send push notification
+                await pushNotificationService.sendNotification(
+                    userId,
+                    '🎉 Loan Approved!',
+                    `Your loan application for $${data.amount} has been approved.`,
+                    {
+                        notification_type: 'loan_approved',
+                        action_url: 'https://zimcrowd.com/dashboard#loans',
+                        loanId: data.loanId
+                    }
+                );
                 break;
                 
             case 'loan.rejected':
