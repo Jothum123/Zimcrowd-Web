@@ -55,7 +55,7 @@ function showDepositModal() {
                             placeholder="+263771234567"
                             pattern="\+2637[1-9]\d{7}">
                         <small style="color: #64748b; display: block; margin-top: 5px;">
-                            <i class="fas fa-info-circle"></i> Format: +263771234567 or +263781234567
+                            <i class="fas fa-info-circle"></i> EcoCash: +26377... or +26378... | OneMoney: +26371...
                         </small>
                     </div>
                     

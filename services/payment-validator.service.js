@@ -407,16 +407,16 @@ class PaymentValidatorService {
         
         // Method-specific validation
         if (method === 'ecocash' && mobileNumber) {
-            // EcoCash uses Econet numbers (077)
-            if (!mobileNumber.startsWith('+26377')) {
-                errors.push('EcoCash requires an Econet number (+26377...)');
+            // EcoCash accepts both Econet (077) and NetOne (078)
+            if (!mobileNumber.startsWith('+26377') && !mobileNumber.startsWith('+26378')) {
+                errors.push('EcoCash requires an Econet (+26377...) or NetOne (+26378...) number');
             }
         }
         
         if (method === 'onemoney' && mobileNumber) {
-            // OneMoney uses NetOne numbers (078)
-            if (!mobileNumber.startsWith('+26378')) {
-                errors.push('OneMoney requires a NetOne number (+26378...)');
+            // OneMoney uses NetOne numbers (071)
+            if (!mobileNumber.startsWith('+26371')) {
+                errors.push('OneMoney requires a NetOne number (+26371...)');
             }
         }
         
