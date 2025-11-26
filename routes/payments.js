@@ -269,6 +269,12 @@ router.get('/status/:reference', async (req, res) => {
                 updateData.paynow_reference = statusResponse.paynowReference;
             }
             
+            if (statusResponse.failureReason) {
+                updateData.failure_reason = statusResponse.failureReason;
+                updateData.error_message = statusResponse.errorMessage;
+                updateData.status = 'failed';
+            }
+            
             await supabase
                 .from('payment_transactions')
                 .update(updateData)
@@ -281,7 +287,9 @@ router.get('/status/:reference', async (req, res) => {
                 reference: statusResponse.reference,
                 amount: statusResponse.amount,
                 currency: statusResponse.currency,
-                paynowReference: statusResponse.paynowReference
+                paynowReference: statusResponse.paynowReference,
+                failureReason: statusResponse.failureReason,
+                errorMessage: statusResponse.errorMessage
             });
         } else {
             res.status(400).json({
