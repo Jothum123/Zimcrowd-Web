@@ -25,27 +25,31 @@ const handleValidationErrors = (req, res, next) => {
 // @access  Private
 router.get('/', authenticateUser, async (req, res) => {
     try {
-        const { page = 1, limit = 20, unread_only = false } = req.query;
+        const { page = 1, limit = 20, unread_only = false, category = null } = req.query;
         const offset = (page - 1) * limit;
         
         let query = supabase
-            .from('notifications')
-            .select('*')
+            .from('user_notifications')
+            .select('*', { count: 'exact' })
             .eq('user_id', req.user.id)
             .order('created_at', { ascending: false })
-            .range(offset, offset + limit - 1);
+            .range(offset, offset + parseInt(limit) - 1);
             
         if (unread_only === 'true') {
             query = query.eq('is_read', false);
         }
         
-        const { data: notifications, error } = await query;
+        if (category && category !== 'all') {
+            query = query.eq('category', category);
+        }
+        
+        const { data: notifications, error, count } = await query;
         
         if (error) throw error;
         
         // Get unread count
         const { count: unreadCount } = await supabase
-            .from('notifications')
+            .from('user_notifications')
             .select('*', { count: 'exact', head: true })
             .eq('user_id', req.user.id)
             .eq('is_read', false);
@@ -56,7 +60,8 @@ router.get('/', authenticateUser, async (req, res) => {
             pagination: {
                 page: parseInt(page),
                 limit: parseInt(limit),
-                total: notifications?.length || 0
+                total: count || 0,
+                pages: Math.ceil((count || 0) / parseInt(limit))
             },
             unreadCount: unreadCount || 0
         });
@@ -77,7 +82,7 @@ router.put('/:id/read', authenticateUser, async (req, res) => {
         const { id } = req.params;
         
         const { data: notification, error } = await supabase
-            .from('notifications')
+            .from('user_notifications')
             .update({
                 is_read: true,
                 read_at: new Date().toISOString()
@@ -108,13 +113,13 @@ router.put('/:id/read', authenticateUser, async (req, res) => {
     }
 });
 
-// @route   PUT /api/notifications/read-all
+// @route   PUT /api/notifications/mark-all-read
 // @desc    Mark all notifications as read
 // @access  Private
-router.put('/read-all', authenticateUser, async (req, res) => {
+router.put('/mark-all-read', authenticateUser, async (req, res) => {
     try {
         const { data, error } = await supabase
-            .from('notifications')
+            .from('user_notifications')
             .update({
                 is_read: true,
                 read_at: new Date().toISOString()
@@ -137,6 +142,57 @@ router.put('/read-all', authenticateUser, async (req, res) => {
     }
 });
 
+// @route   GET /api/notifications/unread-count
+// @desc    Get unread notification count
+// @access  Private
+router.get('/unread-count', authenticateUser, async (req, res) => {
+    try {
+        const { count, error } = await supabase
+            .from('user_notifications')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', req.user.id)
+            .eq('is_read', false);
+            
+        if (error) throw error;
+        
+        res.json({
+            success: true,
+            count: count || 0
+        });
+    } catch (error) {
+        console.error('Get unread count error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to get unread count'
+        });
+    }
+});
+
+// @route   DELETE /api/notifications/clear-all
+// @desc    Clear all notifications
+// @access  Private
+router.delete('/clear-all', authenticateUser, async (req, res) => {
+    try {
+        const { error } = await supabase
+            .from('user_notifications')
+            .delete()
+            .eq('user_id', req.user.id);
+            
+        if (error) throw error;
+        
+        res.json({
+            success: true,
+            message: 'All notifications cleared'
+        });
+    } catch (error) {
+        console.error('Clear all notifications error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to clear notifications'
+        });
+    }
+});
+
 // @route   DELETE /api/notifications/:id
 // @desc    Delete notification
 // @access  Private
@@ -145,7 +201,7 @@ router.delete('/:id', authenticateUser, async (req, res) => {
         const { id } = req.params;
         
         const { error } = await supabase
-            .from('notifications')
+            .from('user_notifications')
             .delete()
             .eq('id', id)
             .eq('user_id', req.user.id);
