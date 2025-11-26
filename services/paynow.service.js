@@ -207,14 +207,6 @@ class PayNowService {
             // Add item to cart
             payment.add(request.description, request.amount);
             
-            // Add additional info if provided
-            if (request.additionalData) {
-                payment.info = {
-                    ...payment.info,
-                    ...request.additionalData
-                };
-            }
-            
             console.log(`💳 Initiating ${request.currency} web payment: ${request.reference} - $${request.amount}`);
             
             // Send payment to PayNow
