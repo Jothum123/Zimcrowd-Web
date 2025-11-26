@@ -15,11 +15,20 @@ function showDepositModal() {
                 
                 <form id="depositForm" onsubmit="handleDeposit(event)">
                     <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; color: #94a3b8;">Amount (USD)</label>
+                        <label style="display: block; margin-bottom: 8px; color: #94a3b8;">Currency</label>
+                        <select id="depositCurrency" required onchange="updateCurrencyLimits()"
+                            style="width: 100%; padding: 12px; background: #0f172a; border: 2px solid #334155; border-radius: 12px; color: white; font-size: 16px;">
+                            <option value="USD">🇺🇸 USD - US Dollar</option>
+                            <option value="ZWG">🇿🇼 ZWG - Zimbabwe Gold</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; color: #94a3b8;">Amount</label>
                         <input type="number" id="depositAmount" min="1" max="10000" step="0.01" required
                             style="width: 100%; padding: 12px; background: #0f172a; border: 2px solid #334155; border-radius: 12px; color: white; font-size: 16px;"
                             placeholder="Enter amount">
-                        <small style="color: #94a3b8; display: block; margin-top: 5px;">Min: $1, Max: $10,000</small>
+                        <small id="amountLimits" style="color: #94a3b8; display: block; margin-top: 5px;">Min: $1, Max: $10,000</small>
                     </div>
                     
                     <div style="margin-bottom: 20px;">

@@ -62,7 +62,7 @@ const handleValidationErrors = (req, res, next) => {
 };
 
 // @route   GET /api/wallet/balance
-// @desc    Get user's wallet balance
+// @desc    Get user's wallet balance (legacy - single currency)
 // @access  Private
 router.get('/balance', authenticateUser, async (req, res) => {
     try {
@@ -70,7 +70,7 @@ router.get('/balance', authenticateUser, async (req, res) => {
         // Deposits increase balance, withdrawals decrease balance
         const { data: transactions, error } = await supabase
             .from('transactions')
-            .select('type, amount')
+            .select('type, amount, currency')
             .eq('user_id', req.user.id);
 
         if (error) {
@@ -83,10 +83,14 @@ router.get('/balance', authenticateUser, async (req, res) => {
 
         let balance = 0;
         transactions.forEach(transaction => {
-            if (transaction.type === 'deposit') {
-                balance += parseFloat(transaction.amount);
-            } else if (transaction.type === 'withdrawal') {
-                balance -= parseFloat(transaction.amount);
+            // Default to USD for legacy transactions without currency
+            const currency = transaction.currency || 'USD';
+            if (currency === 'USD') {
+                if (transaction.type === 'deposit') {
+                    balance += parseFloat(transaction.amount);
+                } else if (transaction.type === 'withdrawal') {
+                    balance -= parseFloat(transaction.amount);
+                }
             }
         });
 
@@ -116,12 +120,65 @@ router.get('/balance', authenticateUser, async (req, res) => {
     }
 });
 
+// @route   GET /api/wallet/balances
+// @desc    Get user's wallet balances for all currencies
+// @access  Private
+router.get('/balances', authenticateUser, async (req, res) => {
+    try {
+        // Calculate balances for each currency
+        const { data: transactions, error } = await supabase
+            .from('transactions')
+            .select('type, amount, currency')
+            .eq('user_id', req.user.id);
+
+        if (error) {
+            console.error('Balance calculation error:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to calculate balances'
+            });
+        }
+
+        const balances = {
+            USD: 0,
+            ZWG: 0
+        };
+
+        transactions.forEach(transaction => {
+            const currency = transaction.currency || 'USD';
+            const amount = parseFloat(transaction.amount);
+            
+            if (transaction.type === 'deposit') {
+                balances[currency] = (balances[currency] || 0) + amount;
+            } else if (transaction.type === 'withdrawal') {
+                balances[currency] = (balances[currency] || 0) - amount;
+            }
+        });
+
+        // Round balances
+        Object.keys(balances).forEach(currency => {
+            balances[currency] = Math.round(balances[currency] * 100) / 100;
+        });
+
+        res.json({
+            success: true,
+            balances
+        });
+    } catch (error) {
+        console.error('Get balances error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+});
+
 // @route   GET /api/wallet/transactions
 // @desc    Get wallet transaction history
 // @access  Private
 router.get('/transactions', authenticateUser, async (req, res) => {
     try {
-        const { page = 1, limit = 20, type } = req.query;
+        const { page = 1, limit = 20, type, currency } = req.query;
         const offset = (page - 1) * limit;
 
         let query = supabase
@@ -134,6 +191,11 @@ router.get('/transactions', authenticateUser, async (req, res) => {
 
         if (type && ['deposit', 'withdrawal'].includes(type)) {
             query = query.eq('type', type);
+        }
+
+        // Filter by currency if specified
+        if (currency && ['USD', 'ZWG'].includes(currency)) {
+            query = query.eq('currency', currency);
         }
 
         const { data: transactions, error, count } = await query;
@@ -547,6 +609,139 @@ router.get('/payment-methods', async (req, res) => {
         });
     } catch (error) {
         console.error('Get payment methods error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+});
+
+// @route   POST /api/wallet/credit
+// @desc    Credit wallet after successful payment
+// @access  Private
+router.post('/credit', authenticateUser, [
+    body('amount')
+        .isFloat({ min: 0.01 })
+        .withMessage('Amount must be greater than 0'),
+    body('currency')
+        .isIn(['USD', 'ZWG'])
+        .withMessage('Currency must be USD or ZWG'),
+    body('reference')
+        .notEmpty()
+        .withMessage('Payment reference is required'),
+    body('description')
+        .optional()
+        .trim(),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { amount, currency, reference, description } = req.body;
+
+        // Check if transaction with this reference already exists (prevent duplicates)
+        const { data: existingTx } = await supabase
+            .from('transactions')
+            .select('id')
+            .eq('user_id', req.user.id)
+            .eq('paynow_reference', reference)
+            .single();
+
+        if (existingTx) {
+            return res.status(400).json({
+                success: false,
+                message: 'Transaction already processed'
+            });
+        }
+
+        // Create deposit transaction
+        const { data: transaction, error } = await supabase
+            .from('transactions')
+            .insert({
+                user_id: req.user.id,
+                type: 'deposit',
+                amount: parseFloat(amount),
+                currency: currency,
+                description: description || `Deposit via Paynow`,
+                paynow_reference: reference,
+                status: 'completed'
+            })
+            .select('*')
+            .single();
+
+        if (error) {
+            console.error('Credit wallet error:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to credit wallet'
+            });
+        }
+
+        // Calculate new balance
+        const { data: transactions } = await supabase
+            .from('transactions')
+            .select('type, amount')
+            .eq('user_id', req.user.id)
+            .eq('currency', currency);
+
+        let newBalance = 0;
+        transactions?.forEach(tx => {
+            if (tx.type === 'deposit') {
+                newBalance += parseFloat(tx.amount);
+            } else if (tx.type === 'withdrawal') {
+                newBalance -= parseFloat(tx.amount);
+            }
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Wallet credited successfully',
+            transaction,
+            newBalance: Math.round(newBalance * 100) / 100,
+            currency
+        });
+    } catch (error) {
+        console.error('Credit wallet error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+});
+
+// @route   GET /api/exchange-rate/:pair
+// @desc    Get exchange rate between currencies
+// @access  Public
+router.get('/exchange-rate/:pair', async (req, res) => {
+    try {
+        const { pair } = req.params;
+        
+        // Example: ZWG-USD
+        const [from, to] = pair.split('-');
+        
+        if (!from || !to || !['USD', 'ZWG'].includes(from) || !['USD', 'ZWG'].includes(to)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid currency pair. Use format: ZWG-USD or USD-ZWG'
+            });
+        }
+
+        // In production, fetch from a real exchange rate API
+        // For now, use a fixed rate
+        const rates = {
+            'ZWG-USD': 0.0001,  // 10,000 ZWG = 1 USD
+            'USD-ZWG': 10000     // 1 USD = 10,000 ZWG
+        };
+
+        const rate = rates[`${from}-${to}`] || 1;
+
+        res.json({
+            success: true,
+            from,
+            to,
+            rate,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Exchange rate error:', error);
         res.status(500).json({
             success: false,
             message: 'Server error'
