@@ -60,7 +60,7 @@ const KairoWidget = {
     async loadChatHistory() {
         try {
             const response = await fetch(
-                `${window.DashboardCore.API_CONFIG.BASE_URL}/kairo/chat-history?limit=10`,
+                `${window.DashboardCore.API_CONFIG.BASE_URL}/api/kairo/chat-history?limit=10`,
                 { headers: window.DashboardCore.API_CONFIG.HEADERS }
             );
             
@@ -80,6 +80,7 @@ const KairoWidget = {
             }
         } catch (error) {
             console.error('Error loading chat history:', error);
+            // Don't show error to user for history loading
         }
     },
     
@@ -100,7 +101,7 @@ const KairoWidget = {
         
         try {
             const response = await fetch(
-                `${window.DashboardCore.API_CONFIG.BASE_URL}/kairo/chat`,
+                `${window.DashboardCore.API_CONFIG.BASE_URL}/api/kairo/chat`,
                 {
                     method: 'POST',
                     headers: window.DashboardCore.API_CONFIG.HEADERS,
@@ -121,12 +122,14 @@ const KairoWidget = {
                     this.showSuggestions(result.suggestions);
                 }
             } else {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Kairo AI error:', response.status, errorData);
                 this.addMessage('Sorry, I encountered an error. Please try again.', 'ai');
             }
         } catch (error) {
             this.removeTypingIndicator();
             console.error('Error sending message:', error);
-            this.addMessage('Sorry, I\'m having trouble connecting. Please try again.', 'ai');
+            this.addMessage('Sorry, I\'m having trouble connecting. Please check your internet connection.', 'ai');
         }
     },
     
