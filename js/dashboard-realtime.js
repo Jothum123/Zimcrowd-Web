@@ -41,7 +41,7 @@ const DashboardRealtime = {
         try {
             const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             if (!token) {
-                console.warn('⚠️ No auth token, skipping WebSocket');
+                console.log('ℹ️ No auth token, using polling only');
                 return;
             }
 
@@ -61,16 +61,20 @@ const DashboardRealtime = {
             };
 
             this.ws.onerror = (error) => {
-                console.error('❌ WebSocket error:', error);
+                // Silently fail - polling will handle updates
+                console.log('ℹ️ WebSocket unavailable, using polling');
             };
 
             this.ws.onclose = () => {
-                console.warn('⚠️ WebSocket closed');
+                // Don't spam console with reconnect attempts
+                if (this.reconnectAttempts === 0) {
+                    console.log('ℹ️ WebSocket closed, using polling');
+                }
                 this.attemptReconnect();
             };
 
         } catch (error) {
-            console.error('❌ WebSocket initialization error:', error);
+            console.log('ℹ️ WebSocket not available, using polling');
         }
     },
 
@@ -128,12 +132,16 @@ const DashboardRealtime = {
      */
     attemptReconnect() {
         if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-            console.error('❌ Max reconnection attempts reached');
+            // Silently stop trying - polling is working
             return;
         }
 
         this.reconnectAttempts++;
-        console.log(`🔄 Reconnecting... Attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+        
+        // Only log first attempt
+        if (this.reconnectAttempts === 1) {
+            console.log('ℹ️ Attempting WebSocket reconnect...');
+        }
 
         setTimeout(() => {
             this.initWebSocket();

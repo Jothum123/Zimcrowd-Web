@@ -436,14 +436,16 @@ router.put('/profile', authenticateUser, async (req, res) => {
         const userId = req.user.id;
         const updates = req.body;
 
-        // Update profile
+        // Upsert profile (update if exists, insert if not)
         const { data: profile, error } = await supabase
             .from('profiles')
-            .update({
+            .upsert({
+                id: userId,
                 ...updates,
                 updated_at: new Date().toISOString()
+            }, {
+                onConflict: 'id'
             })
-            .eq('id', userId)
             .select()
             .single();
 
