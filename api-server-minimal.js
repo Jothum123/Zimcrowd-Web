@@ -92,7 +92,12 @@ const routes = {
     adminWalletMonitoring: loadRoute('./routes/admin-wallet-monitoring', 'Admin Wallet Monitoring'),
     adminManualTransactions: loadRoute('./routes/admin-manual-transactions', 'Admin Manual Transactions'),
     adminRoleManagement: loadRoute('./routes/admin-role-management', 'Admin Role Management'),
-    cleanupOrphaned: loadRoute('./routes/cleanup-orphaned', 'Cleanup Orphaned Records')
+    cleanupOrphaned: loadRoute('./routes/cleanup-orphaned', 'Cleanup Orphaned Records'),
+    // User & Payment Routes
+    user: loadRoute('./routes/user', 'User Settings & Profile'),
+    payments: loadRoute('./routes/payments', 'Payment Processing'),
+    phoneAuth: loadRoute('./routes/phone-auth', 'Phone Authentication'),
+    settings: loadRoute('./routes/settings', 'User Settings')
 };
 
 console.log('='.repeat(60) + '\n');
@@ -150,6 +155,12 @@ if (routes.adminWalletMonitoring) app.use('/api/admin-wallet-monitoring', routes
 if (routes.adminManualTransactions) app.use('/api/admin-manual-transactions', routes.adminManualTransactions);
 if (routes.adminRoleManagement) app.use('/api/admin-role-management', routes.adminRoleManagement);
 if (routes.cleanupOrphaned) app.use('/api/cleanup', routes.cleanupOrphaned);
+
+// User & Payment Routes
+if (routes.user) app.use('/api/user', routes.user);
+if (routes.payments) app.use('/api/payments', routes.payments);
+if (routes.phoneAuth) app.use('/api/auth/phone', routes.phoneAuth);
+if (routes.settings) app.use('/api/settings', routes.settings);
 
 // =====================================================
 // ERROR HANDLING
