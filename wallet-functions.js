@@ -206,6 +206,9 @@ async function handleDeposit(event) {
         if (result.success) {
             closeModal('depositModal');
             
+            // Show immediate success notification
+            showSuccessToast('✅ Payment initiated successfully!');
+            
             if (method === 'paynow_web' && result.redirectUrl) {
                 // Web checkout - open Paynow in new tab
                 window.open(result.redirectUrl, '_blank');
@@ -226,7 +229,7 @@ async function handleDeposit(event) {
             }
         } else {
             const errorMsg = result.error || result.message || 'Unknown error';
-            alert('❌ Payment failed: ' + errorMsg);
+            showErrorToast('❌ Payment failed: ' + errorMsg);
         }
     } catch (error) {
         console.error('Deposit error:', error);
@@ -962,4 +965,82 @@ function updateWalletTransactionsUI(transactions) {
             </div>
         `;
     }).join('');
+}
+
+// Toast notification functions
+function showSuccessToast(message) {
+    showToast(message, 'success');
+}
+
+function showErrorToast(message) {
+    showToast(message, 'error');
+}
+
+function showToast(message, type = 'success') {
+    // Remove any existing toasts
+    const existingToast = document.getElementById('payment-toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+
+    const toast = document.createElement('div');
+    toast.id = 'payment-toast';
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#38e77b' : '#ef4444'};
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10001;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}" style="font-size: 20px;"></i>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Add CSS animation
+if (!document.getElementById('toast-styles')) {
+    const style = document.createElement('style');
+    style.id = 'toast-styles';
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
 }
