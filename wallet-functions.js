@@ -225,7 +225,8 @@ async function handleDeposit(event) {
                 alert('✅ Payment initiated! ' + (result.message || 'Please check your phone.'));
             }
         } else {
-            alert('❌ Payment failed: ' + (result.message || 'Unknown error'));
+            const errorMsg = result.error || result.message || 'Unknown error';
+            alert('❌ Payment failed: ' + errorMsg);
         }
     } catch (error) {
         console.error('Deposit error:', error);
