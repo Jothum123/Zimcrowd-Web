@@ -117,7 +117,7 @@ class NotificationBell {
             const timeAgo = this.getTimeAgo(notification.created_at);
 
             return `
-                <div class="notification-item ${notification.read ? '' : 'unread'}" 
+                <div class="notification-item ${notification.is_read ? '' : 'unread'}" 
                      data-id="${notification.id}"
                      onclick="notificationBell.handleNotificationClick('${notification.id}')">
                     <div class="notification-icon ${color}">
@@ -128,7 +128,7 @@ class NotificationBell {
                         <p>${notification.message}</p>
                         <span class="notification-time">${timeAgo}</span>
                     </div>
-                    ${!notification.read ? '<div class="notification-dot"></div>' : ''}
+                    ${!notification.is_read ? '<div class="notification-dot"></div>' : ''}
                 </div>
             `;
         }).join('');
@@ -230,8 +230,8 @@ class NotificationBell {
             if (response.ok) {
                 // Update local state
                 const notification = this.notifications.find(n => n.id === notificationId);
-                if (notification && !notification.read) {
-                    notification.read = true;
+                if (notification && !notification.is_read) {
+                    notification.is_read = true;
                     this.unreadCount = Math.max(0, this.unreadCount - 1);
                     this.updateBadge();
                     this.renderNotifications();
@@ -257,7 +257,7 @@ class NotificationBell {
 
             if (response.ok) {
                 // Update local state
-                this.notifications.forEach(n => n.read = true);
+                this.notifications.forEach(n => n.is_read = true);
                 this.unreadCount = 0;
                 this.updateBadge();
                 this.renderNotifications();
@@ -298,7 +298,7 @@ class NotificationBell {
         if (this.notifications.length > 5) {
             this.notifications.pop();
         }
-        if (!notification.read) {
+        if (!notification.is_read) {
             this.unreadCount++;
         }
         this.updateBadge();
