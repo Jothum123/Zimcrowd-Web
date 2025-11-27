@@ -1032,4 +1032,81 @@ router.get('/opportunities', authenticateUser, async (req, res) => {
     }
 });
 
+// Alias route for frontend compatibility - /user redirects to /my-investments
+router.get('/user', authenticateUser, async (req, res) => {
+    try {
+        const { page = 1, limit = 10, status } = req.query;
+        const offset = (page - 1) * limit;
+        
+        let query = supabase
+            .from('investments')
+            .select('*', { count: 'exact' })
+            .eq('user_id', req.user.id)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
+        
+        if (status) {
+            query = query.eq('status', status);
+        }
+        
+        const { data: investments, error, count } = await query;
+        
+        if (error) throw error;
+        
+        res.json({
+            success: true,
+            investments: investments || [],
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total: count || 0,
+                pages: Math.ceil((count || 0) / limit)
+            }
+        });
+    } catch (error) {
+        console.error('User investments error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load investments',
+            error: error.message
+        });
+    }
+});
+
+// Alias for available investments
+router.get('/available', authenticateUser, async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+        
+        const { data: opportunities, error, count } = await supabase
+            .from('loans')
+            .select('*', { count: 'exact' })
+            .eq('status', 'approved')
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
+        
+        if (error) throw error;
+        
+        res.json({
+            success: true,
+            opportunities: opportunities || [],
+            pagination: {
+                page,
+                limit,
+                total: count || 0,
+                pages: Math.ceil((count || 0) / limit)
+            }
+        });
+    } catch (error) {
+        console.error('Available investments error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load available investments',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

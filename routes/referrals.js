@@ -564,4 +564,76 @@ router.get('/program-info', async (req, res) => {
     }
 });
 
+// Alias routes for frontend compatibility
+router.get('/', authenticateUser, async (req, res) => {
+    // Redirect to /stats
+    try {
+        const userId = req.user.id;
+        
+        const { data: referrals, error } = await supabase
+            .from('referrals')
+            .select('*')
+            .eq('referrer_id', userId);
+        
+        if (error) throw error;
+        
+        const totalReferrals = referrals?.length || 0;
+        const completedReferrals = referrals?.filter(r => r.status === 'completed').length || 0;
+        const pendingReferrals = referrals?.filter(r => r.status === 'pending').length || 0;
+        
+        res.json({
+            success: true,
+            stats: {
+                totalReferrals,
+                completedReferrals,
+                pendingReferrals,
+                totalEarnings: referrals?.reduce((sum, r) => sum + (r.reward_amount || 0), 0) || 0
+            },
+            referrals: referrals || []
+        });
+    } catch (error) {
+        console.error('Referrals error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load referrals',
+            error: error.message
+        });
+    }
+});
+
+router.get('/earnings', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        const { data: earnings, error } = await supabase
+            .from('referral_earnings')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        const totalEarnings = earnings?.reduce((sum, e) => sum + e.amount, 0) || 0;
+        const paidEarnings = earnings?.filter(e => e.paid).reduce((sum, e) => sum + e.amount, 0) || 0;
+        const pendingEarnings = totalEarnings - paidEarnings;
+        
+        res.json({
+            success: true,
+            earnings: earnings || [],
+            summary: {
+                total: totalEarnings,
+                paid: paidEarnings,
+                pending: pendingEarnings
+            }
+        });
+    } catch (error) {
+        console.error('Referral earnings error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load earnings',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

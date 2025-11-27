@@ -585,4 +585,61 @@ router.get('/monthly-activity', authenticateUser, async (req, res) => {
     }
 });
 
+// Alias route for overview
+router.get('/overview', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        // Get user's loans
+        const { data: loans } = await supabase
+            .from('loans')
+            .select('*')
+            .eq('borrower_id', userId);
+        
+        // Get user's investments
+        const { data: investments } = await supabase
+            .from('investments')
+            .select('*')
+            .eq('user_id', userId);
+        
+        // Get wallet transactions
+        const { data: transactions } = await supabase
+            .from('wallet_transactions')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(10);
+        
+        const totalLoans = loans?.length || 0;
+        const activeLoans = loans?.filter(l => l.status === 'active').length || 0;
+        const totalInvestments = investments?.reduce((sum, i) => sum + i.amount, 0) || 0;
+        const totalReturns = investments?.reduce((sum, i) => sum + (i.actual_return || 0), 0) || 0;
+        
+        res.json({
+            success: true,
+            overview: {
+                loans: {
+                    total: totalLoans,
+                    active: activeLoans,
+                    totalAmount: loans?.reduce((sum, l) => sum + l.amount, 0) || 0
+                },
+                investments: {
+                    total: investments?.length || 0,
+                    totalAmount: totalInvestments,
+                    totalReturns: totalReturns,
+                    roi: totalInvestments > 0 ? (totalReturns / totalInvestments * 100).toFixed(2) : 0
+                },
+                recentActivity: transactions || []
+            }
+        });
+    } catch (error) {
+        console.error('Analytics overview error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load analytics overview',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;
