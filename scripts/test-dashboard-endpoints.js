@@ -70,11 +70,11 @@ async function runTests() {
         `${API_BASE}/api/user/profile`
     ));
     
-    // Test 4: Wallet Balance (will return 401 without token - that's OK!)
+    // Test 4: Wallet Balance (correct path: /api/wallet/balance)
     results.push(await testEndpoint(
         'Wallet Balance',
         'GET',
-        `${API_BASE}/api/user/wallet/balance`
+        `${API_BASE}/api/wallet/balance`
     ));
     
     // Test 5: Notifications (will return 401 without token - that's OK!)
@@ -84,11 +84,18 @@ async function runTests() {
         `${API_BASE}/api/notifications?limit=5`
     ));
     
-    // Test 6: User Settings (will return 401 without token - that's OK!)
+    // Test 6: Referrals
     results.push(await testEndpoint(
-        'User Settings',
+        'Referrals',
         'GET',
-        `${API_BASE}/api/user/settings`
+        `${API_BASE}/api/referrals`
+    ));
+    
+    // Test 7: Analytics Overview
+    results.push(await testEndpoint(
+        'Analytics Overview',
+        'GET',
+        `${API_BASE}/api/analytics/overview`
     ));
     
     // Test 7: Loans (will return 401 without token - that's OK!)

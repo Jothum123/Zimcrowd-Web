@@ -1,0 +1,502 @@
+/**
+ * Settings Production Loader
+ * Replaces all static data with real backend data
+ */
+
+class SettingsProductionLoader {
+    constructor() {
+        this.dataManager = window.ProductionDataManager;
+        this.currentTab = 'profile';
+        this.unsavedChanges = false;
+    }
+
+    async init() {
+        console.log('⚙️ Initializing Settings Production Loader...');
+        
+        // Load all settings data
+        await this.loadAllSettings();
+        
+        // Setup event listeners
+        this.setupEventListeners();
+        
+        // Setup auto-save
+        this.setupAutoSave();
+        
+        console.log('✅ Settings Production Loader ready');
+    }
+
+    async loadAllSettings() {
+        try {
+            // Show loading state
+            this.showLoadingState();
+            
+            // Load all settings in parallel
+            const [
+                profile,
+                notifications,
+                display,
+                investments,
+                privacy,
+                documents
+            ] = await Promise.all([
+                this.dataManager.loadProfileSettings(),
+                this.dataManager.loadNotificationSettings(),
+                this.dataManager.loadDisplaySettings(),
+                this.dataManager.loadInvestmentPreferences(),
+                this.dataManager.loadPrivacySettings(),
+                this.dataManager.loadDocuments()
+            ]);
+
+            // Populate forms
+            if (profile) this.populateProfileForm(profile);
+            if (notifications) this.populateNotificationForm(notifications);
+            if (display) this.populateDisplayForm(display);
+            if (investments) this.populateInvestmentForm(investments);
+            if (privacy) this.populatePrivacyForm(privacy);
+            if (documents) this.populateDocuments(documents);
+
+            // Hide loading state
+            this.hideLoadingState();
+            
+            console.log('✅ All settings loaded');
+        } catch (error) {
+            console.error('❌ Error loading settings:', error);
+            this.showError('Failed to load settings. Please refresh the page.');
+        }
+    }
+
+    // ============================================
+    // PROFILE SETTINGS
+    // ============================================
+    populateProfileForm(profile) {
+        this.setInputValue('firstName', profile.firstName);
+        this.setInputValue('lastName', profile.lastName);
+        this.setInputValue('email', profile.email);
+        this.setInputValue('phone', profile.phone);
+        this.setInputValue('dateOfBirth', profile.dateOfBirth);
+        this.setInputValue('profileGender', profile.gender);
+        this.setInputValue('country', profile.country);
+        this.setInputValue('streetAddress', profile.streetAddress);
+        this.setInputValue('city', profile.city);
+        this.setInputValue('suburb', profile.suburb);
+        this.setInputValue('postalCode', profile.postalCode);
+        this.setInputValue('profileBio', profile.bio);
+        
+        // Update profile picture
+        if (profile.profilePicture) {
+            const img = document.querySelector('.profile-picture img');
+            if (img) img.src = profile.profilePicture;
+        } else {
+            // Show initials
+            const initials = `${profile.firstName?.[0] || ''}${profile.lastName?.[0] || ''}`;
+            const initialsEl = document.querySelector('.profile-initials');
+            if (initialsEl) initialsEl.textContent = initials;
+        }
+        
+        // Update completion percentage
+        this.updateCompletionBar(profile.completionPercentage);
+    }
+
+    async saveProfileSettings() {
+        try {
+            const profileData = {
+                first_name: this.getInputValue('firstName'),
+                last_name: this.getInputValue('lastName'),
+                email: this.getInputValue('email'),
+                phone: this.getInputValue('phone'),
+                date_of_birth: this.getInputValue('dateOfBirth'),
+                gender: this.getInputValue('profileGender'),
+                country: this.getInputValue('country'),
+                street_address: this.getInputValue('streetAddress'),
+                city: this.getInputValue('city'),
+                suburb: this.getInputValue('suburb'),
+                postal_code: this.getInputValue('postalCode'),
+                bio: this.getInputValue('profileBio')
+            };
+
+            const response = await this.dataManager.saveProfileSettings(profileData);
+            
+            if (response.success) {
+                this.showSuccess('Profile updated successfully!');
+                this.unsavedChanges = false;
+            } else {
+                throw new Error(response.message || 'Failed to save profile');
+            }
+        } catch (error) {
+            console.error('❌ Error saving profile:', error);
+            this.showError('Failed to save profile. Please try again.');
+        }
+    }
+
+    // ============================================
+    // NOTIFICATION SETTINGS
+    // ============================================
+    populateNotificationForm(settings) {
+        this.setCheckboxValue('emailNotifications', settings.emailNotifications);
+        this.setCheckboxValue('pushNotifications', settings.pushNotifications);
+        this.setCheckboxValue('smsNotifications', settings.smsNotifications);
+        this.setCheckboxValue('loanUpdates', settings.loanUpdates);
+        this.setCheckboxValue('investmentUpdates', settings.investmentUpdates);
+        this.setCheckboxValue('paymentAlerts', settings.paymentAlerts);
+        this.setCheckboxValue('securityAlerts', settings.securityAlerts);
+        this.setCheckboxValue('marketingEmails', settings.marketingEmails);
+        this.setCheckboxValue('weeklyReports', settings.weeklyReports);
+        this.setCheckboxValue('monthlyStatements', settings.monthlyStatements);
+    }
+
+    async saveNotificationSettings() {
+        try {
+            const settings = {
+                email_notifications: this.getCheckboxValue('emailNotifications'),
+                push_notifications: this.getCheckboxValue('pushNotifications'),
+                sms_notifications: this.getCheckboxValue('smsNotifications'),
+                loan_updates: this.getCheckboxValue('loanUpdates'),
+                investment_updates: this.getCheckboxValue('investmentUpdates'),
+                payment_alerts: this.getCheckboxValue('paymentAlerts'),
+                security_alerts: this.getCheckboxValue('securityAlerts'),
+                marketing_emails: this.getCheckboxValue('marketingEmails'),
+                weekly_reports: this.getCheckboxValue('weeklyReports'),
+                monthly_statements: this.getCheckboxValue('monthlyStatements')
+            };
+
+            const response = await this.dataManager.saveNotificationSettings(settings);
+            
+            if (response.success) {
+                this.showSuccess('Notification settings updated!');
+                this.unsavedChanges = false;
+            }
+        } catch (error) {
+            console.error('❌ Error saving notification settings:', error);
+            this.showError('Failed to save notification settings.');
+        }
+    }
+
+    // ============================================
+    // DISPLAY SETTINGS
+    // ============================================
+    populateDisplayForm(settings) {
+        this.setInputValue('theme', settings.theme);
+        this.setInputValue('language', settings.language);
+        this.setInputValue('currency', settings.currency);
+        this.setInputValue('dateFormat', settings.dateFormat);
+        this.setInputValue('timeFormat', settings.timeFormat);
+        this.setCheckboxValue('compactMode', settings.compactMode);
+        this.setCheckboxValue('showAnimations', settings.showAnimations);
+    }
+
+    async saveDisplaySettings() {
+        try {
+            const settings = {
+                theme: this.getInputValue('theme'),
+                language: this.getInputValue('language'),
+                currency: this.getInputValue('currency'),
+                date_format: this.getInputValue('dateFormat'),
+                time_format: this.getInputValue('timeFormat'),
+                compact_mode: this.getCheckboxValue('compactMode'),
+                show_animations: this.getCheckboxValue('showAnimations')
+            };
+
+            const response = await this.dataManager.saveDisplaySettings(settings);
+            
+            if (response.success) {
+                this.showSuccess('Display settings updated!');
+                this.unsavedChanges = false;
+                
+                // Apply theme immediately
+                if (settings.theme) {
+                    document.documentElement.setAttribute('data-theme', settings.theme);
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error saving display settings:', error);
+            this.showError('Failed to save display settings.');
+        }
+    }
+
+    // ============================================
+    // INVESTMENT PREFERENCES
+    // ============================================
+    populateInvestmentForm(preferences) {
+        this.setInputValue('riskTolerance', preferences.riskTolerance);
+        this.setCheckboxValue('autoInvest', preferences.autoInvest);
+        this.setInputValue('autoInvestAmount', preferences.autoInvestAmount);
+        this.setInputValue('minReturnRate', preferences.minReturnRate);
+        this.setInputValue('maxLoanAmount', preferences.maxLoanAmount);
+        this.setInputValue('diversificationLevel', preferences.diversificationLevel);
+        
+        // Handle arrays
+        if (preferences.investmentGoals) {
+            preferences.investmentGoals.forEach(goal => {
+                this.setCheckboxValue(`goal_${goal}`, true);
+            });
+        }
+        
+        if (preferences.preferredSectors) {
+            preferences.preferredSectors.forEach(sector => {
+                this.setCheckboxValue(`sector_${sector}`, true);
+            });
+        }
+    }
+
+    async saveInvestmentPreferences() {
+        try {
+            const preferences = {
+                risk_tolerance: this.getInputValue('riskTolerance'),
+                auto_invest: this.getCheckboxValue('autoInvest'),
+                auto_invest_amount: parseFloat(this.getInputValue('autoInvestAmount')) || 0,
+                min_return_rate: parseFloat(this.getInputValue('minReturnRate')) || 0,
+                max_loan_amount: parseFloat(this.getInputValue('maxLoanAmount')) || 0,
+                diversification_level: this.getInputValue('diversificationLevel'),
+                investment_goals: this.getCheckedValues('investment-goal'),
+                preferred_sectors: this.getCheckedValues('preferred-sector')
+            };
+
+            const response = await this.dataManager.saveInvestmentPreferences(preferences);
+            
+            if (response.success) {
+                this.showSuccess('Investment preferences updated!');
+                this.unsavedChanges = false;
+            }
+        } catch (error) {
+            console.error('❌ Error saving investment preferences:', error);
+            this.showError('Failed to save investment preferences.');
+        }
+    }
+
+    // ============================================
+    // PRIVACY SETTINGS
+    // ============================================
+    populatePrivacyForm(settings) {
+        this.setInputValue('profileVisibility', settings.profileVisibility);
+        this.setCheckboxValue('showInvestments', settings.showInvestments);
+        this.setCheckboxValue('showLoans', settings.showLoans);
+        this.setCheckboxValue('allowMessages', settings.allowMessages);
+        this.setCheckboxValue('dataSharing', settings.dataSharing);
+        this.setCheckboxValue('analyticsTracking', settings.analyticsTracking);
+        this.setCheckboxValue('thirdPartySharing', settings.thirdPartySharing);
+    }
+
+    async savePrivacySettings() {
+        try {
+            const settings = {
+                profile_visibility: this.getInputValue('profileVisibility'),
+                show_investments: this.getCheckboxValue('showInvestments'),
+                show_loans: this.getCheckboxValue('showLoans'),
+                allow_messages: this.getCheckboxValue('allowMessages'),
+                data_sharing: this.getCheckboxValue('dataSharing'),
+                analytics_tracking: this.getCheckboxValue('analyticsTracking'),
+                third_party_sharing: this.getCheckboxValue('thirdPartySharing')
+            };
+
+            const response = await this.dataManager.savePrivacySettings(settings);
+            
+            if (response.success) {
+                this.showSuccess('Privacy settings updated!');
+                this.unsavedChanges = false;
+            }
+        } catch (error) {
+            console.error('❌ Error saving privacy settings:', error);
+            this.showError('Failed to save privacy settings.');
+        }
+    }
+
+    // ============================================
+    // DOCUMENTS (KYC)
+    // ============================================
+    populateDocuments(documents) {
+        const container = document.getElementById('documents-list');
+        if (!container) return;
+
+        if (documents.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-file-upload"></i>
+                    <p>No documents uploaded yet</p>
+                    <button onclick="settingsLoader.showUploadModal()" class="btn-primary">
+                        Upload Document
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = documents.map(doc => `
+            <div class="document-item ${doc.status}">
+                <div class="document-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="document-info">
+                    <h4>${doc.name}</h4>
+                    <p>Uploaded: ${new Date(doc.uploadedAt).toLocaleDateString()}</p>
+                    ${doc.verifiedAt ? `<p>Verified: ${new Date(doc.verifiedAt).toLocaleDateString()}</p>` : ''}
+                    ${doc.rejectionReason ? `<p class="error">Reason: ${doc.rejectionReason}</p>` : ''}
+                </div>
+                <div class="document-status">
+                    <span class="status-badge ${doc.status}">${doc.status}</span>
+                </div>
+                <div class="document-actions">
+                    <a href="${doc.url}" target="_blank" class="btn-secondary">
+                        <i class="fas fa-eye"></i> View
+                    </a>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async uploadDocument(documentType, file) {
+        try {
+            this.showLoadingState('Uploading document...');
+            
+            const response = await this.dataManager.uploadDocument(documentType, file);
+            
+            if (response.success) {
+                this.showSuccess('Document uploaded successfully!');
+                // Reload documents
+                const documents = await this.dataManager.loadDocuments();
+                this.populateDocuments(documents);
+            }
+        } catch (error) {
+            console.error('❌ Error uploading document:', error);
+            this.showError('Failed to upload document. Please try again.');
+        } finally {
+            this.hideLoadingState();
+        }
+    }
+
+    // ============================================
+    // UTILITY METHODS
+    // ============================================
+    setInputValue(id, value) {
+        const input = document.getElementById(id);
+        if (input) input.value = value || '';
+    }
+
+    getInputValue(id) {
+        const input = document.getElementById(id);
+        return input ? input.value : '';
+    }
+
+    setCheckboxValue(id, checked) {
+        const checkbox = document.getElementById(id);
+        if (checkbox) checkbox.checked = !!checked;
+    }
+
+    getCheckboxValue(id) {
+        const checkbox = document.getElementById(id);
+        return checkbox ? checkbox.checked : false;
+    }
+
+    getCheckedValues(className) {
+        const checkboxes = document.querySelectorAll(`.${className}:checked`);
+        return Array.from(checkboxes).map(cb => cb.value);
+    }
+
+    updateCompletionBar(percentage) {
+        const bar = document.querySelector('.completion-bar-fill');
+        const text = document.querySelector('.completion-percentage');
+        
+        if (bar) bar.style.width = `${percentage}%`;
+        if (text) text.textContent = `${percentage}%`;
+    }
+
+    setupEventListeners() {
+        // Save buttons
+        document.querySelectorAll('[data-save-settings]').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const section = e.target.dataset.saveSettings;
+                await this.saveSection(section);
+            });
+        });
+
+        // Track changes
+        document.querySelectorAll('input, select, textarea').forEach(input => {
+            input.addEventListener('change', () => {
+                this.unsavedChanges = true;
+            });
+        });
+
+        // Warn before leaving with unsaved changes
+        window.addEventListener('beforeunload', (e) => {
+            if (this.unsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+    }
+
+    setupAutoSave() {
+        // Auto-save every 30 seconds if there are changes
+        setInterval(() => {
+            if (this.unsavedChanges) {
+                console.log('💾 Auto-saving settings...');
+                this.saveSection(this.currentTab);
+            }
+        }, 30000);
+    }
+
+    async saveSection(section) {
+        switch(section) {
+            case 'profile':
+                await this.saveProfileSettings();
+                break;
+            case 'notifications':
+                await this.saveNotificationSettings();
+                break;
+            case 'display':
+                await this.saveDisplaySettings();
+                break;
+            case 'investments':
+                await this.saveInvestmentPreferences();
+                break;
+            case 'privacy':
+                await this.savePrivacySettings();
+                break;
+        }
+    }
+
+    showLoadingState(message = 'Loading...') {
+        const loader = document.getElementById('settings-loader');
+        if (loader) {
+            loader.textContent = message;
+            loader.style.display = 'block';
+        }
+    }
+
+    hideLoadingState() {
+        const loader = document.getElementById('settings-loader');
+        if (loader) loader.style.display = 'none';
+    }
+
+    showSuccess(message) {
+        this.showToast(message, 'success');
+    }
+
+    showError(message) {
+        this.showToast(message, 'error');
+    }
+
+    showToast(message, type = 'info') {
+        // Use existing toast system or create simple one
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => toast.classList.add('show'), 100);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.settingsLoader = new SettingsProductionLoader();
+        window.settingsLoader.init();
+    });
+} else {
+    window.settingsLoader = new SettingsProductionLoader();
+    window.settingsLoader.init();
+}
