@@ -528,7 +528,7 @@ router.get('/kyc/status', authenticateUser, async (req, res) => {
 });
 
 // @route   POST /api/user/kyc/submit
-// @desc    Submit KYC verification data
+// @desc    Submit KYC verification data with OCR and ZimScore calculation
 // @access  Private
 router.post('/kyc/submit', authenticateUser, async (req, res) => {
     try {
@@ -536,6 +536,24 @@ router.post('/kyc/submit', authenticateUser, async (req, res) => {
         const kycData = req.body;
 
         console.log('📝 Submitting KYC data for user:', userId);
+
+        // OCR Processing (if document image provided)
+        let ocrData = null;
+        if (kycData.document_image) {
+            try {
+                // TODO: Integrate OCR service (Tesseract, Google Vision, AWS Textract)
+                // For now, we'll store the image and process later
+                console.log('📸 Document image received for OCR processing');
+                ocrData = {
+                    status: 'pending',
+                    document_type: kycData.id_type,
+                    uploaded_at: new Date().toISOString()
+                };
+            } catch (ocrError) {
+                console.error('⚠️ OCR processing failed:', ocrError);
+                // Continue without OCR - manual verification
+            }
+        }
 
         // Update profile with KYC data
         const { data: profile, error } = await supabase
@@ -558,12 +576,41 @@ router.post('/kyc/submit', authenticateUser, async (req, res) => {
 
         console.log('✅ KYC data saved successfully');
 
+        // Calculate initial ZimScore based on KYC data
+        // Note: Full ZimScore calculation requires bank statement upload
+        // This sets up the profile for score calculation
+        const { ZimScoreService } = require('../services/zimscore.service');
+        const zimScoreService = new ZimScoreService();
+        
+        let zimScore = null;
+        try {
+            // Get employment type from profile or KYC data
+            const employmentType = kycData.employment_type || 'informal';
+            
+            // Calculate initial score (will be updated when bank statement is uploaded)
+            const scoreData = await zimScoreService.calculateColdStartScore(userId, {
+                cashFlowRatio: 0, // Will be calculated from bank statement
+                averageBalance: 0,
+                nsfEvents: 0,
+                monthlyIncome: 0
+            }, employmentType);
+            
+            zimScore = scoreData.score;
+            console.log(`🎯 Initial ZimScore calculated: ${zimScore} (will update with bank statement)`);
+        } catch (scoreError) {
+            console.error('⚠️ ZimScore calculation failed:', scoreError);
+            // Continue without score - can be calculated later
+        }
+
         res.json({
             success: true,
             message: 'KYC verification submitted successfully',
             data: {
                 kyc_status: 'pending',
-                submitted_at: new Date().toISOString()
+                submitted_at: new Date().toISOString(),
+                ocr_status: ocrData?.status || 'not_provided',
+                zimscore: zimScore,
+                zimscore_calculated: zimScore !== null
             }
         });
     } catch (error) {

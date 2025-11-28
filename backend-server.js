@@ -23,6 +23,8 @@ try {
     console.log('✅ Dashboard routes loaded');
     var zimscoreRoutes = require('./routes/zimscore');
     console.log('✅ ZimScore routes loaded');
+    var kycOcrRoutes = require('./routes/kyc-ocr');
+    console.log('✅ KYC-OCR routes loaded');
     var paynowWebhookRoutes = require('./routes/paynow-webhook');
     console.log('✅ Paynow webhook routes loaded');
     var socialAuthRoutes = require('./routes/social-auth');
@@ -143,6 +145,8 @@ app.use('/api/dashboard', dashboardRoutes);
 console.log('✅ Dashboard routes registered');
 app.use('/api/zimscore', zimscoreRoutes);
 console.log('✅ ZimScore routes registered');
+app.use('/api/kyc-ocr', kycOcrRoutes);
+console.log('✅ KYC-OCR routes registered');
 app.use('/api/webhooks', paynowWebhookRoutes);
 console.log('✅ Paynow webhook routes registered');
 app.get('/terms', (req, res) => {
