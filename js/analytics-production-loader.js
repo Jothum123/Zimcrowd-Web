@@ -5,12 +5,14 @@
 
 class AnalyticsProductionLoader {
     constructor() {
-        this.dataManager = window.ProductionDataManager;
+        this.apiBase = window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api';
         this.charts = {};
         this.currentTimeframe = '30d';
         this.autoRefreshInterval = null;
         this.autoRefreshEnabled = true;
         this.refreshRate = 60000; // 60 seconds for analytics
+        this.analyticsData = null;
+        this.lastUpdate = null;
     }
 
     async init() {
@@ -38,62 +40,161 @@ class AnalyticsProductionLoader {
 
     async loadAllAnalytics() {
         try {
+            console.log('📊 Loading analytics data...');
             this.showLoadingState();
             
-            // Load all analytics data in parallel
-            const [
-                overview,
-                portfolioHistory,
-                loanDistribution,
-                monthlyActivity
-            ] = await Promise.all([
-                this.dataManager.loadAnalyticsDashboard(),
-                this.dataManager.loadPortfolioHistory(30),
-                this.dataManager.loadLoanDistribution(),
-                this.dataManager.loadMonthlyActivity(6)
+            // Load all analytics data in parallel from production API
+            const results = await Promise.allSettled([
+                this.loadOverviewStats(),
+                this.loadPortfolioPerformance(),
+                this.loadLoanDistribution(),
+                this.loadMonthlyActivity(),
+                this.loadInvestmentBreakdown(),
+                this.loadRevenueAnalytics()
             ]);
+
+            // Extract successful results
+            const [overview, portfolio, loans, activity, investments, revenue] = results.map(r => 
+                r.status === 'fulfilled' ? r.value : null
+            );
 
             // Store data
             this.analyticsData = {
-                overview,
-                portfolioHistory,
-                loanDistribution,
-                monthlyActivity,
+                overview: overview?.data || {},
+                portfolio: portfolio?.data || {},
+                loans: loans?.data || {},
+                activity: activity?.data || {},
+                investments: investments?.data || {},
+                revenue: revenue?.data || {},
                 lastUpdated: new Date()
             };
 
-            // Update displays
+            // Update all displays
             this.updateOverviewCards();
-            this.updateCharts();
+            this.updatePortfolioChart();
+            this.updateLoanDistributionChart();
+            this.updateMonthlyActivityChart();
+            this.updateInvestmentBreakdown();
+            this.updateRevenueMetrics();
+            this.updateLastRefreshTime();
             
             this.hideLoadingState();
+            this.lastUpdate = new Date();
             
-            console.log('✅ Analytics data loaded:', this.analyticsData);
+            console.log('✅ Analytics data loaded successfully');
         } catch (error) {
             console.error('❌ Error loading analytics:', error);
             this.hideLoadingState();
-            throw error;
+            this.showError('Failed to load analytics data');
         }
     }
 
+    // ========== PRODUCTION API METHODS ==========
+    
+    /**
+     * Load overview statistics
+     */
+    async loadOverviewStats() {
+        return await this.apiRequest('/analytics/overview');
+    }
+    
+    /**
+     * Load portfolio performance data
+     */
+    async loadPortfolioPerformance() {
+        const days = this.getTimeframeDays();
+        return await this.apiRequest(`/analytics/portfolio-performance?days=${days}`);
+    }
+    
+    /**
+     * Load loan distribution data
+     */
+    async loadLoanDistribution() {
+        return await this.apiRequest('/analytics/loan-distribution');
+    }
+    
+    /**
+     * Load monthly activity data
+     */
+    async loadMonthlyActivity() {
+        return await this.apiRequest('/analytics/monthly-activity?months=6');
+    }
+    
+    /**
+     * Load investment breakdown
+     */
+    async loadInvestmentBreakdown() {
+        return await this.apiRequest('/analytics/investment-breakdown');
+    }
+    
+    /**
+     * Load revenue analytics
+     */
+    async loadRevenueAnalytics() {
+        return await this.apiRequest('/analytics/revenue');
+    }
+    
+    /**
+     * API request helper
+     */
+    async apiRequest(endpoint, options = {}) {
+        const token = this.getAuthToken();
+        
+        try {
+            const response = await fetch(`${this.apiBase}${endpoint}`, {
+                ...options,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error(`API Request failed for ${endpoint}:`, error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Get auth token
+     */
+    getAuthToken() {
+        return localStorage.getItem('authToken') || 
+               localStorage.getItem('token') || 
+               localStorage.getItem('access_token');
+    }
+    
+    /**
+     * Get timeframe in days
+     */
+    getTimeframeDays() {
+        const timeframes = {
+            '7d': 7,
+            '30d': 30,
+            '90d': 90,
+            '1y': 365
+        };
+        return timeframes[this.currentTimeframe] || 30;
+    }
+    
+    // ========== UI UPDATE METHODS ==========
+    
     updateOverviewCards() {
-        if (!this.analyticsData.overview) return;
+        if (!this.analyticsData?.overview) return;
 
-        const { loans, investments, recentActivity } = this.analyticsData.overview;
+        const data = this.analyticsData.overview;
 
-        // Update loan stats
-        this.updateCard('total-loans', loans.total || 0);
-        this.updateCard('active-loans', loans.active || 0);
-        this.updateCard('total-loan-amount', this.formatCurrency(loans.totalAmount || 0));
-
-        // Update investment stats
-        this.updateCard('total-investments', investments.total || 0);
-        this.updateCard('total-invested', this.formatCurrency(investments.totalAmount || 0));
-        this.updateCard('total-returns', this.formatCurrency(investments.totalReturns || 0));
-        this.updateCard('roi-percentage', `${investments.roi || 0}%`);
-
-        // Update recent activity
-        this.updateRecentActivity(recentActivity || []);
+        // Update existing dashboard cards with production data
+        this.updateCard('portfolioGrowth', `+${(data.portfolio_growth || 0).toFixed(1)}%`);
+        this.updateCard('totalReturns', this.formatCurrency(data.total_returns || 0));
+        this.updateCard('avgReturnRate', `${(data.average_roi || 0).toFixed(1)}%`);
+        this.updateCard('riskScore', data.risk_score || 'Low');
     }
 
     updateCard(id, value) {
@@ -162,11 +263,11 @@ class AnalyticsProductionLoader {
     }
 
     createPortfolioChart() {
-        const canvas = document.getElementById('portfolio-chart');
-        if (!canvas || !this.analyticsData.portfolioHistory) return;
+        const canvas = document.getElementById('portfolioChart');
+        if (!canvas || !this.analyticsData?.portfolio) return;
 
         const ctx = canvas.getContext('2d');
-        const data = this.analyticsData.portfolioHistory;
+        const data = this.analyticsData.portfolio.history || [];
 
         // Destroy existing chart
         if (this.charts.portfolio) {
@@ -217,19 +318,23 @@ class AnalyticsProductionLoader {
     }
 
     createLoanDistributionChart() {
-        const canvas = document.getElementById('loan-distribution-chart');
-        if (!canvas || !this.analyticsData.loanDistribution) return;
+        const canvas = document.getElementById('allocationChart');
+        if (!canvas || !this.analyticsData?.loans) return;
 
         const ctx = canvas.getContext('2d');
-        const data = this.analyticsData.loanDistribution;
+        const data = this.analyticsData.loans;
 
         // Destroy existing chart
         if (this.charts.loanDistribution) {
             this.charts.loanDistribution.destroy();
         }
 
-        const statuses = Object.keys(data);
-        const values = Object.values(data);
+        const statuses = ['Active', 'Completed', 'Defaulted'];
+        const values = [
+            data.active || 0,
+            data.completed || 0,
+            data.defaulted || 0
+        ];
 
         this.charts.loanDistribution = new Chart(ctx, {
             type: 'doughnut',
@@ -384,6 +489,74 @@ class AnalyticsProductionLoader {
         if (this.charts.loanDistribution) this.createLoanDistributionChart();
         if (this.charts.monthlyActivity) this.createMonthlyActivityChart();
         if (this.charts.investmentBreakdown) this.createInvestmentBreakdownChart();
+    }
+    
+    updatePortfolioChart() {
+        if (!this.analyticsData?.portfolio) return;
+        this.createPortfolioChart();
+    }
+    
+    updateLoanDistributionChart() {
+        if (!this.analyticsData?.loans) return;
+        this.createLoanDistributionChart();
+    }
+    
+    updateMonthlyActivityChart() {
+        if (!this.analyticsData?.activity) return;
+        this.createMonthlyActivityChart();
+    }
+    
+    updateInvestmentBreakdown() {
+        if (!this.analyticsData?.investments) return;
+        
+        const container = document.getElementById('investment-breakdown-container');
+        if (!container) return;
+        
+        const data = this.analyticsData.investments;
+        const breakdown = data.breakdown || [];
+        
+        if (breakdown.length === 0) {
+            container.innerHTML = '<div class="empty-state"><p>No investment data available</p></div>';
+            return;
+        }
+        
+        container.innerHTML = breakdown.map(item => `
+            <div class="breakdown-item">
+                <div class="breakdown-label">${item.category}</div>
+                <div class="breakdown-bar">
+                    <div class="breakdown-fill" style="width: ${item.percentage}%; background: ${item.color}"></div>
+                </div>
+                <div class="breakdown-value">${this.formatCurrency(item.amount)} (${item.percentage}%)</div>
+            </div>
+        `).join('');
+    }
+    
+    updateRevenueMetrics() {
+        if (!this.analyticsData?.revenue) return;
+        
+        const data = this.analyticsData.revenue;
+        
+        this.updateCard('analytics-total-revenue', this.formatCurrency(data.total_revenue || 0));
+        this.updateCard('analytics-borrower-fees', this.formatCurrency(data.borrower_fees || 0));
+        this.updateCard('analytics-lender-fees', this.formatCurrency(data.lender_fees || 0));
+        this.updateCard('analytics-monthly-revenue', this.formatCurrency(data.monthly_revenue || 0));
+    }
+    
+    updateLastRefreshTime() {
+        const element = document.getElementById('analytics-last-update');
+        if (element && this.lastUpdate) {
+            const timeAgo = this.getTimeAgo(this.lastUpdate);
+            element.textContent = `Last updated ${timeAgo}`;
+        }
+    }
+    
+    getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        if (seconds < 60) return 'just now';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m ago`;
+        const hours = Math.floor(minutes / 60);
+        return `${hours}h ago`;
     }
 
     setupEventListeners() {
