@@ -5188,6 +5188,9 @@
                         <button class="btn-secondary" onclick="settingsLoader.revokeAllSessions()">
                             <i class="fas fa-sign-out-alt"></i> Revoke All Other Sessions
                         </button>
+                        <button class="btn-primary" onclick="saveSecuritySettings()">
+                            <i class="fas fa-save"></i> Save Security Settings
+                        </button>
                     </div>
                 </div>
             </div>
@@ -5376,6 +5379,9 @@
                             <span>Enable quiet hours (no notifications during specified time)</span>
                         </label>
                     </div>
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="saveNotificationSettings()">
+                        <i class="fas fa-save"></i> Save Notification Settings
+                    </button>
                 </div>
 
                 <!-- Recent Notifications -->
@@ -5490,7 +5496,7 @@
                             </select>
                         </div>
                     </div>
-                    <button class="btn-primary" style="margin-top: 20px;" onclick="settingsLoader.saveInvestmentPreferences()">
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="saveInvestmentSettings()">
                         <i class="fas fa-save"></i> Save Investment Preferences
                     </button>
                 </div>
@@ -9482,94 +9488,183 @@ How it works:
             }
         }
 
-        async function saveSecuritySettings() {
-            const twoFactorEnabled = document.getElementById('twoFactorAuth')?.checked || false;
-            
-            try {
-                const response = await window.ZimCrowdAPI.updateSecuritySettings({ two_factor_enabled: twoFactorEnabled });
-                if (response.success) {
-                    alert('Security settings saved successfully!');
-                } else {
-                    alert('Failed to save security settings');
-                }
-            } catch (error) {
-                console.error('Security settings error:', error);
-                alert('Failed to save security settings');
-            }
-        }
-
         // Notifications Tab Functions
         async function saveNotificationSettings() {
+            const apiBase = window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api';
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
+            
             const settings = {
-                email_loan_reminders: document.getElementById('emailLoanReminders')?.checked || false,
-                email_investment_returns: document.getElementById('emailInvestmentReturns')?.checked || false,
-                email_loan_opportunities: document.getElementById('emailLoanOpportunities')?.checked || false,
-                email_marketing: document.getElementById('emailMarketing')?.checked || false,
-                push_transaction_alerts: document.getElementById('pushTransactionAlerts')?.checked || false,
-                push_account_activity: document.getElementById('pushAccountActivity')?.checked || false,
-                push_promotional: document.getElementById('pushPromotional')?.checked || false
+                notifications_email: document.getElementById('emailLoanReminders')?.checked || false,
+                notifications_push: document.getElementById('pushTransactionAlerts')?.checked || false,
+                notifications_sms: document.getElementById('smsNotifications')?.checked || false,
+                loan_updates: document.getElementById('emailLoanReminders')?.checked || false,
+                investment_updates: document.getElementById('emailInvestmentReturns')?.checked || false,
+                payment_alerts: document.getElementById('pushTransactionAlerts')?.checked || false,
+                security_alerts: document.getElementById('emailSecurityAlerts')?.checked || true,
+                marketing_emails: document.getElementById('emailMarketing')?.checked || false,
+                weekly_reports: document.getElementById('emailWeeklySummary')?.checked || false
             };
             
             try {
-                const response = await window.ZimCrowdAPI.updateNotificationSettings(settings);
-                if (response.success) {
-                    alert('Notification preferences saved successfully!');
+                const response = await fetch(`${apiBase}/settings/notifications`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('success', 'Saved', 'Notification preferences saved successfully!');
                 } else {
-                    alert('Failed to save notification preferences');
+                    showToast('error', 'Error', 'Failed to save notification preferences');
                 }
             } catch (error) {
                 console.error('Notification settings error:', error);
-                alert('Failed to save notification preferences');
+                showToast('error', 'Error', 'Failed to save notification preferences');
             }
         }
 
         // Display Tab Functions
         async function saveDisplaySettings() {
+            const apiBase = window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api';
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
+            
             const settings = {
                 language: document.getElementById('displayLanguage')?.value || 'en',
                 currency: document.getElementById('displayCurrency')?.value || 'USD',
                 date_format: document.getElementById('displayDateFormat')?.value || 'DD/MM/YYYY',
                 show_animations: document.getElementById('displayAnimations')?.checked || false,
-                compact_view: document.getElementById('displayCompactView')?.checked || false
+                compact_mode: document.getElementById('displayCompactView')?.checked || false,
+                theme: 'dark'
             };
             
             try {
-                const response = await window.ZimCrowdAPI.updateDisplaySettings(settings);
-                if (response.success) {
-                    alert('Display settings saved successfully!');
-                    // Optionally reload page to apply settings
-                    // location.reload();
+                const response = await fetch(`${apiBase}/settings/display`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('success', 'Saved', 'Display settings saved successfully!');
                 } else {
-                    alert('Failed to save display settings');
+                    showToast('error', 'Error', 'Failed to save display settings');
                 }
             } catch (error) {
                 console.error('Display settings error:', error);
-                alert('Failed to save display settings');
+                showToast('error', 'Error', 'Failed to save display settings');
             }
         }
 
         // Privacy Tab Functions
         async function savePrivacySettings() {
+            const apiBase = window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api';
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
+            
             const settings = {
-                profile_visibility: document.getElementById('profileVisibility')?.value || 'public',
-                show_portfolio: document.getElementById('showPortfolio')?.checked || false,
-                show_loan_history: document.getElementById('showLoanHistory')?.checked || false,
+                profile_visibility: document.getElementById('portfolioVisibility')?.value || 'private',
+                show_investments: !document.getElementById('hideInvestmentAmounts')?.checked,
+                show_loans: !document.getElementById('hideReturns')?.checked,
                 allow_messages: document.getElementById('allowMessages')?.checked || false,
-                allow_cookies: document.getElementById('allowCookies')?.checked || false,
-                share_data: document.getElementById('shareData')?.checked || false,
-                third_party_analytics: document.getElementById('thirdPartyAnalytics')?.checked || false
+                data_sharing: document.getElementById('dataSharing')?.checked || false,
+                analytics_tracking: document.getElementById('analyticsTracking')?.checked || false,
+                third_party_sharing: document.getElementById('thirdPartySharing')?.checked || false
             };
             
             try {
-                const response = await window.ZimCrowdAPI.updatePrivacySettings(settings);
-                if (response.success) {
-                    alert('Privacy settings saved successfully!');
+                const response = await fetch(`${apiBase}/settings/privacy`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('success', 'Saved', 'Privacy settings saved successfully!');
+                    // Recalculate privacy score
+                    if (window.settingsLoader) {
+                        window.settingsLoader.populatePrivacyForm(settings);
+                    }
                 } else {
-                    alert('Failed to save privacy settings');
+                    showToast('error', 'Error', 'Failed to save privacy settings');
                 }
             } catch (error) {
                 console.error('Privacy settings error:', error);
-                alert('Failed to save privacy settings');
+                showToast('error', 'Error', 'Failed to save privacy settings');
+            }
+        }
+        
+        // Investment Tab Functions
+        async function saveInvestmentSettings() {
+            const apiBase = window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api';
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
+            
+            const settings = {
+                auto_invest: document.getElementById('autoInvestEnabled')?.checked || false,
+                auto_invest_amount: parseFloat(document.getElementById('autoInvestAmount')?.value) || 0,
+                max_loan_amount: parseFloat(document.getElementById('maxInvestmentAmount')?.value) || 0,
+                risk_tolerance: document.getElementById('riskTolerance')?.value || 'moderate',
+                min_return_rate: parseFloat(document.getElementById('minReturnRate')?.value) || 8,
+                min_zimscore: parseInt(document.getElementById('minZimScore')?.value) || 50
+            };
+            
+            try {
+                const response = await fetch(`${apiBase}/settings/investment-preferences`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('success', 'Saved', 'Investment preferences saved successfully!');
+                } else {
+                    showToast('error', 'Error', 'Failed to save investment preferences');
+                }
+            } catch (error) {
+                console.error('Investment settings error:', error);
+                showToast('error', 'Error', 'Failed to save investment preferences');
+            }
+        }
+        
+        // Security Tab Functions
+        async function saveSecuritySettings() {
+            const apiBase = window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api';
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
+            
+            const settings = {
+                two_factor_enabled: document.getElementById('twoFactorAuth')?.checked || false,
+                login_notifications: document.getElementById('loginNotifications')?.checked || true,
+                session_timeout: parseInt(document.getElementById('sessionTimeout')?.value) || 30
+            };
+            
+            try {
+                const response = await fetch(`${apiBase}/settings/security`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('success', 'Saved', 'Security settings saved successfully!');
+                } else {
+                    showToast('error', 'Error', 'Failed to save security settings');
+                }
+            } catch (error) {
+                console.error('Security settings error:', error);
+                showToast('error', 'Error', 'Failed to save security settings');
             }
         }
 
