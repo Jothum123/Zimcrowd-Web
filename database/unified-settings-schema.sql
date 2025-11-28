@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS public.investment_preferences (
     min_interest_rate DECIMAL(5, 2) DEFAULT 5.0 CHECK (min_interest_rate >= 0),
     max_interest_rate DECIMAL(5, 2) DEFAULT 15.0 CHECK (max_interest_rate >= min_interest_rate),
     preferred_loan_terms INTEGER[] DEFAULT ARRAY[3, 6, 12],
-    min_zimscore INTEGER DEFAULT 500 CHECK (min_zimscore >= 300 AND min_zimscore <= 850),
+    min_zimscore INTEGER DEFAULT 50 CHECK (min_zimscore >= 30 AND min_zimscore <= 85),
     
     -- Auto-Invest Settings
     auto_invest_enabled BOOLEAN DEFAULT FALSE,

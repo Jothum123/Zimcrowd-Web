@@ -30,19 +30,19 @@ This guide covers the complete implementation of:
 
 ```javascript
 New User: 8%
-Low Score (300-500): 7%
-Medium Score (500-650): 6%
-High Score (650-850): 5%
+Low Score (30-50): 7%
+Medium Score (50-65): 6%
+High Score (65-85): 5%
 ```
 
 ### **Credit Scoring Logic:**
 
 ```javascript
 ZimDirect Eligibility:
-- New users: Approved (start at ZimScore 300)
-- Low score (300-500): Approved with higher interest
-- Medium score (500-650): Approved with standard interest
-- High score (650-850): Approved with lower interest
+- New users: Approved (start at ZimScore 30)
+- Low score (30-50): Approved with higher interest
+- Medium score (50-65): Approved with standard interest
+- High score (65-85): Approved with lower interest
 - Account in arrears: REJECTED
 - Active defaults: REJECTED
 ```
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS public.p2p_primary_market (
     purpose TEXT NOT NULL,
     loan_type VARCHAR(50) NOT NULL,
     risk_score VARCHAR(5) CHECK (risk_score IN ('A', 'B', 'C', 'D', 'E')),
-    zimscore INTEGER CHECK (zimscore >= 300 AND zimscore <= 850),
+    zimscore INTEGER CHECK (zimscore >= 30 AND zimscore <= 85),
     
     -- Status
     status VARCHAR(20) DEFAULT 'funding' CHECK (status IN ('funding', 'funded', 'cancelled', 'expired')),
@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS public.zimdirect_loans (
     monthly_payment DECIMAL(15, 2) NOT NULL,
     
     -- Credit Assessment
-    zimscore_at_application INTEGER CHECK (zimscore_at_application >= 300 AND zimscore_at_application <= 850),
+    zimscore_at_application INTEGER CHECK (zimscore_at_application >= 30 AND zimscore_at_application <= 85),
     credit_tier VARCHAR(20) CHECK (credit_tier IN ('new_user', 'low_score', 'medium_score', 'high_score')),
     risk_assessment JSONB DEFAULT '{}',
     
@@ -451,7 +451,7 @@ async function checkZimDirectEligibility(user_id) {
         .eq('user_id', user_id)
         .single();
     
-    const zimscore = profile?.zimscore || 300; // Default for new users
+    const zimscore = profile?.zimscore || 30; // Default for new users
     
     // Check for arrears (overdue payments)
     const { data: arrears } = await supabase
@@ -516,9 +516,9 @@ async function checkZimDirectEligibility(user_id) {
     let credit_tier;
     if (is_new_user) {
         credit_tier = 'new_user';
-    } else if (zimscore < 500) {
+    } else if (zimscore < 50) {
         credit_tier = 'low_score';
-    } else if (zimscore < 650) {
+    } else if (zimscore < 65) {
         credit_tier = 'medium_score';
     } else {
         credit_tier = 'high_score';
@@ -549,9 +549,9 @@ async function checkZimDirectEligibility(user_id) {
 function calculateInterestRate(credit_tier, zimscore) {
     const rates = {
         'new_user': 8.0,      // 8% for new users
-        'low_score': 7.0,     // 7% for low score (300-500)
-        'medium_score': 6.0,  // 6% for medium score (500-650)
-        'high_score': 5.0      // 5% for high score (650-850)
+        'low_score': 7.0,     // 7% for low score (30-50)
+        'medium_score': 6.0,  // 6% for medium score (50-65)
+        'high_score': 5.0      // 5% for high score (65-85)
     };
     
     return rates[credit_tier] || 12.0;

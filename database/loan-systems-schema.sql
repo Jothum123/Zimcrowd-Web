@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS public.p2p_primary_market (
     purpose TEXT NOT NULL,
     loan_type VARCHAR(50) NOT NULL,
     risk_score VARCHAR(5) CHECK (risk_score IN ('A', 'B', 'C', 'D', 'E')),
-    zimscore INTEGER CHECK (zimscore >= 300 AND zimscore <= 850),
+    zimscore INTEGER CHECK (zimscore >= 30 AND zimscore <= 85),
     
     -- Status
     status VARCHAR(20) DEFAULT 'funding' CHECK (status IN ('funding', 'funded', 'cancelled', 'expired')),
@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS public.zimdirect_loans (
     monthly_payment DECIMAL(15, 2) NOT NULL,
     
     -- Credit Assessment
-    zimscore_at_application INTEGER CHECK (zimscore_at_application >= 300 AND zimscore_at_application <= 850),
+    zimscore_at_application INTEGER CHECK (zimscore_at_application >= 30 AND zimscore_at_application <= 85),
     credit_tier VARCHAR(20) CHECK (credit_tier IN ('new_user', 'low_score', 'medium_score', 'high_score')),
     risk_assessment JSONB DEFAULT '{}',
     
