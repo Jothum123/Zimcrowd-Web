@@ -206,13 +206,16 @@ class ZimScoreService {
                 financialData
             );
 
-            const maxLoanAmount = coldStartResult.coldStartLimit;
+            // COLD START OVERRIDE: All new users start with $100 limit
+            const maxLoanAmount = 100; // Fixed $100 for all new users
             const scoreBasedLimit = this.calculateMaxLoanAmount(score); // Unlocked after first repayment
+            const dtniBasedLimit = coldStartResult.coldStartLimit; // For reference only
             const installmentUtilization = coldStartResult.installmentUtilization || 0;
             const dtniStatus = coldStartResult.status;
 
             console.log(`✅ Cold Start Score: ${score}/85 (${starRating}⭐) - Risk Level: ${riskLevel}`);
-            console.log(`💰 Cold Start Limit: $${maxLoanAmount} (Installment Utilization: ${(installmentUtilization * 100).toFixed(1)}% - ${dtniStatus})`);
+            console.log(`💰 Cold Start Limit: $100 (FIXED for all new users)`);
+            console.log(`📊 DTNI-based Limit: $${dtniBasedLimit} (for reference)`);
             console.log(`📊 Score-based Limit: $${scoreBasedLimit} (unlocks after first repayment)`);
 
             // Save to database
@@ -396,25 +399,40 @@ class ZimScoreService {
             );
 
             const newStarRating = this.calculateStarRating(newScore);
-            const newMaxLoanAmount = this.calculateMaxLoanAmount(newScore);
+            const scoreBasedLimit = this.calculateMaxLoanAmount(newScore);
             const newRiskLevel = this.getRiskLevel(newScore);
 
             // Remove cold start override after first repayment
-            const coldStartRemoved = currentScore.cold_start_active && loanEvent.type === 'LOAN_REPAID_ON_TIME';
-            if (coldStartRemoved) {
+            const coldStartActive = currentScore.cold_start_active || false;
+            const isFirstRepayment = coldStartActive && (loanEvent.type === 'LOAN_REPAID_ON_TIME' || loanEvent.type === 'LOAN_REPAID_EARLY');
+            
+            // Determine new max loan amount
+            let newMaxLoanAmount;
+            if (isFirstRepayment) {
+                // Unlock score-based limit after first successful repayment
+                newMaxLoanAmount = scoreBasedLimit;
                 console.log(`🎉 Cold Start Removed! Limit unlocked: $100 → $${newMaxLoanAmount}`);
+            } else if (coldStartActive) {
+                // Still in cold start, keep $100 limit
+                newMaxLoanAmount = 100;
+            } else {
+                // Already past cold start, use score-based limit
+                newMaxLoanAmount = scoreBasedLimit;
             }
 
             console.log(`✅ Score updated: ${currentScore.score_value} -> ${newScore} (${scoreChange >= 0 ? '+' : ''}${scoreChange}) - Reputation: ${newRiskLevel}`);
+            console.log(`💰 New Limit: $${newMaxLoanAmount} (Score-based: $${scoreBasedLimit})`);
 
             // Update in database
             await this.saveZimScore(userId, {
                 scoreValue: newScore,
                 starRating: newStarRating,
                 maxLoanAmount: newMaxLoanAmount,
+                scoreBasedLimit: scoreBasedLimit,
                 riskLevel: newRiskLevel,
                 factors,
-                calculationMethod: 'trust_loop'
+                calculationMethod: 'trust_loop',
+                coldStartActive: !isFirstRepayment && coldStartActive
             });
 
             // Record in history
