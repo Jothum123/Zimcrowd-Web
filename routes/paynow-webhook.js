@@ -26,8 +26,13 @@ router.post('/paynow', async (req, res) => {
             amount,
             status,             // Paid, Awaiting Delivery, Delivered, Cancelled, etc.
             pollurl,
-            hash                // Security hash
+            hash,               // Security hash
+            currency            // Currency from PayNow (USD or ZWG)
         } = req.body;
+        
+        // Validate and default currency
+        const detectedCurrency = ['USD', 'ZWG'].includes(currency) ? currency : 'USD';
+        console.log(`💱 Payment currency detected: ${detectedCurrency}`);
 
         // TODO: Verify webhook signature/hash
         // const isValid = verifyPaynowHash(req.body, process.env.PAYNOW_INTEGRATION_KEY);
@@ -61,6 +66,7 @@ router.post('/paynow', async (req, res) => {
                 status: newStatus,
                 paynow_reference: paynowreference,
                 paynow_poll_url: pollurl,
+                currency: detectedCurrency, // Store PayNow-detected currency
                 paid_at: newStatus === 'paid' ? new Date().toISOString() : null,
                 updated_at: new Date().toISOString()
             })
@@ -78,13 +84,42 @@ router.post('/paynow', async (req, res) => {
         if (newStatus === 'paid') {
             console.log('✅ Payment confirmed:', payment.reference);
 
+            // Create wallet transaction with detected currency
+            if (payment.user_id) {
+                try {
+                    await supabase
+                        .from('transactions')
+                        .insert({
+                            user_id: payment.user_id,
+                            type: 'deposit',
+                            amount: parseFloat(amount),
+                            currency: detectedCurrency, // Use PayNow-detected currency
+                            status: 'completed',
+                            payment_method: 'paynow',
+                            reference: reference,
+                            paynow_reference: paynowreference,
+                            description: `Deposit via PayNow (${detectedCurrency})`,
+                            created_at: new Date().toISOString()
+                        });
+                    
+                    console.log(`💰 Wallet transaction created: ${amount} ${detectedCurrency}`);
+                } catch (txError) {
+                    console.error('Failed to create wallet transaction:', txError);
+                }
+            }
+
             // Log payment event
             await supabase
                 .from('payment_logs')
                 .insert({
                     transaction_id: payment.id,
                     event_type: 'payment_confirmed',
-                    event_data: { paynow_reference: paynowreference, amount, status }
+                    event_data: { 
+                        paynow_reference: paynowreference, 
+                        amount, 
+                        status,
+                        currency: detectedCurrency 
+                    }
                 });
 
             // Trigger ZimScore update if user_id exists
