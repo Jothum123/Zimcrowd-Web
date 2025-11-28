@@ -169,7 +169,7 @@ app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 app.use('/api/loans', loansRoutes);
-console.log('✅ Loans routes registered at /api/loans-test');
+console.log('✅ Loans routes registered');
 app.use('/api/investments', investmentsRoutes);
 console.log('✅ Investments routes registered');
 app.use('/api/transactions', transactionsRoutes);

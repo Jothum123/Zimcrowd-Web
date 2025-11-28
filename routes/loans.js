@@ -639,8 +639,59 @@ router.get('/stats', authenticateUser, async (req, res) => {
     }
 });
 
+// @route   GET /api/loans
+// @desc    Get user's loans (root route for dashboard)
+// @access  Private
+router.get('/', authenticateUser, async (req, res) => {
+    try {
+        const { page = 1, limit = 10, status } = req.query;
+        const offset = (page - 1) * limit;
+        
+        let query = supabase
+            .from('loans')
+            .select(`
+                *,
+                loan_installments(
+                    id,
+                    installment_number,
+                    due_date,
+                    total_amount,
+                    status,
+                    paid_at
+                )
+            `)
+            .eq('user_id', req.user.id)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
+            
+        if (status) {
+            query = query.eq('status', status);
+        }
+        
+        const { data: loans, error } = await query;
+        
+        if (error) throw error;
+        
+        res.json({
+            success: true,
+            data: loans || [],
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total: loans?.length || 0
+            }
+        });
+    } catch (error) {
+        console.error('Get loans error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch loans'
+        });
+    }
+});
+
 // @route   GET /api/loans/my-loans
-// @desc    Get user's loans
+// @desc    Get user's loans (alias for compatibility)
 // @access  Private
 router.get('/my-loans', authenticateUser, async (req, res) => {
     try {
