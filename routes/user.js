@@ -493,6 +493,40 @@ router.put('/profile', authenticateUser, async (req, res) => {
     }
 });
 
+// @route   GET /api/user/kyc/status
+// @desc    Get user's KYC status
+// @access  Private
+router.get('/kyc/status', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Get profile with KYC fields
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('kyc_status, is_verified, verification_date')
+            .eq('id', userId)
+            .single();
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            data: {
+                kyc_status: profile?.kyc_status || 'pending',
+                is_verified: profile?.is_verified || false,
+                verification_date: profile?.verification_date || null
+            }
+        });
+    } catch (error) {
+        console.error('❌ Error fetching KYC status:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch KYC status',
+            error: error.message
+        });
+    }
+});
+
 // @route   PUT /api/user/notification-settings
 // @desc    Update notification settings
 // @access  Private
