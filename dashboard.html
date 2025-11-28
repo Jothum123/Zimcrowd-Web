@@ -5441,25 +5441,25 @@
                 </div>
             </div>
 
-            <!-- Investment Preferences Tab -->
+            <!-- Investment Preferences Tab - Loaded from API -->
             <div id="investment-tab" class="tab-content">
                 <div class="loan-card">
                     <h3 style="margin-bottom: 20px;">Auto-Investment Settings</h3>
                     <div style="display: flex; flex-direction: column; gap: 20px;">
                         <div>
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 15px;">
-                                <input type="checkbox" style="width: 20px; height: 20px;">
+                                <input type="checkbox" id="autoInvestEnabled" style="width: 20px; height: 20px;">
                                 <span style="font-weight: 600;">Enable Auto-Invest</span>
                             </label>
                             <p style="color: #94a3b8; font-size: 13px; margin-left: 30px;">Automatically invest in loans that match your criteria</p>
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 12px; color: #94a3b8; font-size: 14px; font-weight: 600;">Investment Amount per Loan</label>
-                            <input type="number" placeholder="$100" style="width: 100%; max-width: 300px;">
+                            <input type="number" id="autoInvestAmount" placeholder="$100" style="width: 100%; max-width: 300px;">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 12px; color: #94a3b8; font-size: 14px; font-weight: 600;">Maximum Total Investment</label>
-                            <input type="number" placeholder="$5000" style="width: 100%; max-width: 300px;">
+                            <input type="number" id="maxInvestmentAmount" placeholder="$5000" style="width: 100%; max-width: 300px;">
                         </div>
                     </div>
                 </div>
@@ -5469,61 +5469,34 @@
                     <div style="display: flex; flex-direction: column; gap: 20px;">
                         <div>
                             <label style="display: block; margin-bottom: 12px; color: #94a3b8; font-size: 14px; font-weight: 600;">Preferred Risk Level</label>
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                    <input type="checkbox" checked style="width: 18px; height: 18px;">
-                                    <span style="color: var(--color-green);">Low Risk</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                    <input type="checkbox" checked style="width: 18px; height: 18px;">
-                                    <span style="color: #f59e0b;">Medium Risk</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                    <input type="checkbox" style="width: 18px; height: 18px;">
-                                    <span style="color: #ef4444;">High Risk</span>
-                                </label>
-                            </div>
+                            <select id="riskTolerance" style="width: 100%; max-width: 300px;">
+                                <option value="conservative">Conservative (Low Risk)</option>
+                                <option value="moderate">Moderate (Balanced)</option>
+                                <option value="aggressive">Aggressive (High Risk)</option>
+                            </select>
                         </div>
                         <div>
-                            <label style="display: block; margin-bottom: 12px; color: #94a3b8; font-size: 14px; font-weight: 600;">Loan Categories</label>
-                            <div style="display: flex; flex-direction: column; gap: 10px;">
-                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                    <input type="checkbox" checked style="width: 18px; height: 18px;">
-                                    <span>Education Loans</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                    <input type="checkbox" checked style="width: 18px; height: 18px;">
-                                    <span>Business Loans</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                    <input type="checkbox" checked style="width: 18px; height: 18px;">
-                                    <span>Medical Loans</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                    <input type="checkbox" style="width: 18px; height: 18px;">
-                                    <span>Home Improvement</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                    <input type="checkbox" style="width: 18px; height: 18px;">
-                                    <span>Agricultural Loans</span>
-                                </label>
-                            </div>
+                            <label style="display: block; margin-bottom: 12px; color: #94a3b8; font-size: 14px; font-weight: 600;">Minimum Return Rate (%)</label>
+                            <input type="number" id="minReturnRate" placeholder="8" step="0.5" min="0" max="50" style="width: 100%; max-width: 300px;">
                         </div>
                         <div>
-                            <label style="display: block; margin-bottom: 12px; color: #94a3b8; font-size: 14px; font-weight: 600;">Minimum Borrower Rating</label>
-                            <select style="width: 100%; max-width: 300px;">
-                                <option>Any Rating</option>
-                                <option>3+ Stars</option>
-                                <option selected>4+ Stars</option>
-                                <option>4.5+ Stars</option>
+                            <label style="display: block; margin-bottom: 12px; color: #94a3b8; font-size: 14px; font-weight: 600;">Minimum Borrower ZimScore</label>
+                            <select id="minZimScore" style="width: 100%; max-width: 300px;">
+                                <option value="30">Any Score (30+)</option>
+                                <option value="40">40+ (Fair)</option>
+                                <option value="50">50+ (Good)</option>
+                                <option value="60">60+ (Very Good)</option>
+                                <option value="70">70+ (Excellent)</option>
                             </select>
                         </div>
                     </div>
-                    <button class="btn-primary" style="margin-top: 20px;">Save Investment Preferences</button>
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="settingsLoader.saveInvestmentPreferences()">
+                        <i class="fas fa-save"></i> Save Investment Preferences
+                    </button>
                 </div>
             </div>
 
-            <!-- Investment Privacy Tab -->
+            <!-- Privacy Tab - Loaded from API -->
             <div id="privacy-tab" class="tab-content">
                 <!-- Privacy Overview -->
                 <div class="loan-card" style="margin-bottom: 20px;">
@@ -5534,14 +5507,14 @@
                                 <i class="fas fa-shield-alt" style="color: #10b981; font-size: 24px;"></i>
                                 <div>
                                     <h4 style="color: #10b981; margin: 0;">Privacy Level</h4>
-                                    <p style="color: #94a3b8; font-size: 12px; margin: 0;">High Security</p>
+                                    <p id="privacy-level-text" style="color: #94a3b8; font-size: 12px; margin: 0;">Loading...</p>
                                 </div>
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <div style="flex: 1; background: rgba(16, 185, 129, 0.2); height: 6px; border-radius: 3px;">
-                                    <div style="width: 90%; height: 100%; background: #10b981; border-radius: 3px;"></div>
+                                    <div id="privacy-score-bar" style="width: 0%; height: 100%; background: #10b981; border-radius: 3px; transition: width 0.5s;"></div>
                                 </div>
-                                <span style="color: #10b981; font-size: 12px; font-weight: 600;">90%</span>
+                                <span id="privacy-score-text" style="color: #10b981; font-size: 12px; font-weight: 600;">0%</span>
                             </div>
                         </div>
                         <div style="background: rgba(59, 130, 246, 0.1); padding: 20px; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">
@@ -5549,7 +5522,7 @@
                                 <i class="fas fa-eye-slash" style="color: #3b82f6; font-size: 24px;"></i>
                                 <div>
                                     <h4 style="color: #3b82f6; margin: 0;">Hidden Data</h4>
-                                    <p style="color: #94a3b8; font-size: 12px; margin: 0;">5 categories</p>
+                                    <p id="hidden-data-count" style="color: #94a3b8; font-size: 12px; margin: 0;">Loading...</p>
                                 </div>
                             </div>
                             <button class="btn-secondary" style="font-size: 12px; padding: 6px 12px;" onclick="reviewHiddenData()">
@@ -5808,7 +5781,7 @@
                 </div>
             </div>
 
-            <!-- Documents Tab -->
+            <!-- Documents Tab - Loaded from API -->
             <div id="documents-tab" class="tab-content">
                 <!-- Document Overview -->
                 <div class="loan-card" style="margin-bottom: 20px;">
@@ -5819,28 +5792,28 @@
                                 <i class="fas fa-check-circle" style="color: #10b981;"></i>
                                 <span style="font-weight: 600; color: #10b981;">Verified</span>
                             </div>
-                            <p style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">4</p>
+                            <p id="docs-verified-count" style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">0</p>
                         </div>
                         <div style="background: rgba(245, 158, 11, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.3);">
                             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
                                 <i class="fas fa-clock" style="color: #f59e0b;"></i>
                                 <span style="font-weight: 600; color: #f59e0b;">Pending</span>
                             </div>
-                            <p style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">1</p>
+                            <p id="docs-pending-count" style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">0</p>
                         </div>
                         <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
                             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
                                 <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i>
                                 <span style="font-weight: 600; color: #ef4444;">Missing</span>
                             </div>
-                            <p style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">1</p>
+                            <p id="docs-missing-count" style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">0</p>
                         </div>
                         <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
                             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
                                 <i class="fas fa-file-alt" style="color: #3b82f6;"></i>
                                 <span style="font-weight: 600; color: #3b82f6;">Total Docs</span>
                             </div>
-                            <p style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">12</p>
+                            <p id="docs-total-count" style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">0</p>
                         </div>
                     </div>
                     <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">

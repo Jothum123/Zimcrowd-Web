@@ -437,41 +437,34 @@ class SettingsProductionLoader {
     // INVESTMENT PREFERENCES
     // ============================================
     populateInvestmentForm(preferences) {
-        this.setInputValue('riskTolerance', preferences.riskTolerance);
-        this.setCheckboxValue('autoInvest', preferences.autoInvest);
+        // Auto-invest settings
+        this.setCheckboxValue('autoInvestEnabled', preferences.autoInvest);
         this.setInputValue('autoInvestAmount', preferences.autoInvestAmount);
+        this.setInputValue('maxInvestmentAmount', preferences.maxLoanAmount);
+        
+        // Risk settings
+        this.setInputValue('riskTolerance', preferences.riskTolerance);
         this.setInputValue('minReturnRate', preferences.minReturnRate);
-        this.setInputValue('maxLoanAmount', preferences.maxLoanAmount);
-        this.setInputValue('diversificationLevel', preferences.diversificationLevel);
+        this.setInputValue('minZimScore', preferences.minZimScore || '50');
         
-        // Handle arrays
-        if (preferences.investmentGoals) {
-            preferences.investmentGoals.forEach(goal => {
-                this.setCheckboxValue(`goal_${goal}`, true);
-            });
-        }
-        
-        if (preferences.preferredSectors) {
-            preferences.preferredSectors.forEach(sector => {
-                this.setCheckboxValue(`sector_${sector}`, true);
-            });
-        }
+        console.log('✅ Investment preferences loaded:', preferences);
     }
 
     async saveInvestmentPreferences() {
         try {
             const preferences = {
                 risk_tolerance: this.getInputValue('riskTolerance'),
-                auto_invest: this.getCheckboxValue('autoInvest'),
+                auto_invest: this.getCheckboxValue('autoInvestEnabled'),
                 auto_invest_amount: parseFloat(this.getInputValue('autoInvestAmount')) || 0,
+                max_loan_amount: parseFloat(this.getInputValue('maxInvestmentAmount')) || 0,
                 min_return_rate: parseFloat(this.getInputValue('minReturnRate')) || 0,
-                max_loan_amount: parseFloat(this.getInputValue('maxLoanAmount')) || 0,
-                diversification_level: this.getInputValue('diversificationLevel'),
-                investment_goals: this.getCheckedValues('investment-goal'),
-                preferred_sectors: this.getCheckedValues('preferred-sector')
+                min_zimscore: parseInt(this.getInputValue('minZimScore')) || 50
             };
 
-            const response = await this.dataManager.saveInvestmentPreferences(preferences);
+            const response = await this.apiRequest('/settings/investment-preferences', {
+                method: 'PUT',
+                body: JSON.stringify(preferences)
+            });
             
             if (response.success) {
                 this.showSuccess('Investment preferences updated!');
@@ -487,13 +480,50 @@ class SettingsProductionLoader {
     // PRIVACY SETTINGS
     // ============================================
     populatePrivacyForm(settings) {
-        this.setInputValue('profileVisibility', settings.profileVisibility);
-        this.setCheckboxValue('showInvestments', settings.showInvestments);
-        this.setCheckboxValue('showLoans', settings.showLoans);
+        this.setInputValue('portfolioVisibility', settings.profileVisibility);
+        this.setCheckboxValue('hideInvestmentAmounts', !settings.showInvestments);
+        this.setCheckboxValue('hideReturns', !settings.showLoans);
         this.setCheckboxValue('allowMessages', settings.allowMessages);
         this.setCheckboxValue('dataSharing', settings.dataSharing);
         this.setCheckboxValue('analyticsTracking', settings.analyticsTracking);
         this.setCheckboxValue('thirdPartySharing', settings.thirdPartySharing);
+        
+        // Calculate privacy score
+        const privacyScore = this.calculatePrivacyScore(settings);
+        const scoreBar = document.getElementById('privacy-score-bar');
+        const scoreText = document.getElementById('privacy-score-text');
+        const levelText = document.getElementById('privacy-level-text');
+        const hiddenCount = document.getElementById('hidden-data-count');
+        
+        if (scoreBar) scoreBar.style.width = `${privacyScore}%`;
+        if (scoreText) scoreText.textContent = `${privacyScore}%`;
+        if (levelText) {
+            if (privacyScore >= 80) levelText.textContent = 'High Security';
+            else if (privacyScore >= 50) levelText.textContent = 'Moderate';
+            else levelText.textContent = 'Low';
+        }
+        
+        // Count hidden categories
+        let hidden = 0;
+        if (!settings.showInvestments) hidden++;
+        if (!settings.showLoans) hidden++;
+        if (!settings.dataSharing) hidden++;
+        if (!settings.thirdPartySharing) hidden++;
+        if (settings.profileVisibility === 'private') hidden++;
+        if (hiddenCount) hiddenCount.textContent = `${hidden} categories`;
+        
+        console.log('✅ Privacy settings loaded:', settings);
+    }
+    
+    calculatePrivacyScore(settings) {
+        let score = 50; // Base score
+        if (settings.profileVisibility === 'private') score += 20;
+        else if (settings.profileVisibility === 'friends') score += 10;
+        if (!settings.showInvestments) score += 10;
+        if (!settings.showLoans) score += 10;
+        if (!settings.dataSharing) score += 5;
+        if (!settings.thirdPartySharing) score += 5;
+        return Math.min(100, score);
     }
 
     async savePrivacySettings() {
@@ -524,15 +554,39 @@ class SettingsProductionLoader {
     // DOCUMENTS (KYC)
     // ============================================
     populateDocuments(documents) {
+        // Update document counts
+        const docs = documents || [];
+        const verified = docs.filter(d => d.status === 'verified' || d.is_verified).length;
+        const pending = docs.filter(d => d.status === 'pending' || d.status === 'processing').length;
+        const rejected = docs.filter(d => d.status === 'rejected').length;
+        const total = docs.length;
+        
+        // Required documents that might be missing
+        const requiredDocs = ['ZIM_ID', 'SELFIE', 'BANK_STATEMENT'];
+        const uploadedTypes = docs.map(d => d.doc_type || d.document_type);
+        const missing = requiredDocs.filter(type => !uploadedTypes.includes(type)).length;
+        
+        // Update counts in UI
+        const verifiedEl = document.getElementById('docs-verified-count');
+        const pendingEl = document.getElementById('docs-pending-count');
+        const missingEl = document.getElementById('docs-missing-count');
+        const totalEl = document.getElementById('docs-total-count');
+        
+        if (verifiedEl) verifiedEl.textContent = verified;
+        if (pendingEl) pendingEl.textContent = pending;
+        if (missingEl) missingEl.textContent = missing;
+        if (totalEl) totalEl.textContent = total;
+        
+        // Populate document list if container exists
         const container = document.getElementById('documents-list');
         if (!container) return;
 
-        if (documents.length === 0) {
+        if (docs.length === 0) {
             container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-file-upload"></i>
-                    <p>No documents uploaded yet</p>
-                    <button onclick="settingsLoader.showUploadModal()" class="btn-primary">
+                <div class="empty-state" style="padding: 40px; text-align: center;">
+                    <i class="fas fa-file-upload" style="font-size: 48px; color: #94a3b8; margin-bottom: 15px;"></i>
+                    <p style="color: #94a3b8;">No documents uploaded yet</p>
+                    <button onclick="settingsLoader.showUploadModal()" class="btn-primary" style="margin-top: 15px;">
                         Upload Document
                     </button>
                 </div>
@@ -540,27 +594,25 @@ class SettingsProductionLoader {
             return;
         }
 
-        container.innerHTML = documents.map(doc => `
-            <div class="document-item ${doc.status}">
-                <div class="document-icon">
-                    <i class="fas fa-file-alt"></i>
+        container.innerHTML = docs.map(doc => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-file-alt" style="color: ${doc.status === 'verified' || doc.is_verified ? '#10b981' : doc.status === 'pending' ? '#f59e0b' : '#ef4444'}; font-size: 20px;"></i>
+                    <div>
+                        <h4 style="margin: 0; font-weight: 600;">${doc.doc_type || doc.document_type || 'Document'}</h4>
+                        <p style="margin: 0; color: #94a3b8; font-size: 12px;">Uploaded: ${new Date(doc.uploaded_at || doc.created_at).toLocaleDateString()}</p>
+                    </div>
                 </div>
-                <div class="document-info">
-                    <h4>${doc.name}</h4>
-                    <p>Uploaded: ${new Date(doc.uploadedAt).toLocaleDateString()}</p>
-                    ${doc.verifiedAt ? `<p>Verified: ${new Date(doc.verifiedAt).toLocaleDateString()}</p>` : ''}
-                    ${doc.rejectionReason ? `<p class="error">Reason: ${doc.rejectionReason}</p>` : ''}
-                </div>
-                <div class="document-status">
-                    <span class="status-badge ${doc.status}">${doc.status}</span>
-                </div>
-                <div class="document-actions">
-                    <a href="${doc.url}" target="_blank" class="btn-secondary">
-                        <i class="fas fa-eye"></i> View
-                    </a>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="padding: 4px 12px; border-radius: 20px; font-size: 12px; background: ${doc.status === 'verified' || doc.is_verified ? 'rgba(16, 185, 129, 0.2)' : doc.status === 'pending' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${doc.status === 'verified' || doc.is_verified ? '#10b981' : doc.status === 'pending' ? '#f59e0b' : '#ef4444'};">
+                        ${doc.status === 'verified' || doc.is_verified ? 'Verified' : doc.status || 'Pending'}
+                    </span>
+                    ${doc.file_url ? `<a href="${doc.file_url}" target="_blank" class="btn-secondary" style="font-size: 12px; padding: 4px 10px;"><i class="fas fa-eye"></i></a>` : ''}
                 </div>
             </div>
         `).join('');
+        
+        console.log('✅ Documents loaded:', { verified, pending, missing, total });
     }
 
     async uploadDocument(documentType, file) {
