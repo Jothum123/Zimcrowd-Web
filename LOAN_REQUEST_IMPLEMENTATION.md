@@ -197,12 +197,24 @@ Employment Type: government
 Monthly Income: $600
 ZimScore: 40
 Status: Cold Start
+Tenure: 90 days (3 months)
 
-// Expected Limits:
-Max DTNI Loan: $190 (based on 40% DTNI)
+// DTNI Calculation (Reducing Balance):
+Max DTNI: 40%
+Max Installment: $600 × 0.40 = $240
+Monthly Interest Rate: 5% / 12 = 0.4167%
+Term: 3 months
+
+// Reducing Balance Formula:
+P = (M × [(1 + r)^n - 1]) / [r × (1 + r)^n]
+P = ($240 × 0.01256) / 0.004219
+P = $714.52
+
+// Apply Caps:
+DTNI-based Max: $714.52
 Employment Cap: $300
 Cold Start Limit: $300
-Final Max: $190 ✅
+Final Max: $300 ✅ (limited by employment cap, not DTNI)
 
 // Payment Schedule:
 Apply Nov 10 (Day 10 ≤ 14)
@@ -219,14 +231,24 @@ Monthly Income: $400
 Existing Debt: $100/month
 ZimScore: 36
 Status: Cold Start
+Tenure: 90 days (3 months)
 
-// Expected Limits:
+// DTNI Calculation (Reducing Balance):
 Max DTNI: 33%
-Max Installment: $132
-Available: $132 - $100 = $32
-Max DTNI Loan: $30
+Max Installment: $400 × 0.33 = $132
+Available Installment: $132 - $100 = $32
+Monthly Interest Rate: 5% / 12 = 0.4167%
+Term: 3 months
+
+// Reducing Balance Formula:
+P = ($32 × 0.01256) / 0.004219
+P = $95.24
+
+// Apply Caps:
+DTNI-based Max: $95.24
 Employment Cap: $100
-Final Max: $30 ✅
+Cold Start Limit: $100
+Final Max: $95.24 ✅ (limited by DTNI due to existing debt)
 
 // Payment Schedule:
 Apply Nov 20
