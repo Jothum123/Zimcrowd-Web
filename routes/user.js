@@ -436,13 +436,31 @@ router.put('/profile', authenticateUser, async (req, res) => {
         const userId = req.user.id;
         const updates = req.body;
 
-        // Clean up empty date fields (convert empty strings to null)
+        // Clean up empty fields (convert empty strings to null)
         const cleanedUpdates = { ...updates };
+        
+        // Date fields
         if (cleanedUpdates.date_of_birth === '') {
             cleanedUpdates.date_of_birth = null;
         }
         if (cleanedUpdates.verification_date === '') {
             cleanedUpdates.verification_date = null;
+        }
+        
+        // Gender field
+        if (cleanedUpdates.gender === '') {
+            cleanedUpdates.gender = null;
+        }
+        
+        // Other enum/constrained fields
+        if (cleanedUpdates.marital_status === '') {
+            cleanedUpdates.marital_status = null;
+        }
+        if (cleanedUpdates.employment_status === '') {
+            cleanedUpdates.employment_status = null;
+        }
+        if (cleanedUpdates.kyc_status === '') {
+            cleanedUpdates.kyc_status = null;
         }
 
         // Upsert profile (update if exists, insert if not)
