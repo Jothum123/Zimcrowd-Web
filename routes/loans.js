@@ -90,22 +90,42 @@ router.post('/request', authenticateUser, async (req, res) => {
         const availableInstallment = maxInstallment - existingMonthlyPayments;
         const currentDTNI = (existingMonthlyPayments / monthlyIncome);
 
-        console.log(`📊 DTNI Check: Income=$${monthlyIncome}, Existing=$${existingMonthlyPayments}, Available=$${availableInstallment}, DTNI=${(currentDTNI * 100).toFixed(1)}%`);
+        console.log(`📊 DTNI Check: Income=$${monthlyIncome}, Existing=$${existingMonthlyPayments}, Max Installment=$${maxInstallment}, Available=$${availableInstallment}, DTNI=${(currentDTNI * 100).toFixed(1)}%`);
 
-        // Calculate max loan based on DTNI
-        const interestRate = 0.05; // 5%
+        // Calculate max loan using Reducing Balance Method
+        // Formula: P = (M × [(1 + r)^n - 1]) / [r × (1 + r)^n]
+        // Where: P = Principal (loan amount), M = Monthly payment, r = monthly interest rate, n = number of months
+        
+        const annualInterestRate = 0.05; // 5% annual
+        const monthlyInterestRate = annualInterestRate / 12; // 0.4167% monthly
         const termMonths = Math.ceil(tenure_days / 30);
-        const maxLoanFromDTNI = (availableInstallment * termMonths) / (1 + interestRate);
+        
+        // Calculate maximum loan amount from available installment using reducing balance
+        let maxLoanFromDTNI;
+        if (monthlyInterestRate > 0 && termMonths > 0) {
+            // Reducing balance formula
+            const powerTerm = Math.pow(1 + monthlyInterestRate, termMonths);
+            maxLoanFromDTNI = (availableInstallment * (powerTerm - 1)) / (monthlyInterestRate * powerTerm);
+        } else {
+            // Fallback for zero interest
+            maxLoanFromDTNI = availableInstallment * termMonths;
+        }
 
         // Apply employment cap
         const employmentCap = employmentTypeActual === 'government' ? 300 : 100;
-        const maxLoanAmount = Math.min(maxLoanFromDTNI, employmentCap);
-
+        
         // Apply cold start limit if applicable
         const coldStartLimit = zimScore.cold_start_limit || employmentCap;
-        const finalMaxLoan = zimScore.is_cold_start ? Math.min(maxLoanAmount, coldStartLimit) : maxLoanAmount;
+        
+        // Final max loan is the minimum of: DTNI-based loan, employment cap, and cold start limit
+        let finalMaxLoan;
+        if (zimScore.is_cold_start) {
+            finalMaxLoan = Math.min(maxLoanFromDTNI, employmentCap, coldStartLimit);
+        } else {
+            finalMaxLoan = Math.min(maxLoanFromDTNI, employmentCap);
+        }
 
-        console.log(`💵 Loan limits: DTNI=$${maxLoanFromDTNI.toFixed(2)}, Cap=$${employmentCap}, Cold Start=$${coldStartLimit}, Final=$${finalMaxLoan.toFixed(2)}`);
+        console.log(`💵 Loan limits: DTNI-based=$${maxLoanFromDTNI.toFixed(2)}, Employment Cap=$${employmentCap}, Cold Start Limit=$${coldStartLimit}, Final Max=$${finalMaxLoan.toFixed(2)}`);
 
         // 5. Validate requested amount
         if (amount > finalMaxLoan) {

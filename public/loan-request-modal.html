@@ -660,7 +660,7 @@
             }
         }
 
-        // Calculate loan limits based on DTNI
+        // Calculate loan limits based on DTNI using Reducing Balance Method
         function calculateLoanLimits() {
             const employmentType = userData.data.employment_type || 'informal';
             const monthlyIncome = userData.data.monthly_income || 0;
@@ -671,22 +671,47 @@
             const maxInstallment = monthlyIncome * maxDTNI;
             const availableInstallment = maxInstallment - existingDebt;
 
-            // Calculate max loan (assuming 1 month term for cold start)
-            const interestRate = 0.05;
-            const maxLoanFromDTNI = (availableInstallment * 1) / (1 + interestRate);
+            // Get tenure from ZimScore
+            const tenure = zimscoreData.data?.loan_tenure_days || 90;
+            const termMonths = Math.ceil(tenure / 30);
+
+            // Calculate max loan using Reducing Balance Method
+            // Formula: P = (M × [(1 + r)^n - 1]) / [r × (1 + r)^n]
+            const annualInterestRate = 0.05; // 5% annual
+            const monthlyInterestRate = annualInterestRate / 12; // 0.4167% monthly
+            
+            let maxLoanFromDTNI;
+            if (monthlyInterestRate > 0 && termMonths > 0) {
+                const powerTerm = Math.pow(1 + monthlyInterestRate, termMonths);
+                maxLoanFromDTNI = (availableInstallment * (powerTerm - 1)) / (monthlyInterestRate * powerTerm);
+            } else {
+                maxLoanFromDTNI = availableInstallment * termMonths;
+            }
 
             // Apply employment cap
             const employmentCap = employmentType === 'government' ? 300 : 100;
-            const maxLoan = Math.min(maxLoanFromDTNI, employmentCap);
+            
+            // Apply cold start limit
+            const coldStartLimit = zimscoreData.data?.cold_start_limit || employmentCap;
+            const isColdStart = zimscoreData.data?.is_cold_start !== false;
+            
+            // Final max is minimum of all limits
+            let maxLoan;
+            if (isColdStart) {
+                maxLoan = Math.min(maxLoanFromDTNI, employmentCap, coldStartLimit);
+            } else {
+                maxLoan = Math.min(maxLoanFromDTNI, employmentCap);
+            }
 
-            // Get tenure from ZimScore
-            const tenure = zimscoreData.data?.loan_tenure_days || 90;
+            console.log(`💵 Calculated limits: DTNI=$${maxLoanFromDTNI.toFixed(2)}, Cap=$${employmentCap}, Cold Start=$${coldStartLimit}, Final=$${maxLoan.toFixed(2)}`);
 
             loanLimits = {
                 maxAmount: Math.floor(maxLoan),
                 maxTenure: tenure,
+                maxInstallment: maxInstallment,
+                availableInstallment: availableInstallment,
                 dtni: (existingDebt / monthlyIncome * 100).toFixed(1),
-                isColdStart: zimscoreData.data?.is_cold_start !== false
+                isColdStart: isColdStart
             };
         }
 
