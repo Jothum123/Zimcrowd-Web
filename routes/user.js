@@ -527,6 +527,100 @@ router.get('/kyc/status', authenticateUser, async (req, res) => {
     }
 });
 
+// @route   POST /api/user/kyc/submit
+// @desc    Submit KYC verification data
+// @access  Private
+router.post('/kyc/submit', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const kycData = req.body;
+
+        console.log('📝 Submitting KYC data for user:', userId);
+
+        // Update profile with KYC data
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .update({
+                id_number: kycData.id_number,
+                passport_number: kycData.id_type === 'passport' ? kycData.id_number : null,
+                nationality: kycData.nationality,
+                occupation: kycData.occupation,
+                annual_income: kycData.income_range,
+                source_of_funds: kycData.source_of_funds,
+                kyc_status: 'pending',
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', userId)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        console.log('✅ KYC data saved successfully');
+
+        res.json({
+            success: true,
+            message: 'KYC verification submitted successfully',
+            data: {
+                kyc_status: 'pending',
+                submitted_at: new Date().toISOString()
+            }
+        });
+    } catch (error) {
+        console.error('❌ Error submitting KYC:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to submit KYC verification',
+            error: error.message
+        });
+    }
+});
+
+// @route   POST /api/profile-setup/complete
+// @desc    Complete post-registration profile setup
+// @access  Private
+router.post('/profile-setup/complete', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const profileData = req.body;
+
+        console.log('🎯 Completing profile setup for user:', userId);
+
+        // Clean up empty fields
+        const cleanedData = { ...profileData };
+        if (cleanedData.date_of_birth === '') cleanedData.date_of_birth = null;
+        if (cleanedData.gender === '') cleanedData.gender = null;
+
+        // Update profile with all post-registration data
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .update({
+                ...cleanedData,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', userId)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        console.log('✅ Profile setup completed successfully');
+
+        res.json({
+            success: true,
+            message: 'Profile setup completed successfully',
+            data: profile
+        });
+    } catch (error) {
+        console.error('❌ Error completing profile setup:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to complete profile setup',
+            error: error.message
+        });
+    }
+});
+
 // @route   PUT /api/user/notification-settings
 // @desc    Update notification settings
 // @access  Private
