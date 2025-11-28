@@ -81,13 +81,15 @@ BEGIN
         RAISE NOTICE '✅ Added expiry_date column';
     END IF;
     
-    -- Add is_expired (computed column)
+    -- Add is_expired (regular column, will be updated by trigger)
     IF NOT EXISTS (
         SELECT FROM information_schema.columns 
         WHERE table_schema = 'public' AND table_name = 'user_documents' AND column_name = 'is_expired'
     ) THEN
-        ALTER TABLE public.user_documents ADD COLUMN is_expired BOOLEAN GENERATED ALWAYS AS (expiry_date < CURRENT_DATE) STORED;
-        RAISE NOTICE '✅ Added is_expired computed column';
+        ALTER TABLE public.user_documents ADD COLUMN is_expired BOOLEAN DEFAULT FALSE;
+        -- Update existing rows
+        UPDATE public.user_documents SET is_expired = (expiry_date IS NOT NULL AND expiry_date < CURRENT_DATE);
+        RAISE NOTICE '✅ Added is_expired column';
     END IF;
     
     -- Add metadata (new column)
@@ -149,10 +151,10 @@ CREATE INDEX IF NOT EXISTS idx_user_documents_document_type ON public.user_docum
 CREATE INDEX IF NOT EXISTS idx_user_documents_doc_type ON public.user_documents(doc_type);
 
 -- ============================================================================
--- CREATE TRIGGER FOR updated_at
+-- CREATE TRIGGERS
 -- ============================================================================
 
--- Create or replace the update function
+-- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -161,12 +163,32 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Drop trigger if exists and recreate
-DROP TRIGGER IF EXISTS update_user_documents_updated_at ON public.user_documents;
+-- Function to update is_expired status
+CREATE OR REPLACE FUNCTION update_is_expired_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.expiry_date IS NOT NULL THEN
+        NEW.is_expired = (NEW.expiry_date < CURRENT_DATE);
+    ELSE
+        NEW.is_expired = FALSE;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
+-- Drop triggers if exist and recreate
+DROP TRIGGER IF EXISTS update_user_documents_updated_at ON public.user_documents;
+DROP TRIGGER IF EXISTS update_user_documents_is_expired ON public.user_documents;
+
+-- Trigger for updated_at
 CREATE TRIGGER update_user_documents_updated_at 
     BEFORE UPDATE ON public.user_documents
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Trigger for is_expired (runs on INSERT and UPDATE)
+CREATE TRIGGER update_user_documents_is_expired 
+    BEFORE INSERT OR UPDATE ON public.user_documents
+    FOR EACH ROW EXECUTE FUNCTION update_is_expired_column();
 
 -- ============================================================================
 -- ENABLE RLS (if not already enabled)

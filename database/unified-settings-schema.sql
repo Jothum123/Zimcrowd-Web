@@ -231,7 +231,7 @@ CREATE TABLE IF NOT EXISTS public.user_documents (
     -- Document Validity
     issue_date DATE,
     expiry_date DATE,
-    is_expired BOOLEAN GENERATED ALWAYS AS (expiry_date < CURRENT_DATE) STORED,
+    is_expired BOOLEAN DEFAULT FALSE,
     
     -- Metadata
     metadata JSONB DEFAULT '{}',
@@ -260,7 +260,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Apply trigger to all tables
+-- Function to update is_expired status for documents
+CREATE OR REPLACE FUNCTION update_is_expired_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.expiry_date IS NOT NULL THEN
+        NEW.is_expired = (NEW.expiry_date < CURRENT_DATE);
+    ELSE
+        NEW.is_expired = FALSE;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Apply updated_at trigger to all tables
 CREATE TRIGGER update_user_statistics_updated_at BEFORE UPDATE ON public.user_statistics
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -275,6 +288,10 @@ CREATE TRIGGER update_investment_preferences_updated_at BEFORE UPDATE ON public.
 
 CREATE TRIGGER update_user_documents_updated_at BEFORE UPDATE ON public.user_documents
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Apply is_expired trigger to user_documents
+CREATE TRIGGER update_user_documents_is_expired BEFORE INSERT OR UPDATE ON public.user_documents
+    FOR EACH ROW EXECUTE FUNCTION update_is_expired_column();
 
 -- ============================================================================
 -- 7. FUNCTION TO INITIALIZE USER SETTINGS

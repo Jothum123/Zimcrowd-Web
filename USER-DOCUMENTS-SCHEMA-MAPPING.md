@@ -28,7 +28,7 @@ The `user_documents` table exists in the database but has different column names
 | `verified_by` | UUID | NULL | Admin who verified |
 | `issue_date` | DATE | NULL | Document issue date |
 | `expiry_date` | DATE | NULL | Document expiry date |
-| `is_expired` | BOOLEAN (computed) | - | Auto-calculated from expiry_date |
+| `is_expired` | BOOLEAN | FALSE | Auto-updated by trigger from expiry_date |
 | `metadata` | JSONB | '{}' | Additional document metadata |
 | `notes` | TEXT | NULL | Admin notes |
 | `updated_at` | TIMESTAMP | NOW() | Last update timestamp |
