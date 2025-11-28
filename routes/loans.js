@@ -73,17 +73,36 @@ router.post('/request', authenticateUser, async (req, res) => {
             });
         }
 
-        // 3. Get active loans for DTNI calculation
+        // 3. Check active loan count limits
         const { data: activeLoans, error: loansError } = await supabase
             .from('loans')
-            .select('amount, monthly_payment')
+            .select('amount, monthly_payment, status')
             .eq('borrower_id', userId)
             .in('status', ['active', 'pending']);
 
+        const activeLoanCount = activeLoans?.length || 0;
         const existingMonthlyPayments = activeLoans?.reduce((sum, loan) => sum + (loan.monthly_payment || 0), 0) || 0;
 
-        // 4. Calculate DTNI and validate loan limits
+        // 4. Validate loan count limits based on employment type
         const employmentTypeActual = employment_type || profile.employment_type || 'informal';
+        const isGovernment = employmentTypeActual === 'government';
+        const maxActiveLoans = isGovernment ? 3 : 1;
+
+        if (activeLoanCount >= maxActiveLoans) {
+            return res.status(400).json({
+                success: false,
+                message: `Maximum active loan limit reached. ${isGovernment ? 'Government employees' : 'Other employees'} can have maximum ${maxActiveLoans} active loan${maxActiveLoans > 1 ? 's' : ''}.`,
+                data: {
+                    activeLoanCount: activeLoanCount,
+                    maxActiveLoans: maxActiveLoans,
+                    employmentType: employmentTypeActual
+                }
+            });
+        }
+
+        console.log(`📊 Active Loans: ${activeLoanCount}/${maxActiveLoans} (${employmentTypeActual})`);
+
+        // 5. Calculate DTNI and validate loan limits
         const monthlyIncome = profile.monthly_income || 0;
 
         if (monthlyIncome === 0) {
