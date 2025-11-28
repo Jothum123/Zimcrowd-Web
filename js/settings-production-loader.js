@@ -425,8 +425,14 @@ class SettingsProductionLoader {
     }
 
     setupAutoSave() {
+        // Check if auto-save is disabled
+        if (localStorage.getItem('disableAutoSave') === 'true') {
+            console.log('⏸️ Auto-save disabled (waiting for backend restart)');
+            return;
+        }
+        
         // Auto-save every 30 seconds if there are changes
-        setInterval(() => {
+        this.autoSaveInterval = setInterval(() => {
             if (this.unsavedChanges) {
                 console.log('💾 Auto-saving settings...');
                 this.saveSection(this.currentTab);
