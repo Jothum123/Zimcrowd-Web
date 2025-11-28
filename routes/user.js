@@ -436,12 +436,21 @@ router.put('/profile', authenticateUser, async (req, res) => {
         const userId = req.user.id;
         const updates = req.body;
 
+        // Clean up empty date fields (convert empty strings to null)
+        const cleanedUpdates = { ...updates };
+        if (cleanedUpdates.date_of_birth === '') {
+            cleanedUpdates.date_of_birth = null;
+        }
+        if (cleanedUpdates.verification_date === '') {
+            cleanedUpdates.verification_date = null;
+        }
+
         // Upsert profile (update if exists, insert if not)
         const { data: profile, error } = await supabase
             .from('profiles')
             .upsert({
                 id: userId,
-                ...updates,
+                ...cleanedUpdates,
                 updated_at: new Date().toISOString()
             }, {
                 onConflict: 'id'
