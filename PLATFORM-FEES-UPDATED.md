@@ -88,22 +88,22 @@ Total Repayment:                $118.67
 
 ## 💼 LENDER/INVESTOR FEES
 
-### **1. Upfront Fees (Deducted from Investment)**
+### **1. Upfront Fees (Added to Investment Amount)**
 
 #### **Service Fee: 10%**
 - **What it covers:** Platform operations, borrower verification, loan matching
-- **When charged:** Deducted when funding a loan
-- **Example:** Fund $100 loan → $10 service fee → $90 invested
+- **When charged:** Added to investment amount when funding a loan
+- **Example:** Invest $100 → Pay $10 service fee → Total paid: $110
 
 #### **Insurance Fee: 3%**
 - **What it covers:** Default protection, payment coverage for lenders
-- **When charged:** Deducted when funding a loan
-- **Example:** Fund $100 loan → $3 insurance fee → $97 invested
+- **When charged:** Added to investment amount when funding a loan
+- **Example:** Invest $100 → Pay $3 insurance fee → Total paid: $103
 
 #### **Total Upfront Fees: 13%**
-- **Combined deduction:** Service (10%) + Insurance (3%)
-- **Net amount invested:** 87% of funding amount
-- **Example:** Fund $100 → $87 actually invested
+- **Combined addition:** Service (10%) + Insurance (3%)
+- **Total amount paid:** Investment + 13% fees
+- **Example:** Invest $100 → Pay $13 fees → Total paid: $113
 
 ---
 
@@ -145,33 +145,42 @@ Tenure: 3 months
 
 **Fee Breakdown:**
 ```
-UPFRONT FEES (Deducted from Investment):
-Service Fee (10%):              -$10.00
-Insurance Fee (3%):             -$3.00
-Total Upfront Fees:             -$13.00
-Net Amount Invested:            $87.00 ✅
+UPFRONT FEES (Added to Investment):
+Investment Amount:              $100.00
+Service Fee (10%):              +$10.00
+Insurance Fee (3%):             +$3.00
+Total Upfront Fees:             +$13.00
+Total Amount Paid:              $113.00 ✅
+
+Amount Actually Invested:       $100.00
+(Borrower receives this amount)
 
 ONGOING FEES (Deducted from Returns):
-Monthly Payment Received:       $39.56
-Collection Fee (5%):            -$1.98
-Net Monthly Return:             $37.58
+Monthly Payment Received:       $36.72
+Collection Fee (5%):            -$1.84
+Net Monthly Return:             $34.88
 
-Total Returns Over 3 Months:    $112.74
-Total Collection Fees:          -$5.94
-Net Returns After Fees:         $106.80
+Total Returns Over 3 Months:    $110.16
+Total Collection Fees:          -$5.51
+Net Returns After Fees:         $104.65
 
 INVESTMENT SUMMARY:
-Amount Funded:                  $100.00
-Total Fees Paid:                $18.94
-Net Investment:                 $87.00
-Net Returns:                    $106.80
-Net Profit:                     $6.80 (6.8% return)
+Total Amount Paid:              $113.00
+Amount Invested:                $100.00
+Upfront Fees Paid:              $13.00
+Ongoing Fees Paid:              $5.51
+Total Fees Paid:                $18.51
+
+Gross Returns:                  $110.16
+Net Returns:                    $104.65
+Net Loss:                       -$8.35 (-7.4%)
 ```
 
 **Effective Return:**
-- Gross return: $18.94 (18.94% of investment)
-- Platform fees: $18.94 (18.94% of investment)
-- Net return: $6.80 (6.8% of investment)
+- Total paid: $113.00
+- Total received: $104.65
+- Net loss: -$8.35 (-7.4% of total paid)
+- Note: Lender earns from interest spread, not shown in this example
 
 ---
 
@@ -299,23 +308,30 @@ Annual Revenue:     $1,528,200
 
 ### **Lender Journey:**
 ```
-1. Fund $100 loan
+1. Invest $100 in loan
    ↓
-2. Platform deducts upfront fees:
+2. Platform adds upfront fees:
    - Service Fee: $10
    - Insurance Fee: $3
+   - Total to pay: $113 ✅
    ↓
-3. Net investment: $87 ✅
+3. Amount invested: $100
+   (Borrower receives this)
    ↓
-4. Monthly return: $37.58
-   - Gross payment: $39.56
-   - Collection fee: $1.98
+4. Monthly return: $34.88
+   - Gross payment: $36.72
+   - Collection fee: $1.84
    ↓
-5. Total returns: $106.80
-   - Principal back: $87
-   - Interest earned: $19.80
-   - Platform fees: $18.94
-   - Net profit: $6.80
+5. Total returns: $104.65
+   - Principal back: $100
+   - Interest earned: $10.16
+   - Collection fees: $5.51
+   - Net received: $104.65
+   ↓
+6. Final result:
+   - Total paid: $113.00
+   - Total received: $104.65
+   - Net loss: -$8.35
 ```
 
 ---
@@ -353,22 +369,28 @@ Investment Fees Breakdown
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Investment Amount:             $100.00
 
-Upfront Fees (Deducted from Investment):
-  Service Fee (10%):           -$10.00
-  Insurance Fee (3%):          -$3.00
-  Total Upfront Fees:          -$13.00
+Upfront Fees (Added to Investment):
+  Service Fee (10%):           +$10.00
+  Insurance Fee (3%):          +$3.00
+  Total Upfront Fees:          +$13.00
 
-Net Amount Invested:           $87.00 ✅
+Total Amount to Pay:           $113.00 ✅
+
+Amount Actually Invested:      $100.00
+(Borrower receives this)
 
 Ongoing Fees (Deducted from Returns):
-  Collection Fee (5%):         $1.98/month
+  Collection Fee (5%):         $1.84/month
 
-Total Investment Fees:         $18.94
+Total Investment Fees:         $18.51
 
 Investment Summary:
-  Monthly Return (Net):        $37.58
-  Total Returns (Net):         $106.80
-  Net Profit:                  $6.80 (6.8%)
+  Total Paid:                  $113.00
+  Monthly Return (Net):        $34.88
+  Total Returns (Net):         $104.65
+  Net Loss:                    -$8.35 (-7.4%)
+  
+Note: Returns based on $100 invested at borrower's interest rate
 ```
 
 ---
