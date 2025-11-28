@@ -7,6 +7,31 @@
 const ProductionDataLoader = {
     apiBase: window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api',
     
+    // Real-time update configuration
+    realtime: {
+        enabled: true,
+        pollingInterval: null,
+        refreshRate: 30000, // 30 seconds
+        lastUpdate: null,
+        isPolling: false
+    },
+    
+    // Platform fees configuration (from PLATFORM-FEES-UPDATED.md)
+    platformFees: {
+        borrower: {
+            serviceFee: 0.10,      // 10%
+            insuranceFee: 0.05,    // 5%
+            tenureFee: 0.01,       // 1% per month
+            collectionFee: 0.05    // 5% of payment
+        },
+        lender: {
+            serviceFee: 0.10,      // 10% (mandatory)
+            insuranceFee: 0.05,    // 5% (OPTIONAL - investor can choose)
+            collectionFee: 0.00,   // REMOVED - no ongoing fees
+            dealFee: 0.02          // 2% secondary market
+        }
+    },
+    
     /**
      * Initialize all dashboard sections with real data
      */
@@ -26,6 +51,13 @@ const ProductionDataLoader = {
             ]);
             
             console.log('✅ All production data loaded');
+            
+            // Start real-time updates
+            this.startRealTimeUpdates();
+            
+            // Setup visibility change handler
+            this.setupVisibilityHandler();
+            
         } catch (error) {
             console.error('❌ Error loading production data:', error);
         }
@@ -1180,6 +1212,299 @@ const ProductionDataLoader = {
         } catch (error) {
             console.error('Failed to cache data:', error);
         }
+    },
+    
+    // ========== REAL-TIME UPDATE METHODS ==========
+    
+    /**
+     * Start real-time data updates
+     */
+    startRealTimeUpdates() {
+        if (!this.realtime.enabled || this.realtime.isPolling) return;
+        
+        console.log('🔴 Starting real-time updates (30s interval)...');
+        this.realtime.isPolling = true;
+        this.realtime.lastUpdate = new Date();
+        
+        // Poll for updates every 30 seconds
+        this.realtime.pollingInterval = setInterval(() => {
+            this.refreshCriticalData();
+        }, this.realtime.refreshRate);
+    },
+    
+    /**
+     * Stop real-time updates
+     */
+    stopRealTimeUpdates() {
+        if (this.realtime.pollingInterval) {
+            clearInterval(this.realtime.pollingInterval);
+            this.realtime.pollingInterval = null;
+            this.realtime.isPolling = false;
+            console.log('⏸️ Real-time updates paused');
+        }
+    },
+    
+    /**
+     * Refresh critical data (wallet, notifications, active loans)
+     */
+    async refreshCriticalData() {
+        try {
+            const token = this.getAuthToken();
+            if (!token) return;
+            
+            // Update last refresh time
+            this.realtime.lastUpdate = new Date();
+            
+            // Refresh critical sections in parallel
+            await Promise.allSettled([
+                this.refreshWalletBalance(),
+                this.refreshNotifications(),
+                this.refreshActiveLoans(),
+                this.refreshInvestmentReturns()
+            ]);
+            
+            // Update last update indicator
+            this.updateLastRefreshIndicator();
+            
+        } catch (error) {
+            console.error('❌ Error refreshing critical data:', error);
+        }
+    },
+    
+    /**
+     * Refresh wallet balance
+     */
+    async refreshWalletBalance() {
+        try {
+            const response = await this.apiRequest('/dashboard/wallet');
+            if (response.success && response.data) {
+                // Get stats for invested amount
+                const statsResponse = await this.apiRequest('/dashboard/stats');
+                const stats = statsResponse.success ? statsResponse.data : null;
+                
+                this.updateWalletUI(response.data, stats);
+                this.cacheData('wallet', response.data);
+            }
+        } catch (error) {
+            console.error('Failed to refresh wallet:', error);
+        }
+    },
+    
+    /**
+     * Refresh notifications
+     */
+    async refreshNotifications() {
+        try {
+            const response = await this.apiRequest('/dashboard/notifications?unread=true');
+            if (response.success && response.data) {
+                this.updateNotificationBadge(response.data.unread_count || 0);
+            }
+        } catch (error) {
+            console.error('Failed to refresh notifications:', error);
+        }
+    },
+    
+    /**
+     * Refresh active loans
+     */
+    async refreshActiveLoans() {
+        try {
+            const response = await this.apiRequest('/loans/my-loans?status=active');
+            if (response.success && response.data) {
+                // Update loan count badge
+                const activeCount = response.data.length;
+                const badge = document.getElementById('activeLoansCount');
+                if (badge) badge.textContent = `${activeCount} Active`;
+            }
+        } catch (error) {
+            console.error('Failed to refresh active loans:', error);
+        }
+    },
+    
+    /**
+     * Refresh investment returns
+     */
+    async refreshInvestmentReturns() {
+        try {
+            const response = await this.apiRequest('/investments/portfolio');
+            if (response.success && response.data) {
+                // Update portfolio stats
+                const totalReturns = document.getElementById('portfolioTotalReturns');
+                if (totalReturns) {
+                    totalReturns.textContent = `$${parseFloat(response.data.total_returns || 0).toLocaleString()}`;
+                }
+            }
+        } catch (error) {
+            console.error('Failed to refresh investment returns:', error);
+        }
+    },
+    
+    /**
+     * Update notification badge
+     */
+    updateNotificationBadge(count) {
+        const badge = document.getElementById('notificationCount');
+        if (badge) {
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'block' : 'none';
+            
+            // Animate if count increased
+            if (count > 0) {
+                badge.style.animation = 'pulse 0.5s';
+                setTimeout(() => badge.style.animation = '', 500);
+            }
+        }
+    },
+    
+    /**
+     * Update last refresh indicator
+     */
+    updateLastRefreshIndicator() {
+        const indicator = document.getElementById('lastUpdateTime');
+        if (indicator && this.realtime.lastUpdate) {
+            const timeAgo = this.getTimeAgo(this.realtime.lastUpdate);
+            indicator.textContent = `Updated ${timeAgo}`;
+            indicator.style.color = '#38e77b';
+        }
+    },
+    
+    /**
+     * Get time ago string
+     */
+    getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        if (seconds < 60) return 'just now';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m ago`;
+        const hours = Math.floor(minutes / 60);
+        return `${hours}h ago`;
+    },
+    
+    /**
+     * Setup visibility change handler
+     */
+    setupVisibilityHandler() {
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.stopRealTimeUpdates();
+            } else {
+                // Refresh immediately when tab becomes visible
+                this.refreshCriticalData();
+                this.startRealTimeUpdates();
+            }
+        });
+    },
+    
+    // ========== PLATFORM FEES CALCULATION METHODS ==========
+    
+    /**
+     * Calculate borrower fees
+     */
+    calculateBorrowerFees(loanAmount, termMonths, monthlyPayment) {
+        const fees = this.platformFees.borrower;
+        
+        // Upfront fees
+        const serviceFee = loanAmount * fees.serviceFee;
+        const insuranceFee = loanAmount * fees.insuranceFee;
+        const totalUpfront = serviceFee + insuranceFee;
+        const netReceived = loanAmount - totalUpfront;
+        
+        // Ongoing fees
+        const tenureFeePerMonth = loanAmount * fees.tenureFee;
+        const totalTenureFees = tenureFeePerMonth * termMonths;
+        
+        const collectionFeePerMonth = monthlyPayment * fees.collectionFee;
+        const totalCollectionFees = collectionFeePerMonth * termMonths;
+        
+        const totalPlatformFees = totalUpfront + totalTenureFees + totalCollectionFees;
+        
+        return {
+            upfront: {
+                serviceFee,
+                insuranceFee,
+                total: totalUpfront
+            },
+            ongoing: {
+                tenureFeePerMonth,
+                totalTenureFees,
+                collectionFeePerMonth,
+                totalCollectionFees
+            },
+            netReceived,
+            totalPlatformFees,
+            effectiveFeePercentage: (totalPlatformFees / loanAmount) * 100
+        };
+    },
+    
+    /**
+     * Calculate lender fees
+     * @param {number} investmentAmount - Amount to invest
+     * @param {number} returns - Expected returns
+     * @param {number} termMonths - Term in months
+     * @param {boolean} includeInsurance - Whether investor chose insurance (default: false)
+     */
+    calculateLenderFees(investmentAmount, returns, termMonths, includeInsurance = false) {
+        const fees = this.platformFees.lender;
+        
+        // Upfront fees
+        const serviceFee = investmentAmount * fees.serviceFee;
+        const insuranceFee = includeInsurance ? (investmentAmount * fees.insuranceFee) : 0;
+        const totalUpfront = serviceFee + insuranceFee;
+        const totalPaid = investmentAmount + totalUpfront;
+        
+        // No ongoing fees - collection fee removed
+        const collectionFeeTotal = 0;
+        const netReturns = returns; // No deductions
+        
+        const totalFees = totalUpfront; // Only upfront fees
+        const netProfit = netReturns - totalPaid;
+        const roi = (netProfit / totalPaid) * 100;
+        
+        return {
+            upfront: {
+                serviceFee,
+                insuranceFee,
+                insuranceOptional: !includeInsurance,
+                total: totalUpfront
+            },
+            ongoing: {
+                collectionFee: 0, // REMOVED
+                note: 'No ongoing fees for lenders'
+            },
+            totalPaid,
+            grossReturns: returns,
+            netReturns,
+            totalFees,
+            netProfit,
+            roi,
+            insuranceIncluded: includeInsurance
+        };
+    },
+    
+    /**
+     * Format currency with fees breakdown
+     */
+    formatWithFees(amount, fees) {
+        return `$${amount.toFixed(2)} (Fees: $${fees.toFixed(2)})`;
+    },
+    
+    /**
+     * Get lender fee breakdown text
+     */
+    getLenderFeeBreakdown(investmentAmount, includeInsurance = false) {
+        const serviceFee = investmentAmount * this.platformFees.lender.serviceFee;
+        const insuranceFee = includeInsurance ? (investmentAmount * this.platformFees.lender.insuranceFee) : 0;
+        const total = serviceFee + insuranceFee;
+        
+        let breakdown = `Service Fee (10%): $${serviceFee.toFixed(2)}`;
+        if (includeInsurance) {
+            breakdown += `\nInsurance Fee (5%, Optional): $${insuranceFee.toFixed(2)}`;
+        } else {
+            breakdown += `\nInsurance Fee: Not selected (Optional)`;
+        }
+        breakdown += `\nTotal Upfront: $${total.toFixed(2)}`;
+        
+        return breakdown;
     }
 };
 

@@ -8,6 +8,9 @@ class AnalyticsProductionLoader {
         this.dataManager = window.ProductionDataManager;
         this.charts = {};
         this.currentTimeframe = '30d';
+        this.autoRefreshInterval = null;
+        this.autoRefreshEnabled = true;
+        this.refreshRate = 60000; // 60 seconds for analytics
     }
 
     async init() {
@@ -22,6 +25,9 @@ class AnalyticsProductionLoader {
             
             // Setup event listeners
             this.setupEventListeners();
+            
+            // Start auto-refresh
+            this.startAutoRefresh();
             
             console.log('✅ Analytics Production Loader ready');
         } catch (error) {
@@ -479,6 +485,82 @@ class AnalyticsProductionLoader {
             toast.classList.remove('show');
             setTimeout(() => toast.remove(), 300);
         }, 3000);
+    },
+    
+    /**
+     * Start auto-refresh for analytics
+     */
+    startAutoRefresh() {
+        if (!this.autoRefreshEnabled || this.autoRefreshInterval) return;
+        
+        console.log('🔄 Starting analytics auto-refresh (60s interval)...');
+        
+        this.autoRefreshInterval = setInterval(async () => {
+            try {
+                // Only refresh if analytics section is visible
+                const analyticsSection = document.getElementById('analytics-section');
+                if (analyticsSection && !analyticsSection.classList.contains('hidden')) {
+                    await this.loadAllAnalytics();
+                    this.updateCharts();
+                    console.log('✅ Analytics refreshed');
+                }
+            } catch (error) {
+                console.error('❌ Auto-refresh error:', error);
+            }
+        }, this.refreshRate);
+    },
+    
+    /**
+     * Stop auto-refresh
+     */
+    stopAutoRefresh() {
+        if (this.autoRefreshInterval) {
+            clearInterval(this.autoRefreshInterval);
+            this.autoRefreshInterval = null;
+            console.log('⏸️ Analytics auto-refresh stopped');
+        }
+    },
+    
+    /**
+     * Calculate platform fees for analytics display
+     */
+    calculatePlatformRevenue(loans, investments) {
+        let totalRevenue = 0;
+        
+        // Borrower fees (from loans)
+        loans.forEach(loan => {
+            const amount = parseFloat(loan.amount || 0);
+            const termMonths = parseInt(loan.term_months || 3);
+            const monthlyPayment = parseFloat(loan.monthly_payment || 0);
+            
+            // Upfront fees: 15% (10% service + 5% insurance)
+            const upfrontFees = amount * 0.15;
+            
+            // Tenure fees: 1% per month
+            const tenureFees = amount * 0.01 * termMonths;
+            
+            // Collection fees: 5% of monthly payment
+            const collectionFees = monthlyPayment * 0.05 * termMonths;
+            
+            totalRevenue += upfrontFees + tenureFees + collectionFees;
+        });
+        
+        // Lender fees (from investments)
+        investments.forEach(inv => {
+            const amount = parseFloat(inv.amount || 0);
+            const hasInsurance = inv.insurance_opted || false;
+            
+            // Upfront fees: 10% service + 5% insurance (if opted)
+            const serviceFee = amount * 0.10;
+            const insuranceFee = hasInsurance ? (amount * 0.05) : 0;
+            const upfrontFees = serviceFee + insuranceFee;
+            
+            // No ongoing fees - collection fee removed
+            
+            totalRevenue += upfrontFees;
+        });
+        
+        return totalRevenue;
     }
 }
 
@@ -492,3 +574,10 @@ if (document.readyState === 'loading') {
     window.analyticsLoader = new AnalyticsProductionLoader();
     window.analyticsLoader.init();
 }
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (window.analyticsLoader) {
+        window.analyticsLoader.stopAutoRefresh();
+    }
+});

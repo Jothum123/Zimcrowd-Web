@@ -152,10 +152,18 @@ const DashboardRealtime = {
      * Start polling for updates (fallback)
      */
     startPolling() {
+        // Clear any existing interval
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+        }
+        
         // Poll every 30 seconds
         this.pollingInterval = setInterval(() => {
             this.pollForUpdates();
         }, 30000);
+        
+        // Do initial poll immediately
+        this.pollForUpdates();
 
         console.log('✅ Polling started (30s interval)');
     },
@@ -168,20 +176,29 @@ const DashboardRealtime = {
             const token = localStorage.getItem('authToken') || localStorage.getItem('token');
             if (!token) return;
 
+            // Use ProductionDataLoader if available for coordinated updates
+            if (window.ProductionDataLoader && window.ProductionDataLoader.refreshCriticalData) {
+                await window.ProductionDataLoader.refreshCriticalData();
+                return;
+            }
+
+            // Fallback to direct API calls
+            const apiBase = 'https://zimcrowd-api.onrender.com/api';
+            
             // Check for new notifications
-            const notificationsResponse = await fetch('https://zimcrowd-api.onrender.com/api/dashboard/notifications?unread=true', {
+            const notificationsResponse = await fetch(`${apiBase}/dashboard/notifications?unread=true`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (notificationsResponse.ok) {
                 const data = await notificationsResponse.json();
                 if (data.success) {
-                    this.updateNotificationCount(data.data.unread_count);
+                    this.updateNotificationCount(data.data.unread_count || 0);
                 }
             }
 
             // Check for wallet balance changes
-            const walletResponse = await fetch('https://zimcrowd-api.onrender.com/api/dashboard/wallet', {
+            const walletResponse = await fetch(`${apiBase}/dashboard/wallet`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -189,6 +206,30 @@ const DashboardRealtime = {
                 const data = await walletResponse.json();
                 if (data.success) {
                     this.updateWalletBalance(data.data);
+                }
+            }
+            
+            // Check for pending loan updates
+            const loansResponse = await fetch(`${apiBase}/loans/my-loans?status=active`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (loansResponse.ok) {
+                const data = await loansResponse.json();
+                if (data.success && data.data) {
+                    this.updateActiveLoansCount(data.data.length);
+                }
+            }
+            
+            // Check for investment returns
+            const investmentsResponse = await fetch(`${apiBase}/investments/portfolio`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (investmentsResponse.ok) {
+                const data = await investmentsResponse.json();
+                if (data.success && data.data) {
+                    this.updateInvestmentStats(data.data);
                 }
             }
 
@@ -340,16 +381,92 @@ const DashboardRealtime = {
      */
     resume() {
         this.startPolling();
+    },
+    
+    /**
+     * Update active loans count
+     */
+    updateActiveLoansCount(count) {
+        const badge = document.getElementById('activeLoansCount');
+        if (badge) {
+            badge.textContent = `${count} Active`;
+        }
+        
+        const loansTab = document.getElementById('activeLoansTabCount');
+        if (loansTab) {
+            loansTab.textContent = count;
+        }
+    },
+    
+    /**
+     * Update investment stats
+     */
+    updateInvestmentStats(data) {
+        const totalReturns = document.getElementById('portfolioTotalReturns');
+        if (totalReturns && data.total_returns !== undefined) {
+            const newValue = `$${parseFloat(data.total_returns).toLocaleString()}`;
+            if (totalReturns.textContent !== newValue) {
+                totalReturns.textContent = newValue;
+                this.animateElement(totalReturns);
+            }
+        }
+        
+        const totalInvested = document.getElementById('portfolioTotalInvested');
+        if (totalInvested && data.total_invested !== undefined) {
+            const newValue = `$${parseFloat(data.total_invested).toLocaleString()}`;
+            if (totalInvested.textContent !== newValue) {
+                totalInvested.textContent = newValue;
+                this.animateElement(totalInvested);
+            }
+        }
+    },
+    
+    /**
+     * Manual refresh trigger
+     */
+    async manualRefresh() {
+        console.log('🔄 Manual refresh triggered...');
+        
+        // Show loading indicator
+        const refreshBtn = document.getElementById('manualRefreshBtn');
+        if (refreshBtn) {
+            refreshBtn.disabled = true;
+            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+        }
+        
+        try {
+            await this.pollForUpdates();
+            this.showToast('Success', 'Data refreshed successfully', 'success');
+        } catch (error) {
+            this.showToast('Error', 'Failed to refresh data', 'error');
+        } finally {
+            if (refreshBtn) {
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+            }
+        }
+    }
+};
+
+// Add global refresh function
+window.refreshDashboard = function() {
+    if (window.DashboardRealtime) {
+        window.DashboardRealtime.manualRefresh();
     }
 };
 
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        DashboardRealtime.init();
+        // Wait a bit for ProductionDataLoader to initialize first
+        setTimeout(() => {
+            DashboardRealtime.init();
+        }, 1000);
     });
 } else {
-    DashboardRealtime.init();
+    setTimeout(() => {
+        DashboardRealtime.init();
+    }, 1000);
 }
 
 window.DashboardRealtime = DashboardRealtime;

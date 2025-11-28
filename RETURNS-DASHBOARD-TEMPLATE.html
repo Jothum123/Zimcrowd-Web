@@ -1,0 +1,249 @@
+<!-- Returns Dashboard Section -->
+<!-- Add this to your dashboard.html file -->
+
+<section class="dashboard-section" id="returns-section" style="display: none;">
+    <div class="section-header">
+        <h2><i class="fas fa-chart-line"></i> Investment Returns</h2>
+        <p>Track your returns and see exactly how much you're earning from each investment</p>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <div class="stat-content">
+                <h3 id="totalInvestedAmount">$0.00</h3>
+                <p>Total Invested</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #38e77b, #22c55e);">
+                <i class="fas fa-arrow-down"></i>
+            </div>
+            <div class="stat-content">
+                <h3 id="totalReturnsReceived">$0.00</h3>
+                <p>Returns Received</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-content">
+                <h3 id="netProfitAmount">$0.00</h3>
+                <p>Net Profit/Loss</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                <i class="fas fa-percentage"></i>
+            </div>
+            <div class="stat-content">
+                <h3 id="averageROI">0%</h3>
+                <p>Average ROI</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+        
+        <!-- Recent Returns -->
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3><i class="fas fa-money-bill-wave"></i> Recent Returns</h3>
+                <button class="btn-secondary" style="padding: 8px 16px; font-size: 14px;">
+                    <i class="fas fa-download"></i> Export
+                </button>
+            </div>
+            <div id="recentReturnsContainer">
+                <!-- Returns will be loaded here by JavaScript -->
+                <div style="text-align: center; padding: 40px; color: #64748b;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 48px; margin-bottom: 15px;"></i>
+                    <p>Loading returns...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Payments -->
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3><i class="fas fa-calendar-alt"></i> Upcoming Payments</h3>
+                <span class="badge" style="background: #3b82f6; padding: 6px 12px; border-radius: 6px; font-size: 12px;">
+                    Next 30 Days
+                </span>
+            </div>
+            <div id="upcomingPaymentsContainer">
+                <!-- Upcoming payments will be loaded here -->
+                <div style="text-align: center; padding: 40px; color: #64748b;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 48px; margin-bottom: 15px;"></i>
+                    <p>Loading payments...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Investment Breakdown -->
+    <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3><i class="fas fa-chart-pie"></i> Investment Breakdown</h3>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-secondary" style="padding: 8px 16px; font-size: 14px;">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <button class="btn-secondary" style="padding: 8px 16px; font-size: 14px;">
+                    <i class="fas fa-sort"></i> Sort
+                </button>
+            </div>
+        </div>
+        <div id="investmentBreakdownContainer">
+            <!-- Investment cards will be loaded here -->
+            <div style="text-align: center; padding: 40px; color: #64748b;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 48px; margin-bottom: 15px;"></i>
+                <p>Loading investments...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Returns Calculator -->
+    <div class="card" style="margin-top: 30px;">
+        <div class="card-header">
+            <h3><i class="fas fa-calculator"></i> Returns Calculator</h3>
+            <p style="color: #94a3b8; font-size: 14px; margin: 10px 0 0 0;">
+                Calculate potential returns before investing
+            </p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px;">
+            <div class="form-group">
+                <label>Investment Amount ($)</label>
+                <input type="number" id="calcInvestmentAmount" class="form-control" placeholder="100" value="100">
+            </div>
+            <div class="form-group">
+                <label>Interest Rate (% per month)</label>
+                <input type="number" id="calcInterestRate" class="form-control" placeholder="5" value="5" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Term (months)</label>
+                <input type="number" id="calcTerm" class="form-control" placeholder="3" value="3">
+            </div>
+        </div>
+        <div style="display: flex; gap: 15px; margin-top: 20px;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" id="calcIncludeInsurance" style="width: 20px; height: 20px;">
+                <span>Include Insurance (5%)</span>
+            </label>
+        </div>
+        <button class="btn-primary" onclick="calculateReturns()" style="margin-top: 20px;">
+            <i class="fas fa-calculator"></i> Calculate Returns
+        </button>
+        
+        <!-- Results -->
+        <div id="calculatorResults" style="display: none; margin-top: 30px; padding: 20px; background: #0f172a; border-radius: 12px; border-left: 4px solid #38e77b;">
+            <h4 style="margin: 0 0 20px 0; color: #fff;">Projected Returns</h4>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+                <div>
+                    <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">Total Paid</div>
+                    <div style="color: #fff; font-size: 20px; font-weight: 700;" id="calcTotalPaid">$0.00</div>
+                </div>
+                <div>
+                    <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">Expected Returns</div>
+                    <div style="color: #fff; font-size: 20px; font-weight: 700;" id="calcExpectedReturns">$0.00</div>
+                </div>
+                <div>
+                    <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">Net Profit</div>
+                    <div style="font-size: 20px; font-weight: 700;" id="calcNetProfit">$0.00</div>
+                </div>
+                <div>
+                    <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">ROI</div>
+                    <div style="font-size: 20px; font-weight: 700;" id="calcROI">0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+// Returns Calculator Function
+function calculateReturns() {
+    const amount = parseFloat(document.getElementById('calcInvestmentAmount').value) || 0;
+    const rate = parseFloat(document.getElementById('calcInterestRate').value) || 0;
+    const term = parseInt(document.getElementById('calcTerm').value) || 0;
+    const includeInsurance = document.getElementById('calcIncludeInsurance').checked;
+    
+    if (amount <= 0 || rate < 0 || term <= 0) {
+        alert('Please enter valid values');
+        return;
+    }
+    
+    // Calculate using ProductionDataLoader if available
+    if (window.ProductionDataLoader) {
+        // Calculate monthly payment (simple interest)
+        const monthlyInterest = amount * (rate / 100);
+        const monthlyPrincipal = amount / term;
+        const monthlyPayment = monthlyPrincipal + monthlyInterest;
+        const totalReturns = monthlyPayment * term;
+        
+        const fees = window.ProductionDataLoader.calculateLenderFees(amount, totalReturns, term, includeInsurance);
+        
+        // Display results
+        document.getElementById('calcTotalPaid').textContent = `$${fees.totalPaid.toFixed(2)}`;
+        document.getElementById('calcExpectedReturns').textContent = `$${fees.grossReturns.toFixed(2)}`;
+        
+        const netProfit = document.getElementById('calcNetProfit');
+        netProfit.textContent = `${fees.netProfit >= 0 ? '+' : ''}$${fees.netProfit.toFixed(2)}`;
+        netProfit.style.color = fees.netProfit >= 0 ? '#38e77b' : '#ef4444';
+        
+        const roi = document.getElementById('calcROI');
+        roi.textContent = `${fees.roi >= 0 ? '+' : ''}${fees.roi.toFixed(2)}%`;
+        roi.style.color = fees.roi >= 0 ? '#38e77b' : '#ef4444';
+        
+        document.getElementById('calculatorResults').style.display = 'block';
+    }
+}
+</script>
+
+<style>
+/* Returns Dashboard Styles */
+.return-item,
+.upcoming-payment,
+.investment-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.return-item:hover,
+.upcoming-payment:hover,
+.investment-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.badge {
+    display: inline-block;
+    font-weight: 600;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    #returns-section > div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+    
+    #calculatorResults > div[style*="grid-template-columns: repeat(4, 1fr)"] {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+</style>
