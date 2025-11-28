@@ -16,18 +16,7 @@ const authenticateUser = async (req, res, next) => {
             });
         }
 
-        // Verify JWT token
-        const jwt = require('jsonwebtoken');
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        if (!decoded || !decoded.userId) {
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid token'
-            });
-        }
-
-        // Get user from Supabase auth
+        // Verify token with Supabase (handles Google OAuth tokens correctly)
         const { data: { user }, error } = await supabase.auth.getUser(token);
 
         if (error || !user) {

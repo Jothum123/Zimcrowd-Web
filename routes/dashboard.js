@@ -16,38 +16,10 @@ const authenticateUser = async (req, res, next) => {
             });
         }
 
-        let user = null;
+        // Verify token with Supabase (handles all auth types)
+        const { data: { user }, error } = await supabase.auth.getUser(token);
 
-        // Try Supabase token first (for social auth)
-        try {
-            const { data: supabaseUser, error: supabaseError } = await supabase.auth.getUser(token);
-            if (!supabaseError && supabaseUser?.user) {
-                user = supabaseUser.user;
-            }
-        } catch (supabaseErr) {
-            // If Supabase fails, try JWT verification
-            try {
-                const jwt = require('jsonwebtoken');
-                const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-                if (decoded && decoded.userId) {
-                    // Get user from database using userId
-                    const { data: dbUser, error: dbError } = await supabase
-                        .from('users')
-                        .select('*')
-                        .eq('id', decoded.userId)
-                        .single();
-
-                    if (!dbError && dbUser) {
-                        user = dbUser;
-                    }
-                }
-            } catch (jwtErr) {
-                console.error('Both Supabase and JWT verification failed:', { supabaseErr, jwtErr });
-            }
-        }
-
-        if (!user) {
+        if (error || !user) {
             return res.status(401).json({
                 success: false,
                 message: 'Invalid or expired token'
