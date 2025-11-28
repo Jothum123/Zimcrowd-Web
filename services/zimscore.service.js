@@ -206,16 +206,21 @@ class ZimScoreService {
                 financialData
             );
 
-            // COLD START OVERRIDE: All new users start with $100 limit
-            const maxLoanAmount = 100; // Fixed $100 for all new users
+            // COLD START LIMIT: Based on employment type and DTNI
+            // Government: Up to $300 (40% DTNI)
+            // Other formal employers: Up to $100 (33% DTNI)
+            const dtniBasedLimit = coldStartResult.coldStartLimit;
+            const employmentCap = employmentType === 'government' ? 300 : 100;
+            const maxLoanAmount = Math.min(dtniBasedLimit, employmentCap);
+            
             const scoreBasedLimit = this.calculateMaxLoanAmount(score); // Unlocked after first repayment
-            const dtniBasedLimit = coldStartResult.coldStartLimit; // For reference only
             const installmentUtilization = coldStartResult.installmentUtilization || 0;
             const dtniStatus = coldStartResult.status;
 
             console.log(`✅ Cold Start Score: ${score}/85 (${starRating}⭐) - Risk Level: ${riskLevel}`);
-            console.log(`💰 Cold Start Limit: $100 (FIXED for all new users)`);
-            console.log(`📊 DTNI-based Limit: $${dtniBasedLimit} (for reference)`);
+            console.log(`💰 Employment Type: ${employmentType} (Cap: $${employmentCap})`);
+            console.log(`📊 DTNI-based Limit: $${dtniBasedLimit} (${dtniStatus})`);
+            console.log(`💵 Cold Start Limit: $${maxLoanAmount} (min of DTNI and employment cap)`);
             console.log(`📊 Score-based Limit: $${scoreBasedLimit} (unlocks after first repayment)`);
 
             // Save to database
@@ -486,6 +491,7 @@ class ZimScoreService {
                 .single();
 
             const netSalary = employmentDetails?.monthly_income || 0;
+            const isCivilServant = employmentType === 'government';
 
             if (netSalary === 0) {
                 return {
@@ -493,7 +499,7 @@ class ZimScoreService {
                     maxInstallment: 0,
                     netSalary: 0,
                     status: 'No income data',
-                    isCivilServant: employmentType === 'government'
+                    isCivilServant: isCivilServant
                 };
             }
 
@@ -517,8 +523,11 @@ class ZimScoreService {
                 });
             }
 
-            // DTNI Calculation: Net Salary × 40% = Maximum Total Monthly Installment
-            const maxTotalInstallment = netSalary * 0.40;
+            // DTNI Calculation: Net Salary × DTNI% = Maximum Total Monthly Installment
+            // Government: 40% DTNI
+            // Others: 33% DTNI
+            const dtniPercentage = isCivilServant ? 0.40 : 0.33;
+            const maxTotalInstallment = netSalary * dtniPercentage;
 
             // Available installment capacity = Max Total - Existing
             const availableInstallment = Math.max(0, maxTotalInstallment - existingMonthlyInstallment);
@@ -536,7 +545,6 @@ class ZimScoreService {
             );
 
             // Apply employment-based caps
-            const isCivilServant = employmentType === 'government';
             const maxCap = isCivilServant ? 
                 this.COLD_START_LIMITS.government.max : 
                 this.COLD_START_LIMITS.other.max;
@@ -568,11 +576,12 @@ class ZimScoreService {
 
             console.log(`📊 DTNI Calculation:`);
             console.log(`   Net Salary: $${netSalary}`);
-            console.log(`   Max Total Installment (40%): $${maxTotalInstallment.toFixed(2)}`);
+            console.log(`   DTNI Percentage: ${(dtniPercentage * 100).toFixed(0)}% (${isCivilServant ? 'Government' : 'Other'})`);
+            console.log(`   Max Total Installment: $${maxTotalInstallment.toFixed(2)}`);
             console.log(`   Existing Monthly Installment: $${existingMonthlyInstallment.toFixed(2)}`);
             console.log(`   Available Installment: $${availableInstallment.toFixed(2)}`);
             console.log(`   Installment Utilization: ${(installmentUtilization * 100).toFixed(1)}%`);
-            console.log(`   Employment: ${employmentType} (${isCivilServant ? 'Civil Servant' : 'Other'})`);
+            console.log(`   Employment: ${employmentType} (${isCivilServant ? 'Government - $300 cap' : 'Other - $100 cap'})`);
             console.log(`   Max Cap: $${maxCap}`);
             console.log(`   Cold Start Limit: $${coldStartLimit} (${status})`);
 
