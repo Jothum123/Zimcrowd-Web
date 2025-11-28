@@ -579,24 +579,80 @@
                         </small>
                     </div>
 
-                    <!-- Calculation Summary -->
+                    <!-- Platform Fees Breakdown -->
                     <div class="calculation-summary">
-                        <h3 class="schedule-title">💵 Loan Summary</h3>
+                        <h3 class="schedule-title">💰 Platform Fees Breakdown</h3>
+                        
                         <div class="summary-row">
-                            <span class="summary-label">Loan Amount:</span>
-                            <span class="summary-value" id="summary-amount">$0</span>
+                            <span class="summary-label"><strong>Requested Amount:</strong></span>
+                            <span class="summary-value" id="summary-amount">$0.00</span>
+                        </div>
+                        
+                        <div style="margin: 12px 0; padding: 12px; background: #fef3c7; border-radius: 8px;">
+                            <div style="font-weight: 600; margin-bottom: 8px;">Upfront Fees (Deducted Before Disbursement):</div>
+                            <div class="summary-row" style="border: none; padding: 4px 0;">
+                                <span class="summary-label">Service Fee (10%):</span>
+                                <span class="summary-value" style="color: #dc2626;" id="service-fee">-$0.00</span>
+                            </div>
+                            <div class="summary-row" style="border: none; padding: 4px 0;">
+                                <span class="summary-label">Insurance Fee (5%):</span>
+                                <span class="summary-value" style="color: #dc2626;" id="insurance-fee">-$0.00</span>
+                            </div>
+                            <div class="summary-row" style="border-top: 1px solid #f59e0b; padding-top: 8px;">
+                                <span class="summary-label"><strong>Total Upfront Fees:</strong></span>
+                                <span class="summary-value" style="color: #dc2626;" id="total-upfront-fees">-$0.00</span>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-row" style="background: #d1fae5; padding: 12px; border-radius: 8px; margin: 8px 0;">
+                            <span class="summary-label"><strong>Net Amount Received:</strong></span>
+                            <span class="summary-value" style="color: #059669; font-size: 20px;" id="net-received">$0.00</span>
+                        </div>
+                        
+                        <div style="margin: 12px 0; padding: 12px; background: #e0f2fe; border-radius: 8px;">
+                            <div style="font-weight: 600; margin-bottom: 8px;">Ongoing Fees (Added to Monthly Payment):</div>
+                            <div class="summary-row" style="border: none; padding: 4px 0;">
+                                <span class="summary-label">Tenure Fee (1% monthly):</span>
+                                <span class="summary-value" id="tenure-fee-monthly">$0.00/month</span>
+                            </div>
+                            <div class="summary-row" style="border: none; padding: 4px 0;">
+                                <span class="summary-label">Total Tenure Fees:</span>
+                                <span class="summary-value" id="total-tenure-fees">$0.00</span>
+                            </div>
+                            <div class="summary-row" style="border: none; padding: 4px 0;">
+                                <span class="summary-label">Collection Fee (5% of payment):</span>
+                                <span class="summary-value" id="collection-fee-monthly">$0.00/month</span>
+                            </div>
+                            <div class="summary-row" style="border-top: 1px solid #0ea5e9; padding-top: 8px;">
+                                <span class="summary-label"><strong>Total Collection Fees:</strong></span>
+                                <span class="summary-value" id="total-collection-fees">$0.00</span>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-row" style="background: #fef3c7; padding: 12px; border-radius: 8px; margin: 8px 0;">
+                            <span class="summary-label"><strong>Total All Platform Fees:</strong></span>
+                            <span class="summary-value" style="color: #f59e0b; font-size: 18px;" id="total-platform-fees">$0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Loan Summary -->
+                    <div class="calculation-summary" style="margin-top: 16px;">
+                        <h3 class="schedule-title">📊 Loan Summary</h3>
+                        <div class="summary-row">
+                            <span class="summary-label">Base Monthly Payment (Principal + Interest):</span>
+                            <span class="summary-value" id="base-monthly-payment">$0.00</span>
+                        </div>
+                        <div class="summary-row" style="background: #f0f9ff; padding: 12px; border-radius: 8px;">
+                            <span class="summary-label"><strong>Total Monthly Payment (Including Fees):</strong></span>
+                            <span class="summary-value" style="color: #0ea5e9; font-size: 18px;" id="total-monthly-payment">$0.00</span>
                         </div>
                         <div class="summary-row">
-                            <span class="summary-label">Platform Fee (5%):</span>
-                            <span class="summary-value" id="summary-fee">$0</span>
+                            <span class="summary-label">Total Interest:</span>
+                            <span class="summary-value" id="summary-interest">$0.00</span>
                         </div>
                         <div class="summary-row">
-                            <span class="summary-label">Interest (5%):</span>
-                            <span class="summary-value" id="summary-interest">$0</span>
-                        </div>
-                        <div class="summary-row">
-                            <span class="summary-label">Total Repayment:</span>
-                            <span class="summary-value" id="summary-total">$0</span>
+                            <span class="summary-label"><strong>Total Repayment (All Payments):</strong></span>
+                            <span class="summary-value" style="font-size: 20px; color: #667eea;" id="summary-total">$0.00</span>
                         </div>
                     </div>
 
@@ -790,42 +846,67 @@
             });
         }
 
-        // Update calculations using Reducing Balance Method
+        // Update calculations using Reducing Balance Method with comprehensive fees
         function updateCalculations() {
             const loanAmount = parseInt(document.getElementById('loan-amount-slider').value);
             const tenure = parseInt(document.getElementById('loan-tenure').value);
             const monthlyInterestRate = parseFloat(document.getElementById('interest-rate-slider').value);
             const termMonths = Math.ceil(tenure / 30);
 
-            // Calculate platform fee
-            const platformFee = loanAmount * 0.05;
+            // UPFRONT FEES (Deducted before disbursement)
+            const serviceFee = loanAmount * 0.10; // 10%
+            const insuranceFee = loanAmount * 0.05; // 5%
+            const totalUpfrontFees = serviceFee + insuranceFee;
+            const netAmountReceived = loanAmount - totalUpfrontFees;
 
-            // Calculate interest using reducing balance method
-            // Monthly payment formula: M = P × [r × (1 + r)^n] / [(1 + r)^n - 1]
-            const monthlyRate = monthlyInterestRate / 100; // Convert percentage to decimal
-            let monthlyPayment;
+            // Calculate base interest using reducing balance method
+            const monthlyRate = monthlyInterestRate / 100;
+            let baseMonthlyPayment;
             let totalInterest;
 
             if (monthlyRate > 0) {
                 const powerTerm = Math.pow(1 + monthlyRate, termMonths);
-                monthlyPayment = loanAmount * (monthlyRate * powerTerm) / (powerTerm - 1);
-                totalInterest = (monthlyPayment * termMonths) - loanAmount;
+                baseMonthlyPayment = loanAmount * (monthlyRate * powerTerm) / (powerTerm - 1);
+                totalInterest = (baseMonthlyPayment * termMonths) - loanAmount;
             } else {
-                // Zero interest
-                monthlyPayment = loanAmount / termMonths;
+                baseMonthlyPayment = loanAmount / termMonths;
                 totalInterest = 0;
             }
 
-            const totalRepayment = loanAmount + platformFee + totalInterest;
+            // ONGOING FEES (Added to monthly payment)
+            const tenureFeePerMonth = loanAmount * 0.01; // 1% of loan amount per month
+            const totalTenureFees = tenureFeePerMonth * termMonths;
+            
+            const collectionFeePerMonth = baseMonthlyPayment * 0.05; // 5% of each payment
+            const totalCollectionFees = collectionFeePerMonth * termMonths;
 
-            // Update summary
-            document.getElementById('summary-amount').textContent = `$${loanAmount}`;
-            document.getElementById('summary-fee').textContent = `$${platformFee.toFixed(2)}`;
+            // TOTALS
+            const totalAllPlatformFees = totalUpfrontFees + totalTenureFees + totalCollectionFees;
+            const totalMonthlyPayment = baseMonthlyPayment + tenureFeePerMonth + collectionFeePerMonth;
+            const totalRepayment = totalMonthlyPayment * termMonths;
+
+            // Update Platform Fees Breakdown
+            document.getElementById('summary-amount').textContent = `$${loanAmount.toFixed(2)}`;
+            document.getElementById('service-fee').textContent = `-$${serviceFee.toFixed(2)}`;
+            document.getElementById('insurance-fee').textContent = `-$${insuranceFee.toFixed(2)}`;
+            document.getElementById('total-upfront-fees').textContent = `-$${totalUpfrontFees.toFixed(2)}`;
+            document.getElementById('net-received').textContent = `$${netAmountReceived.toFixed(2)}`;
+            
+            document.getElementById('tenure-fee-monthly').textContent = `$${tenureFeePerMonth.toFixed(2)}/month`;
+            document.getElementById('total-tenure-fees').textContent = `$${totalTenureFees.toFixed(2)}`;
+            document.getElementById('collection-fee-monthly').textContent = `$${collectionFeePerMonth.toFixed(2)}/month`;
+            document.getElementById('total-collection-fees').textContent = `$${totalCollectionFees.toFixed(2)}`;
+            
+            document.getElementById('total-platform-fees').textContent = `$${totalAllPlatformFees.toFixed(2)}`;
+
+            // Update Loan Summary
+            document.getElementById('base-monthly-payment').textContent = `$${baseMonthlyPayment.toFixed(2)}`;
+            document.getElementById('total-monthly-payment').textContent = `$${totalMonthlyPayment.toFixed(2)}`;
             document.getElementById('summary-interest').textContent = `$${totalInterest.toFixed(2)}`;
             document.getElementById('summary-total').textContent = `$${totalRepayment.toFixed(2)}`;
 
             // Generate payment schedule
-            generatePaymentSchedule(monthlyPayment, termMonths, tenure);
+            generatePaymentSchedule(totalMonthlyPayment, termMonths, tenure);
         }
 
         // Generate payment schedule

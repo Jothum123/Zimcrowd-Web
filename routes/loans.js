@@ -163,25 +163,40 @@ router.post('/request', authenticateUser, async (req, res) => {
             });
         }
 
-        // 7. Calculate fees and total using reducing balance
-        const platformFee = amount * 0.05; // 5% platform fee
+        // 7. Calculate comprehensive fee breakdown
         
-        // Calculate total interest using reducing balance method
+        // UPFRONT FEES (Deducted before disbursement)
+        const serviceFee = amount * 0.10; // 10% service fee
+        const insuranceFee = amount * 0.05; // 5% insurance fee
+        const totalUpfrontFees = serviceFee + insuranceFee;
+        const netAmountReceived = amount - totalUpfrontFees;
+        
+        // Calculate base interest using reducing balance method
         // Monthly payment formula: M = P × [r × (1 + r)^n] / [(1 + r)^n - 1]
-        let monthlyPayment;
+        let baseMonthlyPayment;
         let totalInterest;
         
         if (monthlyRate > 0) {
             const powerTerm = Math.pow(1 + monthlyRate, termMonths);
-            monthlyPayment = amount * (monthlyRate * powerTerm) / (powerTerm - 1);
-            totalInterest = (monthlyPayment * termMonths) - amount;
+            baseMonthlyPayment = amount * (monthlyRate * powerTerm) / (powerTerm - 1);
+            totalInterest = (baseMonthlyPayment * termMonths) - amount;
         } else {
             // Zero interest
-            monthlyPayment = amount / termMonths;
+            baseMonthlyPayment = amount / termMonths;
             totalInterest = 0;
         }
         
-        const totalRepayment = amount + platformFee + totalInterest;
+        // ONGOING FEES (Added to monthly payment)
+        const tenureFeePerMonth = amount * 0.01; // 1% of loan amount per month
+        const totalTenureFees = tenureFeePerMonth * termMonths;
+        
+        const collectionFeePerMonth = baseMonthlyPayment * 0.05; // 5% of each payment
+        const totalCollectionFees = collectionFeePerMonth * termMonths;
+        
+        // TOTAL CALCULATIONS
+        const totalAllPlatformFees = totalUpfrontFees + totalTenureFees + totalCollectionFees;
+        const totalMonthlyPayment = baseMonthlyPayment + tenureFeePerMonth + collectionFeePerMonth;
+        const totalRepayment = (totalMonthlyPayment * termMonths);
 
         // 8. Generate payment schedule
         const today = new Date();
@@ -211,7 +226,10 @@ router.post('/request', authenticateUser, async (req, res) => {
                 paymentSchedule.push({
                     payment_number: i + 1,
                     due_date: paymentDate.toISOString(),
-                    amount: monthlyPayment,
+                    amount: totalMonthlyPayment,
+                    base_payment: baseMonthlyPayment,
+                    tenure_fee: tenureFeePerMonth,
+                    collection_fee: collectionFeePerMonth,
                     grace_days: 35
                 });
             }
@@ -227,14 +245,17 @@ router.post('/request', authenticateUser, async (req, res) => {
                 paymentSchedule.push({
                     payment_number: i + 1,
                     due_date: paymentDate.toISOString(),
-                    amount: monthlyPayment,
+                    amount: totalMonthlyPayment,
+                    base_payment: baseMonthlyPayment,
+                    tenure_fee: tenureFeePerMonth,
+                    collection_fee: collectionFeePerMonth,
                     grace_days: 0 // Built into 35-day period
                 });
             }
         }
 
-        // 9. Create loan record
-        const { data: loan, error: loanError } = await supabase
+        // 9. Create loan record with comprehensive fee breakdown
+        const { data: loan, error: loanError} = await supabase
             .from('loans')
             .insert({
                 borrower_id: userId,
@@ -242,10 +263,27 @@ router.post('/request', authenticateUser, async (req, res) => {
                 purpose: purpose,
                 tenure_days: tenure_days,
                 interest_rate: monthlyInterestRate, // Store as percentage (0-10%)
+                
+                // Upfront fees
+                service_fee: serviceFee,
+                insurance_fee: insuranceFee,
+                total_upfront_fees: totalUpfrontFees,
+                net_amount_received: netAmountReceived,
+                
+                // Ongoing fees
+                tenure_fee_per_month: tenureFeePerMonth,
+                total_tenure_fees: totalTenureFees,
+                collection_fee_per_month: collectionFeePerMonth,
+                total_collection_fees: totalCollectionFees,
+                
+                // Totals
                 total_interest: totalInterest,
-                platform_fee: platformFee,
+                total_platform_fees: totalAllPlatformFees,
+                base_monthly_payment: baseMonthlyPayment,
+                total_monthly_payment: totalMonthlyPayment,
                 total_repayment: totalRepayment,
-                monthly_payment: monthlyPayment,
+                
+                // Other details
                 employment_type: employmentTypeActual,
                 zimscore_at_request: zimScore.score,
                 dtni_at_request: currentDTNI,
@@ -272,10 +310,36 @@ router.post('/request', authenticateUser, async (req, res) => {
             message: 'Loan request submitted successfully',
             data: {
                 loan_id: loan.id,
-                amount: amount,
+                requested_amount: amount,
+                
+                // Upfront Fees (Deducted Before Disbursement)
+                upfront_fees: {
+                    service_fee: serviceFee,
+                    insurance_fee: insuranceFee,
+                    total: totalUpfrontFees
+                },
+                net_amount_received: netAmountReceived,
+                
+                // Ongoing Fees (Added to Monthly Payment)
+                ongoing_fees: {
+                    tenure_fee_per_month: tenureFeePerMonth,
+                    total_tenure_fees: totalTenureFees,
+                    collection_fee_per_month: collectionFeePerMonth,
+                    total_collection_fees: totalCollectionFees
+                },
+                
+                // Platform Fees Summary
+                total_platform_fees: totalAllPlatformFees,
+                
+                // Loan Summary
+                base_monthly_payment: baseMonthlyPayment,
+                total_monthly_payment: totalMonthlyPayment,
+                total_interest: totalInterest,
                 total_repayment: totalRepayment,
-                monthly_payment: monthlyPayment,
+                
+                // Other details
                 tenure_days: tenure_days,
+                interest_rate: monthlyInterestRate + '% per month',
                 payment_schedule: paymentSchedule,
                 status: 'pending',
                 dtni: (currentDTNI * 100).toFixed(1) + '%',
