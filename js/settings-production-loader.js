@@ -73,6 +73,7 @@ class SettingsProductionLoader {
             // Load all settings in parallel from production API
             const results = await Promise.allSettled([
                 this.apiRequest('/settings/profile'),
+                this.apiRequest('/settings/security'),
                 this.apiRequest('/settings/notifications'),
                 this.apiRequest('/settings/display'),
                 this.apiRequest('/settings/investment-preferences'),
@@ -81,12 +82,13 @@ class SettingsProductionLoader {
             ]);
             
             // Extract successful results
-            const [profile, notifications, display, investments, privacy, documents] = results.map(r => 
+            const [profile, security, notifications, display, investments, privacy, documents] = results.map(r => 
                 r.status === 'fulfilled' ? r.value?.data : null
             );
 
             // Populate forms
             if (profile) this.populateProfileForm(profile);
+            if (security) this.populateSecurityForm(security);
             if (notifications) this.populateNotificationForm(notifications);
             if (display) this.populateDisplayForm(display);
             if (investments) this.populateInvestmentForm(investments);
@@ -96,10 +98,131 @@ class SettingsProductionLoader {
             // Hide loading state
             this.hideLoadingState();
             
-            console.log('✅ All settings loaded');
+            console.log('✅ All settings loaded from production API');
         } catch (error) {
             console.error('❌ Error loading settings:', error);
             this.showError('Failed to load settings. Please refresh the page.');
+        }
+    }
+    
+    // ============================================
+    // SECURITY SETTINGS
+    // ============================================
+    populateSecurityForm(security) {
+        this.setCheckboxValue('twoFactorAuth', security.twoFactorEnabled);
+        this.setCheckboxValue('loginNotifications', security.loginNotifications);
+        this.setInputValue('sessionTimeout', security.sessionTimeout);
+        
+        // Populate login history
+        const historyContainer = document.getElementById('login-history');
+        if (historyContainer && security.loginHistory) {
+            historyContainer.innerHTML = security.loginHistory.map(entry => `
+                <div class="history-item">
+                    <div class="history-info">
+                        <span class="device">${entry.device || 'Unknown Device'}</span>
+                        <span class="location">${entry.location || 'Unknown Location'}</span>
+                    </div>
+                    <div class="history-time">${new Date(entry.created_at).toLocaleString()}</div>
+                </div>
+            `).join('') || '<p>No login history available</p>';
+        }
+        
+        // Populate active sessions
+        const sessionsContainer = document.getElementById('active-sessions');
+        if (sessionsContainer && security.activeSessions) {
+            sessionsContainer.innerHTML = security.activeSessions.map(session => `
+                <div class="session-item">
+                    <div class="session-info">
+                        <span class="device">${session.device || 'Unknown Device'}</span>
+                        <span class="ip">${session.ip_address || ''}</span>
+                    </div>
+                    <button class="btn-danger btn-sm" onclick="settingsLoader.revokeSession('${session.id}')">
+                        Revoke
+                    </button>
+                </div>
+            `).join('') || '<p>No active sessions</p>';
+        }
+    }
+
+    async saveSecuritySettings() {
+        try {
+            const settings = {
+                two_factor_enabled: this.getCheckboxValue('twoFactorAuth'),
+                login_notifications: this.getCheckboxValue('loginNotifications'),
+                session_timeout: parseInt(this.getInputValue('sessionTimeout')) || 30
+            };
+
+            const response = await this.apiRequest('/settings/security', {
+                method: 'PUT',
+                body: JSON.stringify(settings)
+            });
+            
+            if (response.success) {
+                this.showSuccess('Security settings updated!');
+                this.unsavedChanges = false;
+            }
+        } catch (error) {
+            console.error('❌ Error saving security settings:', error);
+            this.showError('Failed to save security settings.');
+        }
+    }
+
+    async changePassword(currentPassword, newPassword) {
+        try {
+            const response = await this.apiRequest('/settings/security/change-password', {
+                method: 'POST',
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword
+                })
+            });
+            
+            if (response.success) {
+                this.showSuccess('Password changed successfully!');
+                return true;
+            }
+        } catch (error) {
+            console.error('❌ Error changing password:', error);
+            this.showError('Failed to change password. Please check your current password.');
+            return false;
+        }
+    }
+
+    async revokeSession(sessionId) {
+        try {
+            const response = await this.apiRequest('/settings/security/revoke-session', {
+                method: 'POST',
+                body: JSON.stringify({ session_id: sessionId })
+            });
+            
+            if (response.success) {
+                this.showSuccess('Session revoked!');
+                // Reload security settings to update the list
+                const security = await this.apiRequest('/settings/security');
+                if (security.data) this.populateSecurityForm(security.data);
+            }
+        } catch (error) {
+            console.error('❌ Error revoking session:', error);
+            this.showError('Failed to revoke session.');
+        }
+    }
+
+    async revokeAllSessions() {
+        try {
+            const response = await this.apiRequest('/settings/security/revoke-all-sessions', {
+                method: 'POST',
+                body: JSON.stringify({})
+            });
+            
+            if (response.success) {
+                this.showSuccess('All other sessions revoked!');
+                // Reload security settings
+                const security = await this.apiRequest('/settings/security');
+                if (security.data) this.populateSecurityForm(security.data);
+            }
+        } catch (error) {
+            console.error('❌ Error revoking sessions:', error);
+            this.showError('Failed to revoke sessions.');
         }
     }
 
@@ -483,12 +606,16 @@ class SettingsProductionLoader {
             case 'profile':
                 await this.saveProfileSettings();
                 break;
+            case 'security':
+                await this.saveSecuritySettings();
+                break;
             case 'notifications':
                 await this.saveNotificationSettings();
                 break;
             case 'display':
                 await this.saveDisplaySettings();
                 break;
+            case 'investment':
             case 'investments':
                 await this.saveInvestmentPreferences();
                 break;
