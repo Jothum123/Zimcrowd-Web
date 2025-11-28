@@ -557,6 +557,28 @@
                         </small>
                     </div>
 
+                    <!-- Interest Rate -->
+                    <div class="form-group">
+                        <label class="form-label" for="interest-rate">Monthly Interest Rate (%)</label>
+                        <div class="slider-container">
+                            <div class="slider-value"><span id="interest-rate-display">5</span>%</div>
+                            <input type="range" 
+                                   id="interest-rate-slider" 
+                                   class="slider" 
+                                   min="0" 
+                                   max="10" 
+                                   value="5" 
+                                   step="0.5">
+                            <div class="slider-labels">
+                                <span>0%</span>
+                                <span>10%</span>
+                            </div>
+                        </div>
+                        <small style="color: #6b7280; font-size: 12px; margin-top: 4px; display: block;">
+                            Interest rate per month (0-10%)
+                        </small>
+                    </div>
+
                     <!-- Calculation Summary -->
                     <div class="calculation-summary">
                         <h3 class="schedule-title">💵 Loan Summary</h3>
@@ -675,15 +697,14 @@
             const tenure = zimscoreData.data?.loan_tenure_days || 90;
             const termMonths = Math.ceil(tenure / 30);
 
-            // Calculate max loan using Reducing Balance Method
+            // Calculate max loan using Reducing Balance Method with default 5% monthly interest
             // Formula: P = (M × [(1 + r)^n - 1]) / [r × (1 + r)^n]
-            const annualInterestRate = 0.05; // 5% annual
-            const monthlyInterestRate = annualInterestRate / 12; // 0.4167% monthly
+            const defaultMonthlyRate = 0.05; // 5% per month (default for limit calculation)
             
             let maxLoanFromDTNI;
-            if (monthlyInterestRate > 0 && termMonths > 0) {
-                const powerTerm = Math.pow(1 + monthlyInterestRate, termMonths);
-                maxLoanFromDTNI = (availableInstallment * (powerTerm - 1)) / (monthlyInterestRate * powerTerm);
+            if (defaultMonthlyRate > 0 && termMonths > 0) {
+                const powerTerm = Math.pow(1 + defaultMonthlyRate, termMonths);
+                maxLoanFromDTNI = (availableInstallment * (powerTerm - 1)) / (defaultMonthlyRate * powerTerm);
             } else {
                 maxLoanFromDTNI = availableInstallment * termMonths;
             }
@@ -762,30 +783,53 @@
             document.getElementById('loan-tenure').addEventListener('input', () => {
                 updateCalculations();
             });
+
+            document.getElementById('interest-rate-slider').addEventListener('input', (e) => {
+                document.getElementById('interest-rate-display').textContent = e.target.value;
+                updateCalculations();
+            });
         }
 
-        // Update calculations
+        // Update calculations using Reducing Balance Method
         function updateCalculations() {
             const loanAmount = parseInt(document.getElementById('loan-amount-slider').value);
             const tenure = parseInt(document.getElementById('loan-tenure').value);
+            const monthlyInterestRate = parseFloat(document.getElementById('interest-rate-slider').value);
+            const termMonths = Math.ceil(tenure / 30);
 
-            // Calculate fees and interest
+            // Calculate platform fee
             const platformFee = loanAmount * 0.05;
-            const interest = loanAmount * 0.05;
-            const totalRepayment = loanAmount + platformFee + interest;
+
+            // Calculate interest using reducing balance method
+            // Monthly payment formula: M = P × [r × (1 + r)^n] / [(1 + r)^n - 1]
+            const monthlyRate = monthlyInterestRate / 100; // Convert percentage to decimal
+            let monthlyPayment;
+            let totalInterest;
+
+            if (monthlyRate > 0) {
+                const powerTerm = Math.pow(1 + monthlyRate, termMonths);
+                monthlyPayment = loanAmount * (monthlyRate * powerTerm) / (powerTerm - 1);
+                totalInterest = (monthlyPayment * termMonths) - loanAmount;
+            } else {
+                // Zero interest
+                monthlyPayment = loanAmount / termMonths;
+                totalInterest = 0;
+            }
+
+            const totalRepayment = loanAmount + platformFee + totalInterest;
 
             // Update summary
             document.getElementById('summary-amount').textContent = `$${loanAmount}`;
             document.getElementById('summary-fee').textContent = `$${platformFee.toFixed(2)}`;
-            document.getElementById('summary-interest').textContent = `$${interest.toFixed(2)}`;
+            document.getElementById('summary-interest').textContent = `$${totalInterest.toFixed(2)}`;
             document.getElementById('summary-total').textContent = `$${totalRepayment.toFixed(2)}`;
 
             // Generate payment schedule
-            generatePaymentSchedule(totalRepayment, tenure);
+            generatePaymentSchedule(monthlyPayment, termMonths, tenure);
         }
 
         // Generate payment schedule
-        function generatePaymentSchedule(totalAmount, tenureDays) {
+        function generatePaymentSchedule(monthlyPayment, termMonths, tenureDays) {
             const employmentType = userData.data.employment_type || 'informal';
             const scheduleList = document.getElementById('payment-schedule-list');
             scheduleList.innerHTML = '';
@@ -807,11 +851,7 @@
                     firstPaymentDate = new Date(today.getFullYear(), today.getMonth() + 2, 0);
                 }
 
-                // Calculate number of payments (monthly)
-                const months = Math.ceil(tenureDays / 30);
-                const monthlyPayment = totalAmount / months;
-
-                for (let i = 0; i < months; i++) {
+                for (let i = 0; i < termMonths; i++) {
                     const paymentDate = new Date(firstPaymentDate);
                     paymentDate.setMonth(paymentDate.getMonth() + i);
                     // Set to last day of month
@@ -828,10 +868,7 @@
                 const firstPaymentDate = new Date(today);
                 firstPaymentDate.setDate(firstPaymentDate.getDate() + 35);
 
-                const months = Math.ceil(tenureDays / 30);
-                const monthlyPayment = totalAmount / months;
-
-                for (let i = 0; i < months; i++) {
+                for (let i = 0; i < termMonths; i++) {
                     const paymentDate = new Date(firstPaymentDate);
                     paymentDate.setMonth(paymentDate.getMonth() + i);
 
@@ -859,6 +896,7 @@
             const loanAmount = parseInt(document.getElementById('loan-amount-slider').value);
             const loanPurpose = document.getElementById('loan-purpose').value;
             const loanTenure = parseInt(document.getElementById('loan-tenure').value);
+            const interestRate = parseFloat(document.getElementById('interest-rate-slider').value);
 
             // Validation
             if (!loanPurpose) {
@@ -873,6 +911,11 @@
 
             if (loanTenure > loanLimits.maxTenure) {
                 showAlert(`Maximum tenure is ${loanLimits.maxTenure} days`, 'error');
+                return;
+            }
+
+            if (interestRate < 0 || interestRate > 10) {
+                showAlert('Interest rate must be between 0% and 10%', 'error');
                 return;
             }
 
@@ -893,6 +936,7 @@
                         amount: loanAmount,
                         purpose: loanPurpose,
                         tenure_days: loanTenure,
+                        interest_rate: interestRate,
                         employment_type: userData.data.employment_type
                     })
                 });

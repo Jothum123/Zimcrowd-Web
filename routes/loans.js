@@ -32,9 +32,18 @@ const handleValidationErrors = (req, res, next) => {
 router.post('/request', authenticateUser, async (req, res) => {
     try {
         const userId = req.user.id;
-        const { amount, purpose, tenure_days, employment_type } = req.body;
+        const { amount, purpose, tenure_days, employment_type, interest_rate } = req.body;
 
-        console.log(`💰 Loan request from user ${userId}: $${amount}, ${tenure_days} days`);
+        // Validate interest rate (0-10% per month)
+        const monthlyInterestRate = interest_rate !== undefined ? parseFloat(interest_rate) : 5.0; // Default 5% per month
+        if (monthlyInterestRate < 0 || monthlyInterestRate > 10) {
+            return res.status(400).json({
+                success: false,
+                message: 'Interest rate must be between 0% and 10% per month'
+            });
+        }
+
+        console.log(`💰 Loan request from user ${userId}: $${amount}, ${tenure_days} days, ${monthlyInterestRate}% interest`);
 
         // 1. Get user profile and ZimScore
         const { data: profile, error: profileError } = await supabase
@@ -96,16 +105,16 @@ router.post('/request', authenticateUser, async (req, res) => {
         // Formula: P = (M × [(1 + r)^n - 1]) / [r × (1 + r)^n]
         // Where: P = Principal (loan amount), M = Monthly payment, r = monthly interest rate, n = number of months
         
-        const annualInterestRate = 0.05; // 5% annual
-        const monthlyInterestRate = annualInterestRate / 12; // 0.4167% monthly
+        // Convert monthly interest rate from percentage to decimal (e.g., 5% → 0.05)
+        const monthlyRate = monthlyInterestRate / 100;
         const termMonths = Math.ceil(tenure_days / 30);
         
         // Calculate maximum loan amount from available installment using reducing balance
         let maxLoanFromDTNI;
-        if (monthlyInterestRate > 0 && termMonths > 0) {
+        if (monthlyRate > 0 && termMonths > 0) {
             // Reducing balance formula
-            const powerTerm = Math.pow(1 + monthlyInterestRate, termMonths);
-            maxLoanFromDTNI = (availableInstallment * (powerTerm - 1)) / (monthlyInterestRate * powerTerm);
+            const powerTerm = Math.pow(1 + monthlyRate, termMonths);
+            maxLoanFromDTNI = (availableInstallment * (powerTerm - 1)) / (monthlyRate * powerTerm);
         } else {
             // Fallback for zero interest
             maxLoanFromDTNI = availableInstallment * termMonths;
@@ -154,11 +163,25 @@ router.post('/request', authenticateUser, async (req, res) => {
             });
         }
 
-        // 7. Calculate fees and total
-        const platformFee = amount * 0.05; // 5%
-        const interest = amount * interestRate;
-        const totalRepayment = amount + platformFee + interest;
-        const monthlyPayment = totalRepayment / termMonths;
+        // 7. Calculate fees and total using reducing balance
+        const platformFee = amount * 0.05; // 5% platform fee
+        
+        // Calculate total interest using reducing balance method
+        // Monthly payment formula: M = P × [r × (1 + r)^n] / [(1 + r)^n - 1]
+        let monthlyPayment;
+        let totalInterest;
+        
+        if (monthlyRate > 0) {
+            const powerTerm = Math.pow(1 + monthlyRate, termMonths);
+            monthlyPayment = amount * (monthlyRate * powerTerm) / (powerTerm - 1);
+            totalInterest = (monthlyPayment * termMonths) - amount;
+        } else {
+            // Zero interest
+            monthlyPayment = amount / termMonths;
+            totalInterest = 0;
+        }
+        
+        const totalRepayment = amount + platformFee + totalInterest;
 
         // 8. Generate payment schedule
         const today = new Date();
@@ -218,7 +241,8 @@ router.post('/request', authenticateUser, async (req, res) => {
                 amount: amount,
                 purpose: purpose,
                 tenure_days: tenure_days,
-                interest_rate: interestRate,
+                interest_rate: monthlyInterestRate, // Store as percentage (0-10%)
+                total_interest: totalInterest,
                 platform_fee: platformFee,
                 total_repayment: totalRepayment,
                 monthly_payment: monthlyPayment,
