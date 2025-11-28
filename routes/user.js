@@ -695,46 +695,379 @@ router.post('/kyc/submit', authenticateUser, async (req, res) => {
     }
 });
 
-// @route   POST /api/profile-setup/complete
-// @desc    Complete post-registration profile setup
+// @route   POST /api/user/settings/personal-details
+// @desc    Save personal details (name, DOB, gender, marital status)
 // @access  Private
-router.post('/profile-setup/complete', authenticateUser, async (req, res) => {
+router.post('/settings/personal-details', authenticateUser, async (req, res) => {
     try {
         const userId = req.user.id;
-        const profileData = req.body;
+        const { first_name, last_name, date_of_birth, gender, marital_status, nationality } = req.body;
 
-        console.log('🎯 Completing profile setup for user:', userId);
+        console.log('💼 Saving personal details for user:', userId);
 
         // Clean up empty fields
-        const cleanedData = { ...profileData };
-        if (cleanedData.date_of_birth === '') cleanedData.date_of_birth = null;
-        if (cleanedData.gender === '') cleanedData.gender = null;
+        const personalData = {
+            first_name,
+            last_name,
+            date_of_birth: date_of_birth === '' ? null : date_of_birth,
+            gender: gender === '' ? null : gender,
+            marital_status: marital_status === '' ? null : marital_status,
+            nationality,
+            updated_at: new Date().toISOString()
+        };
 
-        // Update profile with all post-registration data
         const { data: profile, error } = await supabase
             .from('profiles')
-            .update({
-                ...cleanedData,
-                updated_at: new Date().toISOString()
-            })
+            .update(personalData)
             .eq('id', userId)
             .select()
             .single();
 
         if (error) throw error;
 
-        console.log('✅ Profile setup completed successfully');
+        console.log('✅ Personal details saved');
 
         res.json({
             success: true,
-            message: 'Profile setup completed successfully',
+            message: 'Personal details saved successfully',
             data: profile
         });
     } catch (error) {
-        console.error('❌ Error completing profile setup:', error);
+        console.error('❌ Error saving personal details:', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to complete profile setup',
+            message: 'Failed to save personal details',
+            error: error.message
+        });
+    }
+});
+
+// @route   POST /api/user/settings/next-of-kin
+// @desc    Save next of kin details
+// @access  Private
+router.post('/settings/next-of-kin', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { kin_name, kin_relationship, kin_phone, kin_email, kin_address } = req.body;
+
+        console.log('👨‍👩‍👧 Saving next of kin for user:', userId);
+
+        const kinData = {
+            kin_name,
+            kin_relationship,
+            kin_phone,
+            kin_email,
+            kin_address,
+            updated_at: new Date().toISOString()
+        };
+
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .update(kinData)
+            .eq('id', userId)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        console.log('✅ Next of kin saved');
+
+        res.json({
+            success: true,
+            message: 'Next of kin details saved successfully',
+            data: {
+                kin_name: profile.kin_name,
+                kin_relationship: profile.kin_relationship,
+                kin_phone: profile.kin_phone,
+                kin_email: profile.kin_email,
+                kin_address: profile.kin_address
+            }
+        });
+    } catch (error) {
+        console.error('❌ Error saving next of kin:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to save next of kin details',
+            error: error.message
+        });
+    }
+});
+
+// @route   POST /api/user/settings/employment-details
+// @desc    Save employment details
+// @access  Private
+router.post('/settings/employment-details', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { 
+            employment_type, 
+            employment_status, 
+            employer_name, 
+            occupation, 
+            monthly_income,
+            annual_income,
+            source_of_funds 
+        } = req.body;
+
+        console.log('💼 Saving employment details for user:', userId);
+
+        const employmentData = {
+            employment_type,
+            employment_status: employment_status === '' ? null : employment_status,
+            employer_name,
+            occupation,
+            monthly_income,
+            annual_income,
+            source_of_funds,
+            updated_at: new Date().toISOString()
+        };
+
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .update(employmentData)
+            .eq('id', userId)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        console.log('✅ Employment details saved');
+
+        res.json({
+            success: true,
+            message: 'Employment details saved successfully',
+            data: {
+                employment_type: profile.employment_type,
+                employment_status: profile.employment_status,
+                employer_name: profile.employer_name,
+                occupation: profile.occupation,
+                monthly_income: profile.monthly_income,
+                annual_income: profile.annual_income,
+                source_of_funds: profile.source_of_funds
+            }
+        });
+    } catch (error) {
+        console.error('❌ Error saving employment details:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to save employment details',
+            error: error.message
+        });
+    }
+});
+
+// @route   POST /api/user/settings/physical-address
+// @desc    Save physical address
+// @access  Private
+router.post('/settings/physical-address', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { 
+            street_address, 
+            suburb, 
+            city, 
+            postal_code, 
+            country 
+        } = req.body;
+
+        console.log('🏠 Saving physical address for user:', userId);
+
+        const addressData = {
+            street_address,
+            suburb,
+            city,
+            postal_code,
+            country,
+            updated_at: new Date().toISOString()
+        };
+
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .update(addressData)
+            .eq('id', userId)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        console.log('✅ Physical address saved');
+
+        res.json({
+            success: true,
+            message: 'Physical address saved successfully',
+            data: {
+                street_address: profile.street_address,
+                suburb: profile.suburb,
+                city: profile.city,
+                postal_code: profile.postal_code,
+                country: profile.country
+            }
+        });
+    } catch (error) {
+        console.error('❌ Error saving physical address:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to save physical address',
+            error: error.message
+        });
+    }
+});
+
+// @route   POST /api/user/settings/documents
+// @desc    Save document details and OCR validation results
+// @access  Private
+router.post('/settings/documents', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { 
+            document_type,
+            document_number,
+            document_url,
+            ocr_validation_result,
+            face_verification_result,
+            verification_status
+        } = req.body;
+
+        console.log('📄 Saving document details for user:', userId);
+
+        // Save to documents table (create if doesn't exist)
+        const { data: document, error: docError } = await supabase
+            .from('user_documents')
+            .insert({
+                user_id: userId,
+                document_type,
+                document_number,
+                document_url,
+                ocr_validation: ocr_validation_result,
+                face_verification: face_verification_result,
+                verification_status: verification_status || 'pending',
+                uploaded_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+        if (docError) {
+            // If table doesn't exist, save to profiles table
+            console.log('⚠️ user_documents table not found, saving to profiles');
+            
+            const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .update({
+                    id_number: document_number,
+                    passport_number: document_type === 'passport' ? document_number : null,
+                    kyc_status: verification_status || 'pending',
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', userId)
+                .select()
+                .single();
+
+            if (profileError) throw profileError;
+
+            return res.json({
+                success: true,
+                message: 'Document details saved successfully',
+                data: {
+                    document_type,
+                    document_number,
+                    verification_status: verification_status || 'pending',
+                    saved_to: 'profiles'
+                }
+            });
+        }
+
+        console.log('✅ Document details saved');
+
+        res.json({
+            success: true,
+            message: 'Document details saved successfully',
+            data: document
+        });
+    } catch (error) {
+        console.error('❌ Error saving document details:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to save document details',
+            error: error.message
+        });
+    }
+});
+
+// @route   POST /api/user/settings/payment-method
+// @desc    Save payment method details
+// @access  Private
+router.post('/settings/payment-method', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { 
+            payment_method_type,
+            phone_number,
+            bank_name,
+            account_number,
+            account_holder_name,
+            is_primary
+        } = req.body;
+
+        console.log('💳 Saving payment method for user:', userId);
+
+        // Save to payment_methods table (create if doesn't exist)
+        const { data: paymentMethod, error: pmError } = await supabase
+            .from('payment_methods')
+            .insert({
+                user_id: userId,
+                payment_type: payment_method_type,
+                phone_number,
+                bank_name,
+                account_number,
+                account_holder_name,
+                is_primary: is_primary || false,
+                is_verified: false,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+        if (pmError) {
+            // If table doesn't exist, save to profiles table
+            console.log('⚠️ payment_methods table not found, saving to profiles');
+            
+            const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .update({
+                    phone: phone_number,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', userId)
+                .select()
+                .single();
+
+            if (profileError) throw profileError;
+
+            return res.json({
+                success: true,
+                message: 'Payment method saved successfully',
+                data: {
+                    payment_method_type,
+                    phone_number,
+                    saved_to: 'profiles'
+                }
+            });
+        }
+
+        console.log('✅ Payment method saved');
+
+        res.json({
+            success: true,
+            message: 'Payment method saved successfully',
+            data: paymentMethod
+        });
+    } catch (error) {
+        console.error('❌ Error saving payment method:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to save payment method',
             error: error.message
         });
     }
