@@ -583,6 +583,9 @@ router.post('/kyc/submit', authenticateUser, async (req, res) => {
         const zimScoreService = new ZimScoreService();
         
         let zimScore = null;
+        let coldStartLoanLimit = 0;
+        let loanTenure = 90; // Default 90 days (3 months)
+        
         try {
             // Get employment type from profile or KYC data
             const employmentType = kycData.employment_type || 'informal';
@@ -596,10 +599,70 @@ router.post('/kyc/submit', authenticateUser, async (req, res) => {
             }, employmentType);
             
             zimScore = scoreData.score;
-            console.log(`🎯 Initial ZimScore calculated: ${zimScore} (will update with bank statement)`);
+            
+            // Set cold start loan limit based on employment type
+            if (employmentType === 'government') {
+                coldStartLoanLimit = 300; // Government employees: $300 max
+            } else {
+                coldStartLoanLimit = 100; // Others: $100 max
+            }
+            
+            console.log(`🎯 Initial ZimScore calculated: ${zimScore}`);
+            console.log(`💰 Cold start loan limit: $${coldStartLoanLimit} (${employmentType})`);
+            console.log(`📅 Cold start tenure: ${loanTenure} days (3 months fixed)`);
+            
         } catch (scoreError) {
             console.error('⚠️ ZimScore calculation failed:', scoreError);
-            // Continue without score - can be calculated later
+            
+            // FALLBACK: Set cold start score and limits based on employment type
+            const employmentType = kycData.employment_type || 'informal';
+            
+            // Cold start score = Base score (30) + Employment bonus
+            const employmentBonus = {
+                government: 10,
+                private: 6,
+                business: 3,
+                informal: 0
+            };
+            
+            zimScore = 30 + (employmentBonus[employmentType] || 0);
+            
+            // Cold start loan limits
+            if (employmentType === 'government') {
+                coldStartLoanLimit = 300; // Government: $300 max
+            } else {
+                coldStartLoanLimit = 100; // Others: $100 max
+            }
+            
+            loanTenure = 90; // Fixed 3 months for cold start
+            
+            console.log(`⚠️ Using fallback cold start values:`);
+            console.log(`   ZimScore: ${zimScore} (30 base + ${employmentBonus[employmentType]} employment bonus)`);
+            console.log(`   Loan limit: $${coldStartLoanLimit}`);
+            console.log(`   Tenure: ${loanTenure} days`);
+            
+            // Save cold start score to database
+            try {
+                await supabase
+                    .from('user_zimscores')
+                    .upsert({
+                        user_id: userId,
+                        score: zimScore,
+                        component1_banking: 0,
+                        component2_employment: employmentBonus[employmentType] || 0,
+                        component3_performance: 0,
+                        cold_start_limit: coldStartLoanLimit,
+                        loan_tenure_days: loanTenure,
+                        is_cold_start: true,
+                        updated_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'user_id'
+                    });
+                
+                console.log('✅ Cold start ZimScore saved to database');
+            } catch (dbError) {
+                console.error('⚠️ Failed to save cold start score:', dbError);
+            }
         }
 
         res.json({
@@ -610,7 +673,16 @@ router.post('/kyc/submit', authenticateUser, async (req, res) => {
                 submitted_at: new Date().toISOString(),
                 ocr_status: ocrData?.status || 'not_provided',
                 zimscore: zimScore,
-                zimscore_calculated: zimScore !== null
+                zimscore_calculated: zimScore !== null,
+                cold_start_loan_limit: coldStartLoanLimit,
+                loan_tenure_days: loanTenure,
+                employment_type: kycData.employment_type || 'informal',
+                loan_limits: {
+                    max_amount: coldStartLoanLimit,
+                    tenure_days: loanTenure,
+                    tenure_months: 3,
+                    note: 'Cold start limits. Will increase after successful repayment.'
+                }
             }
         });
     } catch (error) {
