@@ -11241,18 +11241,8 @@ How it works:
     </div>
 
     <script>
-        // Analytics Charts and Functionality
-        let portfolioChart = null;
-        let allocationChart = null;
-
-        // Initialize Analytics when section is shown
-        function initializeAnalytics() {
-            if (document.getElementById('analytics-section').classList.contains('active')) {
-                createPortfolioChart();
-                createAllocationChart();
-                loadAnalyticsData();
-            }
-        }
+        // Analytics removed - Admin only feature
+        // All analytics functionality moved to admin dashboard
 
         // Create Portfolio Performance Chart
         function createPortfolioChart() {
@@ -11314,43 +11304,6 @@ How it works:
             };
 
             portfolioChart = new Chart(ctx, config);
-        }
-
-        // Create Asset Allocation Chart
-        function createAllocationChart() {
-            const ctx = document.getElementById('allocationChart');
-            if (!ctx) return;
-
-            // Destroy existing chart if it exists
-            if (allocationChart) {
-                allocationChart.destroy();
-            }
-
-            const data = {
-                labels: ['Loans', 'Bonds', 'Cash'],
-                datasets: [{
-                    data: [65, 25, 10],
-                    backgroundColor: ['#38e77b', '#3b82f6', '#f59e0b'],
-                    borderWidth: 0
-                }]
-            };
-
-            const config = {
-                type: 'doughnut',
-                data: data,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    cutout: '60%'
-                }
-            };
-
-            allocationChart = new Chart(ctx, config);
         }
 
         // Update chart based on time period
@@ -11444,19 +11397,13 @@ How it works:
                 'investments': 'My Investments',
                 'transactions': 'Transaction History',
                 'referrals': 'Referral Program',
-                'analytics': 'Analytics & Insights',
                 'settings': 'Account Settings'
             };
             
             document.getElementById('page-title').textContent = titles[sectionName] || 'Dashboard';
-            
-            // Initialize analytics if analytics section is shown
-            if (sectionName === 'analytics') {
-                setTimeout(initializeAnalytics, 100); // Small delay to ensure DOM is ready
-            }
         }
 
-        // Update the existing navigation event listeners to include analytics
+        // Navigation event listeners
         document.addEventListener('DOMContentLoaded', function() {
             // Navigation
             document.querySelectorAll('.nav-link').forEach(link => {
@@ -11469,11 +11416,6 @@ How it works:
                     }
                 });
             });
-
-            // Initialize analytics on page load if analytics section is active
-            if (document.getElementById('analytics-section').classList.contains('active')) {
-                initializeAnalytics();
-            }
         });
 
         // Kairo AI Chat Functionality
