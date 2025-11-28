@@ -139,7 +139,7 @@ Total Repayment:                $118.67
 **Investment Details:**
 ```
 Investment Amount: $100
-Loan Interest Rate: 5% per month
+Borrower's Interest Rate: 5% per month (chosen by borrower)
 Tenure: 3 months
 ```
 
@@ -155,12 +155,17 @@ Total Amount Paid:              $113.00 ✅
 Amount Actually Invested:       $100.00
 (Borrower receives this amount)
 
-ONGOING FEES (Deducted from Returns):
+BORROWER'S PAYMENTS (Based on 5% monthly interest):
+Base Monthly Payment:           $36.72
+(Principal + Interest at borrower's rate)
+
+LENDER'S RETURNS (From borrower's payments):
 Monthly Payment Received:       $36.72
 Collection Fee (5%):            -$1.84
 Net Monthly Return:             $34.88
 
 Total Returns Over 3 Months:    $110.16
+(Principal $100 + Interest $10.16 from borrower)
 Total Collection Fees:          -$5.51
 Net Returns After Fees:         $104.65
 
@@ -172,6 +177,7 @@ Ongoing Fees Paid:              $5.51
 Total Fees Paid:                $18.51
 
 Gross Returns:                  $110.16
+(Based on borrower's 5% interest rate)
 Net Returns:                    $104.65
 Net Loss:                       -$8.35 (-7.4%)
 ```
@@ -180,7 +186,56 @@ Net Loss:                       -$8.35 (-7.4%)
 - Total paid: $113.00
 - Total received: $104.65
 - Net loss: -$8.35 (-7.4% of total paid)
-- Note: Lender earns from interest spread, not shown in this example
+- **Note:** Lender receives returns based on borrower's chosen interest rate (5% in this example)
+- **Higher borrower rates = Higher lender returns**
+
+---
+
+### **6. Lender Returns at Different Borrower Rates**
+
+**Same $100 investment, 3 months, varying borrower interest rates:**
+
+#### **Borrower Rate: 3% per month**
+```
+Lender Pays:                    $113.00
+Borrower's Monthly Payment:     $35.15
+Lender's Net Monthly Return:    $33.39 (after 5% collection fee)
+Total Returns:                  $106.24
+Net Returns After All Fees:     $100.17
+Net Loss:                       -$12.83 (-11.4%)
+```
+
+#### **Borrower Rate: 5% per month** (Example above)
+```
+Lender Pays:                    $113.00
+Borrower's Monthly Payment:     $36.72
+Lender's Net Monthly Return:    $34.88
+Total Returns:                  $110.16
+Net Returns After All Fees:     $104.65
+Net Loss:                       -$8.35 (-7.4%)
+```
+
+#### **Borrower Rate: 7% per month**
+```
+Lender Pays:                    $113.00
+Borrower's Monthly Payment:     $38.31
+Lender's Net Monthly Return:    $36.39
+Total Returns:                  $114.93
+Net Returns After All Fees:     $109.17
+Net Loss:                       -$3.83 (-3.4%)
+```
+
+#### **Borrower Rate: 10% per month**
+```
+Lender Pays:                    $113.00
+Borrower's Monthly Payment:     $40.21
+Lender's Net Monthly Return:    $38.20
+Total Returns:                  $120.63
+Net Returns After All Fees:     $114.60
+Net Profit:                     +$1.60 (+1.4%) ✅
+```
+
+**Key Insight:** Lenders become profitable when borrowers choose rates above ~9.5% per month
 
 ---
 
@@ -368,6 +423,7 @@ Loan Summary:
 Investment Fees Breakdown
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Investment Amount:             $100.00
+Borrower's Interest Rate:      5% per month ⭐
 
 Upfront Fees (Added to Investment):
   Service Fee (10%):           +$10.00
@@ -379,8 +435,10 @@ Total Amount to Pay:           $113.00 ✅
 Amount Actually Invested:      $100.00
 (Borrower receives this)
 
-Ongoing Fees (Deducted from Returns):
-  Collection Fee (5%):         $1.84/month
+Returns Based on Borrower's Rate (5%):
+  Borrower's Monthly Payment:  $36.72
+  Collection Fee (5%):         -$1.84
+  Your Net Monthly Return:     $34.88
 
 Total Investment Fees:         $18.51
 
@@ -390,7 +448,9 @@ Investment Summary:
   Total Returns (Net):         $104.65
   Net Loss:                    -$8.35 (-7.4%)
   
-Note: Returns based on $100 invested at borrower's interest rate
+💡 Your returns depend on the borrower's chosen rate
+   Higher borrower rates = Higher your returns
+   At 10% borrower rate, you'd profit $1.60
 ```
 
 ---
