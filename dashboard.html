@@ -10414,6 +10414,41 @@ How it works:
             return storedToken;
         }
 
+        // Initialize Production Loaders for Analytics and Settings
+        async function initializeProductionLoaders() {
+            try {
+                console.log('🚀 Initializing Production Loaders...');
+                
+                // Initialize Analytics Production Loader
+                if (typeof AnalyticsProductionLoader !== 'undefined') {
+                    window.analyticsLoader = new AnalyticsProductionLoader();
+                    await window.analyticsLoader.init();
+                    console.log('✅ Analytics Production Loader initialized');
+                } else {
+                    console.warn('⚠️ AnalyticsProductionLoader not found');
+                }
+                
+                // Initialize Settings Production Loader
+                if (typeof SettingsProductionLoader !== 'undefined') {
+                    window.settingsLoader = new SettingsProductionLoader();
+                    await window.settingsLoader.init();
+                    console.log('✅ Settings Production Loader initialized');
+                } else {
+                    console.warn('⚠️ SettingsProductionLoader not found');
+                }
+                
+                // Initialize Real-time Integration if available
+                if (typeof RealtimeIntegration !== 'undefined') {
+                    await RealtimeIntegration.init();
+                    console.log('✅ Real-time Integration initialized');
+                }
+                
+                console.log('🎉 All Production Loaders initialized successfully');
+            } catch (error) {
+                console.error('❌ Error initializing production loaders:', error);
+            }
+        }
+
         // Initialize data loading on page load
         window.addEventListener('DOMContentLoaded', function() {
             // Handle OAuth callback and get token
@@ -10450,6 +10485,9 @@ How it works:
                 loadTransactionsData();
                 loadReferralsData();
                 loadNotifications();
+                
+                // Initialize production loaders for Analytics and Settings
+                initializeProductionLoaders();
             } else {
                 console.log('⚠️ No authentication found in data loading check');
                 console.log('🔍 Debug info:', {

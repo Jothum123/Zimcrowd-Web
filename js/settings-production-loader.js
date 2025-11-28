@@ -5,7 +5,7 @@
 
 class SettingsProductionLoader {
     constructor() {
-        this.dataManager = window.ProductionDataManager;
+        this.apiBase = window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api';
         this.currentTab = 'profile';
         this.unsavedChanges = false;
     }
@@ -13,16 +13,56 @@ class SettingsProductionLoader {
     async init() {
         console.log('⚙️ Initializing Settings Production Loader...');
         
-        // Load all settings data
-        await this.loadAllSettings();
+        try {
+            // Load all settings data
+            await this.loadAllSettings();
+            
+            // Setup event listeners
+            this.setupEventListeners();
+            
+            // Setup auto-save
+            this.setupAutoSave();
+            
+            console.log('✅ Settings Production Loader ready');
+        } catch (error) {
+            console.error('❌ Error initializing settings loader:', error);
+        }
+    }
+    
+    /**
+     * Get auth token
+     */
+    getAuthToken() {
+        return localStorage.getItem('authToken') || 
+               localStorage.getItem('token') || 
+               localStorage.getItem('access_token');
+    }
+    
+    /**
+     * API request helper
+     */
+    async apiRequest(endpoint, options = {}) {
+        const token = this.getAuthToken();
         
-        // Setup event listeners
-        this.setupEventListeners();
-        
-        // Setup auto-save
-        this.setupAutoSave();
-        
-        console.log('✅ Settings Production Loader ready');
+        try {
+            const response = await fetch(`${this.apiBase}${endpoint}`, {
+                ...options,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error(`API Request failed for ${endpoint}:`, error);
+            throw error;
+        }
     }
 
     async loadAllSettings() {
@@ -30,22 +70,20 @@ class SettingsProductionLoader {
             // Show loading state
             this.showLoadingState();
             
-            // Load all settings in parallel
-            const [
-                profile,
-                notifications,
-                display,
-                investments,
-                privacy,
-                documents
-            ] = await Promise.all([
-                this.dataManager.loadProfileSettings(),
-                this.dataManager.loadNotificationSettings(),
-                this.dataManager.loadDisplaySettings(),
-                this.dataManager.loadInvestmentPreferences(),
-                this.dataManager.loadPrivacySettings(),
-                this.dataManager.loadDocuments()
+            // Load all settings in parallel from production API
+            const results = await Promise.allSettled([
+                this.apiRequest('/settings/profile'),
+                this.apiRequest('/settings/notifications'),
+                this.apiRequest('/settings/display'),
+                this.apiRequest('/settings/investment-preferences'),
+                this.apiRequest('/settings/privacy'),
+                this.apiRequest('/documents')
             ]);
+            
+            // Extract successful results
+            const [profile, notifications, display, investments, privacy, documents] = results.map(r => 
+                r.status === 'fulfilled' ? r.value?.data : null
+            );
 
             // Populate forms
             if (profile) this.populateProfileForm(profile);
