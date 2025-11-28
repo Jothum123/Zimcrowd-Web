@@ -113,35 +113,94 @@ class SettingsProductionLoader {
         this.setCheckboxValue('loginNotifications', security.loginNotifications);
         this.setInputValue('sessionTimeout', security.sessionTimeout);
         
+        // Update security score
+        const securityScore = this.calculateSecurityScore(security);
+        const scoreBar = document.getElementById('security-score-bar');
+        const scoreText = document.getElementById('security-score-text');
+        const statusText = document.getElementById('security-status-text');
+        const alertsCount = document.getElementById('security-alerts-count');
+        
+        if (scoreBar) scoreBar.style.width = `${securityScore}%`;
+        if (scoreText) scoreText.textContent = `${securityScore}%`;
+        if (statusText) {
+            if (securityScore >= 80) statusText.textContent = 'Strong';
+            else if (securityScore >= 50) statusText.textContent = 'Moderate';
+            else statusText.textContent = 'Weak';
+        }
+        
+        // Calculate recommendations
+        const recommendations = [];
+        if (!security.twoFactorEnabled) recommendations.push('Enable 2FA');
+        if (!security.loginNotifications) recommendations.push('Enable login alerts');
+        if (alertsCount) alertsCount.textContent = `${recommendations.length} recommendations`;
+        
         // Populate login history
         const historyContainer = document.getElementById('login-history');
-        if (historyContainer && security.loginHistory) {
-            historyContainer.innerHTML = security.loginHistory.map(entry => `
-                <div class="history-item">
-                    <div class="history-info">
-                        <span class="device">${entry.device || 'Unknown Device'}</span>
-                        <span class="location">${entry.location || 'Unknown Location'}</span>
+        if (historyContainer) {
+            if (security.loginHistory && security.loginHistory.length > 0) {
+                historyContainer.innerHTML = security.loginHistory.map((entry, index) => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas ${entry.device?.includes('Mobile') ? 'fa-mobile-alt' : 'fa-desktop'}" style="color: ${index === 0 ? '#10b981' : '#3b82f6'}; font-size: 18px;"></i>
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">${entry.device || 'Unknown Device'}</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 12px;">${entry.browser || 'Unknown Browser'} • ${entry.location || 'Unknown Location'}</p>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            ${index === 0 ? '<p style="margin: 0; color: #10b981; font-size: 12px;">Current Session</p>' : ''}
+                            <p style="margin: 0; color: #94a3b8; font-size: 11px;">${this.formatTimeAgo(entry.created_at)}</p>
+                        </div>
                     </div>
-                    <div class="history-time">${new Date(entry.created_at).toLocaleString()}</div>
-                </div>
-            `).join('') || '<p>No login history available</p>';
+                `).join('');
+            } else {
+                historyContainer.innerHTML = '<p style="color: #94a3b8; text-align: center; padding: 20px;">No login history available</p>';
+            }
         }
         
         // Populate active sessions
         const sessionsContainer = document.getElementById('active-sessions');
-        if (sessionsContainer && security.activeSessions) {
-            sessionsContainer.innerHTML = security.activeSessions.map(session => `
-                <div class="session-item">
-                    <div class="session-info">
-                        <span class="device">${session.device || 'Unknown Device'}</span>
-                        <span class="ip">${session.ip_address || ''}</span>
+        if (sessionsContainer) {
+            if (security.activeSessions && security.activeSessions.length > 0) {
+                sessionsContainer.innerHTML = security.activeSessions.map((session, index) => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas ${session.device?.includes('Mobile') ? 'fa-mobile-alt' : 'fa-desktop'}" style="color: ${index === 0 ? '#10b981' : '#3b82f6'}; font-size: 18px;"></i>
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">${session.device || 'Unknown Device'}</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 12px;">IP: ${session.ip_address || 'Unknown'}</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            ${index === 0 ? '<span style="color: #10b981; font-size: 12px;">Current</span>' : `<button class="btn-secondary" style="font-size: 12px; padding: 4px 10px;" onclick="settingsLoader.revokeSession('${session.id}')">Revoke</button>`}
+                        </div>
                     </div>
-                    <button class="btn-danger btn-sm" onclick="settingsLoader.revokeSession('${session.id}')">
-                        Revoke
-                    </button>
-                </div>
-            `).join('') || '<p>No active sessions</p>';
+                `).join('');
+            } else {
+                sessionsContainer.innerHTML = '<p style="color: #94a3b8; text-align: center; padding: 20px;">No active sessions</p>';
+            }
         }
+    }
+    
+    calculateSecurityScore(security) {
+        let score = 40; // Base score
+        if (security.twoFactorEnabled) score += 30;
+        if (security.loginNotifications) score += 15;
+        if (security.sessionTimeout && security.sessionTimeout <= 30) score += 15;
+        return Math.min(100, score);
+    }
+    
+    formatTimeAgo(dateString) {
+        if (!dateString) return 'Unknown';
+        const date = new Date(dateString);
+        const now = new Date();
+        const diff = Math.floor((now - date) / 1000);
+        
+        if (diff < 60) return 'Just now';
+        if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+        if (diff < 604800) return `${Math.floor(diff / 86400)} days ago`;
+        return date.toLocaleDateString();
     }
 
     async saveSecuritySettings() {

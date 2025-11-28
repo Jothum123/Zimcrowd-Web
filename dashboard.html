@@ -5035,7 +5035,7 @@
 
             <!-- Security Tab -->
             <div id="security-tab" class="tab-content">
-                <!-- Security Overview -->
+                <!-- Security Overview - Loaded from API -->
                 <div class="loan-card" style="margin-bottom: 20px;">
                     <h3 style="margin-bottom: 20px;">🔒 Security Overview</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
@@ -5044,14 +5044,14 @@
                                 <i class="fas fa-shield-alt" style="color: #10b981; font-size: 24px;"></i>
                                 <div>
                                     <h4 style="color: #10b981; margin: 0;">Account Security</h4>
-                                    <p style="color: #94a3b8; font-size: 12px; margin: 0;">Strong</p>
+                                    <p id="security-status-text" style="color: #94a3b8; font-size: 12px; margin: 0;">Loading...</p>
                                 </div>
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <div style="flex: 1; background: rgba(16, 185, 129, 0.2); height: 6px; border-radius: 3px;">
-                                    <div style="width: 85%; height: 100%; background: #10b981; border-radius: 3px;"></div>
+                                    <div id="security-score-bar" style="width: 0%; height: 100%; background: #10b981; border-radius: 3px; transition: width 0.5s;"></div>
                                 </div>
-                                <span style="color: #10b981; font-size: 12px; font-weight: 600;">85%</span>
+                                <span id="security-score-text" style="color: #10b981; font-size: 12px; font-weight: 600;">0%</span>
                             </div>
                         </div>
                         <div style="background: rgba(245, 158, 11, 0.1); padding: 20px; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.3);">
@@ -5059,7 +5059,7 @@
                                 <i class="fas fa-exclamation-triangle" style="color: #f59e0b; font-size: 24px;"></i>
                                 <div>
                                     <h4 style="color: #f59e0b; margin: 0;">Security Alerts</h4>
-                                    <p style="color: #94a3b8; font-size: 12px; margin: 0;">2 recommendations</p>
+                                    <p id="security-alerts-count" style="color: #94a3b8; font-size: 12px; margin: 0;">Loading...</p>
                                 </div>
                             </div>
                             <button class="btn-secondary" style="font-size: 12px; padding: 6px 12px;" onclick="showSecurityRecommendations()">
@@ -5166,46 +5166,35 @@
                     </div>
                 </div>
 
-                <!-- Login Activity -->
+                <!-- Login Activity - Loaded from API -->
                 <div class="loan-card">
                     <h3 style="margin-bottom: 20px;">🕒 Recent Login Activity</h3>
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <i class="fas fa-desktop" style="color: #10b981; font-size: 18px;"></i>
-                                <div>
-                                    <p style="margin: 0; font-weight: 600;">Windows Desktop</p>
-                                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">Chrome Browser • Harare, Zimbabwe</p>
-                                </div>
-                            </div>
-                            <div style="text-align: right;">
-                                <p style="margin: 0; color: #10b981; font-size: 12px;">Current Session</p>
-                                <p style="margin: 0; color: #94a3b8; font-size: 11px;">2 hours ago</p>
-                            </div>
+                    <div id="login-history" style="display: flex; flex-direction: column; gap: 12px;">
+                        <!-- Login history loaded dynamically from API -->
+                        <div class="loading-placeholder" style="padding: 20px; text-align: center; color: #94a3b8;">
+                            <i class="fas fa-spinner fa-spin"></i> Loading login history...
                         </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <i class="fas fa-mobile-alt" style="color: #3b82f6; font-size: 18px;"></i>
-                                <div>
-                                    <p style="margin: 0; font-weight: 600;">Mobile Device</p>
-                                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">Safari Browser • Harare, Zimbabwe</p>
-                                </div>
-                            </div>
-                            <div style="text-align: right;">
-                                <p style="margin: 0; color: #94a3b8; font-size: 12px;">Yesterday</p>
-                                <p style="margin: 0; color: #94a3b8; font-size: 11px;">Nov 18, 2:30 PM</p>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <h4 style="margin-bottom: 15px; color: #e2e8f0;">Active Sessions</h4>
+                        <div id="active-sessions" style="display: flex; flex-direction: column; gap: 12px;">
+                            <!-- Active sessions loaded dynamically from API -->
+                            <div class="loading-placeholder" style="padding: 20px; text-align: center; color: #94a3b8;">
+                                <i class="fas fa-spinner fa-spin"></i> Loading active sessions...
                             </div>
                         </div>
                     </div>
-                    <button class="btn-secondary" style="margin-top: 15px;" onclick="viewAllSessions()">
-                        <i class="fas fa-list"></i> View All Sessions
-                    </button>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button class="btn-secondary" onclick="settingsLoader.revokeAllSessions()">
+                            <i class="fas fa-sign-out-alt"></i> Revoke All Other Sessions
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <!-- Notifications Tab -->
             <div id="notifications-tab" class="tab-content">
-                <!-- Notification Overview -->
+                <!-- Notification Overview - Loaded from API -->
                 <div class="loan-card" style="margin-bottom: 20px;">
                     <h3 style="margin-bottom: 20px;">🔔 Notification Center</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
@@ -5214,21 +5203,21 @@
                                 <i class="fas fa-check-circle" style="color: #10b981;"></i>
                                 <span style="font-weight: 600; color: #10b981;">Active Alerts</span>
                             </div>
-                            <p style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">12</p>
+                            <p id="notification-active-count" style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">0</p>
                         </div>
                         <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
                             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
                                 <i class="fas fa-envelope" style="color: #3b82f6;"></i>
                                 <span style="font-weight: 600; color: #3b82f6;">Email Enabled</span>
                             </div>
-                            <p style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">8</p>
+                            <p id="notification-email-count" style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">0</p>
                         </div>
                         <div style="background: rgba(245, 158, 11, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.3);">
                             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
                                 <i class="fas fa-mobile-alt" style="color: #f59e0b;"></i>
                                 <span style="font-weight: 600; color: #f59e0b;">Push Enabled</span>
                             </div>
-                            <p style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">6</p>
+                            <p id="notification-push-count" style="color: #94a3b8; font-size: 24px; font-weight: 700; margin: 0;">0</p>
                         </div>
                     </div>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
