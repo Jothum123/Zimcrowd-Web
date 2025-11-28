@@ -26,6 +26,229 @@ const handleValidationErrors = (req, res, next) => {
     next();
 };
 
+// @route   POST /api/loans/request
+// @desc    Submit a loan request with DTNI validation and employment-based payment schedule
+// @access  Private
+router.post('/request', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { amount, purpose, tenure_days, employment_type } = req.body;
+
+        console.log(`💰 Loan request from user ${userId}: $${amount}, ${tenure_days} days`);
+
+        // 1. Get user profile and ZimScore
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+        if (profileError || !profile) {
+            return res.status(404).json({
+                success: false,
+                message: 'User profile not found'
+            });
+        }
+
+        // 2. Get ZimScore
+        const { data: zimScore, error: zimScoreError } = await supabase
+            .from('user_zimscores')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+
+        if (zimScoreError || !zimScore) {
+            return res.status(400).json({
+                success: false,
+                message: 'ZimScore not found. Please complete KYC first.'
+            });
+        }
+
+        // 3. Get active loans for DTNI calculation
+        const { data: activeLoans, error: loansError } = await supabase
+            .from('loans')
+            .select('amount, monthly_payment')
+            .eq('borrower_id', userId)
+            .in('status', ['active', 'pending']);
+
+        const existingMonthlyPayments = activeLoans?.reduce((sum, loan) => sum + (loan.monthly_payment || 0), 0) || 0;
+
+        // 4. Calculate DTNI and validate loan limits
+        const employmentTypeActual = employment_type || profile.employment_type || 'informal';
+        const monthlyIncome = profile.monthly_income || 0;
+
+        if (monthlyIncome === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Monthly income not set. Please update your profile.'
+            });
+        }
+
+        // DTNI Calculation
+        const maxDTNI = employmentTypeActual === 'government' ? 0.40 : 0.33;
+        const maxInstallment = monthlyIncome * maxDTNI;
+        const availableInstallment = maxInstallment - existingMonthlyPayments;
+        const currentDTNI = (existingMonthlyPayments / monthlyIncome);
+
+        console.log(`📊 DTNI Check: Income=$${monthlyIncome}, Existing=$${existingMonthlyPayments}, Available=$${availableInstallment}, DTNI=${(currentDTNI * 100).toFixed(1)}%`);
+
+        // Calculate max loan based on DTNI
+        const interestRate = 0.05; // 5%
+        const termMonths = Math.ceil(tenure_days / 30);
+        const maxLoanFromDTNI = (availableInstallment * termMonths) / (1 + interestRate);
+
+        // Apply employment cap
+        const employmentCap = employmentTypeActual === 'government' ? 300 : 100;
+        const maxLoanAmount = Math.min(maxLoanFromDTNI, employmentCap);
+
+        // Apply cold start limit if applicable
+        const coldStartLimit = zimScore.cold_start_limit || employmentCap;
+        const finalMaxLoan = zimScore.is_cold_start ? Math.min(maxLoanAmount, coldStartLimit) : maxLoanAmount;
+
+        console.log(`💵 Loan limits: DTNI=$${maxLoanFromDTNI.toFixed(2)}, Cap=$${employmentCap}, Cold Start=$${coldStartLimit}, Final=$${finalMaxLoan.toFixed(2)}`);
+
+        // 5. Validate requested amount
+        if (amount > finalMaxLoan) {
+            return res.status(400).json({
+                success: false,
+                message: `Loan amount exceeds your limit of $${finalMaxLoan.toFixed(2)}`,
+                data: {
+                    requested: amount,
+                    maximum: finalMaxLoan,
+                    dtni: (currentDTNI * 100).toFixed(1) + '%',
+                    reason: zimScore.is_cold_start ? 'cold_start_limit' : 'dtni_limit'
+                }
+            });
+        }
+
+        // 6. Validate tenure
+        const maxTenure = zimScore.loan_tenure_days || 90;
+        if (tenure_days > maxTenure) {
+            return res.status(400).json({
+                success: false,
+                message: `Tenure exceeds maximum of ${maxTenure} days`,
+                data: {
+                    requested: tenure_days,
+                    maximum: maxTenure
+                }
+            });
+        }
+
+        // 7. Calculate fees and total
+        const platformFee = amount * 0.05; // 5%
+        const interest = amount * interestRate;
+        const totalRepayment = amount + platformFee + interest;
+        const monthlyPayment = totalRepayment / termMonths;
+
+        // 8. Generate payment schedule
+        const today = new Date();
+        const paymentSchedule = [];
+
+        if (employmentTypeActual === 'government') {
+            // Government: Payment window system
+            const dayOfMonth = today.getDate();
+            const isFirstHalf = dayOfMonth <= 14;
+
+            let firstPaymentDate;
+            if (isFirstHalf) {
+                // SAME_MONTH: End of current month
+                firstPaymentDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            } else {
+                // NEXT_MONTH: End of next month
+                firstPaymentDate = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+            }
+
+            for (let i = 0; i < termMonths; i++) {
+                const paymentDate = new Date(firstPaymentDate);
+                paymentDate.setMonth(paymentDate.getMonth() + i);
+                // Set to last day of month
+                paymentDate.setDate(0);
+                paymentDate.setMonth(paymentDate.getMonth() + 1);
+
+                paymentSchedule.push({
+                    payment_number: i + 1,
+                    due_date: paymentDate.toISOString(),
+                    amount: monthlyPayment,
+                    grace_days: 35
+                });
+            }
+        } else {
+            // Private/Business/Informal: 35-day grace
+            const firstPaymentDate = new Date(today);
+            firstPaymentDate.setDate(firstPaymentDate.getDate() + 35);
+
+            for (let i = 0; i < termMonths; i++) {
+                const paymentDate = new Date(firstPaymentDate);
+                paymentDate.setMonth(paymentDate.getMonth() + i);
+
+                paymentSchedule.push({
+                    payment_number: i + 1,
+                    due_date: paymentDate.toISOString(),
+                    amount: monthlyPayment,
+                    grace_days: 0 // Built into 35-day period
+                });
+            }
+        }
+
+        // 9. Create loan record
+        const { data: loan, error: loanError } = await supabase
+            .from('loans')
+            .insert({
+                borrower_id: userId,
+                amount: amount,
+                purpose: purpose,
+                tenure_days: tenure_days,
+                interest_rate: interestRate,
+                platform_fee: platformFee,
+                total_repayment: totalRepayment,
+                monthly_payment: monthlyPayment,
+                employment_type: employmentTypeActual,
+                zimscore_at_request: zimScore.score,
+                dtni_at_request: currentDTNI,
+                payment_schedule: paymentSchedule,
+                status: 'pending',
+                created_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+        if (loanError) {
+            console.error('❌ Error creating loan:', loanError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to create loan request',
+                error: loanError.message
+            });
+        }
+
+        console.log(`✅ Loan request created: ID=${loan.id}`);
+
+        res.json({
+            success: true,
+            message: 'Loan request submitted successfully',
+            data: {
+                loan_id: loan.id,
+                amount: amount,
+                total_repayment: totalRepayment,
+                monthly_payment: monthlyPayment,
+                tenure_days: tenure_days,
+                payment_schedule: paymentSchedule,
+                status: 'pending',
+                dtni: (currentDTNI * 100).toFixed(1) + '%',
+                zimscore: zimScore.score
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error processing loan request:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to process loan request',
+            error: error.message
+        });
+    }
+});
+
 // @route   POST /api/loans/test-validate
 // @desc    Test loan validation without authentication (DEMO ONLY)
 // @access  Public

@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Request Modal - ZimCrowd</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loan-modal {
+            background: white;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        /* User Info Card */
+        .user-info-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .user-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 12px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* ZimScore Display */
+        .zimscore-display {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .zimscore-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: #0ea5e9;
+            margin: 8px 0;
+        }
+
+        .zimscore-label {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        /* Loan Limits Card */
+        .loan-limits-card {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .limits-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .limit-item {
+            text-align: center;
+        }
+
+        .limit-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #f59e0b;
+        }
+
+        .limit-label {
+            font-size: 12px;
+            color: #92400e;
+            margin-top: 4px;
+        }
+
+        /* Form Section */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-input:disabled {
+            background: #f9fafb;
+            cursor: not-allowed;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-prefix {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        .input-with-prefix {
+            padding-left: 32px;
+        }
+
+        /* Slider */
+        .slider-container {
+            margin: 20px 0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-value {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin: 12px 0;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        /* Payment Schedule */
+        .payment-schedule {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .schedule-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+        }
+
+        .schedule-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .schedule-date {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .schedule-amount {
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        /* Calculation Summary */
+        .calculation-summary {
+            background: #f0f9ff;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0f2fe;
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: 18px;
+            color: #0ea5e9;
+            padding-top: 12px;
+        }
+
+        .summary-label {
+            color: #64748b;
+        }
+
+        .summary-value {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+
+        .alert-icon {
+            font-size: 20px;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .loan-modal {
+                max-width: 100%;
+                margin: 0;
+                border-radius: 0;
+                max-height: 100vh;
+            }
+
+            .modal-header {
+                border-radius: 0;
+            }
+
+            .user-info-grid,
+            .limits-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="loan-modal">
+            <div class="modal-header">
+                <h2>💰 Request a Loan</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Loading State -->
+                <div id="loading-state" class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading your loan eligibility...</p>
+                </div>
+
+                <!-- Main Content (hidden initially) -->
+                <div id="main-content" style="display: none;">
+                    <!-- User Info Card -->
+                    <div class="user-info-card">
+                        <h3>👤 Your Profile</h3>
+                        <div class="user-info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Employment Type</span>
+                                <span class="info-value" id="employment-type">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Monthly Income</span>
+                                <span class="info-value" id="monthly-income">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">ZimScore</span>
+                                <span class="info-value" id="user-zimscore">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Status</span>
+                                <span class="info-value" id="user-status">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loan Limits Card -->
+                    <div class="loan-limits-card">
+                        <h3>📊 Your Loan Limits</h3>
+                        <div class="limits-grid">
+                            <div class="limit-item">
+                                <div class="limit-value" id="max-loan-amount">$0</div>
+                                <div class="limit-label">Maximum Amount</div>
+                            </div>
+                            <div class="limit-item">
+                                <div class="limit-value" id="max-tenure">0 days</div>
+                                <div class="limit-label">Maximum Tenure</div>
+                            </div>
+                        </div>
+                        <div id="dtni-info" class="alert alert-warning" style="margin-top: 16px; display: none;">
+                            <span class="alert-icon">⚠️</span>
+                            <div>
+                                <strong>DTNI:</strong> <span id="dtni-value">0%</span><br>
+                                <small id="dtni-message">Your debt-to-net-income ratio</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loan Amount Slider -->
+                    <div class="form-group">
+                        <label class="form-label">Loan Amount</label>
+                        <div class="slider-container">
+                            <div class="slider-value">$<span id="loan-amount-display">0</span></div>
+                            <input type="range" 
+                                   id="loan-amount-slider" 
+                                   class="slider" 
+                                   min="10" 
+                                   max="300" 
+                                   value="50" 
+                                   step="10">
+                            <div class="slider-labels">
+                                <span>$10</span>
+                                <span id="max-slider-label">$300</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loan Purpose -->
+                    <div class="form-group">
+                        <label class="form-label" for="loan-purpose">Loan Purpose</label>
+                        <select id="loan-purpose" class="form-input">
+                            <option value="">Select purpose...</option>
+                            <option value="business">Business</option>
+                            <option value="education">Education</option>
+                            <option value="medical">Medical</option>
+                            <option value="emergency">Emergency</option>
+                            <option value="personal">Personal</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Loan Tenure -->
+                    <div class="form-group">
+                        <label class="form-label" for="loan-tenure">Loan Tenure (Days)</label>
+                        <input type="number" 
+                               id="loan-tenure" 
+                               class="form-input" 
+                               value="90" 
+                               min="30" 
+                               max="720" 
+                               step="30">
+                        <small style="color: #6b7280; font-size: 12px; margin-top: 4px; display: block;">
+                            Cold start: 90 days fixed
+                        </small>
+                    </div>
+
+                    <!-- Calculation Summary -->
+                    <div class="calculation-summary">
+                        <h3 class="schedule-title">💵 Loan Summary</h3>
+                        <div class="summary-row">
+                            <span class="summary-label">Loan Amount:</span>
+                            <span class="summary-value" id="summary-amount">$0</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Platform Fee (5%):</span>
+                            <span class="summary-value" id="summary-fee">$0</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Interest (5%):</span>
+                            <span class="summary-value" id="summary-interest">$0</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Total Repayment:</span>
+                            <span class="summary-value" id="summary-total">$0</span>
+                        </div>
+                    </div>
+
+                    <!-- Payment Schedule -->
+                    <div class="payment-schedule">
+                        <h3 class="schedule-title">📅 Payment Schedule</h3>
+                        <div id="payment-schedule-list">
+                            <!-- Dynamically generated -->
+                        </div>
+                    </div>
+
+                    <!-- Alerts -->
+                    <div id="alert-container"></div>
+
+                    <!-- Action Buttons -->
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                        <button class="btn btn-primary" id="submit-btn" onclick="submitLoanRequest()">
+                            Submit Request
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE = 'https://zimcrowd-api.onrender.com';
+        
+        // State
+        let userData = null;
+        let zimscoreData = null;
+        let loanLimits = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadUserData();
+        });
+
+        // Load user data
+        async function loadUserData() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    showAlert('Please login to request a loan', 'error');
+                    return;
+                }
+
+                // Fetch user profile
+                const profileResponse = await fetch(`${API_BASE}/api/user/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                userData = await profileResponse.json();
+
+                // Fetch ZimScore
+                const zimscoreResponse = await fetch(`${API_BASE}/api/zimscore/my-score`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                zimscoreData = await zimscoreResponse.json();
+
+                // Calculate loan limits
+                calculateLoanLimits();
+
+                // Display data
+                displayUserInfo();
+                displayLoanLimits();
+                
+                // Hide loading, show content
+                document.getElementById('loading-state').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+
+                // Setup event listeners
+                setupEventListeners();
+
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                showAlert('Failed to load user data. Please try again.', 'error');
+            }
+        }
+
+        // Calculate loan limits based on DTNI
+        function calculateLoanLimits() {
+            const employmentType = userData.data.employment_type || 'informal';
+            const monthlyIncome = userData.data.monthly_income || 0;
+            const existingDebt = 0; // TODO: Fetch from active loans
+
+            // DTNI calculation
+            const maxDTNI = employmentType === 'government' ? 0.40 : 0.33;
+            const maxInstallment = monthlyIncome * maxDTNI;
+            const availableInstallment = maxInstallment - existingDebt;
+
+            // Calculate max loan (assuming 1 month term for cold start)
+            const interestRate = 0.05;
+            const maxLoanFromDTNI = (availableInstallment * 1) / (1 + interestRate);
+
+            // Apply employment cap
+            const employmentCap = employmentType === 'government' ? 300 : 100;
+            const maxLoan = Math.min(maxLoanFromDTNI, employmentCap);
+
+            // Get tenure from ZimScore
+            const tenure = zimscoreData.data?.loan_tenure_days || 90;
+
+            loanLimits = {
+                maxAmount: Math.floor(maxLoan),
+                maxTenure: tenure,
+                dtni: (existingDebt / monthlyIncome * 100).toFixed(1),
+                isColdStart: zimscoreData.data?.is_cold_start !== false
+            };
+        }
+
+        // Display user info
+        function displayUserInfo() {
+            document.getElementById('employment-type').textContent = 
+                (userData.data.employment_type || 'Not set').toUpperCase();
+            document.getElementById('monthly-income').textContent = 
+                `$${userData.data.monthly_income || 0}`;
+            document.getElementById('user-zimscore').textContent = 
+                zimscoreData.data?.score || 'N/A';
+            document.getElementById('user-status').textContent = 
+                loanLimits.isColdStart ? 'Cold Start' : 'Active';
+        }
+
+        // Display loan limits
+        function displayLoanLimits() {
+            document.getElementById('max-loan-amount').textContent = `$${loanLimits.maxAmount}`;
+            document.getElementById('max-tenure').textContent = `${loanLimits.maxTenure} days`;
+
+            // Update slider max
+            const slider = document.getElementById('loan-amount-slider');
+            slider.max = loanLimits.maxAmount;
+            slider.value = Math.min(50, loanLimits.maxAmount);
+            document.getElementById('max-slider-label').textContent = `$${loanLimits.maxAmount}`;
+
+            // Update tenure input
+            document.getElementById('loan-tenure').value = loanLimits.maxTenure;
+            document.getElementById('loan-tenure').max = loanLimits.maxTenure;
+
+            // Show DTNI info
+            if (loanLimits.dtni > 0) {
+                document.getElementById('dtni-info').style.display = 'flex';
+                document.getElementById('dtni-value').textContent = `${loanLimits.dtni}%`;
+            }
+
+            // Initial calculation
+            updateCalculations();
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('loan-amount-slider').addEventListener('input', (e) => {
+                document.getElementById('loan-amount-display').textContent = e.target.value;
+                updateCalculations();
+            });
+
+            document.getElementById('loan-tenure').addEventListener('input', () => {
+                updateCalculations();
+            });
+        }
+
+        // Update calculations
+        function updateCalculations() {
+            const loanAmount = parseInt(document.getElementById('loan-amount-slider').value);
+            const tenure = parseInt(document.getElementById('loan-tenure').value);
+
+            // Calculate fees and interest
+            const platformFee = loanAmount * 0.05;
+            const interest = loanAmount * 0.05;
+            const totalRepayment = loanAmount + platformFee + interest;
+
+            // Update summary
+            document.getElementById('summary-amount').textContent = `$${loanAmount}`;
+            document.getElementById('summary-fee').textContent = `$${platformFee.toFixed(2)}`;
+            document.getElementById('summary-interest').textContent = `$${interest.toFixed(2)}`;
+            document.getElementById('summary-total').textContent = `$${totalRepayment.toFixed(2)}`;
+
+            // Generate payment schedule
+            generatePaymentSchedule(totalRepayment, tenure);
+        }
+
+        // Generate payment schedule
+        function generatePaymentSchedule(totalAmount, tenureDays) {
+            const employmentType = userData.data.employment_type || 'informal';
+            const scheduleList = document.getElementById('payment-schedule-list');
+            scheduleList.innerHTML = '';
+
+            const today = new Date();
+            const payments = [];
+
+            if (employmentType === 'government') {
+                // Government: Payment window system
+                const dayOfMonth = today.getDate();
+                const isFirstHalf = dayOfMonth <= 14;
+
+                let firstPaymentDate;
+                if (isFirstHalf) {
+                    // SAME_MONTH: End of current month
+                    firstPaymentDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                } else {
+                    // NEXT_MONTH: End of next month
+                    firstPaymentDate = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+                }
+
+                // Calculate number of payments (monthly)
+                const months = Math.ceil(tenureDays / 30);
+                const monthlyPayment = totalAmount / months;
+
+                for (let i = 0; i < months; i++) {
+                    const paymentDate = new Date(firstPaymentDate);
+                    paymentDate.setMonth(paymentDate.getMonth() + i);
+                    // Set to last day of month
+                    paymentDate.setDate(0);
+                    paymentDate.setMonth(paymentDate.getMonth() + 1);
+
+                    payments.push({
+                        date: paymentDate,
+                        amount: monthlyPayment
+                    });
+                }
+            } else {
+                // Private/Business/Informal: 35-day grace
+                const firstPaymentDate = new Date(today);
+                firstPaymentDate.setDate(firstPaymentDate.getDate() + 35);
+
+                const months = Math.ceil(tenureDays / 30);
+                const monthlyPayment = totalAmount / months;
+
+                for (let i = 0; i < months; i++) {
+                    const paymentDate = new Date(firstPaymentDate);
+                    paymentDate.setMonth(paymentDate.getMonth() + i);
+
+                    payments.push({
+                        date: paymentDate,
+                        amount: monthlyPayment
+                    });
+                }
+            }
+
+            // Display payments
+            payments.forEach((payment, index) => {
+                const item = document.createElement('div');
+                item.className = 'schedule-item';
+                item.innerHTML = `
+                    <span class="schedule-date">Payment ${index + 1}: ${payment.date.toLocaleDateString()}</span>
+                    <span class="schedule-amount">$${payment.amount.toFixed(2)}</span>
+                `;
+                scheduleList.appendChild(item);
+            });
+        }
+
+        // Submit loan request
+        async function submitLoanRequest() {
+            const loanAmount = parseInt(document.getElementById('loan-amount-slider').value);
+            const loanPurpose = document.getElementById('loan-purpose').value;
+            const loanTenure = parseInt(document.getElementById('loan-tenure').value);
+
+            // Validation
+            if (!loanPurpose) {
+                showAlert('Please select a loan purpose', 'error');
+                return;
+            }
+
+            if (loanAmount > loanLimits.maxAmount) {
+                showAlert(`Maximum loan amount is $${loanLimits.maxAmount}`, 'error');
+                return;
+            }
+
+            if (loanTenure > loanLimits.maxTenure) {
+                showAlert(`Maximum tenure is ${loanLimits.maxTenure} days`, 'error');
+                return;
+            }
+
+            // Disable button
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE}/api/loans/request`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        amount: loanAmount,
+                        purpose: loanPurpose,
+                        tenure_days: loanTenure,
+                        employment_type: userData.data.employment_type
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('Loan request submitted successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 2000);
+                } else {
+                    showAlert(result.message || 'Failed to submit loan request', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Request';
+                }
+            } catch (error) {
+                console.error('Error submitting loan:', error);
+                showAlert('Failed to submit loan request. Please try again.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Request';
+            }
+        }
+
+        // Show alert
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            
+            const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : '⚠️';
+            alert.innerHTML = `
+                <span class="alert-icon">${icon}</span>
+                <div>${message}</div>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(alert);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        // Close modal
+        function closeModal() {
+            window.history.back();
+        }
+    </script>
+</body>
+</html>
