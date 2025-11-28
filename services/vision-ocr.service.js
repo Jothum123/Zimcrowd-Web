@@ -2,21 +2,44 @@ const vision = require('@google-cloud/vision');
 const path = require('path');
 const TesseractOCRService = require('./tesseract-ocr.service');
 const AzureDocumentOCRService = require('./azure-document-ocr.service');
+const AzureFaceService = require('./azure-face.service');
 
 class VisionOCRService {
     constructor() {
         this.useGoogleVision = false;
         this.useAzure = false;
+        this.useAzureFace = false;
         this.tesseractService = null;
         this.azureService = null;
+        this.azureFaceService = null;
 
-        // Try Azure Document Intelligence first (best for IDs)
+        // ============================================
+        // PRIMARY: Azure Document Intelligence (Paid, High Accuracy)
+        // ============================================
         this.azureService = new AzureDocumentOCRService();
         if (this.azureService.isAvailable()) {
             this.useAzure = true;
-            console.log('✅ Using Azure Document Intelligence (Primary)');
+            console.log('✅ PRIMARY OCR: Azure Document Intelligence (99% accuracy)');
         } else {
-            console.log('⚠️  Azure not configured, using Tesseract OCR (Free)');
+            console.log('⚠️  Azure Document Intelligence not configured');
+        }
+
+        // ============================================
+        // PRIMARY: Azure Face API (Paid, Face Verification)
+        // ============================================
+        this.azureFaceService = new AzureFaceService();
+        if (this.azureFaceService.isAvailable()) {
+            this.useAzureFace = true;
+            console.log('✅ PRIMARY FACE: Azure Face API (95% accuracy)');
+        } else {
+            console.log('⚠️  Azure Face API not configured');
+        }
+
+        // ============================================
+        // FALLBACK: Tesseract OCR (Free, 85-90% accuracy)
+        // ============================================
+        if (!this.useAzure) {
+            console.log('🔄 FALLBACK OCR: Using Tesseract (Free, 85-90% accuracy)');
             this.tesseractService = new TesseractOCRService();
         }
         
@@ -173,39 +196,66 @@ class VisionOCRService {
 
     /**
      * Detect faces in document
+     * PRIMARY: Azure Face API | FALLBACK: Basic detection
      */
     async detectFace(imageBuffer) {
-        try {
-            const [result] = await this.client.faceDetection(imageBuffer);
-            const faces = result.faceAnnotations;
+        // ============================================
+        // PRIMARY: Azure Face API (95% accuracy)
+        // ============================================
+        if (this.useAzureFace && this.azureFaceService) {
+            console.log('🔍 Using Azure Face API (Primary)');
+            return await this.azureFaceService.detectFace(imageBuffer);
+        }
 
-            if (!faces || faces.length === 0) {
+        // ============================================
+        // FALLBACK: Basic face detection (if Google Vision available)
+        // ============================================
+        if (this.useGoogleVision && this.client) {
+            console.log('🔄 Using Google Vision face detection (Fallback)');
+            try {
+                const [result] = await this.client.faceDetection(imageBuffer);
+                const faces = result.faceAnnotations;
+
+                if (!faces || faces.length === 0) {
+                    return {
+                        success: true,
+                        faceDetected: false,
+                        faceCount: 0,
+                        confidence: 0
+                    };
+                }
+
                 return {
                     success: true,
+                    faceDetected: true,
+                    faceCount: faces.length,
+                    confidence: faces[0].detectionConfidence * 100,
+                    faces: faces.map(face => ({
+                        confidence: face.detectionConfidence * 100,
+                        bounds: face.boundingPoly
+                    }))
+                };
+            } catch (error) {
+                console.error('Face detection error:', error);
+                return {
+                    success: false,
                     faceDetected: false,
-                    faceCount: 0,
-                    confidence: 0
+                    error: error.message
                 };
             }
-
-            return {
-                success: true,
-                faceDetected: true,
-                faceCount: faces.length,
-                confidence: faces[0].detectionConfidence,
-                faces: faces.map(face => ({
-                    confidence: face.detectionConfidence,
-                    bounds: face.boundingPoly
-                }))
-            };
-        } catch (error) {
-            console.error('Face detection error:', error);
-            return {
-                success: false,
-                faceDetected: false,
-                error: error.message
-            };
         }
+
+        // ============================================
+        // NO FACE DETECTION AVAILABLE
+        // ============================================
+        console.log('⚠️  No face detection service available');
+        return {
+            success: true,
+            faceDetected: false,
+            faceCount: 0,
+            confidence: 0,
+            message: 'Face detection not configured'
+        };
     }
 
     /**
