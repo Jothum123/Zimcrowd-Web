@@ -26,6 +26,15 @@ This guide covers the complete implementation of:
 - Users with active defaulted loans
 - Users with outstanding overdue payments
 
+### **Interest Rate Calculation:**
+
+```javascript
+New User: 8%
+Low Score (300-500): 7%
+Medium Score (500-650): 6%
+High Score (650-850): 5%
+```
+
 ### **Credit Scoring Logic:**
 
 ```javascript
@@ -539,10 +548,10 @@ async function checkZimDirectEligibility(user_id) {
 // Function to calculate interest rate based on credit tier
 function calculateInterestRate(credit_tier, zimscore) {
     const rates = {
-        'new_user': 12.0,      // 12% for new users
-        'low_score': 15.0,     // 15% for low score (300-500)
-        'medium_score': 10.0,  // 10% for medium score (500-650)
-        'high_score': 8.0      // 8% for high score (650-850)
+        'new_user': 8.0,      // 8% for new users
+        'low_score': 7.0,     // 7% for low score (300-500)
+        'medium_score': 6.0,  // 6% for medium score (500-650)
+        'high_score': 5.0      // 5% for high score (650-850)
     };
     
     return rates[credit_tier] || 12.0;
