@@ -1113,15 +1113,77 @@
                 ? 'http://localhost:3000' 
                 : 'https://zimcrowd-api.onrender.com';
 
+            // Collect all profile data from the form
+            const profileData = {
+                // Personal information (from KYC step)
+                first_name: document.getElementById('idFirstName')?.value,
+                last_name: document.getElementById('idLastName')?.value,
+                national_id: document.getElementById('idNumber')?.value,
+                
+                // Profile details (from step 2)
+                date_of_birth: document.getElementById('dob')?.value,
+                gender: document.getElementById('gender')?.value,
+                street_address: document.getElementById('address')?.value,
+                
+                // Employment details
+                employment_status: document.getElementById('employment')?.value,
+                monthly_income: document.getElementById('income')?.value,
+                employer_name: document.getElementById('employer')?.value,
+                job_title: document.getElementById('occupation')?.value,
+                work_address: document.getElementById('workAddress')?.value,
+                work_phone: document.getElementById('workPhone')?.value,
+                work_email: document.getElementById('workEmail')?.value,
+                years_employed: document.getElementById('yearsEmployed')?.value,
+                department: document.getElementById('department')?.value,
+                supervisor_name: document.getElementById('supervisorName')?.value,
+                supervisor_phone: document.getElementById('supervisorPhone')?.value,
+                
+                // Next of kin
+                next_of_kin: {
+                    primary: {
+                        name: document.getElementById('kin1Name')?.value,
+                        relationship: document.getElementById('kin1Relationship')?.value,
+                        phone: document.getElementById('kin1Phone')?.value
+                    },
+                    secondary: {
+                        name: document.getElementById('kin2Name')?.value,
+                        relationship: document.getElementById('kin2Relationship')?.value,
+                        phone: document.getElementById('kin2Phone')?.value
+                    }
+                },
+                
+                // Payment method
+                payment_method: {
+                    type: selectedPaymentMethod,
+                    mobile_number: document.getElementById('mobileNumber')?.value,
+                    account_name: document.getElementById('accountName')?.value
+                }
+            };
+
             try {
-                // Call the complete-setup API to trigger OCR verification
                 const authToken = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
+                
+                // First, save all profile data to the user profile API
+                const profileResponse = await fetch(`${API_BASE}/api/user/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(profileData)
+                });
+                
+                const profileResult = await profileResponse.json();
+                console.log('Profile save result:', profileResult);
+                
+                // Then call the complete-setup API to trigger OCR verification
                 const response = await fetch(`${API_BASE}/api/profile-setup/complete-setup`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify(profileData)
                 });
 
                 const result = await response.json();
@@ -1132,6 +1194,11 @@
                     localStorage.setItem('documentsUploaded', 'true');
                     localStorage.setItem('employmentVerified', 'true');
                     localStorage.setItem('paymentSetup', 'true');
+                    
+                    // Store profile data for settings sync
+                    localStorage.setItem('userProfile', JSON.stringify(profileData));
+                    localStorage.setItem('userFirstName', profileData.first_name || '');
+                    localStorage.setItem('userLastName', profileData.last_name || '');
 
                     // Store ZimScore data if available
                     if (result.data && result.data.zimScore) {
@@ -1141,13 +1208,13 @@
                             max_loan_amount: result.data.zimScore.maxLoanAmount,
                             risk_level: result.data.zimScore.riskLevel,
                             is_cold_start: result.data.zimScore.isColdStart !== false,
-                            employment_type: result.data.zimScore.employmentType || 'private'
+                            employment_type: result.data.zimScore.employmentType || profileData.employment_status || 'private'
                         }));
                         
                         // Also store user data for loan calculations
                         localStorage.setItem('userData', JSON.stringify({
-                            monthly_income: result.data.zimScore.monthlyIncome || 0,
-                            employment_type: result.data.zimScore.employmentType || 'private',
+                            monthly_income: result.data.zimScore.monthlyIncome || profileData.monthly_income || 0,
+                            employment_type: result.data.zimScore.employmentType || profileData.employment_status || 'private',
                             loans_repaid_on_time: 0,
                             existing_monthly_payments: 0
                         }));
@@ -1168,11 +1235,14 @@
                 hideProcessingModal();
                 console.error('Complete setup error:', error);
                 
-                // Fallback: still mark as complete locally
+                // Fallback: still mark as complete locally and save profile data
                 localStorage.setItem('profileCompleted', 'true');
                 localStorage.setItem('documentsUploaded', 'true');
                 localStorage.setItem('employmentVerified', 'true');
                 localStorage.setItem('paymentSetup', 'true');
+                localStorage.setItem('userProfile', JSON.stringify(profileData));
+                localStorage.setItem('userFirstName', profileData.first_name || '');
+                localStorage.setItem('userLastName', profileData.last_name || '');
 
                 alert('🎉 Registration complete! Your documents will be verified shortly.');
                 window.location.href = 'dashboard.html';

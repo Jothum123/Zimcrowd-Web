@@ -5123,6 +5123,175 @@
                     <button class="btn-primary" style="margin-top: 20px;" onclick="SettingsDataLoader.saveProfile()">Save Changes</button>
                 </div>
 
+                <!-- Employment Details Section -->
+                <div class="loan-card" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 20px;"><i class="fas fa-briefcase" style="color: #38e77b; margin-right: 10px;"></i>Employment Details</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Employment Status</label>
+                            <select id="employmentStatus">
+                                <option value="">Select Status</option>
+                                <option value="employed">Employed</option>
+                                <option value="self-employed">Self-Employed</option>
+                                <option value="unemployed">Unemployed</option>
+                                <option value="student">Student</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Monthly Income (USD)</label>
+                            <select id="monthlyIncome">
+                                <option value="">Select Range</option>
+                                <option value="0-500">$0 - $500</option>
+                                <option value="500-1000">$500 - $1,000</option>
+                                <option value="1000-2000">$1,000 - $2,000</option>
+                                <option value="2000+">$2,000+</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Employer/Business Name</label>
+                            <input type="text" id="employerName" placeholder="Company or business name">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Job Title/Occupation</label>
+                            <input type="text" id="jobTitle" placeholder="Your job title or profession">
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Work Address</label>
+                            <input type="text" id="workAddress" placeholder="123 Business Street, Harare">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Work Phone</label>
+                            <input type="tel" id="workPhone" placeholder="+263 24 123 4567">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Work Email</label>
+                            <input type="email" id="workEmail" placeholder="you@company.com">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Years at Current Job</label>
+                            <select id="yearsEmployed">
+                                <option value="">Select Duration</option>
+                                <option value="0-1">Less than 1 year</option>
+                                <option value="1-2">1-2 years</option>
+                                <option value="2-5">2-5 years</option>
+                                <option value="5-10">5-10 years</option>
+                                <option value="10+">10+ years</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Department/Division</label>
+                            <input type="text" id="department" placeholder="e.g., Sales, IT, Finance">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Supervisor Name</label>
+                            <input type="text" id="supervisorName" placeholder="Your direct supervisor's name">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Supervisor Phone</label>
+                            <input type="tel" id="supervisorPhone" placeholder="+263 77 123 4567">
+                        </div>
+                    </div>
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="SettingsDataLoader.saveProfile()">Save Changes</button>
+                </div>
+
+                <!-- Next of Kin Section -->
+                <div class="loan-card" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 20px;"><i class="fas fa-users" style="color: #38e77b; margin-right: 10px;"></i>Next of Kin / Emergency Contacts</h3>
+                    
+                    <!-- Primary Contact -->
+                    <div style="margin-bottom: 25px; padding: 20px; background: rgba(56, 231, 123, 0.05); border-radius: 12px; border: 1px solid rgba(56, 231, 123, 0.2);">
+                        <h4 style="margin-bottom: 15px; color: #38e77b;"><i class="fas fa-user-check" style="margin-right: 8px;"></i>Primary Contact</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Full Name</label>
+                                <input type="text" id="kin1Name" placeholder="e.g., John Doe">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Relationship</label>
+                                <select id="kin1Relationship">
+                                    <option value="">Select Relationship</option>
+                                    <option value="spouse">Spouse</option>
+                                    <option value="parent">Parent</option>
+                                    <option value="sibling">Sibling</option>
+                                    <option value="child">Child</option>
+                                    <option value="friend">Friend</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Phone Number</label>
+                                <input type="tel" id="kin1Phone" placeholder="+263 77 123 4567">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Secondary Contact -->
+                    <div style="padding: 20px; background: rgba(59, 130, 246, 0.05); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2);">
+                        <h4 style="margin-bottom: 15px; color: #3b82f6;"><i class="fas fa-user-plus" style="margin-right: 8px;"></i>Secondary Contact</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Full Name</label>
+                                <input type="text" id="kin2Name" placeholder="e.g., Jane Smith">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Relationship</label>
+                                <select id="kin2Relationship">
+                                    <option value="">Select Relationship</option>
+                                    <option value="spouse">Spouse</option>
+                                    <option value="parent">Parent</option>
+                                    <option value="sibling">Sibling</option>
+                                    <option value="child">Child</option>
+                                    <option value="friend">Friend</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Phone Number</label>
+                                <input type="tel" id="kin2Phone" placeholder="+263 77 123 4567">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="SettingsDataLoader.saveProfile()">Save Changes</button>
+                </div>
+
+                <!-- Payment Method Section -->
+                <div class="loan-card" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 20px;"><i class="fas fa-wallet" style="color: #38e77b; margin-right: 10px;"></i>Payment Method</h3>
+                    
+                    <!-- Current Payment Method Display -->
+                    <div id="paymentMethodDisplay" style="margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 15px; padding: 15px; background: rgba(100, 116, 139, 0.1); border-radius: 12px; border: 1px solid rgba(100, 116, 139, 0.3);">
+                            <span style="font-size: 32px;">💰</span>
+                            <div>
+                                <h4 style="margin: 0; color: #94a3b8;">No payment method set</h4>
+                                <p style="margin: 5px 0 0 0; color: #64748b; font-size: 14px;">Add a payment method below</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Payment Method</label>
+                            <select id="paymentMethod">
+                                <option value="">Select Method</option>
+                                <option value="ecocash">EcoCash</option>
+                                <option value="onemoney">OneMoney</option>
+                                <option value="innbucks">InnBucks</option>
+                                <option value="bank">Bank Transfer</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Mobile Number</label>
+                            <input type="tel" id="paymentMobileNumber" placeholder="+263 77 123 4567">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Account Name (as registered)</label>
+                            <input type="text" id="paymentAccountName" placeholder="Name as registered on account">
+                        </div>
+                    </div>
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="SettingsDataLoader.saveProfile()">Save Payment Method</button>
+                </div>
+
                 <!-- Social Login Info -->
                 <div class="loan-card" style="margin-top: 20px;">
                     <h3 style="margin-bottom: 20px;">Social Login Information</h3>

@@ -59,7 +59,7 @@ const SettingsDataLoader = {
     },
 
     /**
-     * Load Profile Data
+     * Load Profile Data - Includes employment, next of kin, and payment methods
      */
     async loadProfileData() {
         try {
@@ -88,30 +88,129 @@ const SettingsDataLoader = {
                 this.setInputValue('postalCode', profile.postal_code);
                 this.setInputValue('profileBio', profile.bio);
                 
+                // Update employment details (from post-registration)
+                this.setInputValue('employmentStatus', profile.employment_status);
+                this.setInputValue('monthlyIncome', profile.monthly_income);
+                this.setInputValue('employerName', profile.employer_name);
+                this.setInputValue('jobTitle', profile.job_title || profile.occupation);
+                this.setInputValue('workAddress', profile.work_address);
+                this.setInputValue('workPhone', profile.work_phone);
+                this.setInputValue('workEmail', profile.work_email);
+                this.setInputValue('yearsEmployed', profile.years_employed);
+                this.setInputValue('department', profile.department);
+                this.setInputValue('supervisorName', profile.supervisor_name);
+                this.setInputValue('supervisorPhone', profile.supervisor_phone);
+                
+                // Update next of kin details
+                if (profile.next_of_kin) {
+                    // Primary contact
+                    this.setInputValue('kin1Name', profile.next_of_kin.primary?.name);
+                    this.setInputValue('kin1Relationship', profile.next_of_kin.primary?.relationship);
+                    this.setInputValue('kin1Phone', profile.next_of_kin.primary?.phone);
+                    
+                    // Secondary contact
+                    this.setInputValue('kin2Name', profile.next_of_kin.secondary?.name);
+                    this.setInputValue('kin2Relationship', profile.next_of_kin.secondary?.relationship);
+                    this.setInputValue('kin2Phone', profile.next_of_kin.secondary?.phone);
+                }
+                
+                // Update payment method details
+                if (profile.payment_method) {
+                    this.setInputValue('paymentMethod', profile.payment_method.type);
+                    this.setInputValue('paymentMobileNumber', profile.payment_method.mobile_number);
+                    this.setInputValue('paymentAccountName', profile.payment_method.account_name);
+                    
+                    // Update payment method display
+                    this.updatePaymentMethodDisplay(profile.payment_method);
+                }
+                
                 // Update profile completion
                 this.updateProfileCompletion(profile.completion_percentage || 0);
                 
                 // Update social login status
                 this.updateSocialLoginStatus(profile.social_logins || {});
                 
+                // Store profile data globally for other components
+                window.userProfile = profile;
+                localStorage.setItem('userProfile', JSON.stringify(profile));
+                
                 console.log('✅ Profile data loaded');
             }
         } catch (error) {
             console.error('❌ Error loading profile:', error);
+            // Try to load from localStorage as fallback
+            this.loadProfileFromLocalStorage();
         }
+    },
+    
+    /**
+     * Load profile from localStorage (fallback)
+     */
+    loadProfileFromLocalStorage() {
+        try {
+            const storedProfile = localStorage.getItem('userProfile');
+            if (storedProfile) {
+                const profile = JSON.parse(storedProfile);
+                this.updateProfilePicture(profile.profile_picture, profile.first_name, profile.last_name);
+                console.log('📦 Loaded profile from localStorage');
+            }
+        } catch (error) {
+            console.error('Error loading from localStorage:', error);
+        }
+    },
+    
+    /**
+     * Update Payment Method Display
+     */
+    updatePaymentMethodDisplay(paymentMethod) {
+        const container = document.getElementById('paymentMethodDisplay');
+        if (!container) return;
+        
+        const methodIcons = {
+            'ecocash': '📱',
+            'onemoney': '💳',
+            'innbucks': '🏦',
+            'bank': '🏛️'
+        };
+        
+        const methodNames = {
+            'ecocash': 'EcoCash',
+            'onemoney': 'OneMoney',
+            'innbucks': 'InnBucks',
+            'bank': 'Bank Transfer'
+        };
+        
+        container.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 15px; padding: 15px; background: rgba(56, 231, 123, 0.1); border-radius: 12px; border: 1px solid rgba(56, 231, 123, 0.3);">
+                <span style="font-size: 32px;">${methodIcons[paymentMethod.type] || '💰'}</span>
+                <div>
+                    <h4 style="margin: 0; color: #38e77b;">${methodNames[paymentMethod.type] || paymentMethod.type}</h4>
+                    <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">${paymentMethod.mobile_number || paymentMethod.account_number || 'No number set'}</p>
+                    <p style="margin: 2px 0 0 0; color: #64748b; font-size: 12px;">${paymentMethod.account_name || ''}</p>
+                </div>
+                <div style="margin-left: auto;">
+                    <span style="padding: 4px 12px; background: rgba(56, 231, 123, 0.2); color: #38e77b; border-radius: 12px; font-size: 12px;">
+                        <i class="fas fa-check-circle"></i> Active
+                    </span>
+                </div>
+            </div>
+        `;
     },
 
     /**
-     * Update Profile Picture
+     * Update Profile Picture - Syncs across header avatar and settings
      */
     updateProfilePicture(pictureUrl, firstName, lastName) {
         const avatar = document.getElementById('profile-avatar');
         const initials = document.getElementById('profile-initials');
-        const navAvatar = document.querySelector('.user-avatar');
+        const navAvatar = document.getElementById('nav-avatar'); // Header avatar
+        const headerUserAvatar = document.querySelector('.header-user-avatar'); // Alternative header avatar
         const removeBtn = document.getElementById('remove-icon-btn');
         
+        const initial = this.getInitials(firstName, lastName);
+        
         if (pictureUrl) {
-            // Show image
+            // Show image in settings profile avatar
             if (avatar) {
                 avatar.style.backgroundImage = `url(${pictureUrl})`;
                 avatar.style.backgroundSize = 'cover';
@@ -120,17 +219,23 @@ const SettingsDataLoader = {
             if (initials) initials.style.display = 'none';
             if (removeBtn) removeBtn.style.display = 'flex';
             
-            // Update nav avatar
+            // Update header nav avatar (ID: nav-avatar)
             if (navAvatar) {
                 navAvatar.style.backgroundImage = `url(${pictureUrl})`;
                 navAvatar.style.backgroundSize = 'cover';
                 navAvatar.style.backgroundPosition = 'center';
-                const navInitials = navAvatar.querySelector('span');
-                if (navInitials) navInitials.style.display = 'none';
+                navAvatar.textContent = ''; // Clear initials text
+            }
+            
+            // Update alternative header avatar (class: header-user-avatar)
+            if (headerUserAvatar && headerUserAvatar !== navAvatar) {
+                headerUserAvatar.style.backgroundImage = `url(${pictureUrl})`;
+                headerUserAvatar.style.backgroundSize = 'cover';
+                headerUserAvatar.style.backgroundPosition = 'center';
+                headerUserAvatar.textContent = '';
             }
         } else {
-            // Show initials
-            const initial = this.getInitials(firstName, lastName);
+            // Show initials in settings profile avatar
             if (initials) {
                 initials.textContent = initial;
                 initials.style.display = 'block';
@@ -140,19 +245,34 @@ const SettingsDataLoader = {
             }
             if (removeBtn) removeBtn.style.display = 'none';
             
-            // Update nav avatar initials
+            // Update header nav avatar with initials
             if (navAvatar) {
                 navAvatar.style.backgroundImage = 'none';
-                const navInitials = navAvatar.querySelector('span');
-                if (navInitials) {
-                    navInitials.textContent = initial;
-                    navInitials.style.display = 'block';
-                }
+                navAvatar.textContent = initial;
+            }
+            
+            // Update alternative header avatar with initials
+            if (headerUserAvatar && headerUserAvatar !== navAvatar) {
+                headerUserAvatar.style.backgroundImage = 'none';
+                headerUserAvatar.textContent = initial;
             }
         }
         
-        // Store picture URL globally
+        // Update header user name
+        const headerUserName = document.getElementById('header-user-name');
+        if (headerUserName && firstName) {
+            headerUserName.textContent = `${firstName} ${lastName || ''}`.trim();
+        }
+        
+        // Store picture URL and user info globally
         window.currentProfilePicture = pictureUrl;
+        window.currentUserFirstName = firstName;
+        window.currentUserLastName = lastName;
+        
+        // Store in localStorage for persistence
+        localStorage.setItem('userProfilePicture', pictureUrl || '');
+        localStorage.setItem('userFirstName', firstName || '');
+        localStorage.setItem('userLastName', lastName || '');
     },
 
     /**
@@ -620,13 +740,14 @@ const SettingsDataLoader = {
     },
 
     /**
-     * Save Profile Information
+     * Save Profile Information - Includes all profile sections
      */
     async saveProfile() {
         try {
             console.log('💾 Saving profile...');
             
             const profileData = {
+                // Personal information
                 first_name: this.getInputValue('firstName'),
                 last_name: this.getInputValue('lastName'),
                 email: this.getInputValue('email'),
@@ -634,11 +755,47 @@ const SettingsDataLoader = {
                 date_of_birth: this.getInputValue('dateOfBirth'),
                 gender: this.getInputValue('profileGender'),
                 country: this.getInputValue('country'),
+                
+                // Address information
                 street_address: this.getInputValue('streetAddress'),
                 city: this.getInputValue('city'),
                 suburb: this.getInputValue('suburb'),
                 postal_code: this.getInputValue('postalCode'),
-                bio: this.getInputValue('profileBio')
+                bio: this.getInputValue('profileBio'),
+                
+                // Employment details
+                employment_status: this.getInputValue('employmentStatus'),
+                monthly_income: this.getInputValue('monthlyIncome'),
+                employer_name: this.getInputValue('employerName'),
+                job_title: this.getInputValue('jobTitle'),
+                work_address: this.getInputValue('workAddress'),
+                work_phone: this.getInputValue('workPhone'),
+                work_email: this.getInputValue('workEmail'),
+                years_employed: this.getInputValue('yearsEmployed'),
+                department: this.getInputValue('department'),
+                supervisor_name: this.getInputValue('supervisorName'),
+                supervisor_phone: this.getInputValue('supervisorPhone'),
+                
+                // Next of kin
+                next_of_kin: {
+                    primary: {
+                        name: this.getInputValue('kin1Name'),
+                        relationship: this.getInputValue('kin1Relationship'),
+                        phone: this.getInputValue('kin1Phone')
+                    },
+                    secondary: {
+                        name: this.getInputValue('kin2Name'),
+                        relationship: this.getInputValue('kin2Relationship'),
+                        phone: this.getInputValue('kin2Phone')
+                    }
+                },
+                
+                // Payment method
+                payment_method: {
+                    type: this.getInputValue('paymentMethod'),
+                    mobile_number: this.getInputValue('paymentMobileNumber'),
+                    account_name: this.getInputValue('paymentAccountName')
+                }
             };
             
             const response = await this.apiRequest('/api/user/profile', {
@@ -648,7 +805,7 @@ const SettingsDataLoader = {
             
             if (response.success) {
                 this.showNotification('Profile updated successfully!', 'success');
-                // Reload profile data
+                // Reload profile data to sync all UI elements
                 await this.loadProfileData();
             } else {
                 throw new Error(response.message || 'Failed to update profile');
