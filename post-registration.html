@@ -643,6 +643,14 @@
                         </div>
 
                         <div class="form-group">
+                            <label class="form-label">EC Number / Employee Number <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="ecNumber" placeholder="e.g., 6134510V (Govt) or 12345 (Private)" required>
+                            <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                                Government employees: Format like 6134510V | Private sector: Your employee ID number
+                            </small>
+                        </div>
+
+                        <div class="form-group">
                             <label class="form-label">Work Address <span class="required">*</span></label>
                             <input type="text" class="form-input" id="workAddress" placeholder="123 Business Street, Harare" required>
                         </div>
@@ -1031,6 +1039,10 @@
                     message: 'Please enter your occupation/job title'
                 },
                 {
+                    field: document.getElementById('ecNumber'),
+                    message: 'Please enter your EC Number / Employee Number'
+                },
+                {
                     field: document.getElementById('workAddress'),
                     message: 'Please enter your work address'
                 },
@@ -1130,6 +1142,7 @@
                 monthly_income: document.getElementById('income')?.value,
                 employer_name: document.getElementById('employer')?.value,
                 job_title: document.getElementById('occupation')?.value,
+                ec_number: document.getElementById('ecNumber')?.value,
                 work_address: document.getElementById('workAddress')?.value,
                 work_phone: document.getElementById('workPhone')?.value,
                 work_email: document.getElementById('workEmail')?.value,

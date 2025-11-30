@@ -93,6 +93,7 @@ const SettingsDataLoader = {
                 this.setInputValue('monthlyIncome', profile.monthly_income);
                 this.setInputValue('employerName', profile.employer_name);
                 this.setInputValue('jobTitle', profile.job_title || profile.occupation);
+                this.setInputValue('ecNumber', profile.ec_number);
                 this.setInputValue('workAddress', profile.work_address);
                 this.setInputValue('workPhone', profile.work_phone);
                 this.setInputValue('workEmail', profile.work_email);
@@ -768,6 +769,7 @@ const SettingsDataLoader = {
                 monthly_income: this.getInputValue('monthlyIncome'),
                 employer_name: this.getInputValue('employerName'),
                 job_title: this.getInputValue('jobTitle'),
+                ec_number: this.getInputValue('ecNumber'),
                 work_address: this.getInputValue('workAddress'),
                 work_phone: this.getInputValue('workPhone'),
                 work_email: this.getInputValue('workEmail'),

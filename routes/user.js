@@ -442,7 +442,7 @@ router.put('/profile', authenticateUser, async (req, res) => {
             'date_of_birth', 'gender', 'national_id',
             'street_address', 'address', 'city', 'suburb', 'postal_code', 'country',
             'bio', 'profile_picture_url',
-            'employment_status', 'monthly_income', 'employer_name', 'job_title', 'occupation',
+            'employment_status', 'monthly_income', 'employer_name', 'job_title', 'occupation', 'ec_number',
             'marital_status', 'kyc_status', 'account_status'
         ];
         
