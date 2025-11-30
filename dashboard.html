@@ -5298,7 +5298,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Get notified 3 days before payment due</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="emailLoanReminders" checked>
+                                <input type="checkbox" id="emailLoanReminders" checked onchange="saveNotificationToggle('loan_reminders', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5308,7 +5308,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Receive updates on investment earnings</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="emailInvestmentReturns" checked>
+                                <input type="checkbox" id="emailInvestmentReturns" checked onchange="saveNotificationToggle('investment_returns', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5318,7 +5318,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Alert me of new investment opportunities</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="emailLoanOpportunities" checked>
+                                <input type="checkbox" id="emailLoanOpportunities" checked onchange="saveNotificationToggle('loan_opportunities', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5328,7 +5328,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Important account security notifications</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="emailSecurityAlerts" checked>
+                                <input type="checkbox" id="emailSecurityAlerts" checked onchange="saveNotificationToggle('security_alerts', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5338,7 +5338,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Weekly portfolio performance summary</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="emailWeeklySummary" checked>
+                                <input type="checkbox" id="emailWeeklySummary" checked onchange="saveNotificationToggle('weekly_summary', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5348,7 +5348,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Special offers and platform updates</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="emailMarketing">
+                                <input type="checkbox" id="emailMarketing" onchange="saveNotificationToggle('marketing_emails', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5365,7 +5365,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Instant notifications for all transactions</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="pushTransactionAlerts" checked>
+                                <input type="checkbox" id="pushTransactionAlerts" checked onchange="saveNotificationToggle('transaction_alerts', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5375,7 +5375,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Login attempts and profile changes</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="pushAccountActivity" checked>
+                                <input type="checkbox" id="pushAccountActivity" checked onchange="saveNotificationToggle('account_activity', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5385,7 +5385,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Real-time investment performance updates</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="pushInvestmentUpdates" checked>
+                                <input type="checkbox" id="pushInvestmentUpdates" checked onchange="saveNotificationToggle('investment_updates', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5395,7 +5395,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Special deals and limited-time offers</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="pushPromotional">
+                                <input type="checkbox" id="pushPromotional" onchange="saveNotificationToggle('promotional', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5617,7 +5617,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Hide specific investment amounts from public view</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="hideInvestmentAmounts" checked>
+                                <input type="checkbox" id="hideInvestmentAmounts" checked onchange="savePrivacyToggle('hide_investment_amounts', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5627,7 +5627,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Keep your earnings and returns private</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="hideReturns" checked>
+                                <input type="checkbox" id="hideReturns" checked onchange="savePrivacyToggle('hide_returns', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5637,7 +5637,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Show only current investments, hide historical data</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="hideInvestmentHistory">
+                                <input type="checkbox" id="hideInvestmentHistory" onchange="savePrivacyToggle('hide_investment_history', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5647,7 +5647,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Hide your risk tolerance and investment strategy</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="hideRiskProfile">
+                                <input type="checkbox" id="hideRiskProfile" onchange="savePrivacyToggle('hide_risk_profile', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5675,7 +5675,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Hide your credit score from other users</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="hideCreditScore" checked>
+                                <input type="checkbox" id="hideCreditScore" checked onchange="savePrivacyToggle('hide_credit_score', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5685,7 +5685,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Keep loan amounts and balances private</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="hideLoanAmounts" checked>
+                                <input type="checkbox" id="hideLoanAmounts" checked onchange="savePrivacyToggle('hide_loan_amounts', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5695,7 +5695,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Hide payment patterns and history</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="hidePaymentHistory">
+                                <input type="checkbox" id="hidePaymentHistory" onchange="savePrivacyToggle('hide_payment_history', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5712,7 +5712,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Share anonymized data to improve platform features</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="shareAnalytics" checked>
+                                <input type="checkbox" id="shareAnalytics" checked onchange="savePrivacyToggle('share_analytics', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5722,7 +5722,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Contribute to financial market research (anonymized)</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="shareMarketResearch">
+                                <input type="checkbox" id="shareMarketResearch" onchange="savePrivacyToggle('share_market_research', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5732,7 +5732,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Allow third-party analytics for service improvement</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="thirdPartyAnalytics">
+                                <input type="checkbox" id="thirdPartyAnalytics" onchange="savePrivacyToggle('third_party_analytics', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -5742,7 +5742,7 @@
                                 <p style="margin: 0; color: #94a3b8; font-size: 14px;">Use my data to personalize offers and recommendations</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="personalizedMarketing">
+                                <input type="checkbox" id="personalizedMarketing" onchange="savePrivacyToggle('personalized_marketing', this.checked)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -9653,6 +9653,82 @@ How it works:
             }
         }
         
+        // Toggle Save Functions - Auto-save on toggle change
+        async function saveNotificationToggle(setting, value) {
+            const apiBase = window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api';
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
+            
+            try {
+                const response = await fetch(`${apiBase}/settings/notifications`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ [setting]: value })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('success', 'Saved', `Notification setting updated`);
+                } else {
+                    showToast('error', 'Error', 'Failed to update notification setting');
+                }
+            } catch (error) {
+                console.error('Notification toggle error:', error);
+                showToast('error', 'Error', 'Failed to update notification setting');
+            }
+        }
+
+        async function savePrivacyToggle(setting, value) {
+            const apiBase = window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api';
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
+            
+            try {
+                const response = await fetch(`${apiBase}/settings/privacy`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ [setting]: value })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('success', 'Saved', `Privacy setting updated`);
+                } else {
+                    showToast('error', 'Error', 'Failed to update privacy setting');
+                }
+            } catch (error) {
+                console.error('Privacy toggle error:', error);
+                showToast('error', 'Error', 'Failed to update privacy setting');
+            }
+        }
+
+        async function saveSecurityToggle(setting, value) {
+            const apiBase = window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api';
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
+            
+            try {
+                const response = await fetch(`${apiBase}/settings/security`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ [setting]: value })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('success', 'Saved', `Security setting updated`);
+                } else {
+                    showToast('error', 'Error', 'Failed to update security setting');
+                }
+            } catch (error) {
+                console.error('Security toggle error:', error);
+                showToast('error', 'Error', 'Failed to update security setting');
+            }
+        }
+
         // Security Tab Functions
         async function saveSecuritySettings() {
             const apiBase = window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api';
