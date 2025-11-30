@@ -3113,6 +3113,43 @@
             color: rgba(0, 0, 0, 0.9);
         }
 
+        /* Export Menu Styles */
+        .export-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 12px 15px;
+            background: none;
+            border: none;
+            color: #e2e8f0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: left;
+        }
+
+        .export-option:hover {
+            background: rgba(56, 231, 123, 0.1);
+        }
+
+        .export-option:last-child {
+            border-radius: 0 0 8px 8px;
+        }
+
+        body.light-mode .export-menu {
+            background: white;
+            border-color: #e2e8f0;
+        }
+
+        body.light-mode .export-option {
+            color: #1f2937;
+        }
+
+        body.light-mode .export-option:hover {
+            background: rgba(56, 231, 123, 0.1);
+        }
+
         @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
@@ -4490,9 +4527,19 @@
                         <option value="3months">Last 3 Months</option>
                         <option value="year">This Year</option>
                     </select>
-                    <button onclick="exportTransactions()" class="btn-secondary" style="padding: 10px 20px;">
-                        <i class="fas fa-download"></i> Export
-                    </button>
+                    <div class="export-dropdown" style="position: relative;">
+                        <button onclick="toggleExportMenu()" class="btn-secondary" style="padding: 10px 20px;">
+                            <i class="fas fa-download"></i> Export <i class="fas fa-chevron-down" style="margin-left: 5px; font-size: 10px;"></i>
+                        </button>
+                        <div id="exportMenu" class="export-menu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 5px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; min-width: 200px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); z-index: 100;">
+                            <div style="padding: 10px 15px; border-bottom: 1px solid #334155; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Export Format</div>
+                            <button onclick="exportTransactions('pdf')" class="export-option"><i class="fas fa-file-pdf" style="color: #ef4444;"></i> PDF Document (.pdf)</button>
+                            <button onclick="exportTransactions('docx')" class="export-option"><i class="fas fa-file-word" style="color: #2563eb;"></i> Microsoft Word (.docx)</button>
+                            <button onclick="exportTransactions('xlsx')" class="export-option"><i class="fas fa-file-excel" style="color: #10b981;"></i> Microsoft Excel (.xlsx)</button>
+                            <button onclick="exportTransactions('csv')" class="export-option"><i class="fas fa-file-csv" style="color: #f59e0b;"></i> CSV File (.csv)</button>
+                            <button onclick="exportTransactions('txt')" class="export-option"><i class="fas fa-file-alt" style="color: #64748b;"></i> Plain Text (.txt)</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -9249,37 +9296,338 @@ How it works:
             loadTransactionsData();
         }
 
-        function exportTransactions() {
+        // Toggle export menu visibility
+        function toggleExportMenu() {
+            const menu = document.getElementById('exportMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Close export menu when clicking outside
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('exportMenu');
+            const dropdown = document.querySelector('.export-dropdown');
+            if (menu && dropdown && !dropdown.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
+
+        // Main export function with format support
+        async function exportTransactions(format) {
+            // Close the menu
+            document.getElementById('exportMenu').style.display = 'none';
+            
             const transactions = transactionsState.allTransactions;
             if (!transactions || transactions.length === 0) {
-                alert('No transactions to export');
+                showToast('warning', 'No data to export', 'Complete some transactions first');
                 return;
             }
-            
-            // Create CSV content
-            const headers = ['Date', 'Type', 'Description', 'Amount', 'Status'];
+
+            showToast('info', 'Preparing export', 'Your file is being generated...');
+
+            const dateStr = new Date().toISOString().split('T')[0];
+            const filename = `ZimCrowd_Transactions_${dateStr}`;
+
+            try {
+                switch(format) {
+                    case 'csv':
+                        exportToCSV(transactions, filename);
+                        break;
+                    case 'txt':
+                        exportToTXT(transactions, filename);
+                        break;
+                    case 'xlsx':
+                        exportToXLSX(transactions, filename);
+                        break;
+                    case 'pdf':
+                        exportToPDF(transactions, filename);
+                        break;
+                    case 'docx':
+                        exportToDOCX(transactions, filename);
+                        break;
+                    default:
+                        exportToCSV(transactions, filename);
+                }
+                showToast('success', 'Export complete', `Your ${format.toUpperCase()} file has been downloaded`);
+            } catch (error) {
+                console.error('Export error:', error);
+                showToast('error', 'Export failed', 'Please try again or choose a different format');
+            }
+        }
+
+        // CSV Export
+        function exportToCSV(transactions, filename) {
+            const headers = ['Date', 'Type', 'Description', 'Amount (USD)', 'Status', 'Reference'];
             const csvRows = [headers.join(',')];
             
             transactions.forEach(txn => {
-                const date = new Date(txn.created_at).toLocaleDateString('en-US');
-                const type = txn.type || 'N/A';
-                const description = (txn.description || '').replace(/,/g, ';');
-                const amount = parseFloat(txn.amount).toFixed(2);
-                const status = txn.status || 'completed';
-                
-                csvRows.push([date, type, description, amount, status].join(','));
+                const row = [
+                    new Date(txn.created_at).toLocaleDateString('en-US'),
+                    formatTransactionType(txn.type),
+                    `"${(txn.description || txn.type || 'Transaction').replace(/"/g, '""')}"`,
+                    parseFloat(txn.amount || 0).toFixed(2),
+                    txn.status || 'completed',
+                    txn.reference_id || txn.id || 'N/A'
+                ];
+                csvRows.push(row.join(','));
             });
             
-            const csvContent = csvRows.join('\\n');
-            const blob = new Blob([csvContent], { type: 'text/csv' });
+            downloadFile(csvRows.join('\n'), `${filename}.csv`, 'text/csv;charset=utf-8;');
+        }
+
+        // Plain Text Export
+        function exportToTXT(transactions, filename) {
+            let content = '═══════════════════════════════════════════════════════════════\n';
+            content += '                    ZIMCROWD TRANSACTION HISTORY\n';
+            content += '═══════════════════════════════════════════════════════════════\n\n';
+            content += `Generated: ${new Date().toLocaleString()}\n`;
+            content += `Total Transactions: ${transactions.length}\n\n`;
+            content += '───────────────────────────────────────────────────────────────\n\n';
+
+            transactions.forEach((txn, index) => {
+                content += `Transaction #${index + 1}\n`;
+                content += `  Date:        ${new Date(txn.created_at).toLocaleString()}\n`;
+                content += `  Type:        ${formatTransactionType(txn.type)}\n`;
+                content += `  Description: ${txn.description || txn.type || 'Transaction'}\n`;
+                content += `  Amount:      $${parseFloat(txn.amount || 0).toFixed(2)}\n`;
+                content += `  Status:      ${(txn.status || 'completed').toUpperCase()}\n`;
+                content += `  Reference:   ${txn.reference_id || txn.id || 'N/A'}\n`;
+                content += '\n───────────────────────────────────────────────────────────────\n\n';
+            });
+
+            // Summary
+            const totalDeposits = transactions.filter(t => t.type === 'deposit' || t.type === 'credit').reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+            const totalWithdrawals = transactions.filter(t => t.type === 'withdrawal' || t.type === 'debit').reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+            
+            content += '\n═══════════════════════════════════════════════════════════════\n';
+            content += '                           SUMMARY\n';
+            content += '═══════════════════════════════════════════════════════════════\n';
+            content += `  Total Credits:  $${totalDeposits.toFixed(2)}\n`;
+            content += `  Total Debits:   $${totalWithdrawals.toFixed(2)}\n`;
+            content += `  Net Change:     $${(totalDeposits - totalWithdrawals).toFixed(2)}\n`;
+            content += '═══════════════════════════════════════════════════════════════\n';
+            content += '\n                    Thank you for using ZimCrowd!\n';
+            content += '                      www.zimcrowd.com\n';
+
+            downloadFile(content, `${filename}.txt`, 'text/plain;charset=utf-8;');
+        }
+
+        // Excel Export (XLSX) - Using simple XML format
+        function exportToXLSX(transactions, filename) {
+            // Create Excel XML format
+            let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+            xml += '<?mso-application progid="Excel.Sheet"?>\n';
+            xml += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"\n';
+            xml += '  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n';
+            xml += '<Styles>\n';
+            xml += '  <Style ss:ID="Header"><Font ss:Bold="1"/><Interior ss:Color="#38e77b" ss:Pattern="Solid"/></Style>\n';
+            xml += '  <Style ss:ID="Currency"><NumberFormat ss:Format="$#,##0.00"/></Style>\n';
+            xml += '</Styles>\n';
+            xml += '<Worksheet ss:Name="Transactions">\n';
+            xml += '<Table>\n';
+            
+            // Header row
+            xml += '<Row ss:StyleID="Header">\n';
+            ['Date', 'Type', 'Description', 'Amount (USD)', 'Status', 'Reference'].forEach(h => {
+                xml += `  <Cell><Data ss:Type="String">${h}</Data></Cell>\n`;
+            });
+            xml += '</Row>\n';
+            
+            // Data rows
+            transactions.forEach(txn => {
+                xml += '<Row>\n';
+                xml += `  <Cell><Data ss:Type="String">${new Date(txn.created_at).toLocaleDateString()}</Data></Cell>\n`;
+                xml += `  <Cell><Data ss:Type="String">${formatTransactionType(txn.type)}</Data></Cell>\n`;
+                xml += `  <Cell><Data ss:Type="String">${escapeXML(txn.description || txn.type || 'Transaction')}</Data></Cell>\n`;
+                xml += `  <Cell ss:StyleID="Currency"><Data ss:Type="Number">${parseFloat(txn.amount || 0).toFixed(2)}</Data></Cell>\n`;
+                xml += `  <Cell><Data ss:Type="String">${txn.status || 'completed'}</Data></Cell>\n`;
+                xml += `  <Cell><Data ss:Type="String">${txn.reference_id || txn.id || 'N/A'}</Data></Cell>\n`;
+                xml += '</Row>\n';
+            });
+            
+            xml += '</Table>\n</Worksheet>\n</Workbook>';
+            
+            downloadFile(xml, `${filename}.xls`, 'application/vnd.ms-excel');
+        }
+
+        // PDF Export - Using HTML to PDF approach
+        function exportToPDF(transactions, filename) {
+            const printWindow = window.open('', '_blank');
+            
+            let html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>ZimCrowd Transaction History</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
+                    .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #38e77b; padding-bottom: 20px; }
+                    .header h1 { color: #38e77b; margin: 0; }
+                    .header p { color: #666; margin: 5px 0; }
+                    .logo { font-size: 28px; font-weight: bold; color: #38e77b; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th { background: #38e77b; color: white; padding: 12px 8px; text-align: left; font-size: 12px; }
+                    td { padding: 10px 8px; border-bottom: 1px solid #eee; font-size: 11px; }
+                    tr:nth-child(even) { background: #f9f9f9; }
+                    .amount-positive { color: #10b981; font-weight: bold; }
+                    .amount-negative { color: #ef4444; font-weight: bold; }
+                    .status { padding: 3px 8px; border-radius: 12px; font-size: 10px; text-transform: uppercase; }
+                    .status-completed { background: #d4edda; color: #155724; }
+                    .status-pending { background: #fff3cd; color: #856404; }
+                    .summary { margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; }
+                    .footer { margin-top: 40px; text-align: center; color: #999; font-size: 11px; }
+                    @media print { body { padding: 20px; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div class="logo">ZIMCROWD</div>
+                    <h1>Transaction History</h1>
+                    <p>Generated on ${new Date().toLocaleString()}</p>
+                    <p>Total Transactions: ${transactions.length}</p>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Reference</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            
+            transactions.forEach(txn => {
+                const amount = parseFloat(txn.amount || 0);
+                const isPositive = txn.type === 'deposit' || txn.type === 'credit' || txn.type === 'investment_return';
+                const amountClass = isPositive ? 'amount-positive' : 'amount-negative';
+                const statusClass = (txn.status || 'completed') === 'completed' ? 'status-completed' : 'status-pending';
+                
+                html += `
+                    <tr>
+                        <td>${new Date(txn.created_at).toLocaleDateString()}</td>
+                        <td>${formatTransactionType(txn.type)}</td>
+                        <td>${escapeHTML(txn.description || txn.type || 'Transaction')}</td>
+                        <td class="${amountClass}">${isPositive ? '+' : '-'}$${Math.abs(amount).toFixed(2)}</td>
+                        <td><span class="status ${statusClass}">${txn.status || 'completed'}</span></td>
+                        <td>${txn.reference_id || txn.id?.substring(0, 8) || 'N/A'}</td>
+                    </tr>`;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+                <div class="footer">
+                    <p>This document was generated by ZimCrowd - P2P Lending Platform</p>
+                    <p>www.zimcrowd.com | support@zimcrowd.com</p>
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                    };
+                </script>
+            </body>
+            </html>`;
+            
+            printWindow.document.write(html);
+            printWindow.document.close();
+        }
+
+        // Word Document Export (DOCX) - Using HTML format that Word can open
+        function exportToDOCX(transactions, filename) {
+            let html = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" 
+                  xmlns:w="urn:schemas-microsoft-com:office:word">
+            <head>
+                <meta charset="utf-8">
+                <title>ZimCrowd Transaction History</title>
+                <style>
+                    body { font-family: Calibri, Arial, sans-serif; }
+                    h1 { color: #38e77b; text-align: center; }
+                    .subtitle { text-align: center; color: #666; margin-bottom: 20px; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th { background: #38e77b; color: white; padding: 8px; border: 1px solid #ddd; }
+                    td { padding: 8px; border: 1px solid #ddd; }
+                    .positive { color: green; }
+                    .negative { color: red; }
+                </style>
+            </head>
+            <body>
+                <h1>ZIMCROWD</h1>
+                <p class="subtitle">Transaction History Report</p>
+                <p class="subtitle">Generated: ${new Date().toLocaleString()} | Total: ${transactions.length} transactions</p>
+                <table>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>`;
+            
+            transactions.forEach(txn => {
+                const amount = parseFloat(txn.amount || 0);
+                const isPositive = txn.type === 'deposit' || txn.type === 'credit' || txn.type === 'investment_return';
+                
+                html += `
+                    <tr>
+                        <td>${new Date(txn.created_at).toLocaleDateString()}</td>
+                        <td>${formatTransactionType(txn.type)}</td>
+                        <td>${escapeHTML(txn.description || txn.type || 'Transaction')}</td>
+                        <td class="${isPositive ? 'positive' : 'negative'}">${isPositive ? '+' : '-'}$${Math.abs(amount).toFixed(2)}</td>
+                        <td>${txn.status || 'completed'}</td>
+                    </tr>`;
+            });
+            
+            html += `
+                </table>
+                <p style="margin-top: 30px; text-align: center; color: #999;">
+                    ZimCrowd - P2P Lending Platform | www.zimcrowd.com
+                </p>
+            </body>
+            </html>`;
+            
+            downloadFile(html, `${filename}.doc`, 'application/msword');
+        }
+
+        // Helper: Download file
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `transactions_${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = filename;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
+        }
+
+        // Helper: Format transaction type
+        function formatTransactionType(type) {
+            const types = {
+                'deposit': 'Deposit',
+                'withdrawal': 'Withdrawal',
+                'loan_payment': 'Loan Payment',
+                'loan_disbursement': 'Loan Disbursement',
+                'investment': 'Investment',
+                'investment_return': 'Investment Return',
+                'transfer': 'Transfer',
+                'credit': 'Credit',
+                'debit': 'Debit'
+            };
+            return types[type] || type || 'Transaction';
+        }
+
+        // Helper: Escape HTML
+        function escapeHTML(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // Helper: Escape XML
+        function escapeXML(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
         }
 
         function showTransactionsError() {
