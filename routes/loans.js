@@ -26,6 +26,59 @@ const handleValidationErrors = (req, res, next) => {
     next();
 };
 
+// @route   GET /api/loans/max-amount
+// @desc    Get maximum loan amount based on DTNI and ZimScore
+//          ALWAYS requires bank statement - used by loan request modal
+// @access  Private
+router.get('/max-amount', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const termDays = parseInt(req.query.term_days) || 90;
+        const interestRate = parseFloat(req.query.interest_rate) || 0.05;
+
+        console.log(`📊 Calculating max loan for user ${userId}, term: ${termDays} days`);
+
+        // Use ZimScoreService to calculate max loan
+        const result = await zimScoreService.calculateMaxLoanForRequest(
+            userId, 
+            termDays, 
+            interestRate
+        );
+
+        if (!result.success) {
+            return res.status(400).json({
+                success: false,
+                message: result.message,
+                error: result.error,
+                requiresBankStatement: result.requiresBankStatement
+            });
+        }
+
+        res.json({
+            success: true,
+            data: {
+                maxLoanAmount: result.maxLoanAmount,
+                limitReason: result.limitReason,
+                isColdStart: result.isColdStart,
+                employmentType: result.employmentType,
+                dtni: result.dtni,
+                zimScore: result.zimScore,
+                tenure: result.tenure,
+                requiresBankStatement: result.requiresBankStatement,
+                message: result.message
+            }
+        });
+
+    } catch (error) {
+        console.error('Error getting max loan amount:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to calculate maximum loan amount',
+            error: error.message
+        });
+    }
+});
+
 // @route   POST /api/loans/request
 // @desc    Submit a loan request with DTNI validation and employment-based payment schedule
 // @access  Private

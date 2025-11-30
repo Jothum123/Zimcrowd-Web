@@ -73,6 +73,77 @@ class ZimScoreService {
             ACTIVE_LOAN_BONUS: 2,         // Has active loan (trust building)
             MULTIPLE_LOANS_BONUS: 5       // Successfully completed 3+ loans
         };
+
+        // KYC Document Verification Bonus (0-15 points)
+        this.KYC_BONUS = {
+            ID_VERIFIED_HIGH: 5,      // OCR confidence >= 90%
+            ID_VERIFIED_MEDIUM: 3,    // OCR confidence >= 70%
+            ID_UPLOADED: 1,           // Just uploaded
+            SELFIE_VERIFIED: 5,       // Face detected
+            SELFIE_UPLOADED: 2,       // Just uploaded
+            FACE_MATCH_HIGH: 5,       // >= 90% match
+            FACE_MATCH_GOOD: 4,       // >= 80% match
+            FACE_MATCH_ACCEPTABLE: 3, // >= 70% match
+            FACE_MATCH_LOW: 2         // >= 60% match
+        };
+    }
+
+    /**
+     * Calculate KYC Document Verification Bonus (0-15 points)
+     * @param {Object} kycData - KYC verification data
+     * @returns {Object} KYC bonus details
+     */
+    calculateKYCBonus(kycData) {
+        let kycBonus = 0;
+        const factors = {};
+
+        // ID Verification (0-5 points)
+        if (kycData.id_verified && kycData.ocr_confidence >= 0.90) {
+            kycBonus += this.KYC_BONUS.ID_VERIFIED_HIGH;
+            factors.id_verification = this.KYC_BONUS.ID_VERIFIED_HIGH;
+        } else if (kycData.id_verified && kycData.ocr_confidence >= 0.70) {
+            kycBonus += this.KYC_BONUS.ID_VERIFIED_MEDIUM;
+            factors.id_verification = this.KYC_BONUS.ID_VERIFIED_MEDIUM;
+        } else if (kycData.id_uploaded) {
+            kycBonus += this.KYC_BONUS.ID_UPLOADED;
+            factors.id_verification = this.KYC_BONUS.ID_UPLOADED;
+        } else {
+            factors.id_verification = 0;
+        }
+
+        // Selfie Verification (0-5 points)
+        if (kycData.selfie_verified && kycData.face_detected) {
+            kycBonus += this.KYC_BONUS.SELFIE_VERIFIED;
+            factors.selfie_verification = this.KYC_BONUS.SELFIE_VERIFIED;
+        } else if (kycData.selfie_uploaded) {
+            kycBonus += this.KYC_BONUS.SELFIE_UPLOADED;
+            factors.selfie_verification = this.KYC_BONUS.SELFIE_UPLOADED;
+        } else {
+            factors.selfie_verification = 0;
+        }
+
+        // Face Match (0-5 points)
+        const faceMatchScore = kycData.face_match_score || 0;
+        if (faceMatchScore >= 0.90) {
+            kycBonus += this.KYC_BONUS.FACE_MATCH_HIGH;
+            factors.face_match = this.KYC_BONUS.FACE_MATCH_HIGH;
+        } else if (faceMatchScore >= 0.80) {
+            kycBonus += this.KYC_BONUS.FACE_MATCH_GOOD;
+            factors.face_match = this.KYC_BONUS.FACE_MATCH_GOOD;
+        } else if (faceMatchScore >= 0.70) {
+            kycBonus += this.KYC_BONUS.FACE_MATCH_ACCEPTABLE;
+            factors.face_match = this.KYC_BONUS.FACE_MATCH_ACCEPTABLE;
+        } else if (faceMatchScore >= 0.60) {
+            kycBonus += this.KYC_BONUS.FACE_MATCH_LOW;
+            factors.face_match = this.KYC_BONUS.FACE_MATCH_LOW;
+        } else {
+            factors.face_match = 0;
+        }
+
+        return {
+            totalBonus: kycBonus, // Max 15 points
+            factors
+        };
     }
 
     /**
@@ -189,10 +260,24 @@ class ZimScoreService {
                 score = component1Score;
             }
 
+            // KYC Bonus: Document Verification (0-15 points)
+            // Get KYC verification data from documents
+            const kycData = await this.getKYCVerificationData(userId);
+            const kycBonusResult = this.calculateKYCBonus(kycData);
+            const kycBonus = kycBonusResult.totalBonus;
+            
+            if (kycBonus > 0) {
+                score += kycBonus;
+                factors.kyc_bonus = kycBonus;
+                factors.kyc_factors = kycBonusResult.factors;
+                console.log(`🪪 KYC Bonus: +${kycBonus} points (ID: ${kycBonusResult.factors.id_verification}, Selfie: ${kycBonusResult.factors.selfie_verification}, Face Match: ${kycBonusResult.factors.face_match})`);
+            }
+
             // Component 3: Performance (0 for new users)
             factors.component3_performance = 0;
 
-            // Final score (Component 1 + Component 2 + Component 3)
+            // Final score (Component 1 + Component 2 + KYC Bonus + Component 3)
+            // Capped at 85 maximum
             score = Math.max(this.MIN_SCORE, Math.min(this.MAX_SCORE, score));
 
             // Calculate star rating and reputation level
@@ -870,6 +955,195 @@ class ZimScoreService {
     }
 
     /**
+     * Calculate maximum loan amount for a loan request
+     * ALWAYS requires bank statement for DTNI calculation
+     * 
+     * Cold Start: min(DTNI, Employment Cap)
+     * Post-Cold Start: min(DTNI, ZimScore Limit)
+     * 
+     * @param {string} userId - User ID
+     * @param {number} termDays - Loan term in days
+     * @param {number} interestRate - Annual interest rate (e.g., 0.05 for 5%)
+     * @returns {Promise<Object>} Maximum loan calculation result
+     */
+    async calculateMaxLoanForRequest(userId, termDays = 90, interestRate = 0.05) {
+        try {
+            console.log(`💰 Calculating max loan for user ${userId}...`);
+
+            // 1. Get user's ZimScore
+            const { data: zimScore, error: zimScoreError } = await supabase
+                .from('user_zimscores')
+                .select('*')
+                .eq('user_id', userId)
+                .single();
+
+            if (zimScoreError || !zimScore) {
+                return {
+                    success: false,
+                    error: 'ZIMSCORE_NOT_FOUND',
+                    message: 'Please complete KYC and upload bank statement first',
+                    requiresBankStatement: true
+                };
+            }
+
+            // 2. Get employment details
+            const { data: employmentDetails, error: empError } = await supabase
+                .from('employment_details')
+                .select('monthly_income, employment_type')
+                .eq('user_id', userId)
+                .single();
+
+            if (empError || !employmentDetails || !employmentDetails.monthly_income) {
+                return {
+                    success: false,
+                    error: 'NO_INCOME_DATA',
+                    message: 'Please update your employment details with current monthly income',
+                    requiresBankStatement: true
+                };
+            }
+
+            const netSalary = employmentDetails.monthly_income;
+            const employmentType = employmentDetails.employment_type || 'informal';
+            const isGovernment = employmentType === 'government';
+            const isColdStart = zimScore.cold_start_active !== false;
+
+            // 3. Get existing active loans
+            const { data: activeLoans } = await supabase
+                .from('loans')
+                .select('amount, interest_rate, term_days')
+                .eq('user_id', userId)
+                .in('status', ['active', 'approved']);
+
+            // 4. Calculate existing monthly installments
+            let existingMonthlyInstallment = 0;
+            if (activeLoans && activeLoans.length > 0) {
+                activeLoans.forEach(loan => {
+                    const termMonths = (loan.term_days || 30) / 30;
+                    const annualRate = (loan.interest_rate || 0) / 100;
+                    const monthlyInstallment = this.calculateMonthlyInstallment(
+                        loan.amount, annualRate, termMonths
+                    );
+                    existingMonthlyInstallment += monthlyInstallment;
+                });
+            }
+
+            // 5. Calculate DTNI
+            const dtniPercent = isGovernment ? 0.40 : 0.33;
+            const maxTotalInstallment = netSalary * dtniPercent;
+            const availableInstallment = Math.max(0, maxTotalInstallment - existingMonthlyInstallment);
+            const installmentUtilization = existingMonthlyInstallment / maxTotalInstallment;
+
+            // 6. Calculate max loan from DTNI using reducing balance
+            const termMonths = Math.ceil(termDays / 30);
+            const monthlyRate = interestRate / 12;
+            
+            let maxLoanFromDTNI;
+            if (monthlyRate > 0 && termMonths > 0) {
+                const powerTerm = Math.pow(1 + monthlyRate, termMonths);
+                maxLoanFromDTNI = (availableInstallment * (powerTerm - 1)) / (monthlyRate * powerTerm);
+            } else {
+                maxLoanFromDTNI = availableInstallment * termMonths;
+            }
+
+            // 7. Determine final max loan based on cold start status
+            let finalMaxLoan;
+            let limitReason;
+
+            if (isColdStart) {
+                // Cold Start: min(DTNI, Employment Cap)
+                const employmentCap = isGovernment ? 300 : 100;
+                finalMaxLoan = Math.min(maxLoanFromDTNI, employmentCap);
+                limitReason = maxLoanFromDTNI < employmentCap ? 'DTNI_LIMIT' : 'EMPLOYMENT_CAP';
+            } else {
+                // Post-Cold Start: min(DTNI, ZimScore Limit)
+                const scoreBasedLimit = zimScore.score_based_limit || this.calculateMaxLoanAmount(zimScore.score_value);
+                finalMaxLoan = Math.min(maxLoanFromDTNI, scoreBasedLimit);
+                limitReason = maxLoanFromDTNI < scoreBasedLimit ? 'DTNI_LIMIT' : 'ZIMSCORE_LIMIT';
+            }
+
+            // Round down to whole dollar
+            finalMaxLoan = Math.floor(finalMaxLoan);
+
+            // Check if DTNI is too high (denied)
+            if (installmentUtilization >= 1.0) {
+                return {
+                    success: true,
+                    maxLoanAmount: 0,
+                    limitReason: 'DTNI_EXCEEDED',
+                    message: 'Your debt-to-income ratio is too high. Please repay existing loans first.',
+                    dtni: {
+                        netSalary,
+                        maxInstallment: maxTotalInstallment,
+                        existingInstallment: existingMonthlyInstallment,
+                        availableInstallment: 0,
+                        utilizationPercent: (installmentUtilization * 100).toFixed(1),
+                        status: 'Denied - At maximum capacity'
+                    },
+                    zimScore: {
+                        score: zimScore.score_value,
+                        starRating: zimScore.star_rating,
+                        coldStartActive: isColdStart,
+                        scoreBasedLimit: zimScore.score_based_limit
+                    },
+                    requiresBankStatement: true
+                };
+            }
+
+            console.log(`✅ Max Loan Calculation:`);
+            console.log(`   DTNI-based: $${maxLoanFromDTNI.toFixed(2)}`);
+            console.log(`   ${isColdStart ? 'Employment Cap' : 'ZimScore Limit'}: $${isColdStart ? (isGovernment ? 300 : 100) : zimScore.score_based_limit}`);
+            console.log(`   Final Max: $${finalMaxLoan} (${limitReason})`);
+
+            return {
+                success: true,
+                maxLoanAmount: finalMaxLoan,
+                limitReason,
+                isColdStart,
+                employmentType,
+                dtni: {
+                    netSalary,
+                    maxInstallment: maxTotalInstallment,
+                    existingInstallment: existingMonthlyInstallment,
+                    availableInstallment,
+                    dtniBasedLimit: Math.floor(maxLoanFromDTNI),
+                    utilizationPercent: (installmentUtilization * 100).toFixed(1),
+                    status: installmentUtilization === 0 ? 'Excellent - No existing debt' :
+                            installmentUtilization <= 0.20 ? 'Excellent - Low debt' :
+                            installmentUtilization <= 0.50 ? 'Good' :
+                            installmentUtilization <= 0.80 ? 'Fair' : 'Limited'
+                },
+                zimScore: {
+                    score: zimScore.score_value,
+                    starRating: zimScore.star_rating,
+                    riskLevel: zimScore.risk_level,
+                    coldStartActive: isColdStart,
+                    scoreBasedLimit: zimScore.score_based_limit,
+                    employmentCap: isGovernment ? 300 : 100
+                },
+                tenure: {
+                    requestedDays: termDays,
+                    requestedMonths: termMonths,
+                    maxDays: isColdStart ? 90 : (isGovernment ? 720 : 360),
+                    maxMonths: isColdStart ? 3 : (isGovernment ? 24 : 12)
+                },
+                requiresBankStatement: true, // Always required
+                message: isColdStart ? 
+                    `Cold start limit: $${finalMaxLoan}. After first successful repayment, your limit will unlock to $${zimScore.score_based_limit}.` :
+                    `Your maximum loan amount is $${finalMaxLoan} based on your ZimScore and DTNI.`
+            };
+
+        } catch (error) {
+            console.error('Error calculating max loan:', error);
+            return {
+                success: false,
+                error: 'CALCULATION_ERROR',
+                message: 'Unable to calculate maximum loan. Please try again.',
+                requiresBankStatement: true
+            };
+        }
+    }
+
+    /**
      * Calculate star rating from internal score
      * @param {number} scoreValue - Internal score (30-85)
      * @returns {number} Star rating (1.0-5.0)
@@ -915,6 +1189,68 @@ class ZimScoreService {
         if (scoreValue >= 50) return 'High Risk';        // 50-59
         if (scoreValue >= 40) return 'Very High Risk';   // 40-49
         return 'Building Credit';                        // 30-39
+    }
+
+    /**
+     * Get KYC verification data for a user
+     * @param {string} userId - User ID
+     * @returns {Promise<Object>} KYC verification data
+     */
+    async getKYCVerificationData(userId) {
+        try {
+            // Get verification documents
+            const { data: documents, error } = await supabase
+                .from('verification_documents')
+                .select('document_type, status, ocr_data')
+                .eq('user_id', userId);
+
+            if (error) throw error;
+
+            const kycData = {
+                id_uploaded: false,
+                id_verified: false,
+                ocr_confidence: 0,
+                selfie_uploaded: false,
+                selfie_verified: false,
+                face_detected: false,
+                face_match_score: 0
+            };
+
+            if (!documents || documents.length === 0) {
+                return kycData;
+            }
+
+            // Check ID document
+            const idDoc = documents.find(d => d.document_type === 'national_id');
+            if (idDoc) {
+                kycData.id_uploaded = true;
+                kycData.id_verified = idDoc.status === 'verified' || idDoc.status === 'processing';
+                kycData.ocr_confidence = idDoc.ocr_data?.confidence || 0;
+            }
+
+            // Check selfie
+            const selfieDoc = documents.find(d => d.document_type === 'selfie');
+            if (selfieDoc) {
+                kycData.selfie_uploaded = true;
+                kycData.selfie_verified = selfieDoc.status === 'verified' || selfieDoc.status === 'processing';
+                kycData.face_detected = selfieDoc.ocr_data?.faceDetection?.faceDetected || false;
+                kycData.face_match_score = selfieDoc.ocr_data?.faceDetection?.confidence || 
+                                          selfieDoc.ocr_data?.faceMatch?.confidence || 0;
+            }
+
+            return kycData;
+        } catch (error) {
+            console.error('Error getting KYC verification data:', error);
+            return {
+                id_uploaded: false,
+                id_verified: false,
+                ocr_confidence: 0,
+                selfie_uploaded: false,
+                selfie_verified: false,
+                face_detected: false,
+                face_match_score: 0
+            };
+        }
     }
 
     /**
