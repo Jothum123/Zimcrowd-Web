@@ -27,12 +27,31 @@
 
 **DTNI (Debt-to-Net-Income)** is the core loan affordability calculation that determines how much a user can borrow based on their income and existing debt obligations.
 
+### ⚠️ DTNI is ALWAYS Required
+
+**Bank statement submission is mandatory for EVERY loan request**, regardless of whether the user is in cold start or has an established ZimScore. DTNI ensures responsible lending by verifying the borrower can afford the loan.
+
 ### Key Principles:
 - ✅ Maximum 40% of net salary for loan installments (government)
 - ✅ Maximum 33% of net salary for loan installments (others)
 - ✅ Uses reducing balance amortization (not simple interest)
-- ✅ Employment caps apply after DTNI calculation
-- ✅ Cold start limits for new users
+- ✅ Employment caps apply during cold start phase
+- ✅ ZimScore limits apply after cold start (but still capped by DTNI)
+- ✅ **Bank statement required for EVERY loan application**
+
+### When DTNI is Used:
+
+| Phase | Loan Limit Formula |
+|-------|-------------------|
+| **Cold Start (1st loan)** | `min(DTNI, Employment Cap)` |
+| **Post-Cold Start** | `min(DTNI, ZimScore Limit)` |
+
+### Why Bank Statement is Always Required:
+1. **Income Verification** - Confirms current monthly income
+2. **Existing Debt Check** - Calculates current debt obligations  
+3. **Affordability Assessment** - Ensures user can repay
+4. **Regulatory Compliance** - Responsible lending requirement
+5. **Risk Management** - Prevents over-indebtedness
 
 ---
 

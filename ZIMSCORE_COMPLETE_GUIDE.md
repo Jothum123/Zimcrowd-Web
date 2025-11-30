@@ -294,33 +294,69 @@ coldStartLimit = min(DTNI-based limit, Employment cap)
 
 ### After First Successful Repayment:
 - ✅ Cold start flag removed
-- ✅ ZimScore-based limit unlocked
-- ✅ Can borrow based on ZimScore (up to $1,000)
+- ✅ ZimScore-based limit unlocked (up to $1,000)
 - ✅ Score increases (+3 points for on-time repayment)
+- ⚠️ **STILL requires bank statement for DTNI calculation**
 
-### Cold Start vs Score-Based Limits
+### DTNI is ALWAYS Required
 
-| Phase | Limit Determined By | Max Amount |
-|-------|---------------------|------------|
-| **Cold Start** | Employment Cap + DTNI | $100-$300 |
-| **After 1st Repayment** | ZimScore | $100-$1,000 |
+**IMPORTANT:** Even after cold start is removed and ZimScore-based limits are unlocked, the user must **ALWAYS submit a bank statement** to determine their actual maximum loan amount.
+
+```javascript
+// Post-Cold Start Loan Limit Formula
+actualMaxLoan = min(ZimScore-based limit, DTNI-based limit)
+
+// Example: User with ZimScore 73 (score limit $800)
+// But DTNI calculation shows they can only afford $500
+// Final max loan: min($800, $500) = $500
+```
+
+### Why Bank Statement is Always Required:
+1. **Income Verification** - Confirms current monthly income
+2. **Existing Debt Check** - Calculates current debt obligations
+3. **Affordability Assessment** - Ensures user can repay
+4. **Regulatory Compliance** - Responsible lending requirement
+5. **Risk Management** - Prevents over-indebtedness
+
+### Cold Start vs Post-Cold Start
+
+| Phase | ZimScore Limit | DTNI Required? | Final Limit |
+|-------|----------------|----------------|-------------|
+| **Cold Start** | Not used | ✅ YES | min(DTNI, Employment Cap) |
+| **Post-Cold Start** | $100-$1,000 | ✅ YES | min(ZimScore limit, DTNI) |
 
 ### Example Flow:
 ```
-1. New user completes KYC
+1. New user completes KYC + uploads bank statement
    → ZimScore calculated: 70/85 (Low Risk)
    → Score-based limit: $800 (NOT YET ACTIVE)
-   → Cold start limit: $300 (Government) or $100 (Others)
+   → DTNI-based limit: $714.52
+   → Cold start limit: min($714.52, $300) = $300
 
 2. User borrows $100, repays on-time
    → Cold start removed
    → ZimScore updated: 73/85 (+3 points)
-   → New limit: $800 (ZimScore-based, NOW ACTIVE)
+   → Score-based limit: $800 (NOW UNLOCKED)
 
-3. User continues good behavior
-   → ZimScore increases to 85
-   → Max limit: $1,000
+3. User wants to borrow again - MUST submit new bank statement
+   → New bank statement uploaded
+   → DTNI recalculated: $600 (based on current income/debt)
+   → Final max loan: min($800, $600) = $600
+
+4. User continues good behavior, ZimScore reaches 85
+   → Score-based limit: $1,000
+   → But still needs bank statement for DTNI
+   → If DTNI shows $750, max loan = $750 (not $1,000)
 ```
+
+### Bank Statement Submission Rules
+
+| Scenario | Bank Statement Required? |
+|----------|-------------------------|
+| First loan (cold start) | ✅ YES |
+| Second loan (post-cold start) | ✅ YES |
+| Every subsequent loan | ✅ YES |
+| Bank statement older than 30 days | ⚠️ Must resubmit |
 
 ---
 
