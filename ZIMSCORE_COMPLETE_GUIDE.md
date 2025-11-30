@@ -261,26 +261,66 @@ Active ≥3 months: +1 point
 
 ---
 
-## Cold Start Strategy
+## Cold Start Strategy (First-Time Borrowers)
 
-### Employment-Based Caps
+**IMPORTANT:** For first-time borrowers, the loan limit is determined by **Employment Cap** and **DTNI calculation**, NOT by ZimScore. ZimScore is calculated but only used for risk assessment and unlocking higher limits after the first successful repayment.
 
-| Employment Type | Cold Start Cap | DTNI % |
-|-----------------|----------------|--------|
-| **Government** | $300 | 40% |
-| **Private** | $100 | 33% |
-| **Business** | $100 | 33% |
-| **Informal** | $100 | 33% |
+### First-Time Borrowing Limits
+
+| Employment Type | Max Cold Start | DTNI % | Max Tenure |
+|-----------------|----------------|--------|------------|
+| **Government** | $300 | 40% | 90 days |
+| **Private** | $100 | 33% | 90 days |
+| **Business** | $100 | 33% | 90 days |
+| **Informal** | $100 | 33% | 90 days |
 
 ### Cold Start Formula:
 ```javascript
-Final Limit = min(DTNI-based limit, Employment cap)
+// First-time borrowers use Employment Cap + DTNI, NOT ZimScore
+coldStartLimit = min(DTNI-based limit, Employment cap)
+
+// Example: Government employee with $600 income
+// DTNI-based limit: $714.52
+// Employment cap: $300
+// Final cold start limit: min($714.52, $300) = $300 ✅
 ```
 
-### After First Repayment:
-- Cold start flag removed
-- Score-based limit unlocked
-- Can borrow based on ZimScore (up to $1,000)
+### What ZimScore Does During Cold Start:
+- ✅ Calculated and stored for risk assessment
+- ✅ Displayed to user (star rating)
+- ✅ Used to determine "score-based limit" (shown but not active)
+- ❌ Does NOT determine first loan amount
+- ❌ Does NOT override employment cap
+
+### After First Successful Repayment:
+- ✅ Cold start flag removed
+- ✅ ZimScore-based limit unlocked
+- ✅ Can borrow based on ZimScore (up to $1,000)
+- ✅ Score increases (+3 points for on-time repayment)
+
+### Cold Start vs Score-Based Limits
+
+| Phase | Limit Determined By | Max Amount |
+|-------|---------------------|------------|
+| **Cold Start** | Employment Cap + DTNI | $100-$300 |
+| **After 1st Repayment** | ZimScore | $100-$1,000 |
+
+### Example Flow:
+```
+1. New user completes KYC
+   → ZimScore calculated: 70/85 (Low Risk)
+   → Score-based limit: $800 (NOT YET ACTIVE)
+   → Cold start limit: $300 (Government) or $100 (Others)
+
+2. User borrows $100, repays on-time
+   → Cold start removed
+   → ZimScore updated: 73/85 (+3 points)
+   → New limit: $800 (ZimScore-based, NOW ACTIVE)
+
+3. User continues good behavior
+   → ZimScore increases to 85
+   → Max limit: $1,000
+```
 
 ---
 
