@@ -114,9 +114,10 @@ router.put('/:id/read', authenticateUser, async (req, res) => {
 });
 
 // @route   PUT /api/notifications/mark-all-read
+// @route   POST /api/notifications/read-all (alias)
 // @desc    Mark all notifications as read
 // @access  Private
-router.put('/mark-all-read', authenticateUser, async (req, res) => {
+const markAllReadHandler = async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('user_notifications')
@@ -140,7 +141,10 @@ router.put('/mark-all-read', authenticateUser, async (req, res) => {
             message: 'Failed to mark all notifications as read'
         });
     }
-});
+};
+
+router.put('/mark-all-read', authenticateUser, markAllReadHandler);
+router.post('/read-all', authenticateUser, markAllReadHandler);
 
 // @route   GET /api/notifications/unread-count
 // @desc    Get unread notification count
