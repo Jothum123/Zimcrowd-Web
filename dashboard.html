@@ -3423,7 +3423,7 @@
                     <span class="notification-badge" id="notification-count" style="display: none;">0</span>
                 </div>
                 <div class="header-user">
-                    <div class="header-user-avatar" id="nav-avatar">U</div>
+                    <div class="header-user-avatar" id="nav-avatar"></div>
                     <div class="header-user-info">
                         <h4 id="header-user-name">Loading...</h4>
                         <p id="header-user-status">
@@ -4991,7 +4991,7 @@
                     <div style="display: flex; align-items: center; gap: 30px; flex-wrap: wrap;">
                         <div style="position: relative;">
                             <div id="profile-avatar" style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #38e77b, #34d399); display: flex; align-items: center; justify-content: center; font-size: 48px; font-weight: 700; color: white; box-shadow: 0 8px 24px rgba(56, 231, 123, 0.3); overflow: hidden;">
-                                <span id="profile-initials">TM</span>
+                                <span id="profile-initials"></span>
                             </div>
                             <button onclick="document.getElementById('profile-upload').click()" style="position: absolute; bottom: 0; right: 0; width: 40px; height: 40px; border-radius: 50%; background: var(--color-green); border: 3px solid #1e293b; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition-normal);" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Upload Photo">
                                 <i class="fas fa-camera" style="color: white; font-size: 16px;"></i>
@@ -7733,7 +7733,7 @@ How it works:
         function removeProfilePicture() {
             const avatarDiv = document.getElementById('profileAvatar');
             avatarDiv.style.backgroundImage = '';
-            avatarDiv.innerHTML = '<span id="profile-initials">TM</span>';
+            avatarDiv.innerHTML = '<span id="profile-initials"></span>';
 
             // Hide remove button
             document.getElementById('remove-icon-btn').style.display = 'none';
@@ -9419,7 +9419,7 @@ How it works:
             profileInitials.style.display = 'block';
             
             navAvatar.style.backgroundImage = 'none';
-            navAvatar.textContent = 'TM';
+            navAvatar.textContent = '';
 
             // Hide remove icon button
             if (removeIconBtn) {
@@ -9785,7 +9785,7 @@ How it works:
             const firstName = profile.first_name || '';
             const lastName = profile.last_name || '';
             const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
-            document.getElementById('profile-initials').textContent = initials || 'TM';
+            document.getElementById('profile-initials').textContent = initials || '';
         }
 
         // Save profile information
@@ -11021,7 +11021,7 @@ How it works:
             if (document.getElementById('postalCode')) document.getElementById('postalCode').value = data.postal_code || '';
             
             // Profile Picture
-            const initials = ((data.first_name || 'T').charAt(0) + (data.last_name || 'U').charAt(0)).toUpperCase();
+            const initials = ((data.first_name || '').charAt(0) + (data.last_name || '').charAt(0)).toUpperCase();
             if (document.getElementById('profile-initials')) {
                 document.getElementById('profile-initials').textContent = initials;
             }
@@ -11714,13 +11714,13 @@ How it works:
             if (userInfo) {
                 const userDetails = userInfo.querySelector('.user-details h4');
                 if (userDetails) {
-                    userDetails.textContent = `${user.first_name || 'Test'} ${user.last_name || 'User'}`;
+                    userDetails.textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'User';
                 }
 
                 // Update avatar with initials
                 const avatar = userInfo.querySelector('.user-avatar');
                 if (avatar) {
-                    const initials = `${(user.first_name || 'T')[0]}${(user.last_name || 'U')[0]}`.toUpperCase();
+                    const initials = `${(user.first_name || '')[0] || ''}${(user.last_name || '')[0] || ''}`.toUpperCase();
                     avatar.textContent = initials;
                 }
             }
@@ -11731,11 +11731,11 @@ How it works:
                 const headerAvatar = headerUser.querySelector('.header-user-avatar');
 
                 if (headerName) {
-                    headerName.textContent = `${user.first_name || 'Test'} ${user.last_name || 'User'}`;
+                    headerName.textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'User';
                 }
 
                 if (headerAvatar) {
-                    const initials = `${(user.first_name || 'T')[0]}${(user.last_name || 'U')[0]}`.toUpperCase();
+                    const initials = `${(user.first_name || '')[0] || ''}${(user.last_name || '')[0] || ''}`.toUpperCase();
                     headerAvatar.textContent = initials;
                 }
             }
