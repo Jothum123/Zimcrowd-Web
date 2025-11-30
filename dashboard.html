@@ -11180,13 +11180,22 @@ How it works:
             }
         };
         
-        // Cold Start Limits
-        const COLD_START_LIMITS = {
-            government: 300,    // Government employees
-            private: 100,       // Private sector
-            business: 100,      // Business owners
-            informal: 100,      // Informal sector
-            verified: 3000      // After good repayment history
+        // Loan Limit Caps (ceiling limits - actual limit is min of DTNI and cap)
+        const LOAN_LIMIT_CAPS = {
+            // Cold Start Caps (first-time borrowers)
+            coldStart: {
+                government: 300,    // Government employees
+                private: 100,       // Private sector
+                business: 100,      // Business owners
+                informal: 100       // Informal sector
+            },
+            // Verified Caps (after successful repayment - still requires DTNI check)
+            verified: {
+                government: 3000,   // Government employees - up to $3000 based on DTNI
+                private: 3000,      // Private sector - up to $3000 based on DTNI
+                business: 3000,     // Business owners - up to $3000 based on DTNI
+                informal: 3000      // Informal sector - up to $3000 based on DTNI
+            }
         };
 
         // Loan Request Modal Functions
@@ -11259,18 +11268,29 @@ How it works:
             const loansRepaidOnTime = parseInt(userData.loans_repaid_on_time || userData.loansRepaidOnTime || 0);
             const hasGoodRepaymentHistory = loansRepaidOnTime >= 1; // At least 1 loan repaid on time
             
+            // Check if documents are up to date (payslip/bank statement for DTNI verification)
+            const lastDocumentUpdate = userData.last_document_update || userData.lastDocumentUpdate;
+            const documentsUpToDate = lastDocumentUpdate ? 
+                (new Date() - new Date(lastDocumentUpdate)) < (30 * 24 * 60 * 60 * 1000) : false; // Within 30 days
+            
             // DTNI Calculation based on ZIMSCORE_COLD_START_FINAL.md
             const isCivilServant = employmentType === 'government' || employmentType === 'civil_servant';
             const dtniPercentage = isCivilServant ? 0.40 : 0.33;
             
-            // Employment cap based on repayment history
-            let employmentCap;
-            if (hasGoodRepaymentHistory) {
-                // Verified user - unlocked up to $3000
-                employmentCap = COLD_START_LIMITS.verified;
+            // Determine cap ceiling based on verification status
+            // Note: Cap is just the ceiling - actual limit is ALWAYS based on DTNI
+            let capCeiling;
+            const empType = isCivilServant ? 'government' : (employmentType || 'private');
+            
+            if (hasGoodRepaymentHistory && documentsUpToDate) {
+                // Verified user with updated documents - higher cap ceiling
+                capCeiling = LOAN_LIMIT_CAPS.verified[empType] || LOAN_LIMIT_CAPS.verified.private;
+            } else if (hasGoodRepaymentHistory && !documentsUpToDate) {
+                // Verified but documents outdated - still use cold start cap until updated
+                capCeiling = LOAN_LIMIT_CAPS.coldStart[empType] || LOAN_LIMIT_CAPS.coldStart.private;
             } else {
                 // Cold start - limited by employment type
-                employmentCap = isCivilServant ? COLD_START_LIMITS.government : COLD_START_LIMITS.private;
+                capCeiling = LOAN_LIMIT_CAPS.coldStart[empType] || LOAN_LIMIT_CAPS.coldStart.private;
             }
             
             // Step 1: Calculate Maximum Monthly Installment
@@ -11282,7 +11302,7 @@ How it works:
             // Step 3: Calculate Maximum Loan (Reducing Balance Method)
             // Formula: P = (M × [(1 + r)^n - 1]) / [r × (1 + r)^n]
             const monthlyRate = 0.05 / 12; // 5% annual / 12 months = 0.4167%
-            const termMonths = 3; // Cold start term
+            const termMonths = 3; // Default term for calculation
             const powerTerm = Math.pow(1 + monthlyRate, termMonths);
             
             let dtniBasedLimit = 0;
@@ -11290,11 +11310,12 @@ How it works:
                 dtniBasedLimit = (availableInstallment * (powerTerm - 1)) / (monthlyRate * powerTerm);
             }
             
-            // Step 4: Apply Employment Cap
-            const maxLoanAmount = Math.min(dtniBasedLimit, employmentCap);
+            // Step 4: Apply Cap Ceiling (DTNI is ALWAYS the primary limiter)
+            // maxLoanAmount = min(DTNI-based limit, Cap Ceiling)
+            const maxLoanAmount = Math.min(dtniBasedLimit, capCeiling);
             
             // Calculate DTNI ratio
-            const dtniRatio = monthlyIncome > 0 ? (existingDebt / maxInstallment) : 0;
+            const dtniRatio = maxInstallment > 0 ? (existingDebt / maxInstallment) : 0;
             
             // Determine DTNI status
             let dtniStatus = 'Excellent';
@@ -11302,6 +11323,9 @@ How it works:
             else if (dtniRatio >= 0.8) dtniStatus = 'Limited';
             else if (dtniRatio >= 0.5) dtniStatus = 'Fair';
             else if (dtniRatio >= 0.2) dtniStatus = 'Good';
+            
+            // Determine limiting factor
+            const limitedByDTNI = dtniBasedLimit <= capCeiling;
             
             // Calculate ZimScore (simplified cold start)
             const zimScore = Math.min(85, Math.max(30, 50 + (isCivilServant ? 10 : 0) + (dtniRatio < 0.3 ? 10 : 0) + (hasGoodRepaymentHistory ? 15 : 0)));
@@ -11315,6 +11339,9 @@ How it works:
                 employmentType: employmentType,
                 hasGoodRepaymentHistory: hasGoodRepaymentHistory,
                 loansRepaidOnTime: loansRepaidOnTime,
+                documentsUpToDate: documentsUpToDate,
+                limitedByDTNI: limitedByDTNI,
+                capCeiling: capCeiling,
                 dtni: {
                     ratio: dtniRatio,
                     status: dtniStatus,
@@ -11323,7 +11350,7 @@ How it works:
                     maxInstallment: maxInstallment,
                     availableInstallment: availableInstallment,
                     dtniBasedLimit: Math.floor(dtniBasedLimit),
-                    employmentCap: employmentCap
+                    employmentCap: capCeiling
                 }
             };
             
@@ -11442,13 +11469,32 @@ How it works:
             
             // Update limit message based on status
             const limitMessage = document.getElementById('loanLimitMessage');
-            if (loanEligibilityData.coldStartActive) {
-                const employmentLimit = loanEligibilityData.employmentType === 'government' ? '$300' : '$100';
-                limitMessage.innerHTML = `<strong>Cold Start Limit: ${employmentLimit}</strong> — Pay your first loan on time to unlock up to <strong style="color: #38e77b;">$3,000</strong>`;
-            } else {
-                limitMessage.innerHTML = `<strong style="color: #38e77b;">✓ Verified Borrower</strong> — You've unlocked higher limits based on your repayment history!`;
-                document.getElementById('loanLimitInfo').style.background = 'rgba(56, 231, 123, 0.1)';
-                document.getElementById('loanLimitInfo').style.borderColor = 'rgba(56, 231, 123, 0.3)';
+            const limitInfo = document.getElementById('loanLimitInfo');
+            const data = loanEligibilityData;
+            
+            if (data.coldStartActive) {
+                // Cold start user
+                const employmentLimit = data.employmentType === 'government' ? '$300' : '$100';
+                limitMessage.innerHTML = `<strong>Cold Start Limit: ${employmentLimit}</strong> — Pay your first loan on time to unlock higher limits`;
+                limitInfo.style.background = 'rgba(245, 158, 11, 0.1)';
+                limitInfo.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+            } else if (data.hasGoodRepaymentHistory && !data.documentsUpToDate) {
+                // Verified but documents outdated
+                limitMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> <strong>Documents Outdated</strong> — Upload your latest payslip & bank statement to unlock up to <strong style="color: #38e77b;">$3,000</strong>`;
+                limitInfo.style.background = 'rgba(239, 68, 68, 0.1)';
+                limitInfo.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                limitMessage.style.color = '#ef4444';
+            } else if (data.hasGoodRepaymentHistory && data.documentsUpToDate) {
+                // Fully verified with updated documents
+                if (data.limitedByDTNI) {
+                    // DTNI is the limiting factor
+                    limitMessage.innerHTML = `<strong style="color: #38e77b;">✓ Verified</strong> — Your limit is based on your DTNI (Debt-to-Net-Income ratio)`;
+                } else {
+                    // Cap is the limiting factor
+                    limitMessage.innerHTML = `<strong style="color: #38e77b;">✓ Verified</strong> — Maximum cap: $${data.capCeiling}. Increase income to borrow more.`;
+                }
+                limitInfo.style.background = 'rgba(56, 231, 123, 0.1)';
+                limitInfo.style.borderColor = 'rgba(56, 231, 123, 0.3)';
                 limitMessage.style.color = '#38e77b';
             }
             
