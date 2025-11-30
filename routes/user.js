@@ -436,31 +436,38 @@ router.put('/profile', authenticateUser, async (req, res) => {
         const userId = req.user.id;
         const updates = req.body;
 
-        // Clean up empty fields (convert empty strings to null)
-        const cleanedUpdates = { ...updates };
+        // Define allowed fields that exist in the profiles table
+        const allowedProfileFields = [
+            'first_name', 'last_name', 'full_name', 'email', 'phone',
+            'date_of_birth', 'gender', 'national_id',
+            'street_address', 'address', 'city', 'suburb', 'postal_code', 'country',
+            'bio', 'profile_picture_url',
+            'employment_status', 'monthly_income', 'employer_name', 'job_title', 'occupation',
+            'marital_status', 'kyc_status', 'account_status'
+        ];
         
-        // Date fields
-        if (cleanedUpdates.date_of_birth === '') {
-            cleanedUpdates.date_of_birth = null;
-        }
-        if (cleanedUpdates.verification_date === '') {
-            cleanedUpdates.verification_date = null;
+        // Separate profile fields from extended data
+        const profileUpdates = {};
+        const extendedData = {};
+        
+        for (const [key, value] of Object.entries(updates)) {
+            if (allowedProfileFields.includes(key)) {
+                // Clean empty strings to null for profile fields
+                profileUpdates[key] = value === '' ? null : value;
+            } else {
+                // Store other fields in extended_data
+                extendedData[key] = value;
+            }
         }
         
-        // Gender field
-        if (cleanedUpdates.gender === '') {
-            cleanedUpdates.gender = null;
+        // Handle date fields
+        if (profileUpdates.date_of_birth === '') {
+            profileUpdates.date_of_birth = null;
         }
         
-        // Other enum/constrained fields
-        if (cleanedUpdates.marital_status === '') {
-            cleanedUpdates.marital_status = null;
-        }
-        if (cleanedUpdates.employment_status === '') {
-            cleanedUpdates.employment_status = null;
-        }
-        if (cleanedUpdates.kyc_status === '') {
-            cleanedUpdates.kyc_status = null;
+        // Store extended data (employment details, next of kin, payment method) as JSON
+        if (Object.keys(extendedData).length > 0) {
+            profileUpdates.extended_profile_data = extendedData;
         }
 
         // Upsert profile (update if exists, insert if not)
@@ -468,7 +475,7 @@ router.put('/profile', authenticateUser, async (req, res) => {
             .from('profiles')
             .upsert({
                 id: userId,
-                ...cleanedUpdates,
+                ...profileUpdates,
                 updated_at: new Date().toISOString()
             }, {
                 onConflict: 'id'
@@ -476,7 +483,36 @@ router.put('/profile', authenticateUser, async (req, res) => {
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            // If extended_profile_data column doesn't exist, try without it
+            if (error.message && error.message.includes('extended_profile_data')) {
+                console.warn('extended_profile_data column not found, saving without extended data');
+                delete profileUpdates.extended_profile_data;
+                
+                const { data: profileRetry, error: retryError } = await supabase
+                    .from('profiles')
+                    .upsert({
+                        id: userId,
+                        ...profileUpdates,
+                        updated_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'id'
+                    })
+                    .select()
+                    .single();
+                
+                if (retryError) throw retryError;
+                
+                // Store extended data in localStorage on client side
+                return res.json({
+                    success: true,
+                    message: 'Profile updated successfully (extended data stored locally)',
+                    data: profileRetry,
+                    extendedData: extendedData
+                });
+            }
+            throw error;
+        }
 
         res.json({
             success: true,

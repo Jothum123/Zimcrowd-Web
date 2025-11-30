@@ -397,11 +397,53 @@ router.post('/extract-bank-statement', authenticateUser, upload.single('document
 });
 
 /**
- * GET /api/kyc-ocr/status
- * Get OCR service status
+ * GET /api/kyc/status or /api/kyc-ocr/status
+ * Get user's KYC verification status (when authenticated) or OCR service status
  */
 router.get('/status', async (req, res) => {
     try {
+        // Check if there's an auth token - if so, return user's KYC status
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            // Try to get user's KYC status from database
+            try {
+                const { createClient } = require('@supabase/supabase-js');
+                const supabase = createClient(
+                    process.env.SUPABASE_URL,
+                    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+                );
+                
+                const token = authHeader.split(' ')[1];
+                const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+                
+                if (!authError && user) {
+                    // Get user's profile with KYC status
+                    const { data: profile, error: profileError } = await supabase
+                        .from('profiles')
+                        .select('kyc_status, kyc_verified_at, id_verified, selfie_verified, documents_verified')
+                        .eq('id', user.id)
+                        .single();
+                    
+                    if (!profileError && profile) {
+                        return res.json({
+                            success: true,
+                            data: {
+                                status: profile.kyc_status || 'pending',
+                                verified_at: profile.kyc_verified_at,
+                                id_verified: profile.id_verified || false,
+                                selfie_verified: profile.selfie_verified || false,
+                                documents_verified: profile.documents_verified || false,
+                                is_verified: profile.kyc_status === 'verified'
+                            }
+                        });
+                    }
+                }
+            } catch (dbError) {
+                console.warn('Could not fetch user KYC status:', dbError.message);
+            }
+        }
+        
+        // Fallback: Return OCR service status
         const status = ocrService ? ocrService.getServiceStatus() : null;
         
         res.json({
@@ -416,7 +458,7 @@ router.get('/status', async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Failed to get service status',
+            message: 'Failed to get status',
             error: error.message
         });
     }

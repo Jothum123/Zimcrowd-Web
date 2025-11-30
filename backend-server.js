@@ -73,6 +73,8 @@ try {
     console.log('✅ User routes loaded');
     var faceVerificationRoutes = require('./routes/face-verification');
     console.log('✅ Face verification routes loaded');
+    var profileSetupRoutes = require('./routes/profile-setup');
+    console.log('✅ Profile setup routes loaded');
     console.log('✅ All routes loaded successfully');
 } catch (error) {
     console.error('❌ Error loading routes:', error.message);
@@ -216,6 +218,10 @@ app.use('/api/user', userRoutes);
 console.log('✅ User routes registered');
 app.use('/api/face', faceVerificationRoutes);
 console.log('✅ Face verification routes registered');
+app.use('/api/profile-setup', profileSetupRoutes);
+console.log('✅ Profile setup routes registered');
+app.use('/api/kyc', kycOcrRoutes); // Alias for /api/kyc-ocr
+console.log('✅ KYC routes registered (alias for kyc-ocr)');
 
 // Direct loans routes
 const directLoansRoutes = require('./routes/direct-loans');
