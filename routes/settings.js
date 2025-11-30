@@ -862,4 +862,284 @@ router.post('/security/revoke-all-sessions', authenticateUser, async (req, res) 
     }
 });
 
+// ============================================
+// TWO-FACTOR AUTHENTICATION (2FA)
+// ============================================
+
+// Generate TOTP secret for 2FA
+function generateTOTPSecret() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let secret = '';
+    for (let i = 0; i < 32; i++) {
+        secret += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return secret;
+}
+
+// Generate TOTP code from secret
+function generateTOTP(secret, timeStep = 30) {
+    const crypto = require('crypto');
+    const time = Math.floor(Date.now() / 1000 / timeStep);
+    const timeBuffer = Buffer.alloc(8);
+    timeBuffer.writeBigInt64BE(BigInt(time));
+    
+    // Decode base32 secret
+    const base32Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let bits = '';
+    for (const char of secret.toUpperCase()) {
+        const val = base32Chars.indexOf(char);
+        if (val === -1) continue;
+        bits += val.toString(2).padStart(5, '0');
+    }
+    const keyBuffer = Buffer.from(bits.match(/.{8}/g).map(b => parseInt(b, 2)));
+    
+    const hmac = crypto.createHmac('sha1', keyBuffer);
+    hmac.update(timeBuffer);
+    const hash = hmac.digest();
+    
+    const offset = hash[hash.length - 1] & 0xf;
+    const code = ((hash[offset] & 0x7f) << 24 |
+                  (hash[offset + 1] & 0xff) << 16 |
+                  (hash[offset + 2] & 0xff) << 8 |
+                  (hash[offset + 3] & 0xff)) % 1000000;
+    
+    return code.toString().padStart(6, '0');
+}
+
+// Verify TOTP code
+function verifyTOTP(secret, code, window = 1) {
+    for (let i = -window; i <= window; i++) {
+        const timeStep = 30;
+        const time = Math.floor(Date.now() / 1000 / timeStep) + i;
+        
+        const crypto = require('crypto');
+        const timeBuffer = Buffer.alloc(8);
+        timeBuffer.writeBigInt64BE(BigInt(time));
+        
+        const base32Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+        let bits = '';
+        for (const char of secret.toUpperCase()) {
+            const val = base32Chars.indexOf(char);
+            if (val === -1) continue;
+            bits += val.toString(2).padStart(5, '0');
+        }
+        const keyBuffer = Buffer.from(bits.match(/.{8}/g).map(b => parseInt(b, 2)));
+        
+        const hmac = crypto.createHmac('sha1', keyBuffer);
+        hmac.update(timeBuffer);
+        const hash = hmac.digest();
+        
+        const offset = hash[hash.length - 1] & 0xf;
+        const generatedCode = ((hash[offset] & 0x7f) << 24 |
+                      (hash[offset + 1] & 0xff) << 16 |
+                      (hash[offset + 2] & 0xff) << 8 |
+                      (hash[offset + 3] & 0xff)) % 1000000;
+        
+        if (generatedCode.toString().padStart(6, '0') === code) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// @route   POST /api/settings/security/2fa/setup
+// @desc    Generate 2FA secret and QR code URL
+// @access  Private
+router.post('/security/2fa/setup', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const userEmail = req.user.email;
+        
+        // Generate new secret
+        const secret = generateTOTPSecret();
+        
+        // Store secret temporarily (not enabled yet)
+        const { error } = await supabase
+            .from('user_settings')
+            .update({
+                totp_secret_temp: secret,
+                updated_at: new Date().toISOString()
+            })
+            .eq('user_id', userId);
+        
+        if (error) throw error;
+        
+        // Generate otpauth URL for QR code
+        const issuer = 'ZimCrowd';
+        const otpauthUrl = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(userEmail)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`;
+        
+        // Generate QR code as data URL using a simple SVG-based approach
+        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(otpauthUrl)}`;
+        
+        res.json({
+            success: true,
+            data: {
+                secret,
+                otpauthUrl,
+                qrCodeUrl,
+                manualEntryKey: secret.match(/.{1,4}/g).join(' ')
+            }
+        });
+    } catch (error) {
+        console.error('Error setting up 2FA:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to setup 2FA',
+            error: error.message
+        });
+    }
+});
+
+// @route   POST /api/settings/security/2fa/verify
+// @desc    Verify 2FA code and enable 2FA
+// @access  Private
+router.post('/security/2fa/verify', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { code } = req.body;
+        
+        if (!code || code.length !== 6) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please enter a valid 6-digit code'
+            });
+        }
+        
+        // Get temporary secret
+        const { data: settings, error: fetchError } = await supabase
+            .from('user_settings')
+            .select('totp_secret_temp')
+            .eq('user_id', userId)
+            .single();
+        
+        if (fetchError || !settings?.totp_secret_temp) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please setup 2FA first'
+            });
+        }
+        
+        // Verify the code
+        const isValid = verifyTOTP(settings.totp_secret_temp, code);
+        
+        if (!isValid) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid verification code. Please try again.'
+            });
+        }
+        
+        // Enable 2FA and move secret to permanent storage
+        const { error: updateError } = await supabase
+            .from('user_settings')
+            .update({
+                two_factor_enabled: true,
+                totp_secret: settings.totp_secret_temp,
+                totp_secret_temp: null,
+                two_factor_enabled_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .eq('user_id', userId);
+        
+        if (updateError) throw updateError;
+        
+        res.json({
+            success: true,
+            message: '2FA enabled successfully! Your account is now more secure.'
+        });
+    } catch (error) {
+        console.error('Error verifying 2FA:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to verify 2FA code',
+            error: error.message
+        });
+    }
+});
+
+// @route   POST /api/settings/security/2fa/disable
+// @desc    Disable 2FA
+// @access  Private
+router.post('/security/2fa/disable', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { code } = req.body;
+        
+        // Get current secret
+        const { data: settings, error: fetchError } = await supabase
+            .from('user_settings')
+            .select('totp_secret')
+            .eq('user_id', userId)
+            .single();
+        
+        if (fetchError) throw fetchError;
+        
+        // Verify the code before disabling
+        if (settings?.totp_secret && code) {
+            const isValid = verifyTOTP(settings.totp_secret, code);
+            if (!isValid) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid verification code'
+                });
+            }
+        }
+        
+        // Disable 2FA
+        const { error: updateError } = await supabase
+            .from('user_settings')
+            .update({
+                two_factor_enabled: false,
+                totp_secret: null,
+                totp_secret_temp: null,
+                updated_at: new Date().toISOString()
+            })
+            .eq('user_id', userId);
+        
+        if (updateError) throw updateError;
+        
+        res.json({
+            success: true,
+            message: '2FA disabled successfully'
+        });
+    } catch (error) {
+        console.error('Error disabling 2FA:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to disable 2FA',
+            error: error.message
+        });
+    }
+});
+
+// @route   GET /api/settings/security/auth-provider
+// @desc    Check if user signed up with password or OAuth
+// @access  Private
+router.get('/security/auth-provider', authenticateUser, async (req, res) => {
+    try {
+        const user = req.user;
+        
+        // Check auth provider from user metadata
+        const provider = user.app_metadata?.provider || 'email';
+        const hasPassword = provider === 'email';
+        
+        res.json({
+            success: true,
+            data: {
+                provider,
+                hasPassword,
+                canChangePassword: hasPassword,
+                email: user.email
+            }
+        });
+    } catch (error) {
+        console.error('Error checking auth provider:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to check auth provider',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

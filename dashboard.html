@@ -5070,43 +5070,51 @@
                 </div>
 
                 <!-- Password Security -->
-                <div class="loan-card" style="margin-bottom: 20px;">
+                <div id="password-security-section" class="loan-card" style="margin-bottom: 20px;">
                     <h3 style="margin-bottom: 20px;">🔑 Password Security</h3>
-                    <div style="display: flex; flex-direction: column; gap: 20px; max-width: 500px;">
-                        <div>
-                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Current Password</label>
-                            <input type="password" id="currentPassword" placeholder="Enter current password">
-                        </div>
-                        <div>
-                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">New Password</label>
-                            <input type="password" id="newPassword" placeholder="Enter new password" oninput="checkPasswordStrength(this.value)">
-                            <div id="passwordStrength" style="margin-top: 8px; display: none;">
-                                <div style="display: flex; gap: 2px; margin-bottom: 5px;">
-                                    <div class="strength-bar" style="flex: 1; height: 4px; background: #334155; border-radius: 2px;"></div>
-                                    <div class="strength-bar" style="flex: 1; height: 4px; background: #334155; border-radius: 2px;"></div>
-                                    <div class="strength-bar" style="flex: 1; height: 4px; background: #334155; border-radius: 2px;"></div>
-                                    <div class="strength-bar" style="flex: 1; height: 4px; background: #334155; border-radius: 2px;"></div>
-                                </div>
-                                <p id="strengthText" style="font-size: 12px; margin: 0; color: #94a3b8;">Password strength: Weak</p>
+                    <div id="password-change-form" style="display: flex; flex-direction: column; gap: 20px; max-width: 500px;">
+                        <div id="oauth-user-notice" style="display: none; background: rgba(245, 158, 11, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-info-circle" style="color: #f59e0b;"></i>
+                                <p style="margin: 0; color: #f59e0b; font-size: 14px;">You signed up with <span id="oauth-provider-name">Google</span>. Password change is not available for OAuth accounts.</p>
                             </div>
                         </div>
-                        <div>
-                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Confirm New Password</label>
-                            <input type="password" id="confirmPassword" placeholder="Confirm new password">
-                        </div>
-                        <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
-                            <h4 style="color: #3b82f6; margin: 0 0 8px 0; font-size: 14px;">Password Requirements:</h4>
-                            <ul style="color: #94a3b8; font-size: 12px; margin: 0; padding-left: 20px;">
-                                <li>At least 8 characters long</li>
-                                <li>Contains uppercase and lowercase letters</li>
-                                <li>Contains at least one number</li>
-                                <li>Contains at least one special character</li>
-                            </ul>
+                        <div id="password-fields">
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Current Password</label>
+                                <input type="password" id="currentPassword" placeholder="Enter current password">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">New Password</label>
+                                <input type="password" id="newPassword" placeholder="Enter new password" oninput="checkPasswordStrength(this.value)">
+                                <div id="passwordStrength" style="margin-top: 8px; display: none;">
+                                    <div style="display: flex; gap: 2px; margin-bottom: 5px;">
+                                        <div class="strength-bar" style="flex: 1; height: 4px; background: #334155; border-radius: 2px;"></div>
+                                        <div class="strength-bar" style="flex: 1; height: 4px; background: #334155; border-radius: 2px;"></div>
+                                        <div class="strength-bar" style="flex: 1; height: 4px; background: #334155; border-radius: 2px;"></div>
+                                        <div class="strength-bar" style="flex: 1; height: 4px; background: #334155; border-radius: 2px;"></div>
+                                    </div>
+                                    <p id="strengthText" style="font-size: 12px; margin: 0; color: #94a3b8;">Password strength: Weak</p>
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Confirm New Password</label>
+                                <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                            </div>
+                            <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                                <h4 style="color: #3b82f6; margin: 0 0 8px 0; font-size: 14px;">Password Requirements:</h4>
+                                <ul style="color: #94a3b8; font-size: 12px; margin: 0; padding-left: 20px;">
+                                    <li>At least 8 characters long</li>
+                                    <li>Contains uppercase and lowercase letters</li>
+                                    <li>Contains at least one number</li>
+                                    <li>Contains at least one special character</li>
+                                </ul>
+                            </div>
+                            <button class="btn-primary" style="margin-top: 20px;" onclick="changePassword()">
+                                <i class="fas fa-key"></i> Update Password
+                            </button>
                         </div>
                     </div>
-                    <button class="btn-primary" style="margin-top: 20px;" onclick="const curr = document.getElementById('currentPassword').value; const newP = document.getElementById('newPassword').value; const conf = document.getElementById('confirmPassword').value; if(newP !== conf) { alert('Passwords do not match'); return; } SettingsDataLoader.changePassword(curr, newP);">
-                        <i class="fas fa-key"></i> Update Password
-                    </button>
                 </div>
 
                 <!-- Two-Factor Authentication -->
@@ -5118,7 +5126,7 @@
                             <p style="color: #94a3b8; margin: 0; font-size: 14px;">Add an extra layer of security to your account</p>
                         </div>
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="color: #94a3b8; font-size: 14px;">Disabled</span>
+                            <span id="twoFactorStatus" style="color: #94a3b8; font-size: 14px;">Disabled</span>
                             <label class="toggle-switch">
                                 <input type="checkbox" id="twoFactorAuth" onchange="toggle2FA(this.checked)">
                                 <span class="toggle-slider"></span>
@@ -5126,22 +5134,46 @@
                         </div>
                     </div>
                     
+                    <!-- 2FA Already Enabled -->
+                    <div id="twoFactorEnabled" style="display: none;">
+                        <div style="background: rgba(16, 185, 129, 0.1); padding: 20px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); margin-bottom: 20px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-shield-alt" style="color: #10b981; font-size: 24px;"></i>
+                                <div>
+                                    <h4 style="color: #10b981; margin: 0 0 5px 0;">2FA is Active</h4>
+                                    <p style="color: #94a3b8; margin: 0; font-size: 14px;">Your account is protected with two-factor authentication</p>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-secondary" onclick="disable2FA()" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #ef4444;">
+                            <i class="fas fa-times"></i> Disable 2FA
+                        </button>
+                    </div>
+                    
+                    <!-- 2FA Setup -->
                     <div id="twoFactorSetup" style="display: none;">
                         <div style="background: rgba(56, 231, 123, 0.1); padding: 20px; border-radius: 12px; border: 1px solid rgba(56, 231, 123, 0.3); margin-bottom: 20px;">
                             <h4 style="color: #38e77b; margin: 0 0 15px 0;">Setup 2FA with Authenticator App</h4>
-                            <div style="display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center;">
-                                <div style="width: 120px; height: 120px; background: white; padding: 10px; border-radius: 8px;">
-                                    <div id="qrCode" style="width: 100%; height: 100%; background: #f3f4f6; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #6b7280;">
-                                        QR Code
+                            <div style="display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: start;">
+                                <div style="width: 150px; height: 150px; background: white; padding: 5px; border-radius: 8px;">
+                                    <img id="qrCodeImage" src="" alt="2FA QR Code" style="width: 100%; height: 100%; display: none;">
+                                    <div id="qrCodeLoading" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #6b7280;">
+                                        <i class="fas fa-spinner fa-spin"></i>
                                     </div>
                                 </div>
                                 <div>
                                     <p style="color: #94a3b8; margin: 0 0 10px 0; font-size: 14px;">1. Download an authenticator app (Google Authenticator, Authy, etc.)</p>
                                     <p style="color: #94a3b8; margin: 0 0 10px 0; font-size: 14px;">2. Scan this QR code with your app</p>
-                                    <p style="color: #94a3b8; margin: 0 0 15px 0; font-size: 14px;">3. Enter the 6-digit code below</p>
+                                    <p style="color: #94a3b8; margin: 0 0 10px 0; font-size: 14px;">3. Enter the 6-digit code below to verify</p>
+                                    <div style="background: rgba(59, 130, 246, 0.1); padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+                                        <p style="color: #94a3b8; font-size: 12px; margin: 0 0 5px 0;">Manual entry key:</p>
+                                        <code id="manualEntryKey" style="color: #3b82f6; font-size: 14px; letter-spacing: 2px;">Loading...</code>
+                                    </div>
                                     <div style="display: flex; gap: 10px; align-items: center;">
-                                        <input type="text" id="twoFactorCode" placeholder="Enter 6-digit code" maxlength="6" style="width: 150px;">
-                                        <button class="btn-primary" onclick="verify2FA()">Verify</button>
+                                        <input type="text" id="twoFactorCode" placeholder="Enter 6-digit code" maxlength="6" style="width: 150px; text-align: center; font-size: 18px; letter-spacing: 5px;" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                        <button class="btn-primary" onclick="verify2FA()" id="verify2FABtn">
+                                            <i class="fas fa-check"></i> Verify & Enable
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -5152,16 +5184,16 @@
                         <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
                             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
                                 <i class="fas fa-mobile-alt" style="color: #3b82f6;"></i>
-                                <span style="font-weight: 600;">SMS Authentication</span>
+                                <span style="font-weight: 600;">Authenticator App</span>
                             </div>
-                            <p style="color: #94a3b8; font-size: 12px; margin: 0;">Receive codes via SMS</p>
+                            <p style="color: #94a3b8; font-size: 12px; margin: 0;">Use Google Authenticator, Authy, or similar apps</p>
                         </div>
                         <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
                             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                <i class="fas fa-envelope" style="color: #10b981;"></i>
-                                <span style="font-weight: 600;">Email Authentication</span>
+                                <i class="fas fa-lock" style="color: #10b981;"></i>
+                                <span style="font-weight: 600;">Time-based Codes</span>
                             </div>
-                            <p style="color: #94a3b8; font-size: 12px; margin: 0;">Receive codes via email</p>
+                            <p style="color: #94a3b8; font-size: 12px; margin: 0;">Codes refresh every 30 seconds for security</p>
                         </div>
                     </div>
                 </div>
@@ -9437,9 +9469,11 @@ How it works:
                 tabContent.style.opacity = '1'; // Ensure opacity
                 
                 console.log('✅ Tab content shown:', tabName + '-tab');
-                console.log('Content visible:', window.getComputedStyle(tabContent).display !== 'none');
-                console.log('Content has children:', tabContent.children.length);
-                console.log('First child:', tabContent.children[0]?.className);
+                
+                // Load tab-specific data
+                if (tabName === 'security') {
+                    loadSecuritySettings();
+                }
                 
                 // Scroll to top of settings section
                 document.getElementById('settings-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -9450,43 +9484,6 @@ How it works:
         
         // Make function globally accessible for debugging
         window.switchSettingsTab = switchSettingsTab;
-
-        // Enhanced Security Tab Functions with API integration
-        async function changePassword() {
-            const currentPassword = document.getElementById('currentPassword')?.value;
-            const newPassword = document.getElementById('newPassword')?.value;
-            const confirmPassword = document.getElementById('confirmPassword')?.value;
-            
-            if (!currentPassword || !newPassword || !confirmPassword) {
-                showToast('error', 'Validation Error', 'Please fill in all password fields');
-                return;
-            }
-            
-            if (newPassword !== confirmPassword) {
-                showToast('error', 'Validation Error', 'New passwords do not match');
-                return;
-            }
-            
-            if (newPassword.length < 8) {
-                alert('Password must be at least 8 characters long');
-                return;
-            }
-            
-            try {
-                const response = await window.ZimCrowdAPI.changePassword(currentPassword, newPassword);
-                if (response.success) {
-                    alert('Password changed successfully!');
-                    document.getElementById('currentPassword').value = '';
-                    document.getElementById('newPassword').value = '';
-                    document.getElementById('confirmPassword').value = '';
-                } else {
-                    alert('Failed to change password: ' + (response.message || 'Unknown error'));
-                }
-            } catch (error) {
-                console.error('Password change error:', error);
-                alert('Failed to change password');
-            }
-        }
 
         // Notifications Tab Functions
         async function saveNotificationSettings() {
@@ -9666,6 +9663,275 @@ How it works:
                 console.error('Security settings error:', error);
                 showToast('error', 'Error', 'Failed to save security settings');
             }
+        }
+        
+        // Check auth provider and show/hide password change
+        async function checkAuthProvider() {
+            const apiBase = window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api';
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
+            
+            try {
+                const response = await fetch(`${apiBase}/settings/security/auth-provider`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const oauthNotice = document.getElementById('oauth-user-notice');
+                    const passwordFields = document.getElementById('password-fields');
+                    const providerName = document.getElementById('oauth-provider-name');
+                    
+                    if (!data.data.canChangePassword) {
+                        // OAuth user - hide password fields
+                        if (oauthNotice) oauthNotice.style.display = 'block';
+                        if (passwordFields) passwordFields.style.display = 'none';
+                        if (providerName) providerName.textContent = data.data.provider.charAt(0).toUpperCase() + data.data.provider.slice(1);
+                    } else {
+                        // Email user - show password fields
+                        if (oauthNotice) oauthNotice.style.display = 'none';
+                        if (passwordFields) passwordFields.style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking auth provider:', error);
+            }
+        }
+        
+        // Change password function
+        async function changePassword() {
+            const apiBase = window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api';
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
+            
+            const currentPassword = document.getElementById('currentPassword')?.value;
+            const newPassword = document.getElementById('newPassword')?.value;
+            const confirmPassword = document.getElementById('confirmPassword')?.value;
+            
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showToast('error', 'Error', 'Please fill in all password fields');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showToast('error', 'Error', 'New passwords do not match');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                showToast('error', 'Error', 'Password must be at least 8 characters');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${apiBase}/settings/security/change-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('success', 'Success', 'Password changed successfully!');
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                    document.getElementById('passwordStrength').style.display = 'none';
+                } else {
+                    showToast('error', 'Error', data.message || 'Failed to change password');
+                }
+            } catch (error) {
+                console.error('Password change error:', error);
+                showToast('error', 'Error', 'Failed to change password');
+            }
+        }
+        
+        // 2FA Functions
+        async function toggle2FA(enabled) {
+            const setupDiv = document.getElementById('twoFactorSetup');
+            const enabledDiv = document.getElementById('twoFactorEnabled');
+            const statusText = document.getElementById('twoFactorStatus');
+            
+            if (enabled) {
+                // Start 2FA setup
+                setupDiv.style.display = 'block';
+                enabledDiv.style.display = 'none';
+                statusText.textContent = 'Setting up...';
+                await setup2FA();
+            } else {
+                // Hide setup
+                setupDiv.style.display = 'none';
+                enabledDiv.style.display = 'none';
+                statusText.textContent = 'Disabled';
+            }
+        }
+        
+        async function setup2FA() {
+            const apiBase = window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api';
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
+            
+            try {
+                const response = await fetch(`${apiBase}/settings/security/2fa/setup`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Show QR code
+                    const qrImage = document.getElementById('qrCodeImage');
+                    const qrLoading = document.getElementById('qrCodeLoading');
+                    const manualKey = document.getElementById('manualEntryKey');
+                    
+                    qrImage.src = data.data.qrCodeUrl;
+                    qrImage.style.display = 'block';
+                    qrLoading.style.display = 'none';
+                    manualKey.textContent = data.data.manualEntryKey;
+                    
+                    showToast('info', '2FA Setup', 'Scan the QR code with your authenticator app');
+                } else {
+                    showToast('error', 'Error', data.message || 'Failed to setup 2FA');
+                    document.getElementById('twoFactorAuth').checked = false;
+                    toggle2FA(false);
+                }
+            } catch (error) {
+                console.error('2FA setup error:', error);
+                showToast('error', 'Error', 'Failed to setup 2FA');
+                document.getElementById('twoFactorAuth').checked = false;
+                toggle2FA(false);
+            }
+        }
+        
+        async function verify2FA() {
+            const apiBase = window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api';
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
+            const code = document.getElementById('twoFactorCode')?.value;
+            
+            if (!code || code.length !== 6) {
+                showToast('error', 'Error', 'Please enter a valid 6-digit code');
+                return;
+            }
+            
+            const btn = document.getElementById('verify2FABtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+            
+            try {
+                const response = await fetch(`${apiBase}/settings/security/2fa/verify`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ code })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('success', '2FA Enabled', 'Your account is now protected with 2FA!');
+                    document.getElementById('twoFactorSetup').style.display = 'none';
+                    document.getElementById('twoFactorEnabled').style.display = 'block';
+                    document.getElementById('twoFactorStatus').textContent = 'Enabled';
+                    document.getElementById('twoFactorStatus').style.color = '#10b981';
+                    document.getElementById('twoFactorCode').value = '';
+                } else {
+                    showToast('error', 'Invalid Code', data.message || 'Please check your authenticator app and try again');
+                }
+            } catch (error) {
+                console.error('2FA verify error:', error);
+                showToast('error', 'Error', 'Failed to verify 2FA code');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check"></i> Verify & Enable';
+            }
+        }
+        
+        async function disable2FA() {
+            if (!confirm('Are you sure you want to disable 2FA? This will make your account less secure.')) {
+                return;
+            }
+            
+            const code = prompt('Enter your current 2FA code to disable:');
+            if (!code) return;
+            
+            const apiBase = window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api';
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
+            
+            try {
+                const response = await fetch(`${apiBase}/settings/security/2fa/disable`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ code })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('success', '2FA Disabled', 'Two-factor authentication has been disabled');
+                    document.getElementById('twoFactorAuth').checked = false;
+                    document.getElementById('twoFactorEnabled').style.display = 'none';
+                    document.getElementById('twoFactorSetup').style.display = 'none';
+                    document.getElementById('twoFactorStatus').textContent = 'Disabled';
+                    document.getElementById('twoFactorStatus').style.color = '#94a3b8';
+                } else {
+                    showToast('error', 'Error', data.message || 'Failed to disable 2FA');
+                }
+            } catch (error) {
+                console.error('2FA disable error:', error);
+                showToast('error', 'Error', 'Failed to disable 2FA');
+            }
+        }
+        
+        // Load security settings on page load
+        async function loadSecuritySettings() {
+            const apiBase = window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api';
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
+            
+            try {
+                const response = await fetch(`${apiBase}/settings/security`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const settings = data.data;
+                    
+                    // Update 2FA status
+                    const twoFactorAuth = document.getElementById('twoFactorAuth');
+                    const twoFactorStatus = document.getElementById('twoFactorStatus');
+                    const twoFactorEnabled = document.getElementById('twoFactorEnabled');
+                    
+                    if (settings.twoFactorEnabled) {
+                        twoFactorAuth.checked = true;
+                        twoFactorStatus.textContent = 'Enabled';
+                        twoFactorStatus.style.color = '#10b981';
+                        twoFactorEnabled.style.display = 'block';
+                    } else {
+                        twoFactorAuth.checked = false;
+                        twoFactorStatus.textContent = 'Disabled';
+                        twoFactorStatus.style.color = '#94a3b8';
+                        twoFactorEnabled.style.display = 'none';
+                    }
+                    
+                    // Update login notifications
+                    const loginNotifications = document.getElementById('loginNotifications');
+                    if (loginNotifications) loginNotifications.checked = settings.loginNotifications;
+                }
+            } catch (error) {
+                console.error('Error loading security settings:', error);
+            }
+            
+            // Also check auth provider
+            await checkAuthProvider();
         }
 
         async function downloadMyData() {
