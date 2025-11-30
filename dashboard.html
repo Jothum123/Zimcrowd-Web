@@ -5022,6 +5022,69 @@
                     </div>
                 </div>
 
+                <!-- Selfie Verification Section -->
+                <div class="loan-card" style="border: 1px solid rgba(59, 130, 246, 0.3); background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(56, 231, 123, 0.05));">
+                    <h3 style="margin-bottom: 20px;">
+                        <i class="fas fa-camera" style="color: #3b82f6; margin-right: 10px;"></i>
+                        Identity Verification (Selfie)
+                    </h3>
+                    
+                    <!-- Verification Status -->
+                    <div id="selfieVerificationStatus" style="display: flex; align-items: center; gap: 15px; padding: 15px; background: rgba(100, 116, 139, 0.1); border-radius: 12px; margin-bottom: 20px;">
+                        <div id="selfieStatusIcon" style="width: 50px; height: 50px; border-radius: 50%; background: rgba(100, 116, 139, 0.2); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-user-circle" style="font-size: 24px; color: #94a3b8;"></i>
+                        </div>
+                        <div>
+                            <h4 id="selfieStatusTitle" style="margin: 0; color: #94a3b8;">No selfie uploaded</h4>
+                            <p id="selfieStatusDesc" style="margin: 5px 0 0 0; color: #64748b; font-size: 13px;">Upload a selfie holding your ID to verify your identity</p>
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                        <p style="color: #94a3b8; font-size: 14px; margin: 0;">
+                            <i class="fas fa-info-circle" style="color: #3b82f6; margin-right: 8px;"></i>
+                            <strong>Why do we need this?</strong> A selfie with your ID helps us verify that you are the owner of the identification documents. This protects your account from fraud.
+                        </p>
+                    </div>
+                    
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start;">
+                        <!-- Current Selfie Preview -->
+                        <div id="currentSelfiePreview" style="display: none; position: relative;">
+                            <img id="currentSelfieImage" style="width: 150px; height: 150px; object-fit: cover; border-radius: 12px; border: 3px solid #3b82f6;" alt="Current selfie">
+                            <div style="position: absolute; bottom: -10px; right: -10px; width: 30px; height: 30px; background: #38e77b; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-check" style="color: white; font-size: 14px;"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Upload Area -->
+                        <div style="flex: 1; min-width: 250px;">
+                            <p style="color: #94a3b8; margin-bottom: 15px; font-size: 14px;">
+                                <strong>Tips for a good selfie:</strong><br>
+                                • Good lighting on your face<br>
+                                • Hold your ID clearly visible next to your face<br>
+                                • Look directly at the camera
+                            </p>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <label for="selfie-upload" class="btn-primary" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                                    <i class="fas fa-camera"></i>
+                                    <span>Upload Selfie</span>
+                                    <input type="file" id="selfie-upload" accept="image/*" capture="user" style="display: none;" onchange="handleSettingsSelfieUpload(event)">
+                                </label>
+                                <button id="saveSelfieBtn" class="btn-primary" style="display: none; align-items: center; gap: 8px;" onclick="saveSelfieVerification()">
+                                    <i class="fas fa-save"></i>
+                                    <span>Save & Verify</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- New Selfie Preview -->
+                    <div id="newSelfiePreview" style="display: none; margin-top: 20px; padding: 15px; background: rgba(56, 231, 123, 0.1); border-radius: 12px; text-align: center;">
+                        <img id="newSelfieImage" style="max-width: 200px; max-height: 200px; border-radius: 12px; border: 3px solid #38e77b;" alt="New selfie preview">
+                        <p style="color: #38e77b; font-size: 13px; margin-top: 10px;"><i class="fas fa-check-circle"></i> New selfie ready to upload</p>
+                    </div>
+                </div>
+
                 <div class="loan-card">
                     <h3 style="margin-bottom: 20px;">Personal Information</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
@@ -9383,6 +9446,150 @@ How it works:
             }
         }
 
+        // Selfie verification handling
+        let pendingSelfieImage = null;
+        
+        function handleSettingsSelfieUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Validate file size (5MB max)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File size must be less than 5MB');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    pendingSelfieImage = e.target.result;
+                    
+                    // Show preview
+                    document.getElementById('newSelfieImage').src = e.target.result;
+                    document.getElementById('newSelfiePreview').style.display = 'block';
+                    
+                    // Show save button
+                    document.getElementById('saveSelfieBtn').style.display = 'inline-flex';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        async function saveSelfieVerification() {
+            if (!pendingSelfieImage) {
+                alert('Please upload a selfie first');
+                return;
+            }
+            
+            try {
+                const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+                const API_BASE = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:3000' 
+                    : 'https://zimcrowd-api.onrender.com';
+                
+                // Show loading state
+                const saveBtn = document.getElementById('saveSelfieBtn');
+                const originalText = saveBtn.innerHTML;
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+                saveBtn.disabled = true;
+                
+                // Upload selfie for verification
+                const response = await fetch(`${API_BASE}/api/face/verify-selfie`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        selfie_image: pendingSelfieImage
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update status display
+                    updateSelfieVerificationStatus(true, pendingSelfieImage);
+                    
+                    // Store in localStorage
+                    localStorage.setItem('selfieVerified', 'true');
+                    localStorage.setItem('selfieImage', pendingSelfieImage);
+                    
+                    // Hide new preview, show current
+                    document.getElementById('newSelfiePreview').style.display = 'none';
+                    saveBtn.style.display = 'none';
+                    
+                    alert('✅ Selfie uploaded successfully! Your identity will be verified shortly.');
+                } else {
+                    alert('Failed to upload selfie: ' + (result.message || 'Please try again'));
+                }
+                
+                // Restore button
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+                
+            } catch (error) {
+                console.error('Selfie upload error:', error);
+                
+                // Fallback: save locally
+                localStorage.setItem('selfieImage', pendingSelfieImage);
+                localStorage.setItem('selfieVerified', 'pending');
+                updateSelfieVerificationStatus('pending', pendingSelfieImage);
+                
+                document.getElementById('newSelfiePreview').style.display = 'none';
+                document.getElementById('saveSelfieBtn').style.display = 'none';
+                
+                alert('Selfie saved locally. It will be uploaded when connection is restored.');
+            }
+        }
+        
+        function updateSelfieVerificationStatus(status, imageUrl) {
+            const statusIcon = document.getElementById('selfieStatusIcon');
+            const statusTitle = document.getElementById('selfieStatusTitle');
+            const statusDesc = document.getElementById('selfieStatusDesc');
+            const currentPreview = document.getElementById('currentSelfiePreview');
+            const currentImage = document.getElementById('currentSelfieImage');
+            
+            if (status === true || status === 'verified') {
+                statusIcon.innerHTML = '<i class="fas fa-check-circle" style="font-size: 24px; color: #38e77b;"></i>';
+                statusIcon.style.background = 'rgba(56, 231, 123, 0.2)';
+                statusTitle.textContent = 'Identity Verified';
+                statusTitle.style.color = '#38e77b';
+                statusDesc.textContent = 'Your selfie has been verified successfully';
+            } else if (status === 'pending') {
+                statusIcon.innerHTML = '<i class="fas fa-clock" style="font-size: 24px; color: #f59e0b;"></i>';
+                statusIcon.style.background = 'rgba(245, 158, 11, 0.2)';
+                statusTitle.textContent = 'Verification Pending';
+                statusTitle.style.color = '#f59e0b';
+                statusDesc.textContent = 'Your selfie is being reviewed';
+            } else {
+                statusIcon.innerHTML = '<i class="fas fa-user-circle" style="font-size: 24px; color: #94a3b8;"></i>';
+                statusIcon.style.background = 'rgba(100, 116, 139, 0.2)';
+                statusTitle.textContent = 'No selfie uploaded';
+                statusTitle.style.color = '#94a3b8';
+                statusDesc.textContent = 'Upload a selfie holding your ID to verify your identity';
+            }
+            
+            if (imageUrl) {
+                currentImage.src = imageUrl;
+                currentPreview.style.display = 'block';
+            } else {
+                currentPreview.style.display = 'none';
+            }
+        }
+        
+        // Load selfie status on page load
+        function loadSelfieStatus() {
+            const selfieVerified = localStorage.getItem('selfieVerified');
+            const selfieImage = localStorage.getItem('selfieImage');
+            
+            if (selfieVerified === 'true') {
+                updateSelfieVerificationStatus(true, selfieImage);
+            } else if (selfieVerified === 'pending') {
+                updateSelfieVerificationStatus('pending', selfieImage);
+            } else if (selfieImage) {
+                updateSelfieVerificationStatus('pending', selfieImage);
+            }
+        }
+
         // Load saved profile picture and check profile completion on page load
         window.addEventListener('DOMContentLoaded', function() {
             const savedImage = localStorage.getItem('profilePicture');
@@ -9390,6 +9597,9 @@ How it works:
                 currentProfileImage = savedImage;
                 updateProfilePicture(savedImage);
             }
+
+            // Load selfie verification status
+            loadSelfieStatus();
 
             // Check if user needs to complete profile registration
             checkProfileCompletion();

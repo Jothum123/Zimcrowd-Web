@@ -563,6 +563,51 @@
                         </div>
                     </div>
 
+                    <!-- Selfie Verification Section -->
+                    <div class="form-group" style="margin-top: 30px; padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <label class="form-label" style="font-size: 18px; margin-bottom: 15px;">
+                            <i class="fas fa-camera" style="color: #38e77b; margin-right: 10px;"></i>
+                            Selfie Verification <span class="required">*</span>
+                        </label>
+                        <p style="color: #94a3b8; font-size: 14px; margin-bottom: 20px;">
+                            Take a clear selfie holding your National ID next to your face. This helps us verify that you are the owner of the ID.
+                        </p>
+                        
+                        <div class="info-box" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); margin-bottom: 20px;">
+                            <i class="fas fa-lightbulb info-icon" style="color: #3b82f6;"></i>
+                            <div class="info-text">
+                                <strong>Tips for a good selfie:</strong><br>
+                                • Ensure good lighting on your face<br>
+                                • Hold your ID clearly visible next to your face<br>
+                                • Look directly at the camera<br>
+                                • Remove glasses, hats, or face coverings
+                            </div>
+                        </div>
+
+                        <div class="upload-area" onclick="document.getElementById('selfiePhoto').click()" style="border-color: rgba(59, 130, 246, 0.5);">
+                            <i class="fas fa-user-circle upload-icon" style="color: #3b82f6;"></i>
+                            <div class="upload-text">Click to upload selfie with ID</div>
+                            <div class="upload-hint">PNG or JPG (max. 5MB) - Face must be clearly visible</div>
+                        </div>
+                        <input type="file" id="selfiePhoto" class="file-input" accept="image/*" capture="user">
+                        <div class="uploaded-file" id="selfieFilePreview">
+                            <i class="fas fa-user-circle file-icon" style="color: #3b82f6;"></i>
+                            <div class="file-info">
+                                <div class="file-name" id="selfieFileName"></div>
+                                <div class="file-size" id="selfieFileSize"></div>
+                            </div>
+                            <button type="button" class="remove-file" onclick="removeFile('selfie')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Selfie Preview -->
+                        <div id="selfiePreviewContainer" style="display: none; margin-top: 15px; text-align: center;">
+                            <img id="selfiePreviewImage" style="max-width: 200px; max-height: 200px; border-radius: 12px; border: 3px solid #38e77b;" alt="Selfie preview">
+                            <p style="color: #38e77b; font-size: 13px; margin-top: 10px;"><i class="fas fa-check-circle"></i> Selfie uploaded successfully</p>
+                        </div>
+                    </div>
+
                     <div class="button-group">
                         <button type="button" class="btn btn-primary" onclick="nextStep()">
                             Continue <i class="fas fa-arrow-right"></i>
@@ -873,6 +918,10 @@
             handleFileUpload(e, 'bankStatement');
         });
 
+        document.getElementById('selfiePhoto').addEventListener('change', function(e) {
+            handleSelfieUpload(e);
+        });
+
         function handleFileUpload(event, side) {
             const file = event.target.files[0];
             if (file) {
@@ -892,8 +941,32 @@
                 document.getElementById('idBack').value = '';
             } else if (side === 'bankStatement') {
                 document.getElementById('bankStatement').value = '';
+            } else if (side === 'selfie') {
+                document.getElementById('selfiePhoto').value = '';
+                document.getElementById('selfiePreviewContainer').style.display = 'none';
             }
             document.getElementById(`${side}FilePreview`).classList.remove('show');
+        }
+        
+        // Selfie upload handler with preview
+        function handleSelfieUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const fileName = file.name;
+                const fileSize = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                
+                document.getElementById('selfieFileName').textContent = fileName;
+                document.getElementById('selfieFileSize').textContent = fileSize;
+                document.getElementById('selfieFilePreview').classList.add('show');
+                
+                // Show image preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('selfiePreviewImage').src = e.target.result;
+                    document.getElementById('selfiePreviewContainer').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
         }
 
         // Payment method selection
@@ -1106,11 +1179,15 @@
             }
 
             // Check file uploads
-            const requiredFiles = ['idFront', 'idBack'];
+            const requiredFiles = ['idFront', 'idBack', 'selfiePhoto'];
             for (const fileId of requiredFiles) {
                 const fileInput = document.getElementById(fileId);
                 if (!fileInput.files || fileInput.files.length === 0) {
-                    alert(`Please upload ${fileId === 'idFront' ? 'the front' : 'the back'} of your National ID`);
+                    let message = '';
+                    if (fileId === 'idFront') message = 'Please upload the front of your National ID';
+                    else if (fileId === 'idBack') message = 'Please upload the back of your National ID';
+                    else if (fileId === 'selfiePhoto') message = 'Please upload a selfie holding your National ID for verification';
+                    alert(message);
                     currentStep = 1;
                     updateStepDisplay();
                     return;

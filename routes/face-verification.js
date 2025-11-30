@@ -201,6 +201,112 @@ router.post('/analyze-id-photo', upload.single('image'), async (req, res) => {
 });
 
 /**
+ * @route POST /api/face/verify-selfie
+ * @desc Upload and verify selfie for identity verification
+ */
+router.post('/verify-selfie', async (req, res) => {
+    try {
+        const { selfie_image } = req.body;
+        
+        if (!selfie_image) {
+            return res.status(400).json({
+                success: false,
+                message: 'No selfie image provided'
+            });
+        }
+        
+        // Get user ID from auth token if available
+        let userId = null;
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            try {
+                const { createClient } = require('@supabase/supabase-js');
+                const supabase = createClient(
+                    process.env.SUPABASE_URL,
+                    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+                );
+                
+                const token = authHeader.split(' ')[1];
+                const { data: { user }, error } = await supabase.auth.getUser(token);
+                if (!error && user) {
+                    userId = user.id;
+                }
+            } catch (authError) {
+                console.warn('Auth error in selfie verification:', authError.message);
+            }
+        }
+        
+        // Convert base64 to buffer if needed
+        let imageBuffer;
+        if (selfie_image.startsWith('data:image')) {
+            const base64Data = selfie_image.replace(/^data:image\/\w+;base64,/, '');
+            imageBuffer = Buffer.from(base64Data, 'base64');
+        } else {
+            imageBuffer = Buffer.from(selfie_image, 'base64');
+        }
+        
+        // If face service is available, detect face
+        let faceDetected = false;
+        let faceData = null;
+        
+        if (faceService && faceService.isAvailable()) {
+            try {
+                const result = await faceService.detectFace(imageBuffer);
+                faceDetected = result.success && result.faceDetected;
+                faceData = result;
+            } catch (faceError) {
+                console.warn('Face detection failed:', faceError.message);
+            }
+        }
+        
+        // Save selfie to database if user is authenticated
+        if (userId) {
+            try {
+                const { createClient } = require('@supabase/supabase-js');
+                const supabase = createClient(
+                    process.env.SUPABASE_URL,
+                    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+                );
+                
+                // Update profile with selfie status
+                await supabase
+                    .from('profiles')
+                    .update({
+                        selfie_verified: faceDetected ? true : false,
+                        selfie_uploaded_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', userId);
+                    
+                console.log(`✅ Selfie uploaded for user ${userId}, face detected: ${faceDetected}`);
+            } catch (dbError) {
+                console.warn('Database update failed:', dbError.message);
+            }
+        }
+        
+        res.json({
+            success: true,
+            message: faceDetected 
+                ? 'Selfie uploaded and face detected successfully' 
+                : 'Selfie uploaded successfully (face verification pending)',
+            data: {
+                face_detected: faceDetected,
+                verification_status: faceDetected ? 'verified' : 'pending',
+                face_data: faceData
+            }
+        });
+        
+    } catch (error) {
+        console.error('Selfie verification error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to process selfie',
+            error: error.message
+        });
+    }
+});
+
+/**
  * @route GET /api/face/test
  * @desc Test face service availability
  */
@@ -216,7 +322,8 @@ router.get('/test', (req, res) => {
             'Face Detection',
             'Face Comparison',
             'Liveness Verification',
-            'ID Photo Analysis'
+            'ID Photo Analysis',
+            'Selfie Verification'
         ]
     });
 });
