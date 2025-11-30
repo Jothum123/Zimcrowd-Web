@@ -2958,87 +2958,144 @@
             }
         }
 
-        /* Toast Notification Styles */
-        .toast-notification {
+        /* Modern Toast Notification Styles */
+        .toast-container {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: #1a1a1a;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 15px;
+            z-index: 10000;
             display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 12px;
-            max-width: 400px;
-            z-index: 1001;
-            animation: slideInToast 0.3s ease-out;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
         }
+
+        .toast-notification {
+            pointer-events: auto;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d3d 100%);
+            border-radius: 16px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            min-width: 340px;
+            max-width: 420px;
+            animation: toastSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .toast-notification::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            border-radius: 16px 0 0 16px;
+        }
+
+        .toast-notification.success::before { background: linear-gradient(180deg, #10b981, #059669); }
+        .toast-notification.error::before { background: linear-gradient(180deg, #ef4444, #dc2626); }
+        .toast-notification.warning::before { background: linear-gradient(180deg, #f59e0b, #d97706); }
+        .toast-notification.info::before { background: linear-gradient(180deg, #3b82f6, #2563eb); }
+
+        .toast-notification.success { background: linear-gradient(135deg, #0d3d2e 0%, #1a1a2e 100%); }
+        .toast-notification.error { background: linear-gradient(135deg, #3d1a1a 0%, #1a1a2e 100%); }
+        .toast-notification.warning { background: linear-gradient(135deg, #3d2e0d 0%, #1a1a2e 100%); }
+        .toast-notification.info { background: linear-gradient(135deg, #1a2a3d 0%, #1a1a2e 100%); }
 
         body.light-mode .toast-notification {
             background: white;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+        }
+        body.light-mode .toast-notification.success { background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%); }
+        body.light-mode .toast-notification.error { background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%); }
+        body.light-mode .toast-notification.warning { background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%); }
+        body.light-mode .toast-notification.info { background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%); }
+
+        .toast-notification.removing {
+            animation: toastSlideOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes toastSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        @keyframes toastSlideOut {
+            from {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100px) scale(0.9);
+            }
         }
 
         .toast-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 20px;
             flex-shrink: 0;
+            position: relative;
+        }
+
+        .toast-icon::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            opacity: 0.15;
         }
 
         .toast-icon.success {
-            background: rgba(16, 185, 129, 0.2);
+            background: rgba(16, 185, 129, 0.15);
             color: #10b981;
         }
+        .toast-icon.success::after { background: #10b981; }
 
         .toast-icon.error {
-            background: rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.15);
             color: #ef4444;
         }
+        .toast-icon.error::after { background: #ef4444; }
 
         .toast-icon.warning {
-            background: rgba(245, 158, 11, 0.2);
+            background: rgba(245, 158, 11, 0.15);
             color: #f59e0b;
         }
+        .toast-icon.warning::after { background: #f59e0b; }
 
         .toast-icon.info {
-            background: rgba(59, 130, 246, 0.2);
+            background: rgba(59, 130, 246, 0.15);
             color: #3b82f6;
         }
-
-        /* Toast type-based border colors */
-        .toast-notification.success {
-            border-left: 4px solid #10b981;
-        }
-
-        .toast-notification.error {
-            border-left: 4px solid #ef4444;
-        }
-
-        .toast-notification.warning {
-            border-left: 4px solid #f59e0b;
-        }
-
-        .toast-notification.info {
-            border-left: 4px solid #3b82f6;
-        }
+        .toast-icon.info::after { background: #3b82f6; }
 
         .toast-content {
             flex: 1;
+            padding-top: 2px;
         }
 
         .toast-content h4 {
-            color: white;
-            font-size: 14px;
+            color: #f1f5f9;
+            font-size: 15px;
             font-weight: 600;
             margin: 0 0 4px 0;
+            letter-spacing: -0.01em;
         }
 
         body.light-mode .toast-content h4 {
@@ -3046,14 +3103,34 @@
         }
 
         .toast-content p {
-            color: rgba(255, 255, 255, 0.8);
+            color: #94a3b8;
             font-size: 13px;
             margin: 0;
-            line-height: 1.4;
+            line-height: 1.5;
         }
 
         body.light-mode .toast-content p {
-            color: rgba(0, 0, 0, 0.7);
+            color: #6b7280;
+        }
+
+        /* Progress bar for auto-dismiss */
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            border-radius: 0 0 16px 16px;
+            animation: toastProgress 5s linear forwards;
+        }
+
+        .toast-notification.success .toast-progress { background: linear-gradient(90deg, #10b981, #34d399); }
+        .toast-notification.error .toast-progress { background: linear-gradient(90deg, #ef4444, #f87171); }
+        .toast-notification.warning .toast-progress { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .toast-notification.info .toast-progress { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+
+        @keyframes toastProgress {
+            from { width: 100%; }
+            to { width: 0%; }
         }
 
         .toast-close {
@@ -11655,6 +11732,14 @@ How it works:
         }
 
         function showToastNotification(notification) {
+            // Create or get toast container
+            let container = document.querySelector('.toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+
             const toast = document.createElement('div');
             toast.className = `toast-notification ${notification.type}`;
             toast.innerHTML = `
@@ -11665,19 +11750,28 @@ How it works:
                     <h4>${notification.title}</h4>
                     <p>${notification.message}</p>
                 </div>
-                <button class="toast-close" onclick="this.parentElement.remove()">
+                <button class="toast-close" onclick="dismissToast(this.parentElement)">
                     <i class="fas fa-times"></i>
                 </button>
+                <div class="toast-progress"></div>
             `;
             
-            document.body.appendChild(toast);
+            container.appendChild(toast);
             
-            // Auto remove after 5 seconds
+            // Auto remove after 5 seconds with animation
+            setTimeout(() => {
+                dismissToast(toast);
+            }, 5000);
+        }
+
+        function dismissToast(toast) {
+            if (!toast || !toast.parentElement) return;
+            toast.classList.add('removing');
             setTimeout(() => {
                 if (toast.parentElement) {
                     toast.remove();
                 }
-            }, 5000);
+            }, 300);
         }
 
         // Wrapper function for showToast (used throughout the app)
