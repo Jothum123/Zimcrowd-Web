@@ -204,38 +204,122 @@ Final Limit = min(DTNI-based limit, Employment cap)
 
 ## DTNI Calculation
 
-### Step 1: Calculate Maximum Monthly Installment
-```javascript
-// Government employees
-maxInstallment = monthlyIncome × 40%
+**DTNI (Debt-to-Net-Income)** determines how much a user can borrow based on their income and existing debt.
 
-// Other employees
-maxInstallment = monthlyIncome × 33%
+### ❌ Wrong Approach (Simple Interest)
+```javascript
+// DON'T DO THIS - Underestimates borrowing capacity
+Max Loan = $240 ÷ (1 + 5%) = $228 ❌
 ```
 
-### Step 2: Calculate Available Installment
+### ✅ Correct Approach (Reducing Balance)
+
+#### Step 1: Calculate Maximum Monthly Installment
+```javascript
+// Government employees (40% DTNI)
+maxInstallment = monthlyIncome × 0.40
+
+// Other employees (33% DTNI)
+maxInstallment = monthlyIncome × 0.33
+
+// Example: $600 income × 40% = $240
+```
+
+#### Step 2: Calculate Available Installment
 ```javascript
 availableInstallment = maxInstallment - existingMonthlyPayments
+
+// Example: $240 - $0 = $240
 ```
 
-### Step 3: Calculate Maximum Loan (Reducing Balance)
+#### Step 3: Calculate Maximum Loan (Reducing Balance Formula)
 ```javascript
 // Formula: P = (M × [(1 + r)^n - 1]) / [r × (1 + r)^n]
 // Where:
+// P = Principal (loan amount)
 // M = Available monthly installment
-// r = Monthly interest rate (5% / 12 = 0.004167)
-// n = Term in months (3 months for cold start)
+// r = Monthly interest rate (5% annual ÷ 12 = 0.004167)
+// n = Term in months (90 days ÷ 30 = 3 months)
 
-monthlyRate = 0.05 / 12  // 0.4167%
-termMonths = 3
-powerTerm = (1 + monthlyRate)^termMonths
+const annualInterestRate = 0.05;
+const monthlyRate = annualInterestRate / 12; // 0.004167
+const termMonths = Math.ceil(tenure_days / 30); // 3
 
-maxLoanFromDTNI = (availableInstallment × (powerTerm - 1)) / (monthlyRate × powerTerm)
+const powerTerm = Math.pow(1 + monthlyRate, termMonths); // 1.01256
+const maxLoanFromDTNI = (availableInstallment * (powerTerm - 1)) / (monthlyRate * powerTerm);
+
+// Example: ($240 × 0.01256) / 0.004219 = $714.52 ✅
 ```
 
-### Step 4: Apply Employment Cap
+#### Step 4: Apply Employment Cap
 ```javascript
-coldStartLimit = min(maxLoanFromDTNI, employmentCap)
+const employmentCap = employmentType === 'government' ? 300 : 100;
+
+let finalMaxLoan;
+if (isColdStart) {
+    finalMaxLoan = Math.min(maxLoanFromDTNI, employmentCap);
+} else {
+    finalMaxLoan = Math.min(maxLoanFromDTNI, scoreBasedLimit);
+}
+
+// Example: min($714.52, $300) = $300 ✅
+```
+
+### DTNI Comparison Table
+
+| Income | DTNI % | Max Installment | OLD (Wrong) | NEW (Correct) | Employment Cap | Final |
+|--------|--------|-----------------|-------------|---------------|----------------|-------|
+| $600 | 40% | $240 | $228 ❌ | $714.52 | $300 | **$300** |
+| $500 | 40% | $200 | $190 ❌ | $595.43 | $300 | **$300** |
+| $400 | 40% | $160 | $152 ❌ | $476.35 | $300 | **$300** |
+| $300 | 33% | $99 | $94 ❌ | $294.51 | $100 | **$100** |
+| $200 | 33% | $66 | $63 ❌ | $196.34 | $100 | **$100** |
+
+**Key Insight:** For most cold start users, the **employment cap** is the limiting factor, not DTNI!
+
+### Installment Utilization Thresholds
+
+| Utilization | Status | Description |
+|-------------|--------|-------------|
+| **0%** | Excellent | No existing debt, full capacity |
+| **1-20%** | Excellent | Very low debt |
+| **21-50%** | Good | Moderate debt |
+| **51-80%** | Fair | Limited capacity |
+| **81-99%** | Limited | Near maximum |
+| **100%+** | Denied | Must repay first |
+
+### Implementation Code
+```javascript
+// Backend: Calculate max loan using Reducing Balance Method
+function calculateMaxLoan(monthlyIncome, employmentType, existingDebt, tenureDays) {
+    const dtniPercent = employmentType === 'government' ? 0.40 : 0.33;
+    const maxInstallment = monthlyIncome * dtniPercent;
+    const availableInstallment = maxInstallment - existingDebt;
+    
+    if (availableInstallment <= 0) {
+        return { maxLoan: 0, status: 'Denied - DTNI too high' };
+    }
+    
+    const annualRate = 0.05;
+    const monthlyRate = annualRate / 12;
+    const termMonths = Math.ceil(tenureDays / 30);
+    
+    let maxLoanFromDTNI;
+    if (monthlyRate > 0 && termMonths > 0) {
+        const powerTerm = Math.pow(1 + monthlyRate, termMonths);
+        maxLoanFromDTNI = (availableInstallment * (powerTerm - 1)) / (monthlyRate * powerTerm);
+    } else {
+        maxLoanFromDTNI = availableInstallment * termMonths;
+    }
+    
+    const employmentCap = employmentType === 'government' ? 300 : 100;
+    return {
+        maxLoan: Math.min(maxLoanFromDTNI, employmentCap),
+        dtniBasedLimit: maxLoanFromDTNI,
+        employmentCap: employmentCap,
+        utilizationPercent: ((maxInstallment - availableInstallment) / maxInstallment) * 100
+    };
+}
 ```
 
 ---
