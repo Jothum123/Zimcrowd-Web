@@ -1,6 +1,7 @@
 /**
  * Post-Registration Production Loader
  * Handles KYC verification, profile setup, and payment method configuration
+ * Uses production API endpoints
  */
 
 class PostRegistrationLoader {
@@ -9,6 +10,36 @@ class PostRegistrationLoader {
         this.currentStep = 1;
         this.totalSteps = 3;
         this.formData = {};
+        
+        // Production API base URL
+        this.apiBase = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api' 
+            : 'https://zimcrowd-api.onrender.com/api';
+    }
+
+    getAuthToken() {
+        return localStorage.getItem('authToken') || 
+               localStorage.getItem('token') || 
+               localStorage.getItem('access_token');
+    }
+
+    async apiRequest(endpoint, options = {}) {
+        const token = this.getAuthToken();
+        const headers = {
+            'Content-Type': 'application/json',
+            ...options.headers
+        };
+        
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await fetch(`${this.apiBase}${endpoint}`, {
+            ...options,
+            headers
+        });
+        
+        return response.json();
     }
 
     async init() {
@@ -32,22 +63,27 @@ class PostRegistrationLoader {
 
     async checkRegistrationStatus() {
         try {
-            const kycStatus = await this.dataManager.getKYCStatus();
+            // Use production API to check KYC status
+            const response = await this.apiRequest('/kyc/status');
             
-            if (kycStatus) {
+            if (response.success && response.data) {
+                const kycStatus = response.data;
+                
                 // Update UI based on status
                 this.updateKYCStatus(kycStatus);
                 
                 // If already verified, redirect to dashboard
-                if (kycStatus.status === 'verified') {
+                if (kycStatus.status === 'verified' || kycStatus.status === 'approved') {
                     console.log('✅ KYC already verified, redirecting...');
+                    this.showSuccess('Profile already verified! Redirecting to dashboard...');
                     setTimeout(() => {
-                        window.location.href = '/dashboard.html';
+                        window.location.href = 'dashboard.html';
                     }, 2000);
                 }
             }
         } catch (error) {
             console.error('❌ Error checking registration status:', error);
+            // Continue with registration flow even if status check fails
         }
     }
 
@@ -91,7 +127,11 @@ class PostRegistrationLoader {
                 return;
             }
 
-            const response = await this.dataManager.submitKYCVerification(kycData);
+            // Use production API
+            const response = await this.apiRequest('/kyc/submit', {
+                method: 'POST',
+                body: JSON.stringify(kycData)
+            });
             
             if (response.success) {
                 this.showSuccess('KYC verification submitted successfully!');
@@ -125,13 +165,28 @@ class PostRegistrationLoader {
             this.showLoadingState('Uploading document...');
             
             const file = fileInput.files[0];
-            const response = await this.dataManager.uploadDocument(documentType, file);
             
-            if (response.success) {
+            // Create FormData for file upload
+            const formData = new FormData();
+            formData.append('document', file);
+            formData.append('document_type', documentType);
+            
+            const token = this.getAuthToken();
+            const response = await fetch(`${this.apiBase}/documents/upload`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
                 this.showSuccess(`${documentType} uploaded successfully!`);
                 this.markDocumentUploaded(documentType);
             } else {
-                throw new Error(response.message || 'Upload failed');
+                throw new Error(result.message || 'Upload failed');
             }
             
             this.hideLoadingState();
@@ -182,11 +237,23 @@ class PostRegistrationLoader {
                 return;
             }
 
-            const response = await this.dataManager.completeProfileSetup(profileData);
+            // Use production API
+            const response = await this.apiRequest('/profile/update', {
+                method: 'PUT',
+                body: JSON.stringify(profileData)
+            });
             
             if (response.success) {
                 this.showSuccess('Profile setup completed!');
                 this.formData.profile = profileData;
+                
+                // Store profile data locally
+                localStorage.setItem('userData', JSON.stringify({
+                    ...profileData,
+                    monthly_income: this.getInputValue('monthlyIncome') || 0,
+                    employment_type: this.getInputValue('employmentType') || 'private'
+                }));
+                
                 this.nextStep();
             } else {
                 throw new Error(response.message || 'Profile setup failed');
@@ -210,10 +277,29 @@ class PostRegistrationLoader {
     // ============================================
     async loadPaymentMethods() {
         try {
-            const methods = await this.dataManager.getAvailablePaymentMethods();
-            this.displayPaymentMethods(methods);
+            // Use production API
+            const response = await this.apiRequest('/wallet/payment-methods');
+            
+            if (response.success && response.data) {
+                this.displayPaymentMethods(response.data);
+            } else {
+                // Fallback to default payment methods
+                this.displayPaymentMethods([
+                    { id: 'ecocash', name: 'EcoCash', icon: 'fa-mobile-alt', description: 'Mobile money transfer', fees: '1.5%' },
+                    { id: 'innbucks', name: 'InnBucks', icon: 'fa-wallet', description: 'InnBucks wallet', fees: '1.5%' },
+                    { id: 'onemoney', name: 'OneMoney', icon: 'fa-money-bill-wave', description: 'OneMoney mobile', fees: '1.5%' },
+                    { id: 'bank', name: 'Bank Transfer', icon: 'fa-university', description: 'Direct bank transfer', fees: '0%' }
+                ]);
+            }
         } catch (error) {
             console.error('❌ Error loading payment methods:', error);
+            // Fallback to default payment methods
+            this.displayPaymentMethods([
+                { id: 'ecocash', name: 'EcoCash', icon: 'fa-mobile-alt', description: 'Mobile money transfer', fees: '1.5%' },
+                { id: 'innbucks', name: 'InnBucks', icon: 'fa-wallet', description: 'InnBucks wallet', fees: '1.5%' },
+                { id: 'onemoney', name: 'OneMoney', icon: 'fa-money-bill-wave', description: 'OneMoney mobile', fees: '1.5%' },
+                { id: 'bank', name: 'Bank Transfer', icon: 'fa-university', description: 'Direct bank transfer', fees: '0%' }
+            ]);
         }
     }
 
@@ -247,11 +333,19 @@ class PostRegistrationLoader {
                 is_primary: true
             };
 
-            const response = await this.dataManager.addPaymentMethod(methodData);
+            // Use production API
+            const response = await this.apiRequest('/wallet/payment-methods', {
+                method: 'POST',
+                body: JSON.stringify(methodData)
+            });
             
             if (response.success) {
                 this.showSuccess('Payment method added successfully!');
                 this.formData.paymentMethod = methodId;
+                
+                // Store payment method locally
+                localStorage.setItem('paymentSetup', 'true');
+                localStorage.setItem('primaryPaymentMethod', methodId);
                 
                 // Complete registration
                 await this.completeRegistration();

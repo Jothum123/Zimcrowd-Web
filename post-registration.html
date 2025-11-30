@@ -1108,10 +1108,15 @@
             // Show processing modal
             showProcessingModal();
 
+            // Production API base URL
+            const API_BASE = window.location.hostname === 'localhost' 
+                ? 'http://localhost:3000' 
+                : 'https://zimcrowd-api.onrender.com';
+
             try {
                 // Call the complete-setup API to trigger OCR verification
-                const authToken = localStorage.getItem('authToken');
-                const response = await fetch('/api/profile-setup/complete-setup', {
+                const authToken = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
+                const response = await fetch(`${API_BASE}/api/profile-setup/complete-setup`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
@@ -1129,12 +1134,22 @@
                     localStorage.setItem('paymentSetup', 'true');
 
                     // Store ZimScore data if available
-                    if (result.data.zimScore) {
+                    if (result.data && result.data.zimScore) {
                         localStorage.setItem('zimscoreData', JSON.stringify({
                             score_value: result.data.zimScore.score,
                             star_rating: result.data.zimScore.starRating,
                             max_loan_amount: result.data.zimScore.maxLoanAmount,
-                            risk_level: result.data.zimScore.riskLevel
+                            risk_level: result.data.zimScore.riskLevel,
+                            is_cold_start: result.data.zimScore.isColdStart !== false,
+                            employment_type: result.data.zimScore.employmentType || 'private'
+                        }));
+                        
+                        // Also store user data for loan calculations
+                        localStorage.setItem('userData', JSON.stringify({
+                            monthly_income: result.data.zimScore.monthlyIncome || 0,
+                            employment_type: result.data.zimScore.employmentType || 'private',
+                            loans_repaid_on_time: 0,
+                            existing_monthly_payments: 0
                         }));
                     }
 

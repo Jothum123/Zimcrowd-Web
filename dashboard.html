@@ -6443,6 +6443,32 @@
                 });
             },
             
+            // Loan Request API
+            async createLoanRequest(loanData) {
+                return this.request('/api/loans/request', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        amount: loanData.amount,
+                        purpose: loanData.purpose,
+                        tenure_days: (loanData.term || 3) * 30, // Convert months to days
+                        interest_rate: loanData.rate || 5, // Monthly interest rate
+                        description: loanData.description,
+                        e_signature: loanData.e_signature
+                    })
+                });
+            },
+            
+            // Investment API
+            async createInvestment(investmentData) {
+                return this.request('/api/investments/invest', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        loan_id: investmentData.loan_id,
+                        amount: investmentData.amount
+                    })
+                });
+            },
+            
             // Referrals API
             async getReferralStats() {
                 return this.request('/api/referrals/stats');
@@ -12082,36 +12108,94 @@ How it works:
             const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
             
             try {
-                const response = await fetch(`${apiBase}/zimscore/calculate`, {
-                    method: 'POST',
+                // Get term from selected button or default to 90 days
+                const termDays = parseInt(document.getElementById('loanTerm')?.value) * 30 || 90;
+                const interestRate = parseFloat(document.getElementById('loanRate')?.value) / 100 || 0.05;
+                
+                // Call the production max-amount endpoint
+                const response = await fetch(`${apiBase}/loans/max-amount?term_days=${termDays}&interest_rate=${interestRate}`, {
+                    method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 });
                 
-                const data = await response.json();
+                const result = await response.json();
                 
-                if (data.success) {
+                if (result.success && result.data) {
+                    const data = result.data;
+                    
+                    // Map API response to local state
                     loanEligibilityData = {
                         maxLoanAmount: data.maxLoanAmount || 0,
-                        zimScore: data.scoreValue || 0,
-                        starRating: data.starRating || 0,
-                        riskLevel: data.riskLevel || 'Unknown',
-                        coldStartActive: data.coldStartActive !== false,
+                        zimScore: data.zimScore?.score || data.zimScore?.scoreValue || 0,
+                        starRating: data.zimScore?.starRating || Math.min(5, Math.floor((data.zimScore?.score || 0) / 17)),
+                        riskLevel: data.zimScore?.riskLevel || 'Unknown',
+                        coldStartActive: data.isColdStart !== false,
                         employmentType: data.employmentType || 'private',
-                        dtni: data.dtni || loanEligibilityData.dtni
+                        hasGoodRepaymentHistory: !data.isColdStart,
+                        loansRepaidOnTime: data.zimScore?.loansRepaidOnTime || 0,
+                        documentsUpToDate: !data.requiresBankStatement,
+                        limitedByDTNI: data.limitReason === 'dtni',
+                        capCeiling: data.dtni?.employmentCap || 100,
+                        dtni: {
+                            ratio: data.dtni?.ratio || 0,
+                            status: data.dtni?.status || 'Unknown',
+                            monthlyIncome: data.dtni?.monthlyIncome || 0,
+                            monthlyDebt: data.dtni?.existingDebt || 0,
+                            maxInstallment: data.dtni?.maxInstallment || 0,
+                            availableInstallment: data.dtni?.availableInstallment || 0,
+                            dtniBasedLimit: data.dtni?.dtniBasedLimit || 0,
+                            employmentCap: data.dtni?.employmentCap || 100
+                        }
                     };
+                    
+                    // Check if bank statement is required
+                    if (data.requiresBankStatement) {
+                        showBankStatementRequired(data.message);
+                        return;
+                    }
                     
                     displayEligibility();
                 } else {
-                    // API returned error, use local calculation
-                    await calculateLocalEligibility();
+                    // API returned error
+                    if (result.requiresBankStatement) {
+                        showBankStatementRequired(result.message);
+                    } else {
+                        // Use local calculation as fallback
+                        console.warn('API error, using local calculation:', result.message);
+                        await calculateLocalEligibility();
+                    }
                 }
             } catch (error) {
                 console.error('API Error:', error);
                 await calculateLocalEligibility();
             }
+        }
+        
+        // Show bank statement required message
+        function showBankStatementRequired(message) {
+            document.getElementById('eligibilityLoading').style.display = 'none';
+            document.getElementById('eligibilityDenied').style.display = 'block';
+            document.getElementById('loanFormContent').style.display = 'none';
+            
+            const deniedContent = document.getElementById('eligibilityDenied');
+            deniedContent.innerHTML = `
+                <i class="fas fa-file-invoice" style="font-size: 64px; color: #f59e0b; margin-bottom: 20px;"></i>
+                <h3 style="color: #f59e0b; margin-bottom: 15px;">Bank Statement Required</h3>
+                <p id="deniedReason" style="color: #94a3b8; margin-bottom: 20px;">
+                    ${message || 'Please upload your latest bank statement to calculate your loan eligibility based on DTNI (Debt-to-Net-Income ratio).'}
+                </p>
+                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    <button onclick="window.location.href='post-registration.html'" class="btn-primary" style="padding: 12px 24px;">
+                        <i class="fas fa-upload"></i> Upload Bank Statement
+                    </button>
+                    <button onclick="closeLoanRequestModal()" class="btn-secondary" style="padding: 12px 24px;">
+                        Cancel
+                    </button>
+                </div>
+            `;
         }
 
         async function calculateLocalEligibility() {
