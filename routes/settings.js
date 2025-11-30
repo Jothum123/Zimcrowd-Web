@@ -953,14 +953,35 @@ router.post('/security/2fa/setup', authenticateUser, async (req, res) => {
         // Generate new secret
         const secret = generateTOTPSecret();
         
-        // Store secret temporarily (not enabled yet)
-        const { error } = await supabase
+        // First check if user_settings exists
+        const { data: existing } = await supabase
             .from('user_settings')
-            .update({
-                totp_secret_temp: secret,
-                updated_at: new Date().toISOString()
-            })
-            .eq('user_id', userId);
+            .select('user_id')
+            .eq('user_id', userId)
+            .single();
+        
+        let error;
+        if (existing) {
+            // Update existing row
+            const result = await supabase
+                .from('user_settings')
+                .update({
+                    totp_secret_temp: secret,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('user_id', userId);
+            error = result.error;
+        } else {
+            // Insert new row with temp secret
+            const result = await supabase
+                .from('user_settings')
+                .insert({
+                    user_id: userId,
+                    totp_secret_temp: secret,
+                    two_factor_enabled: false
+                });
+            error = result.error;
+        }
         
         if (error) throw error;
         
@@ -968,7 +989,7 @@ router.post('/security/2fa/setup', authenticateUser, async (req, res) => {
         const issuer = 'ZimCrowd';
         const otpauthUrl = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(userEmail)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`;
         
-        // Generate QR code as data URL using a simple SVG-based approach
+        // Generate QR code URL
         const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(otpauthUrl)}`;
         
         res.json({
