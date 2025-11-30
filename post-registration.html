@@ -1296,7 +1296,15 @@
         function showSuccessModal(data) {
             const zimScore = data.zimScore;
             const starRating = zimScore ? zimScore.starRating : 0;
-            const stars = '★'.repeat(Math.floor(starRating)) + '☆'.repeat(5 - Math.floor(starRating));
+            const fullStars = Math.floor(starRating);
+            const hasHalfStar = starRating % 1 >= 0.5;
+            let stars = '★'.repeat(fullStars);
+            if (hasHalfStar && fullStars < 5) stars += '☆';
+            stars += '☆'.repeat(5 - fullStars - (hasHalfStar ? 1 : 0));
+
+            // Determine if cold start
+            const isColdStart = true; // First time users are always cold start
+            const scoreBasedLimit = zimScore ? getScoreBasedLimit(zimScore.score) : 0;
 
             const modal = document.createElement('div');
             modal.id = 'successModal';
@@ -1312,11 +1320,28 @@
                                     <span class="stars">${stars}</span>
                                     <span class="score-value">${zimScore.score}/85</span>
                                 </div>
-                                <p class="loan-limit">Loan Limit: <strong>$${zimScore.maxLoanAmount}</strong></p>
+                                <p class="risk-level">${zimScore.riskLevel || getRiskLevel(zimScore.score)}</p>
+                                
+                                <div class="loan-offering">
+                                    <div class="cold-start-info">
+                                        <span class="label">🚀 Cold Start Limit</span>
+                                        <span class="amount">$${zimScore.maxLoanAmount}</span>
+                                    </div>
+                                    <div class="unlock-info">
+                                        <span class="label">🔓 After First Repayment</span>
+                                        <span class="amount unlock">$${scoreBasedLimit}</span>
+                                    </div>
+                                </div>
+                                
+                                <p class="cold-start-note">
+                                    <i class="fas fa-info-circle"></i>
+                                    Your first loan is limited to <strong>$${zimScore.maxLoanAmount}</strong> based on your employment type and DTNI.
+                                    After successful repayment, your limit unlocks to <strong>$${scoreBasedLimit}</strong>!
+                                </p>
                             </div>
                         ` : ''}
                         <p class="status-message">${data.kycStatus === 'pending_review' ? 
-                            'Your documents are being reviewed. You\'ll be notified once verified.' : 
+                            'Your documents are being reviewed. You can start borrowing once verified!' : 
                             'Welcome to ZimCrowd!'}</p>
                         <button onclick="window.location.href='dashboard.html'" class="btn-continue">
                             Go to Dashboard <i class="fas fa-arrow-right"></i>
@@ -1385,6 +1410,57 @@
                     color: #38e77b;
                     font-weight: bold;
                 }
+                .risk-level {
+                    color: #94a3b8;
+                    font-size: 14px;
+                    margin-top: 5px;
+                }
+                .loan-offering {
+                    display: flex;
+                    justify-content: space-around;
+                    margin: 20px 0;
+                    gap: 15px;
+                }
+                .cold-start-info, .unlock-info {
+                    background: rgba(0,0,0,0.3);
+                    padding: 15px;
+                    border-radius: 10px;
+                    flex: 1;
+                }
+                .cold-start-info .label, .unlock-info .label {
+                    display: block;
+                    font-size: 12px;
+                    color: #94a3b8;
+                    margin-bottom: 5px;
+                }
+                .cold-start-info .amount {
+                    display: block;
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: #38e77b;
+                }
+                .unlock-info .amount.unlock {
+                    display: block;
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: #fbbf24;
+                }
+                .cold-start-note {
+                    font-size: 12px;
+                    color: #64748b;
+                    background: rgba(251, 191, 36, 0.1);
+                    padding: 10px;
+                    border-radius: 8px;
+                    margin-top: 15px;
+                    text-align: left;
+                }
+                .cold-start-note i {
+                    color: #fbbf24;
+                    margin-right: 5px;
+                }
+                .cold-start-note strong {
+                    color: #38e77b;
+                }
                 .loan-limit {
                     color: #94a3b8;
                     margin-top: 10px;
@@ -1414,6 +1490,26 @@
             `;
             document.head.appendChild(style);
             document.body.appendChild(modal);
+        }
+
+        // Helper function to get score-based limit
+        function getScoreBasedLimit(score) {
+            if (score >= 80) return 1000;
+            if (score >= 70) return 800;
+            if (score >= 60) return 600;
+            if (score >= 50) return 400;
+            if (score >= 40) return 300;
+            return 100;
+        }
+
+        // Helper function to get risk level
+        function getRiskLevel(score) {
+            if (score >= 80) return 'Very Low Risk';
+            if (score >= 70) return 'Low Risk';
+            if (score >= 60) return 'Medium Risk';
+            if (score >= 50) return 'High Risk';
+            if (score >= 40) return 'Very High Risk';
+            return 'Building Credit';
         }
 
         // Drag and drop functionality
