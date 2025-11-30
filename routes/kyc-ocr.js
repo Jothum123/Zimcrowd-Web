@@ -308,13 +308,18 @@ router.post('/check-quality', authenticateUser, upload.single('document'), async
  */
 router.get('/test', authenticateUser, async (req, res) => {
     try {
+        const status = ocrService ? ocrService.getServiceStatus() : null;
+        
         res.json({
             success: true,
             message: 'OCR service is running',
-            service: 'Google Cloud Vision AI',
+            providers: status,
             features: [
-                'Text extraction',
-                'Face detection',
+                'Text extraction (Google Document AI)',
+                'Face detection (Google Cloud Vision)',
+                'ID parsing (specialized)',
+                'Payslip parsing (specialized)',
+                'Bank statement parsing (specialized)',
                 'Quality verification',
                 'Document type detection',
                 'Comprehensive analysis'
@@ -324,6 +329,94 @@ router.get('/test', authenticateUser, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'OCR service error',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/kyc-ocr/extract-payslip
+ * Extract data from payslip (specialized)
+ */
+router.post('/extract-payslip', authenticateUser, upload.single('document'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No document file provided'
+            });
+        }
+
+        console.log(`📄 Processing payslip for user ${req.user.id}`);
+        const result = await ocrService.extractPayslipData(req.file.buffer);
+
+        res.json({
+            success: result.success,
+            data: result
+        });
+
+    } catch (error) {
+        console.error('Payslip extraction error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to extract payslip data',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/kyc-ocr/extract-bank-statement
+ * Extract data from bank statement (specialized)
+ */
+router.post('/extract-bank-statement', authenticateUser, upload.single('document'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No document file provided'
+            });
+        }
+
+        console.log(`📄 Processing bank statement for user ${req.user.id}`);
+        const result = await ocrService.extractBankStatementData(req.file.buffer);
+
+        res.json({
+            success: result.success,
+            data: result
+        });
+
+    } catch (error) {
+        console.error('Bank statement extraction error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to extract bank statement data',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/kyc-ocr/status
+ * Get OCR service status
+ */
+router.get('/status', async (req, res) => {
+    try {
+        const status = ocrService ? ocrService.getServiceStatus() : null;
+        
+        res.json({
+            success: true,
+            status: status,
+            hierarchy: {
+                primary: 'Google Document AI + Google Cloud Vision',
+                secondary: 'Azure Document Intelligence + Azure Face API',
+                tertiary: 'Tesseract OCR (Free)'
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to get service status',
             error: error.message
         });
     }

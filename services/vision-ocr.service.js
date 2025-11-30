@@ -3,118 +3,155 @@ const path = require('path');
 const TesseractOCRService = require('./tesseract-ocr.service');
 const AzureDocumentOCRService = require('./azure-document-ocr.service');
 const AzureFaceService = require('./azure-face.service');
+const GoogleDocAIService = require('./google-docai.service');
 
 class VisionOCRService {
     constructor() {
+        this.useGoogleDocAI = false;
         this.useGoogleVision = false;
         this.useAzure = false;
         this.useAzureFace = false;
         this.tesseractService = null;
+        this.googleDocAIService = null;
         this.azureService = null;
         this.azureFaceService = null;
+        this.visionClient = null;
+
+        console.log('');
+        console.log('🔧 Initializing OCR Services...');
+        console.log('================================');
 
         // ============================================
-        // PRIMARY: Azure Document Intelligence (Paid, High Accuracy)
+        // PRIMARY: Google Document AI (Specialized Parsers)
+        // Best for: Payslips, Bank Statements, IDs
         // ============================================
-        this.azureService = new AzureDocumentOCRService();
-        if (this.azureService.isAvailable()) {
-            this.useAzure = true;
-            console.log('✅ PRIMARY OCR: Azure Document Intelligence (99% accuracy)');
-        } else {
-            console.log('⚠️  Azure Document Intelligence not configured');
-        }
-
-        // ============================================
-        // PRIMARY: Azure Face API (Paid, Face Verification)
-        // ============================================
-        this.azureFaceService = new AzureFaceService();
-        if (this.azureFaceService.isAvailable()) {
-            this.useAzureFace = true;
-            console.log('✅ PRIMARY FACE: Azure Face API (95% accuracy)');
-        } else {
-            console.log('⚠️  Azure Face API not configured');
-        }
-
-        // ============================================
-        // FALLBACK: Tesseract OCR (Free, 85-90% accuracy)
-        // ============================================
-        if (!this.useAzure) {
-            console.log('🔄 FALLBACK OCR: Using Tesseract (Free, 85-90% accuracy)');
-            this.tesseractService = new TesseractOCRService();
-        }
-        
-        // Uncomment below to try Google Vision (requires billing enabled)
-        /*
         try {
-            // Try to initialize Google Vision
-            if (process.env.GOOGLE_VISION_CREDENTIALS) {
-                // Use environment variable (Render, production)
-                const credentials = JSON.parse(process.env.GOOGLE_VISION_CREDENTIALS);
-                this.client = new vision.ImageAnnotatorClient({ credentials });
-                this.useGoogleVision = true;
-                console.log('✅ Google Vision initialized from environment variable');
+            this.googleDocAIService = new GoogleDocAIService();
+            if (this.googleDocAIService.isAvailable()) {
+                this.useGoogleDocAI = true;
+                console.log('✅ PRIMARY OCR: Google Document AI (Specialized Parsers)');
             } else {
-                // Use JSON key file (local development)
-                const keyPath = path.join(__dirname, '../config/google-vision-key.json');
-                this.client = new vision.ImageAnnotatorClient({ keyFilename: keyPath });
-                this.useGoogleVision = true;
-                console.log('✅ Google Vision initialized from key file');
+                console.log('⚠️  Google Document AI not configured');
             }
         } catch (error) {
-            console.warn('⚠️  Google Vision initialization failed:', error.message);
-            console.log('🔄 Falling back to Tesseract OCR (Free)');
-            this.tesseractService = new TesseractOCRService();
+            console.warn('⚠️  Google Document AI initialization failed:', error.message);
         }
-        */
+
+        // ============================================
+        // SECONDARY: Azure Document Intelligence (Fallback)
+        // Best for: General documents, ID verification
+        // ============================================
+        try {
+            this.azureService = new AzureDocumentOCRService();
+            if (this.azureService.isAvailable()) {
+                this.useAzure = true;
+                console.log('✅ SECONDARY OCR: Azure Document Intelligence (Fallback)');
+            } else {
+                console.log('⚠️  Azure Document Intelligence not configured');
+            }
+        } catch (error) {
+            console.warn('⚠️  Azure Document Intelligence initialization failed:', error.message);
+        }
+
+        // ============================================
+        // PRIMARY FACE: Google Cloud Vision (Face Detection)
+        // ============================================
+        try {
+            const credentials = process.env.GOOGLE_CLOUD_CREDENTIALS;
+            if (credentials) {
+                const parsedCredentials = JSON.parse(credentials);
+                this.visionClient = new vision.ImageAnnotatorClient({ credentials: parsedCredentials });
+                this.useGoogleVision = true;
+                console.log('✅ PRIMARY FACE: Google Cloud Vision (Face Detection)');
+            }
+        } catch (error) {
+            console.warn('⚠️  Google Cloud Vision initialization failed:', error.message);
+        }
+
+        // ============================================
+        // SECONDARY FACE: Azure Face API (Fallback)
+        // ============================================
+        try {
+            this.azureFaceService = new AzureFaceService();
+            if (this.azureFaceService.isAvailable()) {
+                this.useAzureFace = true;
+                console.log('✅ SECONDARY FACE: Azure Face API (Fallback)');
+            } else {
+                console.log('⚠️  Azure Face API not configured');
+            }
+        } catch (error) {
+            console.warn('⚠️  Azure Face API initialization failed:', error.message);
+        }
+
+        // ============================================
+        // TERTIARY: Tesseract OCR (Free Fallback)
+        // ============================================
+        if (!this.useGoogleDocAI && !this.useAzure) {
+            console.log('🔄 TERTIARY OCR: Using Tesseract (Free, 85-90% accuracy)');
+            this.tesseractService = new TesseractOCRService();
+        } else {
+            // Still initialize for emergency fallback
+            try {
+                this.tesseractService = new TesseractOCRService();
+                console.log('✅ TERTIARY OCR: Tesseract (Emergency Fallback)');
+            } catch (error) {
+                console.warn('⚠️  Tesseract not available');
+            }
+        }
+
+        console.log('================================');
+        console.log('');
     }
 
     /**
      * Extract text from ID document
+     * Priority: Google Document AI > Azure > Tesseract
      */
     async extractIDText(imageBuffer) {
-        // Use Azure if available (best accuracy)
+        // ============================================
+        // PRIMARY: Google Document AI
+        // ============================================
+        if (this.useGoogleDocAI && this.googleDocAIService) {
+            console.log('🔍 Using Google Document AI (Primary) for ID extraction');
+            try {
+                const result = await this.googleDocAIService.extractIDText(imageBuffer);
+                if (result.success) {
+                    return result;
+                }
+                console.warn('⚠️  Google Document AI failed, trying fallback...');
+            } catch (error) {
+                console.error('❌ Google Document AI error:', error.message);
+            }
+        }
+
+        // ============================================
+        // SECONDARY: Azure Document Intelligence
+        // ============================================
         if (this.useAzure && this.azureService) {
-            return await this.azureService.extractIDText(imageBuffer);
+            console.log('🔄 Using Azure Document Intelligence (Fallback) for ID extraction');
+            try {
+                const result = await this.azureService.extractIDText(imageBuffer);
+                if (result.success) {
+                    return result;
+                }
+                console.warn('⚠️  Azure failed, trying Tesseract...');
+            } catch (error) {
+                console.error('❌ Azure error:', error.message);
+            }
         }
         
-        // Fallback to Tesseract (free OCR)
+        // ============================================
+        // TERTIARY: Tesseract OCR (Free)
+        // ============================================
         if (this.tesseractService) {
+            console.log('🔄 Using Tesseract OCR (Emergency Fallback)');
             return await this.tesseractService.extractIDText(imageBuffer);
         }
 
-        try {
-            const [result] = await this.client.textDetection(imageBuffer);
-            const detections = result.textAnnotations;
-            
-            if (!detections || detections.length === 0) {
-                return {
-                    success: false,
-                    message: 'No text detected in image'
-                };
-            }
-
-            const fullText = detections[0].description;
-            const blocks = detections.slice(1).map(text => ({
-                text: text.description,
-                confidence: text.confidence || 0,
-                bounds: text.boundingPoly
-            }));
-
-            return {
-                success: true,
-                fullText: fullText,
-                blocks: blocks,
-                detectedFields: this.parseIDFields(fullText),
-                blockCount: blocks.length
-            };
-        } catch (error) {
-            console.error('Vision AI OCR Error:', error);
-            return {
-                success: false,
-                message: 'OCR processing failed',
-                error: error.message
-            };
-        }
+        return {
+            success: false,
+            message: 'No OCR service available'
+        };
     }
 
     /**
@@ -196,24 +233,16 @@ class VisionOCRService {
 
     /**
      * Detect faces in document
-     * PRIMARY: Azure Face API | FALLBACK: Basic detection
+     * Priority: Google Cloud Vision > Azure Face API
      */
     async detectFace(imageBuffer) {
         // ============================================
-        // PRIMARY: Azure Face API (95% accuracy)
+        // PRIMARY: Google Cloud Vision (Face Detection)
         // ============================================
-        if (this.useAzureFace && this.azureFaceService) {
-            console.log('🔍 Using Azure Face API (Primary)');
-            return await this.azureFaceService.detectFace(imageBuffer);
-        }
-
-        // ============================================
-        // FALLBACK: Basic face detection (if Google Vision available)
-        // ============================================
-        if (this.useGoogleVision && this.client) {
-            console.log('🔄 Using Google Vision face detection (Fallback)');
+        if (this.useGoogleVision && this.visionClient) {
+            console.log('🔍 Using Google Cloud Vision (Primary) for face detection');
             try {
-                const [result] = await this.client.faceDetection(imageBuffer);
+                const [result] = await this.visionClient.faceDetection(imageBuffer);
                 const faces = result.faceAnnotations;
 
                 if (!faces || faces.length === 0) {
@@ -221,7 +250,8 @@ class VisionOCRService {
                         success: true,
                         faceDetected: false,
                         faceCount: 0,
-                        confidence: 0
+                        confidence: 0,
+                        provider: 'Google Cloud Vision'
                     };
                 }
 
@@ -229,19 +259,33 @@ class VisionOCRService {
                     success: true,
                     faceDetected: true,
                     faceCount: faces.length,
-                    confidence: faces[0].detectionConfidence * 100,
+                    confidence: Math.round(faces[0].detectionConfidence * 100),
                     faces: faces.map(face => ({
-                        confidence: face.detectionConfidence * 100,
-                        bounds: face.boundingPoly
-                    }))
+                        confidence: Math.round(face.detectionConfidence * 100),
+                        bounds: face.boundingPoly,
+                        landmarks: face.landmarks
+                    })),
+                    provider: 'Google Cloud Vision'
                 };
             } catch (error) {
-                console.error('Face detection error:', error);
-                return {
-                    success: false,
-                    faceDetected: false,
-                    error: error.message
-                };
+                console.error('❌ Google Vision face detection error:', error.message);
+                // Fall through to Azure
+            }
+        }
+
+        // ============================================
+        // SECONDARY: Azure Face API (Fallback)
+        // ============================================
+        if (this.useAzureFace && this.azureFaceService) {
+            console.log('🔄 Using Azure Face API (Fallback) for face detection');
+            try {
+                const result = await this.azureFaceService.detectFace(imageBuffer);
+                if (result.success) {
+                    result.provider = 'Azure Face API';
+                    return result;
+                }
+            } catch (error) {
+                console.error('❌ Azure Face API error:', error.message);
             }
         }
 
@@ -316,82 +360,132 @@ class VisionOCRService {
 
     /**
      * Comprehensive document analysis
+     * Priority: Google Document AI > Azure > Tesseract
      */
     async analyzeDocument(imageBuffer, expectedType = null) {
-        // Use Azure if available (best for ID documents)
+        console.log('');
+        console.log('📄 Starting comprehensive document analysis...');
+        console.log(`   Expected type: ${expectedType || 'auto-detect'}`);
+
+        // ============================================
+        // PRIMARY: Google Document AI
+        // ============================================
+        if (this.useGoogleDocAI && this.googleDocAIService) {
+            console.log('🔍 Using Google Document AI (Primary) for analysis');
+            try {
+                const result = await this.googleDocAIService.analyzeDocument(imageBuffer, expectedType);
+                if (result.success) {
+                    // Enhance with face detection
+                    const faceResult = await this.detectFace(imageBuffer);
+                    result.face = {
+                        detected: faceResult.faceDetected,
+                        count: faceResult.faceCount,
+                        confidence: faceResult.confidence,
+                        provider: faceResult.provider
+                    };
+                    result.faceDetected = faceResult.faceDetected;
+                    console.log('✅ Google Document AI analysis complete');
+                    return result;
+                }
+                console.warn('⚠️  Google Document AI analysis failed, trying fallback...');
+            } catch (error) {
+                console.error('❌ Google Document AI error:', error.message);
+            }
+        }
+
+        // ============================================
+        // SECONDARY: Azure Document Intelligence
+        // ============================================
         if (this.useAzure && this.azureService) {
-            return await this.azureService.analyzeDocument(imageBuffer, expectedType);
+            console.log('🔄 Using Azure Document Intelligence (Fallback) for analysis');
+            try {
+                const result = await this.azureService.analyzeDocument(imageBuffer, expectedType);
+                if (result.success) {
+                    // Enhance with face detection
+                    const faceResult = await this.detectFace(imageBuffer);
+                    result.face = {
+                        detected: faceResult.faceDetected,
+                        count: faceResult.faceCount,
+                        confidence: faceResult.confidence,
+                        provider: faceResult.provider
+                    };
+                    result.faceDetected = faceResult.faceDetected;
+                    console.log('✅ Azure analysis complete');
+                    return result;
+                }
+                console.warn('⚠️  Azure analysis failed, trying Tesseract...');
+            } catch (error) {
+                console.error('❌ Azure error:', error.message);
+            }
         }
         
-        // Fallback to Tesseract (free OCR)
+        // ============================================
+        // TERTIARY: Tesseract OCR (Free)
+        // ============================================
         if (this.tesseractService) {
-            return await this.tesseractService.analyzeDocument(imageBuffer, expectedType);
+            console.log('🔄 Using Tesseract OCR (Emergency Fallback) for analysis');
+            try {
+                const result = await this.tesseractService.analyzeDocument(imageBuffer, expectedType);
+                if (result.success) {
+                    console.log('✅ Tesseract analysis complete');
+                    return result;
+                }
+            } catch (error) {
+                console.error('❌ Tesseract error:', error.message);
+            }
         }
 
-        try {
-            const [ocrResult, faceResult, qualityResult, detectedType] = await Promise.all([
-                this.extractIDText(imageBuffer),
-                this.detectFace(imageBuffer),
-                this.verifyQuality(imageBuffer),
-                this.detectDocumentType(imageBuffer)
-            ]);
+        return {
+            success: false,
+            message: 'All OCR services failed'
+        };
+    }
 
-            const typeMatch = expectedType ? detectedType === expectedType : true;
-
-            let confidenceScore = 0;
-            let confidenceFactors = [];
-
-            if (ocrResult.success && ocrResult.blockCount > 10) {
-                confidenceScore += 30;
-                confidenceFactors.push('Text detected');
-            }
-
-            if (faceResult.faceDetected && faceResult.confidence > 0.8) {
-                confidenceScore += 30;
-                confidenceFactors.push('Face detected');
-            }
-
-            if (qualityResult.isGoodQuality) {
-                confidenceScore += 20;
-                confidenceFactors.push('Good quality');
-            }
-
-            if (typeMatch) {
-                confidenceScore += 20;
-                confidenceFactors.push('Type matches');
-            }
-
-            return {
-                success: true,
-                documentType: detectedType,
-                typeMatch: typeMatch,
-                confidenceScore: confidenceScore,
-                confidenceFactors: confidenceFactors,
-                ocr: {
-                    textDetected: ocrResult.success,
-                    fullText: ocrResult.fullText,
-                    detectedFields: ocrResult.detectedFields,
-                    blockCount: ocrResult.blockCount
-                },
-                face: {
-                    detected: faceResult.faceDetected,
-                    count: faceResult.faceCount,
-                    confidence: faceResult.confidence
-                },
-                quality: {
-                    isGood: qualityResult.isGoodQuality,
-                    colorCount: qualityResult.colorCount
-                },
-                recommendation: confidenceScore >= 70 ? 'approve' : 'review'
-            };
-        } catch (error) {
-            console.error('Document analysis error:', error);
-            return {
-                success: false,
-                message: 'Failed to analyze document',
-                error: error.message
-            };
+    /**
+     * Extract payslip data (specialized)
+     * Uses Google Document AI Pay Slip Parser
+     */
+    async extractPayslipData(imageBuffer) {
+        if (this.useGoogleDocAI && this.googleDocAIService) {
+            console.log('🔍 Using Google Document AI Pay Slip Parser');
+            return await this.googleDocAIService.extractPayslipData(imageBuffer);
         }
+
+        // Fallback to general analysis
+        return await this.analyzeDocument(imageBuffer, 'payslip');
+    }
+
+    /**
+     * Extract bank statement data (specialized)
+     * Uses Google Document AI Bank Statement Parser
+     */
+    async extractBankStatementData(imageBuffer) {
+        if (this.useGoogleDocAI && this.googleDocAIService) {
+            console.log('🔍 Using Google Document AI Bank Statement Parser');
+            return await this.googleDocAIService.extractBankStatementData(imageBuffer);
+        }
+
+        // Fallback to general analysis
+        return await this.analyzeDocument(imageBuffer, 'bank_statement');
+    }
+
+    /**
+     * Get service status
+     */
+    getServiceStatus() {
+        return {
+            primary: {
+                ocr: this.useGoogleDocAI ? 'Google Document AI' : 'Not configured',
+                face: this.useGoogleVision ? 'Google Cloud Vision' : 'Not configured'
+            },
+            secondary: {
+                ocr: this.useAzure ? 'Azure Document Intelligence' : 'Not configured',
+                face: this.useAzureFace ? 'Azure Face API' : 'Not configured'
+            },
+            tertiary: {
+                ocr: this.tesseractService ? 'Tesseract OCR' : 'Not available'
+            }
+        };
     }
 }
 
