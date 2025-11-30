@@ -2958,7 +2958,7 @@
             }
         }
 
-        /* Modern Toast Notification Styles */
+        /* Clean Toast Notification Styles - Matching Dribbble Design */
         .toast-container {
             position: fixed;
             top: 20px;
@@ -2966,171 +2966,127 @@
             z-index: 10000;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             pointer-events: none;
         }
 
         .toast-notification {
             pointer-events: auto;
-            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d3d 100%);
-            border-radius: 16px;
-            padding: 16px 20px;
+            border-radius: 8px;
+            padding: 14px 16px;
             display: flex;
-            align-items: flex-start;
-            gap: 14px;
-            min-width: 340px;
-            max-width: 420px;
-            animation: toastSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            align-items: center;
+            gap: 12px;
+            min-width: 320px;
+            max-width: 400px;
+            animation: toastSlideIn 0.3s ease-out;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             position: relative;
-            overflow: hidden;
+            border-left: 4px solid;
         }
 
-        .toast-notification::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            border-radius: 16px 0 0 16px;
+        /* Success - Green */
+        .toast-notification.success {
+            background: #d4edda;
+            border-left-color: #28a745;
         }
+        .toast-notification.success .toast-icon { color: #28a745; }
+        .toast-notification.success .toast-content h4 { color: #155724; }
+        .toast-notification.success .toast-content p { color: #155724; }
 
-        .toast-notification.success::before { background: linear-gradient(180deg, #10b981, #059669); }
-        .toast-notification.error::before { background: linear-gradient(180deg, #ef4444, #dc2626); }
-        .toast-notification.warning::before { background: linear-gradient(180deg, #f59e0b, #d97706); }
-        .toast-notification.info::before { background: linear-gradient(180deg, #3b82f6, #2563eb); }
-
-        .toast-notification.success { background: linear-gradient(135deg, #0d3d2e 0%, #1a1a2e 100%); }
-        .toast-notification.error { background: linear-gradient(135deg, #3d1a1a 0%, #1a1a2e 100%); }
-        .toast-notification.warning { background: linear-gradient(135deg, #3d2e0d 0%, #1a1a2e 100%); }
-        .toast-notification.info { background: linear-gradient(135deg, #1a2a3d 0%, #1a1a2e 100%); }
-
-        body.light-mode .toast-notification {
-            background: white;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+        /* Error - Red */
+        .toast-notification.error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
         }
-        body.light-mode .toast-notification.success { background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%); }
-        body.light-mode .toast-notification.error { background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%); }
-        body.light-mode .toast-notification.warning { background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%); }
-        body.light-mode .toast-notification.info { background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%); }
+        .toast-notification.error .toast-icon { color: #dc3545; }
+        .toast-notification.error .toast-content h4 { color: #721c24; }
+        .toast-notification.error .toast-content p { color: #721c24; }
+
+        /* Warning - Yellow */
+        .toast-notification.warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        .toast-notification.warning .toast-icon { color: #856404; }
+        .toast-notification.warning .toast-content h4 { color: #856404; }
+        .toast-notification.warning .toast-content p { color: #856404; }
+
+        /* Info - Blue */
+        .toast-notification.info {
+            background: #d1ecf1;
+            border-left-color: #17a2b8;
+        }
+        .toast-notification.info .toast-icon { color: #0c5460; }
+        .toast-notification.info .toast-content h4 { color: #0c5460; }
+        .toast-notification.info .toast-content p { color: #0c5460; }
 
         .toast-notification.removing {
-            animation: toastSlideOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: toastSlideOut 0.3s ease-in forwards;
         }
 
         @keyframes toastSlideIn {
             from {
                 opacity: 0;
-                transform: translateX(100px) scale(0.9);
+                transform: translateX(100%);
             }
             to {
                 opacity: 1;
-                transform: translateX(0) scale(1);
+                transform: translateX(0);
             }
         }
 
         @keyframes toastSlideOut {
             from {
                 opacity: 1;
-                transform: translateX(0) scale(1);
+                transform: translateX(0);
             }
             to {
                 opacity: 0;
-                transform: translateX(100px) scale(0.9);
+                transform: translateX(100%);
             }
         }
 
         .toast-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
+            width: 24px;
+            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 18px;
             flex-shrink: 0;
-            position: relative;
         }
-
-        .toast-icon::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 12px;
-            opacity: 0.15;
-        }
-
-        .toast-icon.success {
-            background: rgba(16, 185, 129, 0.15);
-            color: #10b981;
-        }
-        .toast-icon.success::after { background: #10b981; }
-
-        .toast-icon.error {
-            background: rgba(239, 68, 68, 0.15);
-            color: #ef4444;
-        }
-        .toast-icon.error::after { background: #ef4444; }
-
-        .toast-icon.warning {
-            background: rgba(245, 158, 11, 0.15);
-            color: #f59e0b;
-        }
-        .toast-icon.warning::after { background: #f59e0b; }
-
-        .toast-icon.info {
-            background: rgba(59, 130, 246, 0.15);
-            color: #3b82f6;
-        }
-        .toast-icon.info::after { background: #3b82f6; }
 
         .toast-content {
             flex: 1;
-            padding-top: 2px;
         }
 
         .toast-content h4 {
-            color: #f1f5f9;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
-            margin: 0 0 4px 0;
-            letter-spacing: -0.01em;
-        }
-
-        body.light-mode .toast-content h4 {
-            color: #1f2937;
+            margin: 0 0 2px 0;
         }
 
         .toast-content p {
-            color: #94a3b8;
             font-size: 13px;
             margin: 0;
-            line-height: 1.5;
+            line-height: 1.4;
+            opacity: 0.9;
         }
 
-        body.light-mode .toast-content p {
-            color: #6b7280;
+        .toast-close {
+            background: none;
+            border: none;
+            color: inherit;
+            opacity: 0.5;
+            cursor: pointer;
+            padding: 4px;
+            font-size: 16px;
+            transition: opacity 0.2s;
         }
 
-        /* Progress bar for auto-dismiss */
-        .toast-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 3px;
-            border-radius: 0 0 16px 16px;
-            animation: toastProgress 5s linear forwards;
-        }
-
-        .toast-notification.success .toast-progress { background: linear-gradient(90deg, #10b981, #34d399); }
-        .toast-notification.error .toast-progress { background: linear-gradient(90deg, #ef4444, #f87171); }
-        .toast-notification.warning .toast-progress { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-        .toast-notification.info .toast-progress { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
-
-        @keyframes toastProgress {
-            from { width: 100%; }
-            to { width: 0%; }
+        .toast-close:hover {
+            opacity: 1;
         }
 
         .toast-close {
@@ -9653,7 +9609,7 @@ How it works:
             }
         }
         
-        // Toggle Save Functions - Auto-save on toggle change
+        // Toggle Save Functions - Auto-save on toggle change with ZimCrowd messages
         async function saveNotificationToggle(setting, value) {
             const apiBase = window.API_CONFIG?.baseURL || 'https://zimcrowd-api.onrender.com/api';
             const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
@@ -9669,13 +9625,14 @@ How it works:
                 });
                 const data = await response.json();
                 if (data.success) {
-                    showToast('success', 'Saved', `Notification setting updated`);
+                    const status = value ? 'enabled' : 'disabled';
+                    showToast('success', 'Preference saved', `Notification ${status} successfully`);
                 } else {
-                    showToast('error', 'Error', 'Failed to update notification setting');
+                    showToast('warning', 'Action pending', 'Your preference is being processed');
                 }
             } catch (error) {
                 console.error('Notification toggle error:', error);
-                showToast('error', 'Error', 'Failed to update notification setting');
+                showToast('error', 'Connection issue', 'Please check your internet and try again');
             }
         }
 
@@ -9694,13 +9651,13 @@ How it works:
                 });
                 const data = await response.json();
                 if (data.success) {
-                    showToast('success', 'Saved', `Privacy setting updated`);
+                    showToast('success', 'Privacy updated', 'Your data preferences have been saved');
                 } else {
-                    showToast('error', 'Error', 'Failed to update privacy setting');
+                    showToast('warning', 'Action pending', 'Your preference is being processed');
                 }
             } catch (error) {
                 console.error('Privacy toggle error:', error);
-                showToast('error', 'Error', 'Failed to update privacy setting');
+                showToast('error', 'Connection issue', 'Please check your internet and try again');
             }
         }
 
@@ -9719,13 +9676,13 @@ How it works:
                 });
                 const data = await response.json();
                 if (data.success) {
-                    showToast('success', 'Saved', `Security setting updated`);
+                    showToast('success', 'Security updated', 'Your account security has been updated');
                 } else {
-                    showToast('error', 'Error', 'Failed to update security setting');
+                    showToast('warning', 'Action pending', 'Security change is being processed');
                 }
             } catch (error) {
                 console.error('Security toggle error:', error);
-                showToast('error', 'Error', 'Failed to update security setting');
+                showToast('error', 'Connection issue', 'Please check your internet and try again');
             }
         }
 
@@ -11819,25 +11776,24 @@ How it works:
             const toast = document.createElement('div');
             toast.className = `toast-notification ${notification.type}`;
             toast.innerHTML = `
-                <div class="toast-icon ${notification.type}">
+                <div class="toast-icon">
                     <i class="fas ${notification.icon}"></i>
                 </div>
                 <div class="toast-content">
                     <h4>${notification.title}</h4>
-                    <p>${notification.message}</p>
+                    ${notification.message ? `<p>${notification.message}</p>` : ''}
                 </div>
                 <button class="toast-close" onclick="dismissToast(this.parentElement)">
                     <i class="fas fa-times"></i>
                 </button>
-                <div class="toast-progress"></div>
             `;
             
             container.appendChild(toast);
             
-            // Auto remove after 5 seconds with animation
+            // Auto remove after 4 seconds with animation
             setTimeout(() => {
                 dismissToast(toast);
-            }, 5000);
+            }, 4000);
         }
 
         function dismissToast(toast) {
