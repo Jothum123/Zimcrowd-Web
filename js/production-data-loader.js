@@ -994,6 +994,56 @@ const ProductionDataLoader = {
     },
 
     /**
+     * Update Recent Loans UI
+     */
+    updateRecentLoansUI(loans) {
+        const container = document.getElementById('recent-loans-list');
+        if (!container || !loans || loans.length === 0) return;
+        
+        container.innerHTML = loans.slice(0, 5).map(loan => `
+            <div class="loan-item">
+                <div class="loan-icon">
+                    <i class="fas fa-hand-holding-usd"></i>
+                </div>
+                <div class="loan-details">
+                    <h4>${loan.purpose || 'Loan'}</h4>
+                    <p>${new Date(loan.created_at).toLocaleDateString()}</p>
+                </div>
+                <div class="loan-amount">
+                    $${parseFloat(loan.amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}
+                </div>
+            </div>
+        `).join('');
+        
+        console.log('✅ Recent loans UI updated');
+    },
+
+    /**
+     * Update Recent Investments UI
+     */
+    updateRecentInvestmentsUI(investments) {
+        const container = document.getElementById('recent-investments-list');
+        if (!container || !investments || investments.length === 0) return;
+        
+        container.innerHTML = investments.slice(0, 5).map(inv => `
+            <div class="investment-item">
+                <div class="investment-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="investment-details">
+                    <h4>${inv.loan?.purpose || 'Investment'}</h4>
+                    <p>${new Date(inv.created_at).toLocaleDateString()}</p>
+                </div>
+                <div class="investment-amount">
+                    $${parseFloat(inv.amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}
+                </div>
+            </div>
+        `).join('');
+        
+        console.log('✅ Recent investments UI updated');
+    },
+
+    /**
      * Update Loans UI
      */
     updateLoansUI(loans) {

@@ -334,7 +334,10 @@ class SettingsProductionLoader {
                 bio: this.getInputValue('profileBio')
             };
 
-            const response = await this.dataManager.saveProfileSettings(profileData);
+            const response = await this.apiRequest('/settings/profile', {
+                method: 'PUT',
+                body: JSON.stringify(profileData)
+            });
             
             if (response.success) {
                 this.showSuccess('Profile updated successfully!');
@@ -554,8 +557,13 @@ class SettingsProductionLoader {
     // DOCUMENTS (KYC)
     // ============================================
     populateDocuments(documents) {
-        // Update document counts
-        const docs = documents || [];
+        // Update document counts - ensure docs is an array
+        let docs = [];
+        if (Array.isArray(documents)) {
+            docs = documents;
+        } else if (documents && typeof documents === 'object') {
+            docs = documents.documents || documents.data || [];
+        }
         const verified = docs.filter(d => d.status === 'verified' || d.is_verified).length;
         const pending = docs.filter(d => d.status === 'pending' || d.status === 'processing').length;
         const rejected = docs.filter(d => d.status === 'rejected').length;

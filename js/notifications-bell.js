@@ -268,14 +268,9 @@ class NotificationBell {
     }
 
     navigateToNotificationsPage() {
-        // Check if we're in dashboard with tab navigation
-        if (typeof window.ProductionDataLoader !== 'undefined') {
-            window.ProductionDataLoader.loadNotificationsPage();
-            this.closePanel();
-        } else {
-            // Fallback to separate page if it exists
-            window.location.href = '/notifications.html';
-        }
+        // Navigate to notifications page
+        this.closePanel();
+        window.location.href = 'notifications.html';
     }
 
     startPolling() {
