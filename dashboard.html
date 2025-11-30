@@ -6147,9 +6147,68 @@
                     </div>
                 </div>
 
+                <!-- Download Transaction History -->
+                <div class="loan-card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px;">📊 Download Transaction History</h3>
+                    <p style="color: #94a3b8; margin-bottom: 20px;">Export your complete transaction history for record keeping or tax purposes.</p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <!-- Date Range Selection -->
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">From Date</label>
+                            <input type="date" id="txHistoryFromDate" style="width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">To Date</label>
+                            <input type="date" id="txHistoryToDate" style="width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Transaction Type</label>
+                            <select id="txHistoryType" style="width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0;">
+                                <option value="">All Types</option>
+                                <option value="deposit">Deposits</option>
+                                <option value="withdrawal">Withdrawals</option>
+                                <option value="loan_payment">Loan Payments</option>
+                                <option value="loan_disbursement">Loan Disbursements</option>
+                                <option value="investment">Investments</option>
+                                <option value="investment_return">Investment Returns</option>
+                                <option value="transfer">Transfers</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        <button onclick="downloadFullTransactionHistory('pdf')" class="btn-primary" style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-file-pdf" style="color: #ef4444;"></i> Download PDF
+                        </button>
+                        <button onclick="downloadFullTransactionHistory('xlsx')" class="btn-primary" style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-file-excel" style="color: #10b981;"></i> Download Excel
+                        </button>
+                        <button onclick="downloadFullTransactionHistory('csv')" class="btn-primary" style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-file-csv" style="color: #f59e0b;"></i> Download CSV
+                        </button>
+                        <button onclick="downloadFullTransactionHistory('txt')" class="btn-secondary" style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-file-alt"></i> Download TXT
+                        </button>
+                    </div>
+                    
+                    <div style="margin-top: 15px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                        <p style="margin: 0; color: #3b82f6; font-size: 13px;">
+                            <i class="fas fa-info-circle"></i> 
+                            Transaction history includes all deposits, withdrawals, loan payments, investments, and returns. 
+                            Select a date range or leave empty to download all transactions.
+                        </p>
+                    </div>
+                </div>
+
                 <!-- User Uploaded Documents -->
                 <div class="loan-card" style="margin-top: 20px;">
-                    <h3 style="margin-bottom: 20px;">📁 My Uploaded Documents</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="margin: 0;">📁 My Uploaded Documents</h3>
+                        <button onclick="downloadAllUserDocuments()" class="btn-secondary" style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                            <i class="fas fa-download"></i> Download All
+                        </button>
+                    </div>
                     <div id="documentsContainer">
                         <div style="text-align: center; padding: 40px; color: #64748b;">
                             <i class="fas fa-file-alt" style="font-size: 48px; margin-bottom: 15px;"></i>
@@ -8602,6 +8661,351 @@ How it works:
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
+        }
+        
+        // ============================================
+        // SETTINGS TAB - DOWNLOAD FUNCTIONS
+        // ============================================
+        
+        // Download full transaction history from Settings > Documents tab
+        async function downloadFullTransactionHistory(format) {
+            const fromDate = document.getElementById('txHistoryFromDate')?.value;
+            const toDate = document.getElementById('txHistoryToDate')?.value;
+            const txType = document.getElementById('txHistoryType')?.value;
+            
+            showToast('info', 'Preparing Download', 'Fetching your transaction history...');
+            
+            try {
+                // Build query params
+                let endpoint = '/transactions?page=1&limit=1000'; // Get all transactions
+                if (fromDate) endpoint += `&start_date=${fromDate}`;
+                if (toDate) endpoint += `&end_date=${toDate}`;
+                if (txType) endpoint += `&type=${txType}`;
+                
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE_URL}/api${endpoint}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (!result.success || !result.data?.transactions) {
+                    throw new Error(result.message || 'Failed to fetch transactions');
+                }
+                
+                const transactions = result.data.transactions;
+                
+                if (transactions.length === 0) {
+                    showToast('warning', 'No Transactions', 'No transactions found for the selected criteria.');
+                    return;
+                }
+                
+                // Generate file based on format
+                const dateRange = fromDate && toDate ? `_${fromDate}_to_${toDate}` : '';
+                const filename = `zimcrowd_transactions${dateRange}`;
+                
+                switch(format) {
+                    case 'pdf':
+                        generateTransactionHistoryPDF(transactions, filename);
+                        break;
+                    case 'xlsx':
+                        generateTransactionHistoryExcel(transactions, filename);
+                        break;
+                    case 'csv':
+                        generateTransactionHistoryCSV(transactions, filename);
+                        break;
+                    case 'txt':
+                        generateTransactionHistoryTXT(transactions, filename);
+                        break;
+                    default:
+                        throw new Error('Unsupported format');
+                }
+                
+                showToast('success', 'Download Complete', `Transaction history downloaded as ${format.toUpperCase()}`);
+                
+            } catch (error) {
+                console.error('Download error:', error);
+                showToast('error', 'Download Failed', error.message || 'Failed to download transaction history');
+            }
+        }
+        
+        function generateTransactionHistoryPDF(transactions, filename) {
+            if (typeof window.jspdf === 'undefined') {
+                showToast('error', 'Error', 'PDF library not loaded. Please refresh the page.');
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Header
+            doc.setFillColor(15, 23, 42);
+            doc.rect(0, 0, 210, 35, 'F');
+            
+            doc.setTextColor(56, 231, 123);
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.text('ZimCrowd', 14, 18);
+            
+            doc.setFontSize(12);
+            doc.setTextColor(148, 163, 184);
+            doc.text('Transaction History Report', 14, 28);
+            
+            // Summary
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(10);
+            doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 45);
+            doc.text(`Total Transactions: ${transactions.length}`, 14, 52);
+            
+            // Calculate totals
+            const totalCredits = transactions.filter(t => parseFloat(t.amount) > 0).reduce((sum, t) => sum + parseFloat(t.amount), 0);
+            const totalDebits = transactions.filter(t => parseFloat(t.amount) < 0).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount)), 0);
+            
+            doc.setTextColor(16, 185, 129);
+            doc.text(`Total Credits: +$${totalCredits.toFixed(2)}`, 14, 59);
+            doc.setTextColor(239, 68, 68);
+            doc.text(`Total Debits: -$${totalDebits.toFixed(2)}`, 80, 59);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Net: $${(totalCredits - totalDebits).toFixed(2)}`, 150, 59);
+            
+            // Table
+            const tableData = transactions.map(tx => [
+                new Date(tx.created_at).toLocaleDateString(),
+                tx.type.replace(/_/g, ' '),
+                (tx.description || tx.reference || '-').substring(0, 25),
+                `$${parseFloat(tx.amount).toFixed(2)}`,
+                tx.status || 'completed'
+            ]);
+            
+            doc.autoTable({
+                head: [['Date', 'Type', 'Description', 'Amount', 'Status']],
+                body: tableData,
+                startY: 68,
+                theme: 'grid',
+                headStyles: { fillColor: [56, 231, 123], textColor: [15, 23, 42], fontStyle: 'bold' },
+                alternateRowStyles: { fillColor: [245, 247, 250] },
+                styles: { fontSize: 8, cellPadding: 3 },
+                columnStyles: {
+                    3: { halign: 'right' }
+                }
+            });
+            
+            // Footer
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(128);
+                doc.text(`© ${new Date().getFullYear()} ZimCrowd Technologies (Pvt) Ltd`, 14, 287);
+                doc.text(`Page ${i} of ${pageCount}`, 180, 287);
+            }
+            
+            doc.save(`${filename}.pdf`);
+        }
+        
+        function generateTransactionHistoryExcel(transactions, filename) {
+            if (typeof XLSX === 'undefined') {
+                showToast('error', 'Error', 'Excel library not loaded. Please refresh the page.');
+                return;
+            }
+            
+            const data = transactions.map(tx => ({
+                'Date': new Date(tx.created_at).toLocaleDateString(),
+                'Time': new Date(tx.created_at).toLocaleTimeString(),
+                'Type': tx.type.replace(/_/g, ' '),
+                'Description': tx.description || tx.reference || '-',
+                'Amount (USD)': parseFloat(tx.amount).toFixed(2),
+                'Status': tx.status || 'completed',
+                'Reference': tx.reference || '-'
+            }));
+            
+            const ws = XLSX.utils.json_to_sheet(data);
+            
+            // Set column widths
+            ws['!cols'] = [
+                { wch: 12 }, // Date
+                { wch: 10 }, // Time
+                { wch: 18 }, // Type
+                { wch: 35 }, // Description
+                { wch: 12 }, // Amount
+                { wch: 12 }, // Status
+                { wch: 20 }  // Reference
+            ];
+            
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
+            
+            // Add summary sheet
+            const summary = [
+                { 'Metric': 'Total Transactions', 'Value': transactions.length },
+                { 'Metric': 'Total Credits', 'Value': transactions.filter(t => parseFloat(t.amount) > 0).reduce((sum, t) => sum + parseFloat(t.amount), 0).toFixed(2) },
+                { 'Metric': 'Total Debits', 'Value': transactions.filter(t => parseFloat(t.amount) < 0).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount)), 0).toFixed(2) },
+                { 'Metric': 'Generated On', 'Value': new Date().toLocaleString() }
+            ];
+            const summaryWs = XLSX.utils.json_to_sheet(summary);
+            XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
+            
+            XLSX.writeFile(wb, `${filename}.xlsx`);
+        }
+        
+        function generateTransactionHistoryCSV(transactions, filename) {
+            const headers = ['Date', 'Time', 'Type', 'Description', 'Amount (USD)', 'Status', 'Reference'];
+            const rows = transactions.map(tx => [
+                new Date(tx.created_at).toLocaleDateString(),
+                new Date(tx.created_at).toLocaleTimeString(),
+                tx.type.replace(/_/g, ' '),
+                `"${(tx.description || tx.reference || '-').replace(/"/g, '""')}"`,
+                parseFloat(tx.amount).toFixed(2),
+                tx.status || 'completed',
+                tx.reference || '-'
+            ]);
+            
+            let csv = headers.join(',') + '\n';
+            rows.forEach(row => csv += row.join(',') + '\n');
+            
+            downloadFile(csv, `${filename}.csv`, 'text/csv');
+        }
+        
+        function generateTransactionHistoryTXT(transactions, filename) {
+            let txt = '═'.repeat(70) + '\n';
+            txt += '                    ZIMCROWD TRANSACTION HISTORY\n';
+            txt += '═'.repeat(70) + '\n\n';
+            txt += `Generated: ${new Date().toLocaleString()}\n`;
+            txt += `Total Transactions: ${transactions.length}\n\n`;
+            
+            const totalCredits = transactions.filter(t => parseFloat(t.amount) > 0).reduce((sum, t) => sum + parseFloat(t.amount), 0);
+            const totalDebits = transactions.filter(t => parseFloat(t.amount) < 0).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount)), 0);
+            
+            txt += `Total Credits:  +$${totalCredits.toFixed(2)}\n`;
+            txt += `Total Debits:   -$${totalDebits.toFixed(2)}\n`;
+            txt += `Net Balance:     $${(totalCredits - totalDebits).toFixed(2)}\n\n`;
+            txt += '─'.repeat(70) + '\n\n';
+            
+            transactions.forEach((tx, index) => {
+                txt += `[${index + 1}] ${new Date(tx.created_at).toLocaleString()}\n`;
+                txt += `    Type: ${tx.type.replace(/_/g, ' ')}\n`;
+                txt += `    Description: ${tx.description || tx.reference || '-'}\n`;
+                txt += `    Amount: $${parseFloat(tx.amount).toFixed(2)}\n`;
+                txt += `    Status: ${tx.status || 'completed'}\n`;
+                txt += '\n';
+            });
+            
+            txt += '─'.repeat(70) + '\n';
+            txt += '© ' + new Date().getFullYear() + ' ZimCrowd Technologies (Pvt) Ltd\n';
+            
+            downloadFile(txt, `${filename}.txt`, 'text/plain');
+        }
+        
+        // Download all user uploaded documents
+        async function downloadAllUserDocuments() {
+            showToast('info', 'Preparing Download', 'Gathering your documents...');
+            
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE_URL}/api/documents`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (!result.success || !result.data || result.data.length === 0) {
+                    showToast('warning', 'No Documents', 'You have no uploaded documents to download.');
+                    return;
+                }
+                
+                const documents = result.data;
+                
+                // If only one document, download directly
+                if (documents.length === 1) {
+                    await downloadSingleDocument(documents[0]);
+                    return;
+                }
+                
+                // For multiple documents, create a list and download each
+                showToast('info', 'Downloading', `Downloading ${documents.length} documents...`);
+                
+                for (const doc of documents) {
+                    await downloadSingleDocument(doc);
+                    // Small delay between downloads
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+                
+                showToast('success', 'Download Complete', `${documents.length} documents downloaded successfully`);
+                
+            } catch (error) {
+                console.error('Download error:', error);
+                showToast('error', 'Download Failed', 'Failed to download documents. Please try again.');
+            }
+        }
+        
+        // Download a single user document
+        async function downloadSingleDocument(doc) {
+            try {
+                const fileUrl = doc.file_url || doc.url;
+                if (!fileUrl) {
+                    console.error('No file URL for document:', doc);
+                    return;
+                }
+                
+                // Create filename from document type and date
+                const docType = doc.document_type || doc.type || 'document';
+                const date = new Date(doc.created_at || doc.uploaded_at).toISOString().split('T')[0];
+                const extension = fileUrl.split('.').pop().split('?')[0] || 'pdf';
+                const filename = `${docType.replace(/\s+/g, '_')}_${date}.${extension}`;
+                
+                // Fetch and download the file
+                const response = await fetch(fileUrl);
+                const blob = await response.blob();
+                
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+            } catch (error) {
+                console.error('Error downloading document:', error);
+            }
+        }
+        
+        // Download individual KYC document from the documents list
+        function downloadUserDocument(docId, docType, fileUrl) {
+            if (!fileUrl) {
+                showToast('error', 'Error', 'Document file not available');
+                return;
+            }
+            
+            showToast('info', 'Downloading', `Downloading ${docType}...`);
+            
+            const filename = `${docType.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}`;
+            const extension = fileUrl.split('.').pop().split('?')[0] || 'pdf';
+            
+            fetch(fileUrl)
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${filename}.${extension}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    showToast('success', 'Downloaded', `${docType} downloaded successfully`);
+                })
+                .catch(error => {
+                    console.error('Download error:', error);
+                    showToast('error', 'Download Failed', `Failed to download ${docType}`);
+                });
         }
         
         // Toggle export menu
