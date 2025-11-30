@@ -348,13 +348,25 @@ router.get('/stats', authenticateUser, async (req, res) => {
             .from('user_statistics')
             .select('*')
             .eq('user_id', userId)
-            .single();
+            .maybeSingle();
 
-        if (error) throw error;
+        // Return default stats if no row exists
+        const stats = data || {
+            user_id: userId,
+            total_invested: 0,
+            total_borrowed: 0,
+            total_returns: 0,
+            active_investments: 0,
+            active_loans: 0,
+            completed_investments: 0,
+            completed_loans: 0,
+            average_return_rate: 0,
+            zim_score: 0
+        };
 
         res.json({
             success: true,
-            data
+            data: stats
         });
     } catch (error) {
         console.error('Statistics error:', error);
