@@ -59,17 +59,20 @@ starRating = 1.0 + ((score - 30) / 55) * 4.0
 
 ---
 
-## Three-Component Calculation
+## Score Component Calculation
 
-### **Final Score = Component 1 + Component 2 + Component 3**
+### **Final Score = Component 1 + Component 2 + KYC Bonus + Component 3**
 
 ```
 Component 1: Banking Data Analysis (30-60 points)
 Component 2: Employment Bonus (0-10 points)
+KYC Bonus:   Document Verification (0-15 points)
 Component 3: Performance Adjustment (-20 to +39 points)
 
-Total Range: 30-85 points
+Base Range: 30-85 points (capped)
 ```
+
+**Note:** Score is capped at 85 maximum regardless of total component points.
 
 ---
 
@@ -137,6 +140,85 @@ additionalAccounts × 2 points (max 10)
 | **Private** | +6 points | Formal employment with payroll |
 | **Business** | +3 points | Self-employed but established |
 | **Informal** | +0 points | Irregular income |
+
+---
+
+### KYC Document Verification Bonus (0-15 points)
+
+**Source:** Verified KYC documents (National ID, Selfie, Face Match)
+
+#### Factor 1: National ID Verification (0-5 points)
+```javascript
+// ID document uploaded and OCR verified
+if (idVerified && ocrConfidence >= 90%) → +5 points
+else if (idVerified && ocrConfidence >= 70%) → +3 points
+else if (idUploaded) → +1 point
+else → +0 points
+```
+
+#### Factor 2: Selfie Verification (0-5 points)
+```javascript
+// Selfie uploaded with face detection
+if (selfieVerified && faceDetected) → +5 points
+else if (selfieUploaded) → +2 points
+else → +0 points
+```
+
+#### Factor 3: Face Match Score (0-5 points)
+```javascript
+// Face comparison between ID photo and selfie
+if (faceMatchScore >= 90%) → +5 points (High confidence)
+else if (faceMatchScore >= 80%) → +4 points (Good match)
+else if (faceMatchScore >= 70%) → +3 points (Acceptable)
+else if (faceMatchScore >= 60%) → +2 points (Low confidence)
+else → +0 points (No match or failed)
+```
+
+#### KYC Verification Summary
+
+| Document | Status | Points |
+|----------|--------|--------|
+| **National ID (Front)** | Verified + OCR ≥90% | +5 |
+| **National ID (Back)** | Uploaded | +0 (included in front) |
+| **Selfie** | Face detected | +5 |
+| **Face Match** | ≥90% match | +5 |
+| **Total KYC Bonus** | All verified | **+15 points** |
+
+#### Implementation:
+```javascript
+function calculateKYCBonus(kycData) {
+    let kycBonus = 0;
+    
+    // ID Verification (0-5 points)
+    if (kycData.id_verified && kycData.ocr_confidence >= 0.90) {
+        kycBonus += 5;
+    } else if (kycData.id_verified && kycData.ocr_confidence >= 0.70) {
+        kycBonus += 3;
+    } else if (kycData.id_uploaded) {
+        kycBonus += 1;
+    }
+    
+    // Selfie Verification (0-5 points)
+    if (kycData.selfie_verified && kycData.face_detected) {
+        kycBonus += 5;
+    } else if (kycData.selfie_uploaded) {
+        kycBonus += 2;
+    }
+    
+    // Face Match (0-5 points)
+    if (kycData.face_match_score >= 0.90) {
+        kycBonus += 5;
+    } else if (kycData.face_match_score >= 0.80) {
+        kycBonus += 4;
+    } else if (kycData.face_match_score >= 0.70) {
+        kycBonus += 3;
+    } else if (kycData.face_match_score >= 0.60) {
+        kycBonus += 2;
+    }
+    
+    return kycBonus; // Max 15 points
+}
+```
 
 ---
 
