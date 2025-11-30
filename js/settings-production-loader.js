@@ -319,12 +319,15 @@ class SettingsProductionLoader {
 
     async saveProfileSettings() {
         try {
+            // Get date value and convert empty string to null
+            const dateValue = this.getInputValue('dateOfBirth');
+            
             const profileData = {
                 first_name: this.getInputValue('firstName'),
                 last_name: this.getInputValue('lastName'),
                 email: this.getInputValue('email'),
                 phone: this.getInputValue('phone'),
-                date_of_birth: this.getInputValue('dateOfBirth'),
+                date_of_birth: dateValue && dateValue.trim() !== '' ? dateValue : null,
                 gender: this.getInputValue('profileGender'),
                 country: this.getInputValue('country'),
                 street_address: this.getInputValue('streetAddress'),
