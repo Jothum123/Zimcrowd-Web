@@ -4749,8 +4749,8 @@
                     <i class="fas fa-chevron-left"></i> Previous
                 </button>
                 
-                <!-- Page Info -->
-                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <!-- Page Number Buttons -->
+                <div id="transactionsPageButtons" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                     <span style="color: #94a3b8; font-size: 14px;">
                         Page <span id="transactionsCurrentPage" style="font-weight: 600; color: #38e77b;">1</span> of <span id="transactionsTotalPages">1</span> (<span id="transactionsTotalCount">0</span> transactions)
                     </span>
@@ -8299,6 +8299,327 @@ How it works:
             // to attach event listeners to all pagination buttons
             console.log('Pagination system initialized');
         }
+
+        // ============================================
+        // TRANSACTIONS TAB - PRODUCTION PAGINATION
+        // ============================================
+        
+        // Change transactions page (production)
+        function changeTransactionsPage(direction) {
+            if (!window.ProductionDataLoader) {
+                console.error('ProductionDataLoader not available');
+                return;
+            }
+            
+            const state = window.ProductionDataLoader.transactionsPagination;
+            let newPage = state.currentPage;
+            
+            if (direction === 'next' && state.currentPage < state.totalPages) {
+                newPage = state.currentPage + 1;
+            } else if (direction === 'prev' && state.currentPage > 1) {
+                newPage = state.currentPage - 1;
+            }
+            
+            if (newPage !== state.currentPage) {
+                // Show loading animation
+                const container = document.getElementById('transactionsListContainer');
+                if (container) {
+                    container.style.opacity = '0.5';
+                }
+                
+                // Load new page
+                window.ProductionDataLoader.loadTransactionsData(newPage, state.itemsPerPage);
+                
+                // Restore opacity after load
+                setTimeout(() => {
+                    if (container) container.style.opacity = '1';
+                }, 300);
+            }
+        }
+        
+        // Go to specific transactions page
+        function goToTransactionsPage(pageNumber) {
+            if (!window.ProductionDataLoader) return;
+            
+            const state = window.ProductionDataLoader.transactionsPagination;
+            const page = parseInt(pageNumber);
+            
+            if (page >= 1 && page <= state.totalPages && page !== state.currentPage) {
+                window.ProductionDataLoader.loadTransactionsData(page, state.itemsPerPage);
+            }
+        }
+        
+        // Filter transactions by type
+        function filterTransactions() {
+            const typeFilter = document.getElementById('transactionTypeFilter')?.value || '';
+            const dateFilter = document.getElementById('transactionDateFilter')?.value || '';
+            
+            if (!window.ProductionDataLoader) {
+                console.error('ProductionDataLoader not available');
+                return;
+            }
+            
+            // Build query params
+            let endpoint = '/transactions?page=1&limit=10';
+            
+            if (typeFilter) {
+                endpoint += `&type=${typeFilter}`;
+            }
+            
+            if (dateFilter) {
+                const now = new Date();
+                let startDate;
+                
+                switch(dateFilter) {
+                    case 'today':
+                        startDate = new Date(now.setHours(0, 0, 0, 0));
+                        break;
+                    case 'week':
+                        startDate = new Date(now.setDate(now.getDate() - 7));
+                        break;
+                    case 'month':
+                        startDate = new Date(now.setMonth(now.getMonth() - 1));
+                        break;
+                    case '3months':
+                        startDate = new Date(now.setMonth(now.getMonth() - 3));
+                        break;
+                    case 'year':
+                        startDate = new Date(now.setFullYear(now.getFullYear() - 1));
+                        break;
+                }
+                
+                if (startDate) {
+                    endpoint += `&start_date=${startDate.toISOString()}`;
+                }
+            }
+            
+            // Show loading
+            const container = document.getElementById('transactionsListContainer');
+            if (container) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <div class="spinner" style="width: 50px; height: 50px; border: 4px solid rgba(56, 231, 123, 0.1); border-top-color: #38e77b; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                        <p style="color: #94a3b8;">Filtering transactions...</p>
+                    </div>
+                `;
+            }
+            
+            // Fetch filtered data
+            window.ProductionDataLoader.apiRequest(endpoint)
+                .then(response => {
+                    if (response.success && response.data) {
+                        window.ProductionDataLoader.transactionsPagination.currentPage = 1;
+                        window.ProductionDataLoader.updateTransactionsUI(response.data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Filter error:', error);
+                    if (container) {
+                        container.innerHTML = `
+                            <div style="text-align: center; padding: 40px;">
+                                <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #ef4444; margin-bottom: 15px;"></i>
+                                <p style="color: #94a3b8;">Failed to filter transactions. Please try again.</p>
+                                <button class="btn-primary" onclick="window.ProductionDataLoader.loadTransactionsData(1, 10)" style="margin-top: 15px;">
+                                    <i class="fas fa-refresh"></i> Reload
+                                </button>
+                            </div>
+                        `;
+                    }
+                });
+        }
+        
+        // Export transactions
+        function exportTransactions(format) {
+            const transactions = window.ProductionDataLoader?.transactionsPagination?.transactions || [];
+            
+            if (transactions.length === 0) {
+                alert('No transactions to export');
+                return;
+            }
+            
+            // Close export menu
+            const exportMenu = document.getElementById('exportMenu');
+            if (exportMenu) exportMenu.style.display = 'none';
+            
+            switch(format) {
+                case 'csv':
+                    exportTransactionsToCSV(transactions);
+                    break;
+                case 'xlsx':
+                    exportTransactionsToExcel(transactions);
+                    break;
+                case 'pdf':
+                    exportTransactionsToPDF(transactions);
+                    break;
+                case 'txt':
+                    exportTransactionsToTXT(transactions);
+                    break;
+                case 'docx':
+                    exportTransactionsToWord(transactions);
+                    break;
+                default:
+                    alert('Export format not supported');
+            }
+        }
+        
+        function exportTransactionsToCSV(transactions) {
+            const headers = ['Date', 'Type', 'Description', 'Amount', 'Status'];
+            const rows = transactions.map(tx => [
+                new Date(tx.created_at).toLocaleDateString(),
+                tx.type,
+                tx.description || tx.reference || '-',
+                tx.amount,
+                tx.status || 'completed'
+            ]);
+            
+            let csv = headers.join(',') + '\n';
+            rows.forEach(row => {
+                csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+            });
+            
+            downloadFile(csv, 'transactions.csv', 'text/csv');
+        }
+        
+        function exportTransactionsToExcel(transactions) {
+            if (typeof XLSX === 'undefined') {
+                alert('Excel export library not loaded');
+                return;
+            }
+            
+            const data = transactions.map(tx => ({
+                'Date': new Date(tx.created_at).toLocaleDateString(),
+                'Type': tx.type,
+                'Description': tx.description || tx.reference || '-',
+                'Amount': parseFloat(tx.amount),
+                'Status': tx.status || 'completed'
+            }));
+            
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
+            XLSX.writeFile(wb, 'transactions.xlsx');
+        }
+        
+        function exportTransactionsToPDF(transactions) {
+            if (typeof jspdf === 'undefined' && typeof window.jspdf === 'undefined') {
+                alert('PDF export library not loaded');
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(18);
+            doc.setTextColor(56, 231, 123);
+            doc.text('Transaction History', 14, 20);
+            
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 30);
+            doc.text(`Total Transactions: ${transactions.length}`, 14, 36);
+            
+            const tableData = transactions.map(tx => [
+                new Date(tx.created_at).toLocaleDateString(),
+                tx.type.replace(/_/g, ' '),
+                (tx.description || tx.reference || '-').substring(0, 30),
+                `$${parseFloat(tx.amount).toFixed(2)}`,
+                tx.status || 'completed'
+            ]);
+            
+            doc.autoTable({
+                head: [['Date', 'Type', 'Description', 'Amount', 'Status']],
+                body: tableData,
+                startY: 45,
+                theme: 'grid',
+                headStyles: { fillColor: [56, 231, 123], textColor: [15, 23, 42] },
+                alternateRowStyles: { fillColor: [30, 41, 59] },
+                styles: { textColor: [226, 232, 240], fontSize: 9 }
+            });
+            
+            doc.save('transactions.pdf');
+        }
+        
+        function exportTransactionsToTXT(transactions) {
+            let txt = 'ZIMCROWD TRANSACTION HISTORY\n';
+            txt += '='.repeat(60) + '\n';
+            txt += `Generated: ${new Date().toLocaleString()}\n`;
+            txt += `Total Transactions: ${transactions.length}\n\n`;
+            
+            transactions.forEach((tx, index) => {
+                txt += `Transaction #${index + 1}\n`;
+                txt += `-`.repeat(40) + '\n';
+                txt += `Date: ${new Date(tx.created_at).toLocaleDateString()}\n`;
+                txt += `Type: ${tx.type.replace(/_/g, ' ')}\n`;
+                txt += `Description: ${tx.description || tx.reference || '-'}\n`;
+                txt += `Amount: $${parseFloat(tx.amount).toFixed(2)}\n`;
+                txt += `Status: ${tx.status || 'completed'}\n\n`;
+            });
+            
+            downloadFile(txt, 'transactions.txt', 'text/plain');
+        }
+        
+        function exportTransactionsToWord(transactions) {
+            // Simple HTML-based Word export
+            let html = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
+                <head><meta charset="utf-8"><title>Transaction History</title></head>
+                <body>
+                <h1 style="color: #38e77b;">Transaction History</h1>
+                <p>Generated: ${new Date().toLocaleString()}</p>
+                <p>Total Transactions: ${transactions.length}</p>
+                <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+                    <tr style="background: #38e77b; color: #0f172a;">
+                        <th>Date</th><th>Type</th><th>Description</th><th>Amount</th><th>Status</th>
+                    </tr>
+            `;
+            
+            transactions.forEach(tx => {
+                const amount = parseFloat(tx.amount);
+                const isCredit = amount >= 0;
+                html += `
+                    <tr>
+                        <td>${new Date(tx.created_at).toLocaleDateString()}</td>
+                        <td>${tx.type.replace(/_/g, ' ')}</td>
+                        <td>${tx.description || tx.reference || '-'}</td>
+                        <td style="color: ${isCredit ? 'green' : 'red'};">${isCredit ? '+' : ''}$${amount.toFixed(2)}</td>
+                        <td>${tx.status || 'completed'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</table></body></html>';
+            
+            downloadFile(html, 'transactions.doc', 'application/msword');
+        }
+        
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+        
+        // Toggle export menu
+        function toggleExportMenu() {
+            const menu = document.getElementById('exportMenu');
+            if (menu) {
+                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+        
+        // Close export menu when clicking outside
+        document.addEventListener('click', function(e) {
+            const exportDropdown = document.querySelector('.export-dropdown');
+            const exportMenu = document.getElementById('exportMenu');
+            if (exportDropdown && exportMenu && !exportDropdown.contains(e.target)) {
+                exportMenu.style.display = 'none';
+            }
+        });
     </script>
 
     <!-- Notification Panel Handler -->

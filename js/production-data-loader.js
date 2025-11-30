@@ -558,22 +558,236 @@ const ProductionDataLoader = {
         `;
     },
 
+    // Transaction pagination state
+    transactionsPagination: {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        itemsPerPage: 10,
+        transactions: []
+    },
+
     /**
-     * Load Transactions Data
+     * Load Transactions Data with pagination
      */
-    async loadTransactionsData() {
+    async loadTransactionsData(page = 1, limit = 10) {
         try {
-            console.log('💳 Loading transactions data...');
+            console.log(`💳 Loading transactions data (page ${page})...`);
             
-            const response = await this.apiRequest('/transactions?page=1&limit=50');
+            // Show loading state
+            const container = document.getElementById('transactionsListContainer');
+            if (container && page === 1) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <div class="spinner" style="width: 50px; height: 50px; border: 4px solid rgba(56, 231, 123, 0.1); border-top-color: #38e77b; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                        <p style="color: #94a3b8;">Loading transactions...</p>
+                    </div>
+                `;
+            }
+            
+            const response = await this.apiRequest(`/transactions?page=${page}&limit=${limit}`);
             
             if (response.success && response.data) {
+                // Update pagination state
+                this.transactionsPagination.currentPage = response.data.pagination?.page || page;
+                this.transactionsPagination.totalPages = response.data.pagination?.pages || 1;
+                this.transactionsPagination.totalItems = response.data.pagination?.total || 0;
+                this.transactionsPagination.itemsPerPage = limit;
+                this.transactionsPagination.transactions = response.data.transactions || [];
+                
                 this.updateTransactionsUI(response.data);
+                this.cacheData('transactions', response.data);
             }
         } catch (error) {
             console.error('Failed to load transactions:', error);
             this.showFallbackData('transactions');
         }
+    },
+
+    /**
+     * Update Transactions UI with production data
+     */
+    updateTransactionsUI(data) {
+        const container = document.getElementById('transactionsListContainer');
+        if (!container) return;
+        
+        const transactions = data.transactions || [];
+        const pagination = data.pagination || {};
+        const summary = data.summary || {};
+        
+        if (transactions.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="width: 80px; height: 80px; background: rgba(148, 163, 184, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                        <i class="fas fa-exchange-alt" style="font-size: 36px; color: #64748b;"></i>
+                    </div>
+                    <h3 style="color: #e2e8f0; margin-bottom: 10px;">No Transactions Yet</h3>
+                    <p style="color: #94a3b8;">Your transaction history will appear here once you start using ZimCrowd.</p>
+                </div>
+            `;
+            // Hide pagination when no transactions
+            const paginationEl = document.getElementById('transactionsPagination');
+            if (paginationEl) paginationEl.style.display = 'none';
+            return;
+        }
+        
+        // Render transaction cards
+        container.innerHTML = transactions.map(tx => {
+            const isCredit = ['deposit', 'investment_return', 'loan_disbursement', 'credit', 'referral_bonus'].includes(tx.type);
+            const amount = parseFloat(tx.amount || 0);
+            const icon = this.getTransactionIcon(tx.type);
+            const iconColor = isCredit ? '#38e77b' : '#ef4444';
+            const iconBg = isCredit ? 'rgba(56, 231, 123, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+            const amountColor = isCredit ? '#38e77b' : '#ef4444';
+            const amountPrefix = isCredit ? '+' : '-';
+            
+            // Format date
+            const date = new Date(tx.created_at);
+            const formattedDate = date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            
+            // Get status badge class
+            const statusClass = tx.status === 'completed' ? 'loan-status' : 
+                               tx.status === 'pending' ? 'loan-status pending' : 
+                               tx.status === 'failed' ? 'loan-status failed' : 'loan-status';
+            
+            return `
+                <div class="loan-card" style="transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(0,0,0,0.3)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="width: 50px; height: 50px; background: ${iconBg}; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-${icon}" style="color: ${iconColor}; font-size: 18px;"></i>
+                            </div>
+                            <div>
+                                <h4 style="margin-bottom: 5px; text-transform: capitalize;">${this.formatTransactionType(tx.type)}</h4>
+                                <p style="color: #94a3b8; font-size: 14px;">${tx.description || tx.reference || 'Transaction'} • ${formattedDate}</p>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 20px; font-weight: 700; color: ${amountColor};">${amountPrefix}$${Math.abs(amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                            <span class="${statusClass}" style="font-size: 11px; text-transform: capitalize;">${tx.status || 'Completed'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Update pagination UI
+        this.updateTransactionsPaginationUI(pagination);
+        
+        console.log(`✅ Transactions UI updated - ${transactions.length} items, Page ${pagination.page || 1} of ${pagination.pages || 1}`);
+    },
+
+    /**
+     * Update Transactions Pagination UI
+     * Matches the design of investments pagination with page number buttons
+     */
+    updateTransactionsPaginationUI(pagination) {
+        const paginationEl = document.getElementById('transactionsPagination');
+        const pageButtonsContainer = document.getElementById('transactionsPageButtons');
+        const prevBtn = document.getElementById('transactionsPrevBtn');
+        const nextBtn = document.getElementById('transactionsNextBtn');
+        
+        if (!paginationEl) return;
+        
+        const currentPage = pagination.page || this.transactionsPagination.currentPage;
+        const totalPages = pagination.pages || this.transactionsPagination.totalPages;
+        const totalItems = pagination.total || this.transactionsPagination.totalItems;
+        
+        // Show pagination if there are items
+        if (totalItems > 0 && totalPages > 1) {
+            paginationEl.style.display = 'flex';
+            
+            // Generate page buttons (same design as investments)
+            if (pageButtonsContainer) {
+                let buttonsHTML = '';
+                const maxButtons = 5;
+                let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+                let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+                
+                if (endPage - startPage < maxButtons - 1) {
+                    startPage = Math.max(1, endPage - maxButtons + 1);
+                }
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    const isActive = i === currentPage;
+                    buttonsHTML += `
+                        <button onclick="goToTransactionsPage(${i})" 
+                                class="page-number-btn ${isActive ? 'active' : ''}" 
+                                style="padding: 8px 12px; background: ${isActive ? '#38e77b' : 'rgba(255,255,255,0.05)'}; border: 1px solid ${isActive ? '#38e77b' : '#334155'}; border-radius: 8px; color: ${isActive ? '#000' : '#fff'}; cursor: pointer; font-weight: ${isActive ? '700' : '400'}; transition: all 0.2s;">
+                            ${i}
+                        </button>
+                    `;
+                }
+                
+                buttonsHTML += `
+                    <span style="color: #94a3b8; font-size: 14px; margin-left: 10px;">
+                        Page <span style="font-weight: 600; color: #38e77b;">${currentPage}</span> of ${totalPages} (${totalItems} transactions)
+                    </span>
+                `;
+                
+                pageButtonsContainer.innerHTML = buttonsHTML;
+            }
+            
+            // Enable/disable prev/next buttons
+            if (prevBtn) {
+                prevBtn.disabled = currentPage <= 1;
+                prevBtn.style.opacity = currentPage <= 1 ? '0.5' : '1';
+                prevBtn.style.cursor = currentPage <= 1 ? 'not-allowed' : 'pointer';
+            }
+            
+            if (nextBtn) {
+                nextBtn.disabled = currentPage >= totalPages;
+                nextBtn.style.opacity = currentPage >= totalPages ? '0.5' : '1';
+                nextBtn.style.cursor = currentPage >= totalPages ? 'not-allowed' : 'pointer';
+            }
+        } else if (totalItems > 0) {
+            // Show pagination but without page buttons (single page)
+            paginationEl.style.display = 'flex';
+            if (pageButtonsContainer) {
+                pageButtonsContainer.innerHTML = `
+                    <span style="color: #94a3b8; font-size: 14px;">
+                        Showing all ${totalItems} transactions
+                    </span>
+                `;
+            }
+            if (prevBtn) {
+                prevBtn.disabled = true;
+                prevBtn.style.opacity = '0.5';
+                prevBtn.style.cursor = 'not-allowed';
+            }
+            if (nextBtn) {
+                nextBtn.disabled = true;
+                nextBtn.style.opacity = '0.5';
+                nextBtn.style.cursor = 'not-allowed';
+            }
+        } else {
+            paginationEl.style.display = 'none';
+        }
+    },
+
+    /**
+     * Format transaction type for display
+     */
+    formatTransactionType(type) {
+        const typeMap = {
+            'deposit': 'Wallet Deposit',
+            'withdrawal': 'Withdrawal',
+            'loan_payment': 'Loan Payment',
+            'loan_disbursement': 'Loan Disbursement',
+            'investment': 'Investment',
+            'investment_return': 'Investment Return',
+            'transfer': 'Transfer',
+            'credit': 'Credit',
+            'debit': 'Debit',
+            'fee': 'Platform Fee',
+            'referral_bonus': 'Referral Bonus',
+            'repayment': 'Loan Repayment'
+        };
+        return typeMap[type] || type.replace(/_/g, ' ');
     },
 
     /**
