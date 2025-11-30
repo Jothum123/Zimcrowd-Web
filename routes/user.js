@@ -27,24 +27,87 @@ router.get('/profile', authenticateUser, async (req, res) => {
         
         if (userError) throw userError;
 
-        // Combine profile and user data
+        // Combine profile and user data - include all fields from schema
         const profileData = {
             id: userId,
-            email: user.email,
-            phone: user.phone,
-            full_name: profile?.full_name || user.user_metadata?.full_name || '',
+            email: user.email || profile?.email,
+            phone: user.phone || profile?.phone,
+            
+            // Personal info
             first_name: profile?.first_name || user.user_metadata?.first_name || '',
             last_name: profile?.last_name || user.user_metadata?.last_name || '',
-            profile_picture_url: profile?.profile_picture_url || user.user_metadata?.avatar_url || '',
             date_of_birth: profile?.date_of_birth || '',
             gender: profile?.gender || '',
+            nationality: profile?.nationality || '',
+            marital_status: profile?.marital_status || '',
+            id_number: profile?.id_number || '',
+            
+            // Profile
+            profile_picture_url: profile?.profile_picture_url || profile?.avatar_url || user.user_metadata?.avatar_url || '',
+            bio: profile?.bio || '',
+            
+            // Address
+            street_address: profile?.street_address || profile?.street || profile?.address || '',
             address: profile?.address || '',
             city: profile?.city || '',
+            suburb: profile?.suburb || '',
+            province: profile?.province || profile?.state || '',
+            postal_code: profile?.postal_code || profile?.zip_code || '',
             country: profile?.country || 'Zimbabwe',
-            postal_code: profile?.postal_code || '',
-            national_id: profile?.national_id || '',
+            
+            // Employment
+            employment_status: profile?.employment_status || '',
+            employment_type: profile?.employment_type || '',
+            monthly_income: profile?.monthly_income || '',
+            employer_name: profile?.employer_name || '',
+            job_title: profile?.job_title || profile?.occupation || '',
+            occupation: profile?.occupation || '',
+            ec_number: profile?.ec_number || '',
+            work_address: profile?.work_address || '',
+            work_phone: profile?.work_phone || '',
+            work_email: profile?.work_email || '',
+            years_employed: profile?.years_employed || '',
+            department: profile?.department || '',
+            supervisor_name: profile?.supervisor_name || '',
+            supervisor_phone: profile?.supervisor_phone || '',
+            
+            // Next of kin (JSONB)
+            next_of_kin: profile?.next_of_kin || {
+                primary: {
+                    name: profile?.next_of_kin_name || profile?.kin_name || '',
+                    relationship: profile?.next_of_kin_relationship || profile?.kin_relationship || '',
+                    phone: profile?.next_of_kin_phone || profile?.kin_phone || ''
+                },
+                secondary: {
+                    name: profile?.emergency_contact_name || '',
+                    relationship: profile?.emergency_contact_relationship || '',
+                    phone: profile?.emergency_contact_phone || ''
+                }
+            },
+            
+            // Payment method (JSONB)
+            payment_method: profile?.payment_method || {},
+            
+            // Banking
+            bank_name: profile?.bank_name || '',
+            account_number: profile?.account_number || '',
+            
+            // KYC & Status
             kyc_status: profile?.kyc_status || 'pending',
-            account_status: profile?.account_status || 'active',
+            is_verified: profile?.is_verified || false,
+            id_verified: profile?.id_verified || false,
+            selfie_verified: profile?.selfie_verified || false,
+            documents_verified: profile?.documents_verified || false,
+            
+            // Completion tracking
+            profile_completed: profile?.profile_completed || false,
+            employment_completed: profile?.employment_completed || false,
+            next_of_kin_completed: profile?.next_of_kin_completed || false,
+            payment_details_completed: profile?.payment_details_completed || false,
+            completion_percentage: profile?.completion_percentage || 0,
+            onboarding_completed: profile?.onboarding_completed || false,
+            
+            // Timestamps
             created_at: profile?.created_at || user.created_at,
             updated_at: profile?.updated_at || user.updated_at
         };
@@ -436,14 +499,45 @@ router.put('/profile', authenticateUser, async (req, res) => {
         const userId = req.user.id;
         const updates = req.body;
 
-        // Define allowed fields that exist in the profiles table
+        // Define allowed fields that exist in the profiles table (based on actual schema)
         const allowedProfileFields = [
-            'first_name', 'last_name', 'full_name', 'email', 'phone',
-            'date_of_birth', 'gender', 'national_id',
-            'street_address', 'address', 'city', 'suburb', 'postal_code', 'country',
-            'bio', 'profile_picture_url',
-            'employment_status', 'monthly_income', 'employer_name', 'job_title', 'occupation', 'ec_number',
-            'marital_status', 'kyc_status', 'account_status'
+            // Personal info
+            'first_name', 'last_name', 'email', 'phone', 'date_of_birth', 'gender',
+            'nationality', 'marital_status', 'id_number', 'passport_number', 'tax_id',
+            
+            // Address
+            'street_address', 'address', 'street', 'apartment_unit', 'city', 'suburb', 
+            'state', 'province', 'postal_code', 'zip_code', 'country',
+            
+            // Profile
+            'bio', 'profile_picture_url', 'avatar_url', 'education_level',
+            'company', 'website', 'linkedin', 'twitter', 'facebook', 'instagram',
+            
+            // Employment
+            'employment_status', 'employment_type', 'monthly_income', 'annual_income',
+            'employer_name', 'job_title', 'occupation', 'ec_number',
+            'work_address', 'work_phone', 'work_email', 'years_employed',
+            'department', 'supervisor_name', 'supervisor_phone', 'source_of_funds',
+            
+            // Next of kin (individual fields)
+            'next_of_kin_name', 'next_of_kin_relationship', 'next_of_kin_phone', 'next_of_kin_email',
+            'kin_name', 'kin_relationship', 'kin_phone', 'kin_email', 'kin_address',
+            'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship',
+            
+            // JSONB fields
+            'next_of_kin', 'payment_method', 'extended_profile_data',
+            
+            // Banking
+            'bank_name', 'account_number',
+            
+            // KYC & Status
+            'kyc_status', 'is_verified', 'verification_date', 'risk_rating',
+            'id_verified', 'selfie_verified', 'documents_verified',
+            
+            // Completion tracking
+            'profile_completed', 'employment_completed', 'next_of_kin_completed',
+            'payment_details_completed', 'setup_completed_at', 'completion_percentage',
+            'onboarding_completed'
         ];
         
         // Separate profile fields from extended data
