@@ -182,8 +182,55 @@ router.post('/upload-statement', authenticateUser, upload.single('statement'), a
 // ============================================
 
 /**
+ * @route   GET /api/zimscore/current
+ * @desc    Get current user's ZimScore for dashboard display
+ * @access  Private
+ */
+router.get('/current', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Get from user_zimscores table
+        const { data: zimScore, error } = await supabase
+            .from('user_zimscores')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+
+        if (error || !zimScore) {
+            // No ZimScore yet - user hasn't completed setup
+            return res.json({
+                success: true,
+                data: null,
+                message: 'Complete profile setup to get your ZimScore'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: {
+                score_value: zimScore.score_value,
+                star_rating: zimScore.star_rating,
+                max_loan_amount: zimScore.max_loan_amount,
+                score_based_limit: zimScore.score_based_limit,
+                risk_level: zimScore.risk_level,
+                cold_start_active: zimScore.cold_start_active,
+                last_calculated: zimScore.last_calculated
+            }
+        });
+    } catch (error) {
+        console.error('Get current ZimScore error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to retrieve ZimScore',
+            error: error.message
+        });
+    }
+});
+
+/**
  * @route   GET /api/zimscore/my-score
- * @desc    Get current user's ZimScore
+ * @desc    Get current user's ZimScore (detailed)
  * @access  Private
  */
 router.get('/my-score', authenticateUser, async (req, res) => {

@@ -360,6 +360,39 @@
             color: #6b7280;
         }
 
+        /* ZimScore Stars Display */
+        .zimscore-stars {
+            color: #fbbf24;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        .zimscore-value {
+            font-size: 10px;
+            color: #38e77b;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+
+        body.light-mode .zimscore-value {
+            color: #059669;
+        }
+
+        .zimscore-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(56, 231, 123, 0.15));
+            padding: 2px 8px;
+            border-radius: 12px;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        body.light-mode .zimscore-badge {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(56, 231, 123, 0.1));
+            border: 1px solid rgba(251, 191, 36, 0.4);
+        }
+
         .header-notification {
             position: relative;
             width: 40px;
@@ -3393,7 +3426,13 @@
                     <div class="header-user-avatar" id="nav-avatar">U</div>
                     <div class="header-user-info">
                         <h4 id="header-user-name">Loading...</h4>
-                        <p>Premium Member</p>
+                        <p id="header-user-status">
+                            <span id="zimscore-display" style="display: none;">
+                                <span id="zimscore-stars" class="zimscore-stars"></span>
+                                <span id="zimscore-value" class="zimscore-value"></span>
+                            </span>
+                            <span id="member-status">Premium Member</span>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -8460,6 +8499,101 @@ How it works:
                 banner.style.display = 'none';
             }
         }
+
+        // ============================================
+        // ZIMSCORE DISPLAY FUNCTIONS
+        // ============================================
+
+        /**
+         * Fetch and display user's ZimScore in the header
+         */
+        async function loadZimScore() {
+            try {
+                const authToken = localStorage.getItem('authToken');
+                if (!authToken) return;
+
+                const response = await fetch('/api/zimscore/current', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    displayZimScore(data.data);
+                }
+            } catch (error) {
+                console.error('Error loading ZimScore:', error);
+            }
+        }
+
+        /**
+         * Display ZimScore stars in the header
+         * @param {Object} zimscoreData - ZimScore data from API
+         */
+        function displayZimScore(zimscoreData) {
+            const zimscoreDisplay = document.getElementById('zimscore-display');
+            const zimscoreStars = document.getElementById('zimscore-stars');
+            const zimscoreValue = document.getElementById('zimscore-value');
+            const memberStatus = document.getElementById('member-status');
+
+            if (!zimscoreDisplay || !zimscoreData.star_rating) return;
+
+            // Generate star display
+            const starRating = zimscoreData.star_rating || 0;
+            const fullStars = Math.floor(starRating);
+            const hasHalfStar = starRating % 1 >= 0.5;
+            
+            let starsHtml = '';
+            for (let i = 0; i < fullStars; i++) {
+                starsHtml += '★';
+            }
+            if (hasHalfStar && fullStars < 5) {
+                starsHtml += '☆';
+            }
+            // Fill remaining with empty stars
+            const remaining = 5 - fullStars - (hasHalfStar ? 1 : 0);
+            for (let i = 0; i < remaining; i++) {
+                starsHtml += '☆';
+            }
+
+            zimscoreStars.innerHTML = starsHtml;
+            zimscoreValue.textContent = `${zimscoreData.score_value || 0}/85`;
+
+            // Show ZimScore, hide "Premium Member"
+            zimscoreDisplay.style.display = 'inline-flex';
+            zimscoreDisplay.classList.add('zimscore-badge');
+            if (memberStatus) {
+                memberStatus.style.display = 'none';
+            }
+
+            // Store in localStorage for quick access
+            localStorage.setItem('zimscoreData', JSON.stringify(zimscoreData));
+        }
+
+        /**
+         * Load cached ZimScore immediately (for fast display)
+         */
+        function loadCachedZimScore() {
+            const cached = localStorage.getItem('zimscoreData');
+            if (cached) {
+                try {
+                    const zimscoreData = JSON.parse(cached);
+                    displayZimScore(zimscoreData);
+                } catch (e) {
+                    console.warn('Invalid cached ZimScore data');
+                }
+            }
+        }
+
+        // Load ZimScore on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            // Load cached first for instant display
+            loadCachedZimScore();
+            // Then fetch fresh data
+            loadZimScore();
+        });
 
         // ============================================
         // PROFILE MANAGEMENT FUNCTIONS
