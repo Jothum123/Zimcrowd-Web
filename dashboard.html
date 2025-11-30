@@ -6244,7 +6244,7 @@
             
             // Primary Market API
             async getPrimaryMarketLoans(page = 1, limit = 6) {
-                return this.request(`/api/p2p-primary-market/available-loans?page=${page}&limit=${limit}`);
+                return this.request(`/api/p2p/primary/available-loans?page=${page}&limit=${limit}`);
             },
             
             async getPrimaryMarketStats() {
@@ -6253,7 +6253,7 @@
             
             // Secondary Market API
             async getSecondaryMarketLoans(page = 1, limit = 6) {
-                return this.request(`/api/p2p-secondary-market/listings?page=${page}&limit=${limit}`);
+                return this.request(`/api/p2p/secondary/listings?page=${page}&limit=${limit}`);
             },
             
             async getSecondaryMarketStats() {
