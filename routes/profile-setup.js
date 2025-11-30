@@ -973,6 +973,381 @@ router.post('/upload-document-with-ocr-test', upload.single('document'), async (
 });
 
 /**
+ * @route   POST /api/profile-setup/complete-setup
+ * @desc    Complete profile setup and trigger full OCR verification
+ * @access  Private
+ */
+router.post('/complete-setup', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        console.log('');
+        console.log('🚀 Starting Complete Setup Verification for user:', userId);
+        console.log('================================================');
+
+        // Step 1: Check all required documents are uploaded
+        const { data: documents, error: docError } = await supabase
+            .from('verification_documents')
+            .select('*')
+            .eq('user_id', userId);
+
+        if (docError) throw docError;
+
+        const requiredDocs = ['national_id', 'id_back', 'selfie', 'bank_statement'];
+        const uploadedTypes = documents.map(d => d.document_type);
+        const missingDocs = requiredDocs.filter(type => !uploadedTypes.includes(type));
+
+        if (missingDocs.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required documents',
+                missingDocuments: missingDocs,
+                hint: 'Please upload: ' + missingDocs.join(', ')
+            });
+        }
+
+        console.log('✅ All required documents uploaded');
+
+        // Step 2: Check profile completion
+        const { data: profile, error: profileError } = await supabase
+            .from('user_profile_completion')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+        if (profileError) throw profileError;
+
+        if (!profile.profile_completed || !profile.employment_completed) {
+            return res.status(400).json({
+                success: false,
+                message: 'Profile not complete',
+                pending_steps: profile.pending_steps.filter(s => s !== null)
+            });
+        }
+
+        console.log('✅ Profile information complete');
+
+        // Step 3: Get documents for verification
+        const idFront = documents.find(d => d.document_type === 'national_id');
+        const idBack = documents.find(d => d.document_type === 'id_back');
+        const selfie = documents.find(d => d.document_type === 'selfie');
+        const bankStatement = documents.find(d => d.document_type === 'bank_statement');
+        const payslip = documents.find(d => d.document_type === 'payslip');
+
+        // Step 4: Run OCR verification on all documents
+        const verificationResults = {
+            idFront: { verified: false, ocrData: null },
+            idBack: { verified: false, ocrData: null },
+            selfie: { verified: false, faceDetected: false },
+            bankStatement: { verified: false, ocrData: null },
+            payslip: { verified: false, ocrData: null },
+            faceMatch: { matched: false, confidence: 0 }
+        };
+
+        // 4a. Verify ID Front (if not already processed)
+        if (idFront && !idFront.ocr_data && ocrService) {
+            console.log('🔍 Processing ID Front...');
+            try {
+                const idBuffer = await fetchDocumentBuffer(idFront.file_url);
+                if (idBuffer) {
+                    const result = await ocrService.analyzeDocument(idBuffer, 'national_id');
+                    if (result.success) {
+                        verificationResults.idFront = {
+                            verified: true,
+                            ocrData: result.extractedFields || result.parsedFields,
+                            confidence: result.confidence,
+                            ocrEngine: result.ocrEngine
+                        };
+                        // Update document with OCR data
+                        await supabase
+                            .from('verification_documents')
+                            .update({ 
+                                ocr_data: result,
+                                status: 'processing'
+                            })
+                            .eq('id', idFront.id);
+                        console.log('✅ ID Front processed');
+                    }
+                }
+            } catch (err) {
+                console.error('❌ ID Front processing failed:', err.message);
+            }
+        } else if (idFront?.ocr_data) {
+            verificationResults.idFront = { verified: true, ocrData: idFront.ocr_data };
+            console.log('✅ ID Front already processed');
+        }
+
+        // 4b. Verify ID Back
+        if (idBack && !idBack.ocr_data && ocrService) {
+            console.log('🔍 Processing ID Back...');
+            try {
+                const idBackBuffer = await fetchDocumentBuffer(idBack.file_url);
+                if (idBackBuffer) {
+                    const result = await ocrService.analyzeDocument(idBackBuffer, 'id_back');
+                    if (result.success) {
+                        verificationResults.idBack = {
+                            verified: true,
+                            ocrData: result.extractedFields || result.parsedFields,
+                            confidence: result.confidence
+                        };
+                        await supabase
+                            .from('verification_documents')
+                            .update({ 
+                                ocr_data: result,
+                                status: 'processing'
+                            })
+                            .eq('id', idBack.id);
+                        console.log('✅ ID Back processed');
+                    }
+                }
+            } catch (err) {
+                console.error('❌ ID Back processing failed:', err.message);
+            }
+        } else if (idBack?.ocr_data) {
+            verificationResults.idBack = { verified: true, ocrData: idBack.ocr_data };
+            console.log('✅ ID Back already processed');
+        }
+
+        // 4c. Verify Selfie (Face Detection)
+        if (selfie && ocrService) {
+            console.log('🔍 Processing Selfie...');
+            try {
+                const selfieBuffer = await fetchDocumentBuffer(selfie.file_url);
+                if (selfieBuffer) {
+                    const faceResult = await ocrService.detectFace(selfieBuffer);
+                    verificationResults.selfie = {
+                        verified: faceResult.faceDetected,
+                        faceDetected: faceResult.faceDetected,
+                        faceCount: faceResult.faceCount,
+                        confidence: faceResult.confidence,
+                        provider: faceResult.provider
+                    };
+                    await supabase
+                        .from('verification_documents')
+                        .update({ 
+                            ocr_data: { faceDetection: faceResult },
+                            status: faceResult.faceDetected ? 'processing' : 'rejected'
+                        })
+                        .eq('id', selfie.id);
+                    console.log(faceResult.faceDetected ? '✅ Selfie face detected' : '❌ No face in selfie');
+                }
+            } catch (err) {
+                console.error('❌ Selfie processing failed:', err.message);
+            }
+        }
+
+        // 4d. Verify Bank Statement
+        if (bankStatement && !bankStatement.ocr_data && ocrService) {
+            console.log('🔍 Processing Bank Statement...');
+            try {
+                const bankBuffer = await fetchDocumentBuffer(bankStatement.file_url);
+                if (bankBuffer) {
+                    const result = await ocrService.extractBankStatementData(bankBuffer);
+                    if (result.success) {
+                        verificationResults.bankStatement = {
+                            verified: true,
+                            ocrData: result.extractedFields,
+                            confidence: result.confidence
+                        };
+                        await supabase
+                            .from('verification_documents')
+                            .update({ 
+                                ocr_data: result,
+                                status: 'processing'
+                            })
+                            .eq('id', bankStatement.id);
+                        console.log('✅ Bank Statement processed');
+                    }
+                }
+            } catch (err) {
+                console.error('❌ Bank Statement processing failed:', err.message);
+            }
+        } else if (bankStatement?.ocr_data) {
+            verificationResults.bankStatement = { verified: true, ocrData: bankStatement.ocr_data };
+            console.log('✅ Bank Statement already processed');
+        }
+
+        // 4e. Verify Payslip (if uploaded)
+        if (payslip && !payslip.ocr_data && ocrService) {
+            console.log('🔍 Processing Payslip...');
+            try {
+                const payslipBuffer = await fetchDocumentBuffer(payslip.file_url);
+                if (payslipBuffer) {
+                    const result = await ocrService.extractPayslipData(payslipBuffer);
+                    if (result.success) {
+                        verificationResults.payslip = {
+                            verified: true,
+                            ocrData: result.extractedFields,
+                            confidence: result.confidence
+                        };
+                        await supabase
+                            .from('verification_documents')
+                            .update({ 
+                                ocr_data: result,
+                                status: 'processing'
+                            })
+                            .eq('id', payslip.id);
+                        console.log('✅ Payslip processed');
+                    }
+                }
+            } catch (err) {
+                console.error('❌ Payslip processing failed:', err.message);
+            }
+        } else if (payslip?.ocr_data) {
+            verificationResults.payslip = { verified: true, ocrData: payslip.ocr_data };
+            console.log('✅ Payslip already processed');
+        }
+
+        // Step 5: Face Comparison (ID photo vs Selfie)
+        if (verificationResults.idFront.verified && verificationResults.selfie.faceDetected && faceService) {
+            console.log('🔍 Comparing faces (ID vs Selfie)...');
+            try {
+                const idBuffer = await fetchDocumentBuffer(idFront.file_url);
+                const selfieBuffer = await fetchDocumentBuffer(selfie.file_url);
+                
+                if (idBuffer && selfieBuffer && faceService.isAvailable()) {
+                    const compareResult = await faceService.compareFaces(idBuffer, selfieBuffer);
+                    verificationResults.faceMatch = {
+                        matched: compareResult.isMatch || compareResult.confidence > 0.7,
+                        confidence: compareResult.confidence || 0,
+                        provider: 'Azure Face API'
+                    };
+                    console.log(verificationResults.faceMatch.matched ? 
+                        `✅ Face match: ${(verificationResults.faceMatch.confidence * 100).toFixed(1)}%` : 
+                        '❌ Face mismatch');
+                }
+            } catch (err) {
+                console.error('❌ Face comparison failed:', err.message);
+            }
+        }
+
+        // Step 6: Calculate ZimScore if bank statement verified
+        let zimScoreResult = null;
+        if (verificationResults.bankStatement.verified && zimScoreService) {
+            console.log('🎯 Calculating ZimScore...');
+            try {
+                const { data: userData } = await supabase
+                    .from('users')
+                    .select('employment_type')
+                    .eq('id', userId)
+                    .single();
+
+                if (userData?.employment_type) {
+                    const bankData = verificationResults.bankStatement.ocrData?.extractedFields || 
+                                    verificationResults.bankStatement.ocrData?.extracted_fields || 
+                                    verificationResults.bankStatement.ocrData;
+                    
+                    const financialData = zimScoreService.extractFinancialDataFromOCR({
+                        openingBalance: parseFloat(bankData?.openingBalance) || 0,
+                        closingBalance: parseFloat(bankData?.closingBalance) || 0,
+                        totalCredits: parseFloat(bankData?.totalCredits) || 0,
+                        totalDebits: parseFloat(bankData?.totalDebits) || 0,
+                        statementPeriod: bankData?.statementPeriod
+                    });
+
+                    zimScoreResult = await zimScoreService.calculateColdStartScore(
+                        userId,
+                        financialData,
+                        userData.employment_type
+                    );
+                    console.log(`✅ ZimScore: ${zimScoreResult.scoreValue}/85 - Limit: $${zimScoreResult.maxLoanAmount}`);
+                }
+            } catch (err) {
+                console.error('❌ ZimScore calculation failed:', err.message);
+            }
+        }
+
+        // Step 7: Determine overall verification status
+        const allVerified = verificationResults.idFront.verified && 
+                          verificationResults.selfie.faceDetected;
+        
+        const kycStatus = allVerified ? 'pending_review' : 'incomplete';
+        const setupCompleted = allVerified;
+
+        // Step 8: Update user status
+        await supabase
+            .from('users')
+            .update({
+                kyc_status: kycStatus,
+                setup_completed: setupCompleted,
+                setup_completed_at: setupCompleted ? new Date().toISOString() : null,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', userId);
+
+        console.log('');
+        console.log('================================================');
+        console.log(`🏁 Setup Complete - Status: ${kycStatus}`);
+        console.log('');
+
+        res.json({
+            success: true,
+            message: setupCompleted ? 
+                'Profile setup complete! Your documents are being reviewed.' : 
+                'Some verifications failed. Please check and resubmit.',
+            data: {
+                setupCompleted,
+                kycStatus,
+                verificationResults: {
+                    idFront: {
+                        verified: verificationResults.idFront.verified,
+                        confidence: verificationResults.idFront.confidence
+                    },
+                    idBack: {
+                        verified: verificationResults.idBack.verified
+                    },
+                    selfie: {
+                        faceDetected: verificationResults.selfie.faceDetected,
+                        confidence: verificationResults.selfie.confidence
+                    },
+                    bankStatement: {
+                        verified: verificationResults.bankStatement.verified
+                    },
+                    payslip: {
+                        verified: verificationResults.payslip?.verified || false
+                    },
+                    faceMatch: verificationResults.faceMatch
+                },
+                zimScore: zimScoreResult ? {
+                    score: zimScoreResult.scoreValue,
+                    maxLoanAmount: zimScoreResult.maxLoanAmount,
+                    starRating: zimScoreResult.starRating,
+                    riskLevel: zimScoreResult.riskLevel
+                } : null,
+                nextSteps: !setupCompleted ? [
+                    !verificationResults.idFront.verified && 'Reupload clear National ID (front)',
+                    !verificationResults.selfie.faceDetected && 'Reupload clear selfie with visible face',
+                    !verificationResults.faceMatch.matched && 'Ensure selfie matches ID photo'
+                ].filter(Boolean) : ['Wait for admin review (usually within 24 hours)']
+            }
+        });
+
+    } catch (error) {
+        console.error('Complete setup error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to complete setup',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * Helper function to fetch document buffer from URL
+ */
+async function fetchDocumentBuffer(url) {
+    try {
+        const fetch = (await import('node-fetch')).default;
+        const response = await fetch(url);
+        if (!response.ok) return null;
+        const arrayBuffer = await response.arrayBuffer();
+        return Buffer.from(arrayBuffer);
+    } catch (error) {
+        console.error('Failed to fetch document:', error.message);
+        return null;
+    }
+}
+
+/**
  * @route   GET /api/profile-setup/documents
  * @desc    Get user's uploaded documents
  * @access  Private
