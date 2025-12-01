@@ -1379,7 +1379,115 @@
                     return response;
                 };
                 
-                // First, save all profile data to the user profile API
+                // Step 1: Upload all documents with OCR processing
+                updateVerificationStep('id', 'active', 'Uploading & analyzing ID...');
+                
+                const uploadDocumentWithOCR = async (file, documentType) => {
+                    const formData = new FormData();
+                    formData.append('document', file);
+                    formData.append('document_type', documentType);
+                    
+                    try {
+                        const uploadResponse = await fetch(`${API_BASE}/api/profile-setup/upload-document-with-ocr`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${authToken}`
+                            },
+                            body: formData
+                        });
+                        
+                        const result = await uploadResponse.json();
+                        console.log(`📄 ${documentType} OCR result:`, result);
+                        return result;
+                    } catch (err) {
+                        console.error(`❌ ${documentType} upload failed:`, err);
+                        return { success: false, message: err.message };
+                    }
+                };
+                
+                let ocrResults = {
+                    idFront: null,
+                    idBack: null,
+                    selfie: null,
+                    bankStatement: null
+                };
+                
+                // Upload ID Front with OCR
+                const idFrontFile = document.getElementById('idFront').files[0];
+                if (idFrontFile) {
+                    console.log('📤 Uploading ID Front with OCR...');
+                    ocrResults.idFront = await uploadDocumentWithOCR(idFrontFile, 'national_id');
+                    
+                    if (ocrResults.idFront.success) {
+                        // Check if ID name matches entered name
+                        const ocrName = ocrResults.idFront.data?.ocrData?.extractedFields?.fullName || 
+                                       ocrResults.idFront.data?.ocrData?.parsedFields?.fullName || '';
+                        const enteredName = `${profileData.first_name} ${profileData.last_name}`.toLowerCase();
+                        
+                        if (ocrName && !ocrName.toLowerCase().includes(enteredName.split(' ')[0])) {
+                            console.warn('⚠️ ID name may not match entered name');
+                        }
+                        updateVerificationStep('id', 'done', 'ID Front Verified ✓');
+                    } else {
+                        updateVerificationStep('id', 'warning', 'ID uploaded (OCR pending)');
+                    }
+                }
+                
+                // Upload ID Back with OCR
+                const idBackFile = document.getElementById('idBack').files[0];
+                if (idBackFile) {
+                    console.log('📤 Uploading ID Back with OCR...');
+                    ocrResults.idBack = await uploadDocumentWithOCR(idBackFile, 'id_back');
+                }
+                
+                updateVerificationStep('selfie', 'active', 'Analyzing selfie for face detection...');
+                
+                // Upload Selfie with Face Detection
+                const selfieFile = document.getElementById('selfiePhoto').files[0];
+                if (selfieFile) {
+                    console.log('📤 Uploading Selfie with Face Detection...');
+                    ocrResults.selfie = await uploadDocumentWithOCR(selfieFile, 'selfie');
+                    
+                    if (ocrResults.selfie.success && ocrResults.selfie.data?.ocrData?.faceDetected) {
+                        updateVerificationStep('selfie', 'done', 'Face Detected ✓');
+                    } else if (ocrResults.selfie.success) {
+                        updateVerificationStep('selfie', 'warning', 'Selfie uploaded (face check pending)');
+                    } else {
+                        showVerificationError('face_not_detected', 'Could not detect face in selfie');
+                        return;
+                    }
+                }
+                
+                updateVerificationStep('bank', 'active', 'Analyzing bank statement...');
+                
+                // Upload Bank Statement with OCR (optional but recommended)
+                const bankStatementFile = document.getElementById('bankStatement').files[0];
+                if (bankStatementFile) {
+                    console.log('📤 Uploading Bank Statement with OCR...');
+                    ocrResults.bankStatement = await uploadDocumentWithOCR(bankStatementFile, 'bank_statement');
+                    
+                    if (ocrResults.bankStatement.success) {
+                        const bankData = ocrResults.bankStatement.data?.ocrData?.extractedFields;
+                        if (bankData) {
+                            console.log('💰 Bank Statement Data:', {
+                                accountHolder: bankData.accountHolderName,
+                                openingBalance: bankData.openingBalance,
+                                closingBalance: bankData.closingBalance,
+                                totalCredits: bankData.totalCredits,
+                                totalDebits: bankData.totalDebits
+                            });
+                        }
+                        updateVerificationStep('bank', 'done', 'Bank Statement Analyzed ✓');
+                    } else {
+                        updateVerificationStep('bank', 'warning', 'Bank statement uploaded (analysis pending)');
+                    }
+                } else {
+                    updateVerificationStep('bank', 'done', 'No bank statement (optional)');
+                }
+                
+                updateVerificationStep('score', 'active', 'Calculating ZimScore...');
+                
+                // Step 2: Save profile data
                 const profileResponse = await makeAuthRequest(`${API_BASE}/api/user/profile`, {
                     method: 'PUT',
                     headers: {
