@@ -3457,24 +3457,20 @@
 
         <!-- Overview Section -->
         <section id="overview-section" class="dashboard-section active">
-            <!-- Profile Completion Banner -->
-            <div class="profile-completion-banner" id="profileCompletionBanner" style="display: none;" onclick="completeRegistration()">
-                <div class="banner-content">
-                    <div class="banner-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div class="banner-text">
-                        <h3>Complete Your Registration</h3>
-                        <p>To fully access ZimCrowd's features and apply for loans, please complete your profile verification. This includes KYC verification, personal details, and payment method setup.</p>
-                        <p class="banner-importance"><strong>Why complete registration?</strong> It helps us verify your identity, assess your creditworthiness, and provide you with personalized loan offers and better interest rates.</p>
-                        <p class="banner-click-hint">Click anywhere on this banner to get started →</p>
-                    </div>
-                    <div class="banner-actions">
-                        <button class="btn-dismiss" onclick="event.stopPropagation(); dismissBanner();">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
+            <!-- Profile Completion Notice -->
+            <div id="profileCompletionBanner" style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px;">
+                <div style="width: 40px; height: 40px; background: rgba(239, 68, 68, 0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fas fa-user-clock" style="color: #ef4444; font-size: 18px;"></i>
                 </div>
+                <div style="flex: 1;">
+                    <p style="color: #fca5a5; font-size: 14px; margin: 0; line-height: 1.5;">
+                        <strong style="color: #f87171;">Complete your registration</strong> to start borrowing or investing on ZimCrowd. 
+                        Verify your identity to unlock personalized loan offers and investment opportunities.
+                    </p>
+                </div>
+                <a href="post-registration.html" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(239, 68, 68, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                    <i class="fas fa-arrow-right" style="margin-right: 6px;"></i>Complete Now
+                </a>
             </div>
 
             <div class="stats-grid">
@@ -9676,7 +9672,7 @@ How it works:
         function showProfileCompletionBanner() {
             const banner = document.getElementById('profileCompletionBanner');
             if (banner) {
-                banner.style.display = 'block';
+                banner.style.display = 'flex';
             }
         }
 
