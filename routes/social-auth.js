@@ -2,21 +2,21 @@
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 
-// Validate environment variables
-if (!process.env.SUPABASE_URL) {
-    console.error('❌ SUPABASE_URL is not set in environment variables');
-}
-if (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.SUPABASE_ANON_KEY) {
-    console.error('❌ SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY is not set');
-}
+// Create Supabase client only if credentials are available
+let supabase = null;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
-// Create Supabase client directly
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
-);
-
-console.log('✅ Social auth initialized with Supabase URL:', process.env.SUPABASE_URL?.substring(0, 30) + '...');
+if (SUPABASE_URL && SUPABASE_KEY) {
+    try {
+        supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+        console.log('✅ Social auth initialized with Supabase URL:', SUPABASE_URL.substring(0, 30) + '...');
+    } catch (error) {
+        console.warn('⚠️ Failed to initialize Supabase for social auth:', error.message);
+    }
+} else {
+    console.warn('⚠️ Social auth disabled - Supabase credentials not configured');
+}
 
 const socialRouter = express.Router();
 
@@ -26,12 +26,12 @@ socialRouter.get('/google', async (req, res) => {
         const { mode = 'login' } = req.query; // 'login' or 'signup'
         
         // Check if Supabase is configured
-        if (!process.env.SUPABASE_URL || (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.SUPABASE_ANON_KEY)) {
-            console.error('❌ Supabase not configured for social auth');
-            return res.status(500).json({
+        if (!supabase) {
+            console.error('❌ Supabase not configured for Google auth');
+            return res.status(503).json({
                 success: false,
-                message: 'Social authentication is not configured. Please contact support.',
-                error: 'Missing Supabase credentials'
+                message: 'Social authentication is temporarily unavailable. Please try email login.',
+                error: 'Service not configured'
             });
         }
         
@@ -93,9 +93,9 @@ socialRouter.get('/facebook', async (req, res) => {
         const { mode = 'login' } = req.query; // 'login' or 'signup'
         
         // Check if Supabase is configured
-        if (!process.env.SUPABASE_URL || (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.SUPABASE_ANON_KEY)) {
-            console.error('❌ Supabase not configured for social auth');
-            return res.status(500).json({
+        if (!supabase) {
+            console.error('❌ Supabase not configured for Facebook auth');
+            return res.status(503).json({
                 success: false,
                 message: 'Social authentication is not configured. Please contact support.',
                 error: 'Missing Supabase credentials'

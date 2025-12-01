@@ -7,10 +7,20 @@ const VisionOCRService = require('../services/vision-ocr.service');
 const AzureFaceService = require('../services/azure-face.service');
 const { getZimScoreService } = require('../services/zimscore.service');
 
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
-);
+// Create Supabase client only if credentials are available
+let supabase = null;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+
+if (SUPABASE_URL && SUPABASE_KEY) {
+    try {
+        supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    } catch (error) {
+        console.warn('⚠️ Failed to initialize Supabase for profile-setup:', error.message);
+    }
+} else {
+    console.warn('⚠️ Profile setup routes disabled - Supabase credentials not configured');
+}
 
 // Configure multer for file uploads
 const upload = multer({ 
