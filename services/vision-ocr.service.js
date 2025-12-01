@@ -233,92 +233,99 @@ class VisionOCRService {
 
     /**
      * Detect faces in document
-     * Priority: Google Cloud Vision > Azure Face API
+     * Priority: Basic Validation (Manual Review) > Google Cloud Vision > Azure Face API
+     * 
+     * Strategy: Accept all valid images for manual review by admin
+     * Face detection APIs are optional enhancement for auto-approval
      */
     async detectFace(imageBuffer) {
         // ============================================
-        // PRIMARY: Google Cloud Vision (Face Detection)
+        // PRIMARY: Basic Image Validation + Manual Review
+        // Accept valid images and queue for admin review
+        // ============================================
+        console.log('🔍 Using Basic Validation (Primary) for selfie verification');
+        
+        // Basic validation: check if image buffer is valid and has reasonable size
+        const isValidImage = imageBuffer && imageBuffer.length > 5000; // At least 5KB (reduced threshold)
+        const isReasonableSize = imageBuffer && imageBuffer.length < 15 * 1024 * 1024; // Less than 15MB
+        
+        if (!isValidImage || !isReasonableSize) {
+            console.log('❌ Image failed basic validation');
+            return {
+                success: true,
+                faceDetected: false,
+                faceCount: 0,
+                confidence: 0,
+                provider: 'Basic Validation',
+                message: isValidImage ? 'Image too large (max 15MB)' : 'Image too small or corrupt'
+            };
+        }
+        
+        console.log('✅ Image passed basic validation (size:', Math.round(imageBuffer.length / 1024), 'KB)');
+        
+        // ============================================
+        // OPTIONAL: Try Google Cloud Vision for auto-approval
+        // If face detected with high confidence, can auto-approve
         // ============================================
         if (this.useGoogleVision && this.visionClient) {
-            console.log('🔍 Using Google Cloud Vision (Primary) for face detection');
+            console.log('🔄 Attempting Google Cloud Vision face detection (optional)...');
             try {
                 const [result] = await this.visionClient.faceDetection(imageBuffer);
                 const faces = result.faceAnnotations;
 
-                if (!faces || faces.length === 0) {
+                if (faces && faces.length > 0) {
+                    const confidence = Math.round(faces[0].detectionConfidence * 100);
+                    console.log('✅ Google Vision detected face with', confidence, '% confidence');
                     return {
                         success: true,
-                        faceDetected: false,
-                        faceCount: 0,
-                        confidence: 0,
-                        provider: 'Google Cloud Vision'
+                        faceDetected: true,
+                        faceCount: faces.length,
+                        confidence: confidence,
+                        faces: faces.map(face => ({
+                            confidence: Math.round(face.detectionConfidence * 100),
+                            bounds: face.boundingPoly,
+                            landmarks: face.landmarks
+                        })),
+                        provider: 'Google Cloud Vision',
+                        requiresManualReview: confidence < 80 // Only manual review if low confidence
                     };
                 }
-
-                return {
-                    success: true,
-                    faceDetected: true,
-                    faceCount: faces.length,
-                    confidence: Math.round(faces[0].detectionConfidence * 100),
-                    faces: faces.map(face => ({
-                        confidence: Math.round(face.detectionConfidence * 100),
-                        bounds: face.boundingPoly,
-                        landmarks: face.landmarks
-                    })),
-                    provider: 'Google Cloud Vision'
-                };
             } catch (error) {
-                console.error('❌ Google Vision face detection error:', error.message);
-                // Fall through to Azure
+                console.warn('⚠️ Google Vision face detection failed:', error.message);
             }
         }
 
         // ============================================
-        // SECONDARY: Azure Face API (Fallback)
+        // OPTIONAL: Try Azure Face API for auto-approval
         // ============================================
         if (this.useAzureFace && this.azureFaceService) {
-            console.log('🔄 Using Azure Face API (Fallback) for face detection');
+            console.log('🔄 Attempting Azure Face API detection (optional)...');
             try {
                 const result = await this.azureFaceService.detectFace(imageBuffer);
-                if (result.success) {
+                if (result.success && result.faceDetected) {
+                    console.log('✅ Azure Face API detected face');
                     result.provider = 'Azure Face API';
+                    result.requiresManualReview = result.confidence < 80;
                     return result;
                 }
             } catch (error) {
-                console.error('❌ Azure Face API error:', error.message);
+                console.warn('⚠️ Azure Face API failed:', error.message);
             }
         }
 
         // ============================================
-        // FALLBACK: Basic Image Validation (No Face Detection)
-        // Accept selfie for manual review if face detection unavailable
+        // DEFAULT: Accept for Manual Review
+        // Image is valid but face detection unavailable/failed
         // ============================================
-        console.log('⚠️  No face detection service available - using basic validation');
-        
-        // Basic validation: check if image buffer is valid and has reasonable size
-        const isValidImage = imageBuffer && imageBuffer.length > 10000; // At least 10KB
-        const isReasonableSize = imageBuffer && imageBuffer.length < 10 * 1024 * 1024; // Less than 10MB
-        
-        if (isValidImage && isReasonableSize) {
-            console.log('✅ Selfie passed basic validation - queued for manual review');
-            return {
-                success: true,
-                faceDetected: true, // Pass validation, but mark for manual review
-                faceCount: 1,
-                confidence: 50, // Low confidence indicates manual review needed
-                provider: 'Basic Validation',
-                requiresManualReview: true,
-                message: 'Selfie accepted for manual verification'
-            };
-        }
-        
+        console.log('✅ Selfie accepted for manual review (no auto face detection)');
         return {
             success: true,
-            faceDetected: false,
-            faceCount: 0,
-            confidence: 0,
-            provider: 'Basic Validation',
-            message: 'Invalid image - please upload a clear selfie photo'
+            faceDetected: true, // Pass validation
+            faceCount: 1,
+            confidence: 60, // Medium confidence - needs manual review
+            provider: 'Manual Review',
+            requiresManualReview: true,
+            message: 'Selfie accepted - pending admin verification'
         };
     }
 
