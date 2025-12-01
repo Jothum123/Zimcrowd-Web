@@ -7700,6 +7700,11 @@ How it works:
                     console.log('Updated header user name:', displayName);
                 }
                 
+                // Update welcome greeting with the user's name
+                if (typeof updateWelcomeGreeting === 'function') {
+                    updateWelcomeGreeting();
+                }
+                
                 // Get initials for avatar
                 const getInitials = () => {
                     if (userInfo.firstName && userInfo.lastName) {
@@ -9970,9 +9975,15 @@ How it works:
                 emoji = '🌙';
             }
             
-            // Get user's first name
+            // Get user's first name from multiple sources
             const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-            const fullName = userData.full_name || userData.name || localStorage.getItem('userName') || 'User';
+            let headerName = document.getElementById('header-user-name')?.textContent;
+            let sidebarName = document.getElementById('sidebar-user-name')?.textContent;
+            
+            // Filter out placeholder text
+            if (headerName === 'Loading...' || headerName === 'User') headerName = null;
+            if (sidebarName === 'Loading...' || sidebarName === 'User') sidebarName = null;
+            const fullName = userData.full_name || userData.name || headerName || sidebarName || localStorage.getItem('userName') || 'User';
             const firstName = fullName.split(' ')[0];
             
             // Check if new user (registered within last 24 hours)
@@ -12170,6 +12181,11 @@ How it works:
                     const initials = `${(user.first_name || '')[0] || ''}${(user.last_name || '')[0] || ''}`.toUpperCase();
                     headerAvatar.textContent = initials;
                 }
+            }
+            
+            // Update welcome greeting with the user's name
+            if (typeof updateWelcomeGreeting === 'function') {
+                updateWelcomeGreeting();
             }
             
             // Update ZimScore display if available
