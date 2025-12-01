@@ -279,6 +279,10 @@
             display: flex;
         }
 
+        .upload-area.hidden {
+            display: none;
+        }
+
         .file-icon {
             font-size: 24px;
             color: #38e77b;
@@ -525,40 +529,40 @@
 
                     <div class="form-group">
                         <label class="form-label">Upload National ID (Front) <span class="required">*</span></label>
-                        <div class="upload-area" onclick="document.getElementById('idFront').click()">
+                        <div class="upload-area" id="frontUploadArea" onclick="document.getElementById('idFront').click()">
                             <i class="fas fa-cloud-upload-alt upload-icon"></i>
                             <div class="upload-text">Click to upload or drag and drop</div>
                             <div class="upload-hint">PNG, JPG or PDF (max. 5MB)</div>
                         </div>
                         <input type="file" id="idFront" class="file-input" accept="image/*,.pdf">
                         <div class="uploaded-file" id="frontFilePreview">
-                            <i class="fas fa-file-image file-icon"></i>
+                            <i class="fas fa-check-circle file-icon" style="color: #38e77b;"></i>
                             <div class="file-info">
                                 <div class="file-name" id="frontFileName"></div>
                                 <div class="file-size" id="frontFileSize"></div>
                             </div>
-                            <button type="button" class="remove-file" onclick="removeFile('front')">
-                                <i class="fas fa-times"></i>
+                            <button type="button" class="remove-file" onclick="removeFile('front')" title="Remove file">
+                                <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Upload National ID (Back) <span class="required">*</span></label>
-                        <div class="upload-area" onclick="document.getElementById('idBack').click()">
+                        <div class="upload-area" id="backUploadArea" onclick="document.getElementById('idBack').click()">
                             <i class="fas fa-cloud-upload-alt upload-icon"></i>
                             <div class="upload-text">Click to upload or drag and drop</div>
                             <div class="upload-hint">PNG, JPG or PDF (max. 5MB)</div>
                         </div>
                         <input type="file" id="idBack" class="file-input" accept="image/*,.pdf">
                         <div class="uploaded-file" id="backFilePreview">
-                            <i class="fas fa-file-image file-icon"></i>
+                            <i class="fas fa-check-circle file-icon" style="color: #38e77b;"></i>
                             <div class="file-info">
                                 <div class="file-name" id="backFileName"></div>
                                 <div class="file-size" id="backFileSize"></div>
                             </div>
-                            <button type="button" class="remove-file" onclick="removeFile('back')">
-                                <i class="fas fa-times"></i>
+                            <button type="button" class="remove-file" onclick="removeFile('back')" title="Remove file">
+                                <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
                     </div>
@@ -584,20 +588,20 @@
                             </div>
                         </div>
 
-                        <div class="upload-area" onclick="document.getElementById('selfiePhoto').click()" style="border-color: rgba(59, 130, 246, 0.5);">
+                        <div class="upload-area" id="selfieUploadArea" onclick="document.getElementById('selfiePhoto').click()" style="border-color: rgba(59, 130, 246, 0.5);">
                             <i class="fas fa-user-circle upload-icon" style="color: #3b82f6;"></i>
                             <div class="upload-text">Click to upload selfie with ID</div>
                             <div class="upload-hint">PNG or JPG (max. 5MB) - Face must be clearly visible</div>
                         </div>
                         <input type="file" id="selfiePhoto" class="file-input" accept="image/*" capture="user">
                         <div class="uploaded-file" id="selfieFilePreview">
-                            <i class="fas fa-user-circle file-icon" style="color: #3b82f6;"></i>
+                            <i class="fas fa-check-circle file-icon" style="color: #3b82f6;"></i>
                             <div class="file-info">
                                 <div class="file-name" id="selfieFileName"></div>
                                 <div class="file-size" id="selfieFileSize"></div>
                             </div>
-                            <button type="button" class="remove-file" onclick="removeFile('selfie')">
-                                <i class="fas fa-times"></i>
+                            <button type="button" class="remove-file" onclick="removeFile('selfie')" title="Remove file">
+                                <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
                         
@@ -742,20 +746,20 @@
 
                     <div class="form-group">
                         <label class="form-label">Upload Bank Statement (Last 3 months)</label>
-                        <div class="upload-area" onclick="document.getElementById('bankStatement').click()">
+                        <div class="upload-area" id="bankStatementUploadArea" onclick="document.getElementById('bankStatement').click()">
                             <i class="fas fa-file-invoice-dollar upload-icon"></i>
                             <div class="upload-text">Click to upload or drag and drop</div>
                             <div class="upload-hint">PDF format (max. 10MB) - Helps us verify your income</div>
                         </div>
                         <input type="file" id="bankStatement" class="file-input" accept=".pdf">
-                        <div class="uploaded-file" id="bankStatementPreview">
-                            <i class="fas fa-file-pdf file-icon"></i>
+                        <div class="uploaded-file" id="bankStatementFilePreview">
+                            <i class="fas fa-check-circle file-icon" style="color: #38e77b;"></i>
                             <div class="file-info">
-                                <div class="file-name" id="bankStatementName"></div>
-                                <div class="file-size" id="bankStatementSize"></div>
+                                <div class="file-name" id="bankStatementFileName"></div>
+                                <div class="file-size" id="bankStatementFileSize"></div>
                             </div>
-                            <button type="button" class="remove-file" onclick="removeFile('bankStatement')">
-                                <i class="fas fa-times"></i>
+                            <button type="button" class="remove-file" onclick="removeFile('bankStatement')" title="Remove file">
+                                <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
                     </div>
@@ -915,7 +919,7 @@
         });
 
         document.getElementById('bankStatement').addEventListener('change', function(e) {
-            handleFileUpload(e, 'bankStatement');
+            handleFileUpload(e, 'bankStatementFile');
         });
 
         document.getElementById('selfiePhoto').addEventListener('change', function(e) {
@@ -925,38 +929,77 @@
         function handleFileUpload(event, side) {
             const file = event.target.files[0];
             if (file) {
+                // Validate file size (5MB max)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File size must be less than 5MB');
+                    event.target.value = '';
+                    return;
+                }
+                
                 const fileName = file.name;
                 const fileSize = (file.size / 1024 / 1024).toFixed(2) + ' MB';
                 
+                // Update file info display
                 document.getElementById(`${side}FileName`).textContent = fileName;
                 document.getElementById(`${side}FileSize`).textContent = fileSize;
+                
+                // Hide upload area, show file preview (UX pattern)
+                document.getElementById(`${side}UploadArea`).classList.add('hidden');
                 document.getElementById(`${side}FilePreview`).classList.add('show');
             }
         }
 
         function removeFile(side) {
+            // Clear the file input and determine correct element IDs
+            let uploadAreaId, filePreviewId;
+            
             if (side === 'front') {
                 document.getElementById('idFront').value = '';
+                uploadAreaId = 'frontUploadArea';
+                filePreviewId = 'frontFilePreview';
             } else if (side === 'back') {
                 document.getElementById('idBack').value = '';
+                uploadAreaId = 'backUploadArea';
+                filePreviewId = 'backFilePreview';
             } else if (side === 'bankStatement') {
                 document.getElementById('bankStatement').value = '';
+                uploadAreaId = 'bankStatementUploadArea';
+                filePreviewId = 'bankStatementFilePreview';
             } else if (side === 'selfie') {
                 document.getElementById('selfiePhoto').value = '';
                 document.getElementById('selfiePreviewContainer').style.display = 'none';
+                uploadAreaId = 'selfieUploadArea';
+                filePreviewId = 'selfieFilePreview';
             }
-            document.getElementById(`${side}FilePreview`).classList.remove('show');
+            
+            // Hide file preview, show upload area again (UX pattern)
+            if (filePreviewId) {
+                document.getElementById(filePreviewId).classList.remove('show');
+            }
+            if (uploadAreaId) {
+                document.getElementById(uploadAreaId).classList.remove('hidden');
+            }
         }
         
         // Selfie upload handler with preview
         function handleSelfieUpload(event) {
             const file = event.target.files[0];
             if (file) {
+                // Validate file size (5MB max)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File size must be less than 5MB');
+                    event.target.value = '';
+                    return;
+                }
+                
                 const fileName = file.name;
                 const fileSize = (file.size / 1024 / 1024).toFixed(2) + ' MB';
                 
                 document.getElementById('selfieFileName').textContent = fileName;
                 document.getElementById('selfieFileSize').textContent = fileSize;
+                
+                // Hide upload area, show file preview (UX pattern)
+                document.getElementById('selfieUploadArea').classList.add('hidden');
                 document.getElementById('selfieFilePreview').classList.add('show');
                 
                 // Show image preview
