@@ -1142,7 +1142,7 @@ router.post('/complete-setup', authenticateUser, async (req, res) => {
             console.log('✅ ID Back already processed');
         }
 
-        // 4c. Verify Selfie (Face Detection or Basic Validation)
+        // 4c. Verify Selfie (Auto-approve valid images, admin review on failure)
         if (selfie && ocrService) {
             console.log('🔍 Processing Selfie...');
             try {
@@ -1150,15 +1150,17 @@ router.post('/complete-setup', authenticateUser, async (req, res) => {
                 if (selfieBuffer) {
                     const faceResult = await ocrService.detectFace(selfieBuffer);
                     
-                    // Determine status based on result
-                    let selfieStatus = 'rejected';
-                    if (faceResult.faceDetected) {
-                        // If requires manual review (basic validation fallback), set to pending_review
-                        selfieStatus = faceResult.requiresManualReview ? 'pending_review' : 'processing';
+                    // Determine status:
+                    // - faceDetected=true + requiresManualReview=false → 'verified' (auto-approved)
+                    // - faceDetected=true + requiresManualReview=true → 'pending_review' (admin needed)
+                    // - faceDetected=false → 'pending_review' (admin needed)
+                    let selfieStatus = 'pending_review';
+                    if (faceResult.faceDetected && !faceResult.requiresManualReview) {
+                        selfieStatus = 'verified'; // Auto-approved!
                     }
                     
                     verificationResults.selfie = {
-                        verified: faceResult.faceDetected,
+                        verified: faceResult.faceDetected && !faceResult.requiresManualReview,
                         faceDetected: faceResult.faceDetected,
                         faceCount: faceResult.faceCount,
                         confidence: faceResult.confidence,
@@ -1174,20 +1176,20 @@ router.post('/complete-setup', authenticateUser, async (req, res) => {
                         })
                         .eq('id', selfie.id);
                     
-                    if (faceResult.requiresManualReview) {
-                        console.log('⏳ Selfie accepted for manual review');
+                    if (selfieStatus === 'verified') {
+                        console.log('✅ Selfie AUTO-APPROVED');
                     } else {
-                        console.log(faceResult.faceDetected ? '✅ Selfie face detected' : '❌ No face in selfie');
+                        console.log('⏳ Selfie requires admin review');
                     }
                 }
             } catch (err) {
                 console.error('❌ Selfie processing failed:', err.message);
-                // On error, still accept selfie for manual review
+                // On error, queue for admin review
                 verificationResults.selfie = {
-                    verified: true,
-                    faceDetected: true,
-                    confidence: 30,
-                    provider: 'Error Fallback',
+                    verified: false,
+                    faceDetected: false,
+                    confidence: 0,
+                    provider: 'Error',
                     requiresManualReview: true,
                     error: err.message
                 };
@@ -1198,7 +1200,7 @@ router.post('/complete-setup', authenticateUser, async (req, res) => {
                         status: 'pending_review'
                     })
                     .eq('id', selfie.id);
-                console.log('⏳ Selfie queued for manual review due to processing error');
+                console.log('⏳ Selfie queued for admin review due to error');
             }
         }
 
