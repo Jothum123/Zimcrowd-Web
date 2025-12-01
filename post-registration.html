@@ -919,7 +919,7 @@
         });
 
         document.getElementById('bankStatement').addEventListener('change', function(e) {
-            handleFileUpload(e, 'bankStatementFile');
+            handleBankStatementUpload(e);
         });
 
         document.getElementById('selfiePhoto').addEventListener('change', function(e) {
@@ -978,6 +978,30 @@
             }
             if (uploadAreaId) {
                 document.getElementById(uploadAreaId).classList.remove('hidden');
+            }
+        }
+        
+        // Bank statement upload handler
+        function handleBankStatementUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Validate file size (10MB max for bank statements)
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('File size must be less than 10MB');
+                    event.target.value = '';
+                    return;
+                }
+                
+                const fileName = file.name;
+                const fileSize = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                
+                // Update file info display
+                document.getElementById('bankStatementFileName').textContent = fileName;
+                document.getElementById('bankStatementFileSize').textContent = fileSize;
+                
+                // Hide upload area, show file preview (UX pattern)
+                document.getElementById('bankStatementUploadArea').classList.add('hidden');
+                document.getElementById('bankStatementFilePreview').classList.add('show');
             }
         }
         
