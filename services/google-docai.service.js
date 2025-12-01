@@ -1,4 +1,10 @@
-const { DocumentProcessorServiceClient } = require('@google-cloud/documentai').v1;
+// Optional import - gracefully handle if module not installed
+let DocumentProcessorServiceClient = null;
+try {
+    DocumentProcessorServiceClient = require('@google-cloud/documentai').v1.DocumentProcessorServiceClient;
+} catch (err) {
+    console.warn('⚠️  @google-cloud/documentai not installed - Document AI features disabled');
+}
 
 /**
  * Google Document AI Service
@@ -8,6 +14,7 @@ const { DocumentProcessorServiceClient } = require('@google-cloud/documentai').v
 class GoogleDocAIService {
     constructor() {
         this.client = null;
+        this.available = false;
         this.projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
         this.location = process.env.GOOGLE_CLOUD_LOCATION || 'us';
         
@@ -24,10 +31,22 @@ class GoogleDocAIService {
     }
 
     /**
+     * Check if service is available
+     */
+    isAvailable() {
+        return this.available && this.client !== null;
+    }
+
+    /**
      * Initialize Google Document AI client
      */
     initializeClient() {
         try {
+            if (!DocumentProcessorServiceClient) {
+                console.warn('⚠️  Google Document AI SDK not available');
+                return;
+            }
+
             const credentials = process.env.GOOGLE_CLOUD_CREDENTIALS;
             
             if (!credentials) {
@@ -47,6 +66,7 @@ class GoogleDocAIService {
                 credentials: parsedCredentials
             });
 
+            this.available = true;
             console.log('✅ Google Document AI initialized');
             console.log(`   Project: ${this.projectId}`);
             console.log(`   Location: ${this.location}`);
@@ -56,13 +76,6 @@ class GoogleDocAIService {
             console.error('❌ Google Document AI initialization failed:', error.message);
             this.client = null;
         }
-    }
-
-    /**
-     * Check if service is available
-     */
-    isAvailable() {
-        return this.client !== null && this.projectId !== null;
     }
 
     /**
