@@ -604,20 +604,45 @@ router.post('/upload-document-with-ocr', authenticateUser, upload.single('docume
         }
 
         // Upload file to Supabase Storage
+        const bucketName = 'kyc-documents';
         const fileName = `${req.user.id}/${document_type}_${Date.now()}_${req.file.originalname}`;
+        
+        // Try to create bucket if it doesn't exist
+        let publicUrl = null;
+        try {
+            // First, try to create the bucket (will fail silently if exists)
+            await supabase.storage.createBucket(bucketName, {
+                public: true,
+                fileSizeLimit: 10485760 // 10MB
+            });
+        } catch (bucketError) {
+            // Bucket might already exist, that's fine
+            console.log('Bucket check:', bucketError?.message || 'exists');
+        }
+        
+        // Try to upload to storage
         const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('kyc-documents')
+            .from(bucketName)
             .upload(fileName, req.file.buffer, {
                 contentType: req.file.mimetype,
-                upsert: false
+                upsert: true
             });
 
-        if (uploadError) throw uploadError;
-
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-            .from('kyc-documents')
-            .getPublicUrl(fileName);
+        if (uploadError) {
+            console.warn('⚠️ Storage upload failed:', uploadError.message);
+            // Fallback: Store as base64 data URL if storage fails
+            const base64Data = req.file.buffer.toString('base64');
+            publicUrl = `data:${req.file.mimetype};base64,${base64Data.substring(0, 100)}...`; // Truncated for logging
+            console.log('📦 Using base64 fallback for document storage');
+            // Store full base64 in database instead
+            publicUrl = `data:${req.file.mimetype};base64,${base64Data}`;
+        } else {
+            // Get public URL from successful upload
+            const { data: urlData } = supabase.storage
+                .from(bucketName)
+                .getPublicUrl(fileName);
+            publicUrl = urlData?.publicUrl || null;
+        }
 
         // Extract document number from OCR if available
         let documentNumber = null;
@@ -1332,13 +1357,29 @@ router.post('/complete-setup', authenticateUser, async (req, res) => {
 });
 
 /**
- * Helper function to fetch document buffer from URL
+ * Helper function to fetch document buffer from URL or base64 data
  */
 async function fetchDocumentBuffer(url) {
     try {
+        if (!url) return null;
+        
+        // Handle base64 data URLs
+        if (url.startsWith('data:')) {
+            const matches = url.match(/^data:([^;]+);base64,(.+)$/);
+            if (matches && matches[2]) {
+                console.log('📦 Decoding base64 document data');
+                return Buffer.from(matches[2], 'base64');
+            }
+            return null;
+        }
+        
+        // Handle regular URLs
         const fetch = (await import('node-fetch')).default;
         const response = await fetch(url);
-        if (!response.ok) return null;
+        if (!response.ok) {
+            console.warn('⚠️ Failed to fetch document from URL:', response.status);
+            return null;
+        }
         const arrayBuffer = await response.arrayBuffer();
         return Buffer.from(arrayBuffer);
     } catch (error) {
