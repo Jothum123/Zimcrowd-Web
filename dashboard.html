@@ -3250,6 +3250,28 @@
             }
         }
 
+        @keyframes slideIn {
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+        }
+
         @media (max-width: 768px) {
             .toast-notification {
                 top: 10px;
@@ -3457,6 +3479,9 @@
 
         <!-- Overview Section -->
         <section id="overview-section" class="dashboard-section active">
+            <!-- Dynamic Notice Container -->
+            <div id="dashboardNotices"></div>
+
             <!-- Account Blocked/Suspended Notice -->
             <div id="accountBlockedBanner" style="display: none; background: rgba(220, 38, 38, 0.15); border: 1px solid rgba(220, 38, 38, 0.4); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; align-items: flex-start; gap: 14px;">
                 <div style="width: 40px; height: 40px; background: rgba(220, 38, 38, 0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -9768,6 +9793,141 @@ How it works:
             } catch (error) {
                 console.log('Account status check:', error.message);
             }
+        }
+
+        // ============================================
+        // DYNAMIC NOTICE SYSTEM
+        // ============================================
+        
+        /**
+         * Show a dynamic notice banner
+         * @param {string} type - 'success', 'error', 'warning', 'info'
+         * @param {string} title - Bold title text
+         * @param {string} message - Description message
+         * @param {object} options - { icon, buttonText, buttonLink, dismissible, duration }
+         */
+        function showNotice(type, title, message, options = {}) {
+            const container = document.getElementById('dashboardNotices');
+            if (!container) return;
+            
+            const noticeId = 'notice-' + Date.now();
+            
+            // Color schemes for different types
+            const schemes = {
+                success: {
+                    bg: 'rgba(16, 185, 129, 0.1)',
+                    border: 'rgba(16, 185, 129, 0.3)',
+                    iconBg: 'rgba(16, 185, 129, 0.15)',
+                    iconColor: '#10b981',
+                    titleColor: '#34d399',
+                    textColor: '#6ee7b7',
+                    icon: options.icon || 'fa-check-circle',
+                    btnGradient: 'linear-gradient(135deg, #10b981, #059669)'
+                },
+                error: {
+                    bg: 'rgba(239, 68, 68, 0.1)',
+                    border: 'rgba(239, 68, 68, 0.3)',
+                    iconBg: 'rgba(239, 68, 68, 0.15)',
+                    iconColor: '#ef4444',
+                    titleColor: '#f87171',
+                    textColor: '#fca5a5',
+                    icon: options.icon || 'fa-exclamation-circle',
+                    btnGradient: 'linear-gradient(135deg, #ef4444, #dc2626)'
+                },
+                warning: {
+                    bg: 'rgba(245, 158, 11, 0.1)',
+                    border: 'rgba(245, 158, 11, 0.3)',
+                    iconBg: 'rgba(245, 158, 11, 0.15)',
+                    iconColor: '#f59e0b',
+                    titleColor: '#fbbf24',
+                    textColor: '#fcd34d',
+                    icon: options.icon || 'fa-exclamation-triangle',
+                    btnGradient: 'linear-gradient(135deg, #f59e0b, #d97706)'
+                },
+                info: {
+                    bg: 'rgba(59, 130, 246, 0.1)',
+                    border: 'rgba(59, 130, 246, 0.3)',
+                    iconBg: 'rgba(59, 130, 246, 0.15)',
+                    iconColor: '#3b82f6',
+                    titleColor: '#60a5fa',
+                    textColor: '#93c5fd',
+                    icon: options.icon || 'fa-info-circle',
+                    btnGradient: 'linear-gradient(135deg, #3b82f6, #2563eb)'
+                }
+            };
+            
+            const scheme = schemes[type] || schemes.info;
+            
+            // Build button HTML if provided
+            let buttonHtml = '';
+            if (options.buttonText && options.buttonLink) {
+                buttonHtml = `
+                    <a href="${options.buttonLink}" style="background: ${scheme.btnGradient}; color: white; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.2)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                        ${options.buttonText}
+                    </a>
+                `;
+            }
+            
+            // Build dismiss button if dismissible
+            let dismissHtml = '';
+            if (options.dismissible !== false) {
+                dismissHtml = `
+                    <button onclick="dismissNotice('${noticeId}')" style="background: none; border: none; color: #64748b; cursor: pointer; padding: 8px; margin-left: 8px; font-size: 16px; transition: color 0.2s;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#64748b'">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+            }
+            
+            const noticeHtml = `
+                <div id="${noticeId}" style="display: flex; background: ${scheme.bg}; border: 1px solid ${scheme.border}; border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; align-items: center; gap: 14px; animation: slideIn 0.3s ease;">
+                    <div style="width: 40px; height: 40px; background: ${scheme.iconBg}; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="fas ${scheme.icon}" style="color: ${scheme.iconColor}; font-size: 18px;"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <p style="color: ${scheme.textColor}; font-size: 14px; margin: 0; line-height: 1.5;">
+                            <strong style="color: ${scheme.titleColor};">${title}</strong> ${message}
+                        </p>
+                    </div>
+                    ${buttonHtml}
+                    ${dismissHtml}
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', noticeHtml);
+            
+            // Auto-dismiss after duration (default 10 seconds, 0 = never)
+            const duration = options.duration !== undefined ? options.duration : 10000;
+            if (duration > 0) {
+                setTimeout(() => dismissNotice(noticeId), duration);
+            }
+            
+            return noticeId;
+        }
+        
+        // Dismiss a notice by ID
+        function dismissNotice(noticeId) {
+            const notice = document.getElementById(noticeId);
+            if (notice) {
+                notice.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notice.remove(), 300);
+            }
+        }
+        
+        // Convenience functions
+        function showSuccessNotice(title, message, options = {}) {
+            return showNotice('success', title, message, options);
+        }
+        
+        function showErrorNotice(title, message, options = {}) {
+            return showNotice('error', title, message, { ...options, duration: options.duration || 0 });
+        }
+        
+        function showWarningNotice(title, message, options = {}) {
+            return showNotice('warning', title, message, options);
+        }
+        
+        function showInfoNotice(title, message, options = {}) {
+            return showNotice('info', title, message, options);
         }
 
         // ============================================
