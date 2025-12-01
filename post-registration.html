@@ -1647,6 +1647,38 @@
                     return;
                 }
                 
+                console.log('🔐 Auth token found:', authToken.substring(0, 20) + '...');
+                
+                // Proactively refresh token before starting uploads
+                const refreshToken = localStorage.getItem('refreshToken') || localStorage.getItem('refresh_token');
+                if (refreshToken) {
+                    try {
+                        console.log('🔄 Proactively refreshing token...');
+                        const refreshResponse = await fetch(`${API_BASE}/api/auth/refresh`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ refresh_token: refreshToken })
+                        });
+                        
+                        if (refreshResponse.ok) {
+                            const refreshData = await refreshResponse.json();
+                            if (refreshData.access_token) {
+                                authToken = refreshData.access_token;
+                                localStorage.setItem('authToken', authToken);
+                                localStorage.setItem('token', authToken);
+                                localStorage.setItem('access_token', authToken);
+                                if (refreshData.refresh_token) {
+                                    localStorage.setItem('refreshToken', refreshData.refresh_token);
+                                    localStorage.setItem('refresh_token', refreshData.refresh_token);
+                                }
+                                console.log('✅ Token refreshed successfully');
+                            }
+                        }
+                    } catch (refreshError) {
+                        console.warn('⚠️ Proactive token refresh failed, continuing with existing token:', refreshError.message);
+                    }
+                }
+                
                 // Helper function to make authenticated requests with token refresh
                 const makeAuthRequest = async (url, options) => {
                     let response = await fetch(url, options);
@@ -1707,7 +1739,8 @@
                     formData.append('document_type', documentType);
                     
                     try {
-                        const uploadResponse = await fetch(`${API_BASE}/api/profile-setup/upload-document-with-ocr`, {
+                        // Use makeAuthRequest for automatic token refresh on 401
+                        const uploadResponse = await makeAuthRequest(`${API_BASE}/api/profile-setup/upload-document-with-ocr`, {
                             method: 'POST',
                             headers: {
                                 'Authorization': `Bearer ${authToken}`
@@ -1715,8 +1748,18 @@
                             body: formData
                         });
                         
+                        if (!uploadResponse) {
+                            return { success: false, message: 'Session expired' };
+                        }
+                        
                         const result = await uploadResponse.json();
                         console.log(`📄 ${documentType} OCR result:`, result);
+                        
+                        // Handle 401 in response
+                        if (result.message === 'Invalid or expired token' || result.message === 'Access token required') {
+                            console.warn('⚠️ Token issue detected, will retry with refresh');
+                        }
+                        
                         return result;
                     } catch (err) {
                         console.error(`❌ ${documentType} upload failed:`, err);
