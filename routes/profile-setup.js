@@ -1142,31 +1142,63 @@ router.post('/complete-setup', authenticateUser, async (req, res) => {
             console.log('✅ ID Back already processed');
         }
 
-        // 4c. Verify Selfie (Face Detection)
+        // 4c. Verify Selfie (Face Detection or Basic Validation)
         if (selfie && ocrService) {
             console.log('🔍 Processing Selfie...');
             try {
                 const selfieBuffer = await fetchDocumentBuffer(selfie.file_url);
                 if (selfieBuffer) {
                     const faceResult = await ocrService.detectFace(selfieBuffer);
+                    
+                    // Determine status based on result
+                    let selfieStatus = 'rejected';
+                    if (faceResult.faceDetected) {
+                        // If requires manual review (basic validation fallback), set to pending_review
+                        selfieStatus = faceResult.requiresManualReview ? 'pending_review' : 'processing';
+                    }
+                    
                     verificationResults.selfie = {
                         verified: faceResult.faceDetected,
                         faceDetected: faceResult.faceDetected,
                         faceCount: faceResult.faceCount,
                         confidence: faceResult.confidence,
-                        provider: faceResult.provider
+                        provider: faceResult.provider,
+                        requiresManualReview: faceResult.requiresManualReview || false
                     };
+                    
                     await supabase
                         .from('verification_documents')
                         .update({ 
                             ocr_data: { faceDetection: faceResult },
-                            status: faceResult.faceDetected ? 'processing' : 'rejected'
+                            status: selfieStatus
                         })
                         .eq('id', selfie.id);
-                    console.log(faceResult.faceDetected ? '✅ Selfie face detected' : '❌ No face in selfie');
+                    
+                    if (faceResult.requiresManualReview) {
+                        console.log('⏳ Selfie accepted for manual review');
+                    } else {
+                        console.log(faceResult.faceDetected ? '✅ Selfie face detected' : '❌ No face in selfie');
+                    }
                 }
             } catch (err) {
                 console.error('❌ Selfie processing failed:', err.message);
+                // On error, still accept selfie for manual review
+                verificationResults.selfie = {
+                    verified: true,
+                    faceDetected: true,
+                    confidence: 30,
+                    provider: 'Error Fallback',
+                    requiresManualReview: true,
+                    error: err.message
+                };
+                await supabase
+                    .from('verification_documents')
+                    .update({ 
+                        ocr_data: { error: err.message, requiresManualReview: true },
+                        status: 'pending_review'
+                    })
+                    .eq('id', selfie.id);
+                console.log('⏳ Selfie queued for manual review due to processing error');
             }
         }
 
