@@ -1385,6 +1385,12 @@
                 const result = await response.json();
 
                 if (result.success) {
+                    // Mark all steps as done
+                    updateVerificationStep('id', 'done', 'ID Verified');
+                    updateVerificationStep('selfie', 'done', 'Face Detected');
+                    updateVerificationStep('bank', 'done', 'Bank Statement Processed');
+                    updateVerificationStep('score', 'done', 'ZimScore Calculated');
+                    
                     // Store completion flags
                     localStorage.setItem('profileCompleted', 'true');
                     localStorage.setItem('documentsUploaded', 'true');
@@ -1419,34 +1425,75 @@
                     hideProcessingModal();
                     showSuccessModal(result.data);
                 } else {
-                    hideProcessingModal();
-                    alert('⚠️ ' + (result.message || 'Setup failed. Please try again.'));
+                    // Determine error type from response
+                    let errorType = 'default';
+                    const errorMsg = result.message || '';
+                    const errorCode = result.error_code || result.errorCode || '';
                     
-                    // Show what's missing
-                    if (result.missingDocuments) {
-                        alert('Missing documents: ' + result.missingDocuments.join(', '));
+                    // Map error messages/codes to error types
+                    if (errorCode === 'id_mismatch' || errorMsg.toLowerCase().includes('name') && errorMsg.toLowerCase().includes('match')) {
+                        errorType = 'id_mismatch';
+                    } else if (errorCode === 'id_expired' || errorMsg.toLowerCase().includes('expired')) {
+                        errorType = 'id_expired';
+                    } else if (errorCode === 'id_unreadable' || errorMsg.toLowerCase().includes('unreadable') || errorMsg.toLowerCase().includes('unclear')) {
+                        errorType = 'id_unreadable';
+                    } else if (errorCode === 'id_invalid' || errorMsg.toLowerCase().includes('invalid id')) {
+                        errorType = 'id_invalid';
+                    } else if (errorCode === 'face_not_detected' || errorMsg.toLowerCase().includes('face') && errorMsg.toLowerCase().includes('detect')) {
+                        errorType = 'face_not_detected';
+                    } else if (errorCode === 'face_mismatch' || errorMsg.toLowerCase().includes('face') && errorMsg.toLowerCase().includes('match')) {
+                        errorType = 'face_mismatch';
+                    } else if (errorCode === 'selfie_quality' || errorMsg.toLowerCase().includes('selfie') && (errorMsg.toLowerCase().includes('quality') || errorMsg.toLowerCase().includes('blur'))) {
+                        errorType = 'selfie_quality';
+                    } else if (errorCode === 'bank_unreadable' || errorMsg.toLowerCase().includes('bank') && errorMsg.toLowerCase().includes('read')) {
+                        errorType = 'bank_unreadable';
+                    } else if (errorCode === 'bank_outdated' || errorMsg.toLowerCase().includes('bank') && errorMsg.toLowerCase().includes('old')) {
+                        errorType = 'bank_outdated';
+                    } else if (errorCode === 'documents_mismatch' || errorMsg.toLowerCase().includes('document') && errorMsg.toLowerCase().includes('match')) {
+                        errorType = 'documents_mismatch';
                     }
+                    
+                    // Show the appropriate error
+                    showVerificationError(errorType, result.message, result.details);
+                    
+                    // Log for debugging
+                    console.error('Verification failed:', result);
                 }
             } catch (error) {
-                hideProcessingModal();
                 console.error('Complete setup error:', error);
                 
-                // Fallback: still mark as complete locally and save profile data
-                localStorage.setItem('profileCompleted', 'true');
-                localStorage.setItem('documentsUploaded', 'true');
-                localStorage.setItem('employmentVerified', 'true');
-                localStorage.setItem('paymentSetup', 'true');
-                localStorage.setItem('userProfile', JSON.stringify(profileData));
-                localStorage.setItem('userFirstName', profileData.first_name || '');
-                localStorage.setItem('userLastName', profileData.last_name || '');
+                // Determine if it's a network error
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    showVerificationError('network_error', 'Network connection failed');
+                } else if (error.message.includes('500') || error.message.includes('server')) {
+                    showVerificationError('server_error', 'Server error occurred');
+                } else {
+                    // For other errors, still allow completion with local storage
+                    hideProcessingModal();
+                    
+                    // Fallback: still mark as complete locally and save profile data
+                    localStorage.setItem('profileCompleted', 'true');
+                    localStorage.setItem('documentsUploaded', 'true');
+                    localStorage.setItem('employmentVerified', 'true');
+                    localStorage.setItem('paymentSetup', 'true');
+                    localStorage.setItem('userProfile', JSON.stringify(profileData));
+                    localStorage.setItem('userFirstName', profileData.first_name || '');
+                    localStorage.setItem('userLastName', profileData.last_name || '');
 
-                alert('🎉 Registration complete! Your documents will be verified shortly.');
-                window.location.href = 'dashboard.html';
+                    alert('🎉 Registration complete! Your documents will be verified shortly.');
+                    window.location.href = 'dashboard.html';
+                }
             }
         }
 
         // Processing Modal Functions
+        let verificationTimeouts = [];
+        
         function showProcessingModal() {
+            // Clear any existing timeouts
+            verificationTimeouts.forEach(t => clearTimeout(t));
+            verificationTimeouts = [];
+            
             // Create modal if it doesn't exist
             let modal = document.getElementById('processingModal');
             if (!modal) {
@@ -1454,9 +1501,9 @@
                 modal.id = 'processingModal';
                 modal.innerHTML = `
                     <div class="processing-overlay">
-                        <div class="processing-content">
-                            <div class="processing-spinner"></div>
-                            <h3>🔍 Verifying Your Documents</h3>
+                        <div class="processing-content" id="processingContent">
+                            <div class="processing-spinner" id="processingSpinner"></div>
+                            <h3 id="processingTitle">🔍 Verifying Your Documents</h3>
                             <p id="processingStatus">Processing ID document...</p>
                             <div class="processing-steps">
                                 <div class="step" id="step-id">
@@ -1471,6 +1518,14 @@
                                 <div class="step" id="step-score">
                                     <i class="fas fa-clock"></i> Calculating ZimScore
                                 </div>
+                            </div>
+                            <div id="errorActions" style="display: none; margin-top: 20px;">
+                                <button onclick="retryVerification()" class="btn btn-primary" style="margin-right: 10px;">
+                                    <i class="fas fa-redo"></i> Try Again
+                                </button>
+                                <button onclick="hideProcessingModal()" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Close
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1497,8 +1552,11 @@
                         padding: 40px;
                         border-radius: 20px;
                         text-align: center;
-                        max-width: 400px;
+                        max-width: 450px;
                         border: 1px solid rgba(56, 231, 123, 0.3);
+                    }
+                    .processing-content.error {
+                        border-color: rgba(239, 68, 68, 0.5);
                     }
                     .processing-spinner {
                         width: 60px;
@@ -1509,6 +1567,22 @@
                         animation: spin 1s linear infinite;
                         margin: 0 auto 20px;
                     }
+                    .processing-spinner.error {
+                        border-color: rgba(239, 68, 68, 0.2);
+                        border-top-color: #ef4444;
+                        animation: none;
+                        display: none;
+                    }
+                    .error-icon {
+                        font-size: 60px;
+                        color: #ef4444;
+                        margin-bottom: 20px;
+                    }
+                    .warning-icon {
+                        font-size: 60px;
+                        color: #f59e0b;
+                        margin-bottom: 20px;
+                    }
                     @keyframes spin {
                         to { transform: rotate(360deg); }
                     }
@@ -1516,9 +1590,20 @@
                         color: white;
                         margin-bottom: 10px;
                     }
+                    .processing-content h3.error {
+                        color: #ef4444;
+                    }
                     .processing-content p {
                         color: #94a3b8;
                         margin-bottom: 20px;
+                    }
+                    .processing-content p.error-message {
+                        color: #fca5a5;
+                        font-size: 14px;
+                        background: rgba(239, 68, 68, 0.1);
+                        padding: 12px;
+                        border-radius: 8px;
+                        border: 1px solid rgba(239, 68, 68, 0.3);
                     }
                     .processing-steps {
                         text-align: left;
@@ -1537,37 +1622,245 @@
                     .processing-steps .step.done i {
                         color: #22c55e;
                     }
+                    .processing-steps .step.error {
+                        color: #ef4444;
+                    }
+                    .processing-steps .step.error i {
+                        color: #ef4444;
+                    }
+                    .processing-steps .step.warning {
+                        color: #f59e0b;
+                    }
+                    .processing-steps .step.warning i {
+                        color: #f59e0b;
+                    }
                 `;
                 document.head.appendChild(style);
             }
+            
+            // Reset modal state
+            resetProcessingModal();
             modal.style.display = 'flex';
 
-            // Simulate progress
-            setTimeout(() => {
-                document.getElementById('step-id').classList.add('done');
-                document.getElementById('step-id').innerHTML = '<i class="fas fa-check"></i> ID Verified';
-                document.getElementById('step-selfie').classList.add('active');
-                document.getElementById('step-selfie').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Face Detection';
-            }, 1500);
+            // Simulate progress (will be overridden by actual API responses)
+            verificationTimeouts.push(setTimeout(() => {
+                updateVerificationStep('id', 'done', 'ID Verified');
+                updateVerificationStep('selfie', 'active', 'Detecting Face...');
+            }, 1500));
 
-            setTimeout(() => {
-                document.getElementById('step-selfie').classList.remove('active');
-                document.getElementById('step-selfie').classList.add('done');
-                document.getElementById('step-selfie').innerHTML = '<i class="fas fa-check"></i> Face Detected';
-                document.getElementById('step-bank').classList.add('active');
-                document.getElementById('step-bank').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing Bank Statement';
-            }, 3000);
+            verificationTimeouts.push(setTimeout(() => {
+                updateVerificationStep('selfie', 'done', 'Face Detected');
+                updateVerificationStep('bank', 'active', 'Processing Bank Statement...');
+            }, 3000));
 
-            setTimeout(() => {
-                document.getElementById('step-bank').classList.remove('active');
-                document.getElementById('step-bank').classList.add('done');
-                document.getElementById('step-bank').innerHTML = '<i class="fas fa-check"></i> Bank Statement Processed';
-                document.getElementById('step-score').classList.add('active');
-                document.getElementById('step-score').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculating ZimScore';
-            }, 4500);
+            verificationTimeouts.push(setTimeout(() => {
+                updateVerificationStep('bank', 'done', 'Bank Statement Processed');
+                updateVerificationStep('score', 'active', 'Calculating ZimScore...');
+            }, 4500));
+        }
+        
+        function resetProcessingModal() {
+            const content = document.getElementById('processingContent');
+            const spinner = document.getElementById('processingSpinner');
+            const title = document.getElementById('processingTitle');
+            const status = document.getElementById('processingStatus');
+            const errorActions = document.getElementById('errorActions');
+            
+            if (content) content.classList.remove('error');
+            if (spinner) {
+                spinner.classList.remove('error');
+                spinner.style.display = 'block';
+            }
+            if (title) {
+                title.classList.remove('error');
+                title.textContent = '🔍 Verifying Your Documents';
+            }
+            if (status) {
+                status.classList.remove('error-message');
+                status.textContent = 'Processing ID document...';
+            }
+            if (errorActions) errorActions.style.display = 'none';
+            
+            // Reset all steps
+            ['id', 'selfie', 'bank', 'score'].forEach(step => {
+                const el = document.getElementById(`step-${step}`);
+                if (el) {
+                    el.classList.remove('done', 'active', 'error', 'warning');
+                    const labels = {
+                        'id': 'Verifying National ID',
+                        'selfie': 'Face Detection',
+                        'bank': 'Processing Bank Statement',
+                        'score': 'Calculating ZimScore'
+                    };
+                    el.innerHTML = `<i class="fas fa-clock"></i> ${labels[step]}`;
+                }
+            });
+            
+            // Set first step as active
+            const idStep = document.getElementById('step-id');
+            if (idStep) {
+                idStep.classList.add('active');
+                idStep.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying National ID';
+            }
+        }
+        
+        function updateVerificationStep(step, status, message) {
+            const el = document.getElementById(`step-${step}`);
+            if (!el) return;
+            
+            el.classList.remove('done', 'active', 'error', 'warning');
+            
+            if (status === 'done') {
+                el.classList.add('done');
+                el.innerHTML = `<i class="fas fa-check"></i> ${message}`;
+            } else if (status === 'active') {
+                el.classList.add('active');
+                el.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${message}`;
+            } else if (status === 'error') {
+                el.classList.add('error');
+                el.innerHTML = `<i class="fas fa-times-circle"></i> ${message}`;
+            } else if (status === 'warning') {
+                el.classList.add('warning');
+                el.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+            }
+        }
+        
+        function showVerificationError(errorType, errorMessage, details = null) {
+            // Clear progress timeouts
+            verificationTimeouts.forEach(t => clearTimeout(t));
+            verificationTimeouts = [];
+            
+            const content = document.getElementById('processingContent');
+            const spinner = document.getElementById('processingSpinner');
+            const title = document.getElementById('processingTitle');
+            const status = document.getElementById('processingStatus');
+            const errorActions = document.getElementById('errorActions');
+            
+            // Update modal to error state
+            if (content) content.classList.add('error');
+            if (spinner) spinner.style.display = 'none';
+            
+            // Error type specific messages and step updates
+            const errorConfigs = {
+                'id_mismatch': {
+                    title: '❌ ID Verification Failed',
+                    message: 'The name on your ID does not match the name you entered. Please check your details and try again.',
+                    step: 'id',
+                    stepMessage: 'ID Name Mismatch'
+                },
+                'id_expired': {
+                    title: '❌ ID Document Expired',
+                    message: 'Your National ID appears to be expired. Please upload a valid, non-expired ID document.',
+                    step: 'id',
+                    stepMessage: 'ID Expired'
+                },
+                'id_unreadable': {
+                    title: '⚠️ ID Not Readable',
+                    message: 'We could not read your ID document clearly. Please upload a clearer photo with good lighting.',
+                    step: 'id',
+                    stepMessage: 'ID Unreadable'
+                },
+                'id_invalid': {
+                    title: '❌ Invalid ID Document',
+                    message: 'The uploaded document does not appear to be a valid Zimbabwe National ID. Please upload the correct document.',
+                    step: 'id',
+                    stepMessage: 'Invalid ID Document'
+                },
+                'face_not_detected': {
+                    title: '❌ Face Not Detected',
+                    message: 'We could not detect a face in your selfie. Please take a clear photo with your face visible and well-lit.',
+                    step: 'selfie',
+                    stepMessage: 'No Face Detected'
+                },
+                'face_mismatch': {
+                    title: '❌ Face Does Not Match',
+                    message: 'The face in your selfie does not match the photo on your ID. Please ensure you are the ID holder and try again.',
+                    step: 'selfie',
+                    stepMessage: 'Face Mismatch'
+                },
+                'selfie_quality': {
+                    title: '⚠️ Poor Selfie Quality',
+                    message: 'Your selfie is too dark, blurry, or the ID is not visible. Please take a clearer photo holding your ID next to your face.',
+                    step: 'selfie',
+                    stepMessage: 'Poor Quality'
+                },
+                'bank_unreadable': {
+                    title: '⚠️ Bank Statement Unreadable',
+                    message: 'We could not read your bank statement. Please upload a clearer PDF or image of your recent bank statement.',
+                    step: 'bank',
+                    stepMessage: 'Unreadable'
+                },
+                'bank_outdated': {
+                    title: '⚠️ Bank Statement Outdated',
+                    message: 'Your bank statement is more than 3 months old. Please upload a recent statement from the last 3 months.',
+                    step: 'bank',
+                    stepMessage: 'Outdated Statement'
+                },
+                'documents_mismatch': {
+                    title: '❌ Documents Do Not Match',
+                    message: 'The information on your documents does not match. Please ensure all documents belong to the same person.',
+                    step: 'id',
+                    stepMessage: 'Documents Mismatch'
+                },
+                'network_error': {
+                    title: '⚠️ Connection Error',
+                    message: 'We could not connect to our verification servers. Please check your internet connection and try again.',
+                    step: null,
+                    stepMessage: null
+                },
+                'server_error': {
+                    title: '⚠️ Server Error',
+                    message: 'Our verification service is temporarily unavailable. Please try again in a few minutes.',
+                    step: null,
+                    stepMessage: null
+                },
+                'default': {
+                    title: '❌ Verification Failed',
+                    message: errorMessage || 'Document verification failed. Please check your documents and try again.',
+                    step: null,
+                    stepMessage: null
+                }
+            };
+            
+            const config = errorConfigs[errorType] || errorConfigs['default'];
+            
+            if (title) {
+                title.classList.add('error');
+                title.textContent = config.title;
+            }
+            
+            let fullMessage = config.message;
+            if (details) {
+                fullMessage += `\n\nDetails: ${details}`;
+            }
+            
+            if (status) {
+                status.classList.add('error-message');
+                status.innerHTML = fullMessage.replace(/\n/g, '<br>');
+            }
+            
+            // Update the specific step that failed
+            if (config.step) {
+                updateVerificationStep(config.step, 'error', config.stepMessage);
+            }
+            
+            // Show error actions
+            if (errorActions) errorActions.style.display = 'block';
+        }
+        
+        function retryVerification() {
+            hideProcessingModal();
+            // Go back to step 1 to re-upload documents
+            currentStep = 1;
+            updateStepDisplay();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function hideProcessingModal() {
+            // Clear timeouts
+            verificationTimeouts.forEach(t => clearTimeout(t));
+            verificationTimeouts = [];
+            
             const modal = document.getElementById('processingModal');
             if (modal) {
                 modal.style.display = 'none';
