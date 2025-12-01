@@ -9674,11 +9674,24 @@ How it works:
             const zimscoreStars = document.getElementById('zimscore-stars');
             const zimscoreValue = document.getElementById('zimscore-value');
             const memberStatus = document.getElementById('member-status');
+            const zimScoreCard = document.getElementById('zimScore');
+            const headerAvatar = document.getElementById('nav-avatar');
 
-            if (!zimscoreDisplay || !zimscoreData.star_rating) return;
+            if (!zimscoreDisplay) return;
+            
+            // Calculate star rating if not provided
+            let starRating = zimscoreData.star_rating || 0;
+            const scoreValue = zimscoreData.score_value || 0;
+            
+            if (!starRating && scoreValue) {
+                if (scoreValue >= 70) starRating = 5;
+                else if (scoreValue >= 55) starRating = 4;
+                else if (scoreValue >= 40) starRating = 3;
+                else if (scoreValue >= 25) starRating = 2;
+                else starRating = 1;
+            }
 
             // Generate star display
-            const starRating = zimscoreData.star_rating || 0;
             const fullStars = Math.floor(starRating);
             const hasHalfStar = starRating % 1 >= 0.5;
             
@@ -9695,8 +9708,8 @@ How it works:
                 starsHtml += '☆';
             }
 
-            zimscoreStars.innerHTML = starsHtml;
-            zimscoreValue.textContent = `${zimscoreData.score_value || 0}/85`;
+            if (zimscoreStars) zimscoreStars.innerHTML = starsHtml;
+            if (zimscoreValue) zimscoreValue.textContent = `${scoreValue}/85`;
 
             // Show ZimScore, hide "Premium Member"
             zimscoreDisplay.style.display = 'inline-flex';
@@ -9704,9 +9717,41 @@ How it works:
             if (memberStatus) {
                 memberStatus.style.display = 'none';
             }
+            
+            // Update ZimScore card in overview section
+            if (zimScoreCard) {
+                zimScoreCard.textContent = scoreValue;
+            }
+            
+            // Add star badge to avatar
+            if (headerAvatar && starRating > 0) {
+                // Remove existing badge if any
+                const existingBadge = headerAvatar.querySelector('.avatar-star-badge');
+                if (existingBadge) existingBadge.remove();
+                
+                // Add star badge
+                const badge = document.createElement('div');
+                badge.className = 'avatar-star-badge';
+                badge.innerHTML = `<span style="color: #fbbf24; font-size: 10px;">${'★'.repeat(Math.min(fullStars, 5))}</span>`;
+                badge.style.cssText = `
+                    position: absolute;
+                    bottom: -5px;
+                    right: -5px;
+                    background: linear-gradient(135deg, #1e293b, #0f172a);
+                    border: 1px solid #fbbf24;
+                    border-radius: 8px;
+                    padding: 2px 4px;
+                    font-size: 8px;
+                    line-height: 1;
+                `;
+                headerAvatar.style.position = 'relative';
+                headerAvatar.appendChild(badge);
+            }
 
             // Store in localStorage for quick access
             localStorage.setItem('zimscoreData', JSON.stringify(zimscoreData));
+            
+            console.log('✅ ZimScore displayed:', { scoreValue, starRating, starsHtml });
         }
 
         /**
@@ -9730,6 +9775,8 @@ How it works:
             loadCachedZimScore();
             // Then fetch fresh data
             loadZimScore();
+            // Load user documents for settings tab
+            loadUserDocuments();
         });
 
         // ============================================
@@ -11739,6 +11786,145 @@ How it works:
                     headerAvatar.textContent = initials;
                 }
             }
+            
+            // Update ZimScore display if available
+            if (user.zim_score || user.zimScore) {
+                updateZimScoreDisplay(user.zim_score || user.zimScore, user.star_rating || user.starRating);
+            }
+        }
+        
+        // Update ZimScore display in header and avatar
+        function updateZimScoreDisplay(score, starRating) {
+            const zimscoreDisplay = document.getElementById('zimscore-display');
+            const zimscoreStars = document.getElementById('zimscore-stars');
+            const zimscoreValue = document.getElementById('zimscore-value');
+            const memberStatus = document.getElementById('member-status');
+            const zimScoreCard = document.getElementById('zimScore');
+            
+            // Calculate star rating if not provided
+            if (!starRating && score) {
+                if (score >= 70) starRating = 5;
+                else if (score >= 55) starRating = 4;
+                else if (score >= 40) starRating = 3;
+                else if (score >= 25) starRating = 2;
+                else starRating = 1;
+            }
+            
+            // Generate star display
+            const fullStars = Math.floor(starRating || 0);
+            const halfStar = (starRating % 1) >= 0.5;
+            const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+            
+            let starsHtml = '';
+            for (let i = 0; i < fullStars; i++) starsHtml += '★';
+            if (halfStar) starsHtml += '☆';
+            for (let i = 0; i < emptyStars; i++) starsHtml += '☆';
+            
+            // Update header display
+            if (zimscoreDisplay && zimscoreStars && zimscoreValue) {
+                zimscoreStars.textContent = starsHtml;
+                zimscoreValue.textContent = `${score || 0}/85`;
+                zimscoreDisplay.style.display = 'inline-flex';
+                
+                // Hide "Premium Member" text and show ZimScore
+                if (memberStatus) {
+                    memberStatus.style.display = 'none';
+                }
+            }
+            
+            // Update ZimScore card in overview
+            if (zimScoreCard) {
+                zimScoreCard.textContent = score || 0;
+            }
+            
+            console.log('✅ ZimScore display updated:', { score, starRating, starsHtml });
+        }
+        
+        // Load and display user documents
+        async function loadUserDocuments() {
+            try {
+                const response = await DashboardAPI.request('/api/profile-setup/documents');
+                if (response && response.success && response.data) {
+                    updateDocumentsDisplay(response.data);
+                }
+            } catch (error) {
+                console.error('Failed to load documents:', error);
+            }
+        }
+        
+        // Update documents display in settings
+        function updateDocumentsDisplay(documents) {
+            if (!documents || !Array.isArray(documents)) return;
+            
+            // Count documents by status
+            let verified = 0, pending = 0, rejected = 0;
+            
+            documents.forEach(doc => {
+                if (doc.status === 'verified' || doc.status === 'approved') verified++;
+                else if (doc.status === 'pending' || doc.status === 'processing') pending++;
+                else if (doc.status === 'rejected') rejected++;
+            });
+            
+            // Required documents
+            const requiredDocs = ['national_id', 'id_back', 'selfie', 'bank_statement'];
+            const uploadedTypes = documents.map(d => d.document_type);
+            const missing = requiredDocs.filter(type => !uploadedTypes.includes(type)).length;
+            
+            // Update counters
+            const verifiedCount = document.getElementById('docs-verified-count');
+            const pendingCount = document.getElementById('docs-pending-count');
+            const missingCount = document.getElementById('docs-missing-count');
+            const totalCount = document.getElementById('docs-total-count');
+            
+            if (verifiedCount) verifiedCount.textContent = verified;
+            if (pendingCount) pendingCount.textContent = pending;
+            if (missingCount) missingCount.textContent = missing;
+            if (totalCount) totalCount.textContent = documents.length;
+            
+            // Update document cards with status badges
+            const docTypeMap = {
+                'national_id': 'National ID',
+                'id_back': 'National ID',
+                'selfie': 'Selfie',
+                'bank_statement': 'Bank Statement',
+                'payslip': 'Payslip',
+                'employment_contract': 'Employment Contract',
+                'proof_of_address': 'Proof of Address'
+            };
+            
+            documents.forEach(doc => {
+                const docName = docTypeMap[doc.document_type] || doc.document_type;
+                const uploadArea = document.querySelector(`.document-upload-area[data-doc-type="${docName}"]`);
+                
+                if (uploadArea) {
+                    const statusBadge = uploadArea.querySelector('.doc-status-badge');
+                    const statusText = uploadArea.querySelector('.status-text');
+                    const uploadBtn = uploadArea.querySelector('button');
+                    
+                    if (statusBadge && statusText) {
+                        statusBadge.style.display = 'inline-flex';
+                        
+                        if (doc.status === 'verified' || doc.status === 'approved') {
+                            statusBadge.style.background = 'rgba(16, 185, 129, 0.1)';
+                            statusBadge.style.color = '#10b981';
+                            statusText.innerHTML = '<i class="fas fa-check-circle"></i> Verified';
+                            if (uploadBtn) uploadBtn.innerHTML = '<i class="fas fa-eye"></i> View Document';
+                        } else if (doc.status === 'pending' || doc.status === 'processing') {
+                            statusBadge.style.background = 'rgba(245, 158, 11, 0.1)';
+                            statusBadge.style.color = '#f59e0b';
+                            statusText.innerHTML = '<i class="fas fa-clock"></i> Pending Review';
+                            if (uploadBtn) uploadBtn.innerHTML = '<i class="fas fa-sync"></i> Re-upload';
+                        } else if (doc.status === 'rejected') {
+                            statusBadge.style.background = 'rgba(239, 68, 68, 0.1)';
+                            statusBadge.style.color = '#ef4444';
+                            statusText.innerHTML = '<i class="fas fa-times-circle"></i> Rejected';
+                            if (uploadBtn) uploadBtn.innerHTML = '<i class="fas fa-redo"></i> Re-upload';
+                        }
+                    }
+                }
+            });
+            
+            console.log('✅ Documents display updated:', { verified, pending, missing, total: documents.length });
         }
 
         function updateWalletBalance(walletData) {
