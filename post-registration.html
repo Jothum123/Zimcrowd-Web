@@ -283,6 +283,42 @@
             display: none;
         }
 
+        /* Toast animations */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Input validation styles */
+        .form-input.error,
+        .form-select.error {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+
+        .form-input.success,
+        .form-select.success {
+            border-color: #22c55e !important;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+        }
+
         .file-icon {
             font-size: 24px;
             color: #38e77b;
@@ -909,6 +945,79 @@
         let currentStep = 1;
         let selectedPaymentMethod = null;
 
+        // Production-ready input validation
+        const validators = {
+            // Zimbabwe National ID format: XX-XXXXXXXA00
+            nationalId: (value) => {
+                const pattern = /^\d{2}-\d{6,7}[A-Z]\d{2}$/i;
+                return pattern.test(value.trim());
+            },
+            // Zimbabwe phone number
+            phone: (value) => {
+                const cleaned = value.replace(/\s+/g, '').replace(/^\+263/, '0');
+                return /^0[7][0-9]{8}$/.test(cleaned) || /^\+263[7][0-9]{8}$/.test(value.replace(/\s+/g, ''));
+            },
+            // Email validation
+            email: (value) => {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+            },
+            // Not empty
+            required: (value) => {
+                return value && value.trim().length > 0;
+            },
+            // Minimum length
+            minLength: (value, min) => {
+                return value && value.trim().length >= min;
+            }
+        };
+
+        // Format phone number as user types
+        function formatPhoneNumber(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value.startsWith('263')) {
+                value = '+' + value;
+            } else if (value.startsWith('0')) {
+                value = '+263' + value.substring(1);
+            }
+            // Format: +263 77 123 4567
+            if (value.length > 4) {
+                value = value.substring(0, 4) + ' ' + value.substring(4);
+            }
+            if (value.length > 7) {
+                value = value.substring(0, 7) + ' ' + value.substring(7);
+            }
+            if (value.length > 11) {
+                value = value.substring(0, 11) + ' ' + value.substring(11);
+            }
+            input.value = value.substring(0, 16);
+        }
+
+        // Add phone formatting to all phone inputs
+        document.querySelectorAll('input[type="tel"]').forEach(input => {
+            input.addEventListener('input', () => formatPhoneNumber(input));
+        });
+
+        // Validate National ID format
+        document.getElementById('idNumber').addEventListener('blur', function() {
+            const value = this.value.trim();
+            if (value && !validators.nationalId(value)) {
+                this.style.borderColor = '#ef4444';
+                if (!document.getElementById('idNumberError')) {
+                    const error = document.createElement('small');
+                    error.id = 'idNumberError';
+                    error.style.color = '#ef4444';
+                    error.style.display = 'block';
+                    error.style.marginTop = '4px';
+                    error.textContent = 'Invalid ID format. Expected: 63-1234567A12';
+                    this.parentNode.appendChild(error);
+                }
+            } else {
+                this.style.borderColor = '';
+                const error = document.getElementById('idNumberError');
+                if (error) error.remove();
+            }
+        });
+
         // File upload handling
         document.getElementById('idFront').addEventListener('change', function(e) {
             handleFileUpload(e, 'front');
@@ -1052,8 +1161,13 @@
             document.getElementById('paymentDetails').style.display = 'block';
         }
 
-        // Navigation functions
+        // Navigation functions with validation
         function nextStep() {
+            // Validate current step before proceeding
+            if (!validateCurrentStep()) {
+                return;
+            }
+            
             if (currentStep < 3) {
                 // Hide current step
                 document.getElementById(`step${currentStep}`).classList.remove('active');
@@ -1071,6 +1185,211 @@
                 // Scroll to top
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
+        }
+        
+        function validateCurrentStep() {
+            if (currentStep === 1) {
+                // Step 1: KYC Validation
+                const idNumber = document.getElementById('idNumber').value.trim();
+                const firstName = document.getElementById('idFirstName').value.trim();
+                const lastName = document.getElementById('idLastName').value.trim();
+                const idFront = document.getElementById('idFront').files[0];
+                const idBack = document.getElementById('idBack').files[0];
+                const selfie = document.getElementById('selfiePhoto').files[0];
+                
+                if (!idNumber) {
+                    showValidationError('Please enter your National ID number');
+                    document.getElementById('idNumber').focus();
+                    return false;
+                }
+                
+                if (!validators.nationalId(idNumber)) {
+                    showValidationError('Invalid National ID format. Expected format: 63-1234567A12');
+                    document.getElementById('idNumber').focus();
+                    return false;
+                }
+                
+                if (!firstName || firstName.length < 2) {
+                    showValidationError('Please enter your first name (at least 2 characters)');
+                    document.getElementById('idFirstName').focus();
+                    return false;
+                }
+                
+                if (!lastName || lastName.length < 2) {
+                    showValidationError('Please enter your last name (at least 2 characters)');
+                    document.getElementById('idLastName').focus();
+                    return false;
+                }
+                
+                if (!idFront) {
+                    showValidationError('Please upload the front of your National ID');
+                    return false;
+                }
+                
+                if (!idBack) {
+                    showValidationError('Please upload the back of your National ID');
+                    return false;
+                }
+                
+                if (!selfie) {
+                    showValidationError('Please upload a selfie holding your National ID');
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            if (currentStep === 2) {
+                // Step 2: Profile Validation
+                const dob = document.getElementById('dob').value;
+                const gender = document.getElementById('gender').value;
+                const address = document.getElementById('address').value.trim();
+                const employment = document.getElementById('employment').value;
+                const employer = document.getElementById('employer').value.trim();
+                const occupation = document.getElementById('occupation').value.trim();
+                const ecNumber = document.getElementById('ecNumber').value.trim();
+                const workAddress = document.getElementById('workAddress').value.trim();
+                const yearsEmployed = document.getElementById('yearsEmployed').value;
+                const kin1Name = document.getElementById('kin1Name').value.trim();
+                const kin1Relationship = document.getElementById('kin1Relationship').value;
+                const kin1Phone = document.getElementById('kin1Phone').value.trim();
+                const kin2Name = document.getElementById('kin2Name').value.trim();
+                const kin2Relationship = document.getElementById('kin2Relationship').value;
+                const kin2Phone = document.getElementById('kin2Phone').value.trim();
+                
+                if (!dob) {
+                    showValidationError('Please enter your date of birth');
+                    document.getElementById('dob').focus();
+                    return false;
+                }
+                
+                // Check if user is at least 18 years old
+                const birthDate = new Date(dob);
+                const today = new Date();
+                const age = Math.floor((today - birthDate) / (365.25 * 24 * 60 * 60 * 1000));
+                if (age < 18) {
+                    showValidationError('You must be at least 18 years old to use ZimCrowd');
+                    return false;
+                }
+                
+                if (!gender) {
+                    showValidationError('Please select your gender');
+                    return false;
+                }
+                
+                if (!address || address.length < 10) {
+                    showValidationError('Please enter a valid address (at least 10 characters)');
+                    document.getElementById('address').focus();
+                    return false;
+                }
+                
+                if (!employment) {
+                    showValidationError('Please select your employment status');
+                    return false;
+                }
+                
+                if (!employer || employer.length < 2) {
+                    showValidationError('Please enter your employer or business name');
+                    document.getElementById('employer').focus();
+                    return false;
+                }
+                
+                if (!occupation || occupation.length < 2) {
+                    showValidationError('Please enter your occupation or job title');
+                    document.getElementById('occupation').focus();
+                    return false;
+                }
+                
+                if (!ecNumber) {
+                    showValidationError('Please enter your EC Number or Employee Number');
+                    document.getElementById('ecNumber').focus();
+                    return false;
+                }
+                
+                if (!workAddress || workAddress.length < 10) {
+                    showValidationError('Please enter your work address');
+                    document.getElementById('workAddress').focus();
+                    return false;
+                }
+                
+                if (!yearsEmployed) {
+                    showValidationError('Please select how long you have been at your current job');
+                    return false;
+                }
+                
+                // Next of Kin validation
+                if (!kin1Name || kin1Name.length < 3) {
+                    showValidationError('Please enter your primary next of kin full name');
+                    document.getElementById('kin1Name').focus();
+                    return false;
+                }
+                
+                if (!kin1Relationship) {
+                    showValidationError('Please select your primary next of kin relationship');
+                    return false;
+                }
+                
+                if (!kin1Phone) {
+                    showValidationError('Please enter your primary next of kin phone number');
+                    document.getElementById('kin1Phone').focus();
+                    return false;
+                }
+                
+                if (!kin2Name || kin2Name.length < 3) {
+                    showValidationError('Please enter your secondary next of kin full name');
+                    document.getElementById('kin2Name').focus();
+                    return false;
+                }
+                
+                if (!kin2Relationship) {
+                    showValidationError('Please select your secondary next of kin relationship');
+                    return false;
+                }
+                
+                if (!kin2Phone) {
+                    showValidationError('Please enter your secondary next of kin phone number');
+                    document.getElementById('kin2Phone').focus();
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            return true;
+        }
+        
+        function showValidationError(message) {
+            // Create toast notification
+            const toast = document.createElement('div');
+            toast.className = 'validation-toast';
+            toast.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i>
+                <span>${message}</span>
+            `;
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #ef4444, #dc2626);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                z-index: 10000;
+                box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
+                animation: slideIn 0.3s ease;
+                max-width: 400px;
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Remove after 4 seconds
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
         }
 
         function prevStep() {
