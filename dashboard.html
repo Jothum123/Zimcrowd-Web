@@ -3500,6 +3500,16 @@
                 </a>
             </div>
 
+            <!-- Welcome Message -->
+            <div style="margin-bottom: 24px;">
+                <h1 id="welcomeGreeting" style="font-size: 28px; font-weight: 700; color: #f1f5f9; margin: 0 0 6px 0;">
+                    Good morning, <span id="welcomeUserName">User</span>! 👋
+                </h1>
+                <p id="currentDate" style="font-size: 14px; color: #64748b; margin: 0;">
+                    Monday, 01 Dec, 2025
+                </p>
+            </div>
+
             <!-- Profile Completion Notice -->
             <div id="profileCompletionBanner" style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; align-items: center; gap: 14px;">
                 <div style="width: 40px; height: 40px; background: rgba(239, 68, 68, 0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -9931,6 +9941,84 @@ How it works:
         }
 
         // ============================================
+        // WELCOME MESSAGE & DATE FUNCTIONS
+        // ============================================
+        
+        /**
+         * Update welcome greeting based on time of day
+         */
+        function updateWelcomeGreeting() {
+            const greetingEl = document.getElementById('welcomeGreeting');
+            const userNameEl = document.getElementById('welcomeUserName');
+            const dateEl = document.getElementById('currentDate');
+            
+            if (!greetingEl) return;
+            
+            // Get time-based greeting
+            const hour = new Date().getHours();
+            let greeting = 'Good morning';
+            let emoji = '☀️';
+            
+            if (hour >= 12 && hour < 17) {
+                greeting = 'Good afternoon';
+                emoji = '🌤️';
+            } else if (hour >= 17 && hour < 21) {
+                greeting = 'Good evening';
+                emoji = '🌆';
+            } else if (hour >= 21 || hour < 5) {
+                greeting = 'Good night';
+                emoji = '🌙';
+            }
+            
+            // Get user's first name
+            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+            const fullName = userData.full_name || userData.name || localStorage.getItem('userName') || 'User';
+            const firstName = fullName.split(' ')[0];
+            
+            // Check if new user (registered within last 24 hours)
+            const isNewUser = localStorage.getItem('isNewUser') === 'true';
+            const registeredAt = localStorage.getItem('registeredAt');
+            let showWelcome = isNewUser;
+            
+            if (registeredAt) {
+                const regDate = new Date(registeredAt);
+                const now = new Date();
+                const hoursSinceReg = (now - regDate) / (1000 * 60 * 60);
+                showWelcome = hoursSinceReg < 24;
+            }
+            
+            // Update greeting text
+            if (showWelcome) {
+                greetingEl.innerHTML = `Welcome, <span id="welcomeUserName">${firstName}</span>! 🎉`;
+            } else {
+                greetingEl.innerHTML = `${greeting}, <span id="welcomeUserName">${firstName}</span>! ${emoji}`;
+            }
+            
+            // Update date
+            if (dateEl) {
+                const now = new Date();
+                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                
+                const dayName = days[now.getDay()];
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = months[now.getMonth()];
+                const year = now.getFullYear();
+                
+                dateEl.textContent = `${dayName}, ${day} ${month}, ${year}`;
+            }
+        }
+        
+        // Update greeting when user name is loaded
+        function updateWelcomeUserName(name) {
+            const userNameEl = document.getElementById('welcomeUserName');
+            if (userNameEl && name) {
+                const firstName = name.split(' ')[0];
+                userNameEl.textContent = firstName;
+            }
+        }
+
+        // ============================================
         // ZIMSCORE DISPLAY FUNCTIONS
         // ============================================
 
@@ -10064,6 +10152,8 @@ How it works:
 
         // Load ZimScore on page load
         window.addEventListener('DOMContentLoaded', function() {
+            // Update welcome greeting and date
+            updateWelcomeGreeting();
             // Load cached first for instant display
             loadCachedZimScore();
             // Then fetch fresh data
