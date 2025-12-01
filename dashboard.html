@@ -5085,6 +5085,62 @@
                     </div>
                 </div>
 
+                <!-- KYC Verification Status -->
+                <div class="loan-card" id="kycVerificationCard" style="margin-bottom: 20px; border: 1px solid rgba(56, 231, 123, 0.3); background: linear-gradient(135deg, rgba(56, 231, 123, 0.05), rgba(52, 211, 153, 0.05));">
+                    <h3 style="margin-bottom: 20px;">
+                        <i class="fas fa-shield-alt" style="color: #38e77b; margin-right: 10px;"></i>
+                        KYC Verification Status
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div id="kyc-id-status" style="padding: 15px; background: rgba(100, 116, 139, 0.1); border-radius: 8px; border: 1px solid rgba(100, 116, 139, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fas fa-id-card" style="color: #64748b;"></i>
+                                <span style="font-weight: 600; color: #64748b;">National ID</span>
+                            </div>
+                            <p style="color: #94a3b8; font-size: 12px; margin: 0;">Not verified</p>
+                        </div>
+                        <div id="kyc-selfie-status" style="padding: 15px; background: rgba(100, 116, 139, 0.1); border-radius: 8px; border: 1px solid rgba(100, 116, 139, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fas fa-camera" style="color: #64748b;"></i>
+                                <span style="font-weight: 600; color: #64748b;">Face Verification</span>
+                            </div>
+                            <p style="color: #94a3b8; font-size: 12px; margin: 0;">Not verified</p>
+                        </div>
+                        <div id="kyc-bank-status" style="padding: 15px; background: rgba(100, 116, 139, 0.1); border-radius: 8px; border: 1px solid rgba(100, 116, 139, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fas fa-university" style="color: #64748b;"></i>
+                                <span style="font-weight: 600; color: #64748b;">Bank Statement</span>
+                            </div>
+                            <p style="color: #94a3b8; font-size: 12px; margin: 0;">Not verified</p>
+                        </div>
+                        <div id="kyc-zimscore-status" style="padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 8px; border: 1px solid rgba(251, 191, 36, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                <span style="font-weight: 600; color: #fbbf24;">ZimScore</span>
+                            </div>
+                            <p id="kyc-zimscore-value" style="color: #fbbf24; font-size: 18px; font-weight: 700; margin: 0;">--/85</p>
+                            <p id="kyc-zimscore-stars" style="color: #fbbf24; font-size: 14px; margin: 5px 0 0 0;">☆☆☆☆☆</p>
+                        </div>
+                    </div>
+                    <div id="kyc-verified-info" style="display: none; padding: 15px; background: rgba(56, 231, 123, 0.1); border-radius: 8px; border: 1px solid rgba(56, 231, 123, 0.3);">
+                        <h4 style="margin: 0 0 10px 0; color: #38e77b;"><i class="fas fa-check-circle"></i> Verified Information from ID</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                            <div>
+                                <span style="color: #94a3b8; font-size: 12px;">Full Name</span>
+                                <p id="verified-name" style="margin: 2px 0 0 0; font-weight: 600;">--</p>
+                            </div>
+                            <div>
+                                <span style="color: #94a3b8; font-size: 12px;">National ID</span>
+                                <p id="verified-id" style="margin: 2px 0 0 0; font-weight: 600;">--</p>
+                            </div>
+                            <div>
+                                <span style="color: #94a3b8; font-size: 12px;">Date of Birth</span>
+                                <p id="verified-dob" style="margin: 2px 0 0 0; font-weight: 600;">--</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="loan-card">
                     <h3 style="margin-bottom: 20px;">Personal Information</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
@@ -11925,6 +11981,118 @@ How it works:
             });
             
             console.log('✅ Documents display updated:', { verified, pending, missing, total: documents.length });
+            
+            // Update KYC verification status cards
+            updateKYCVerificationStatus(documents);
+        }
+        
+        // Update KYC verification status in profile settings
+        function updateKYCVerificationStatus(documents) {
+            const idStatus = document.getElementById('kyc-id-status');
+            const selfieStatus = document.getElementById('kyc-selfie-status');
+            const bankStatus = document.getElementById('kyc-bank-status');
+            const zimscoreStatus = document.getElementById('kyc-zimscore-status');
+            const verifiedInfo = document.getElementById('kyc-verified-info');
+            
+            // Find documents by type
+            const idDoc = documents.find(d => d.document_type === 'national_id');
+            const selfieDoc = documents.find(d => d.document_type === 'selfie');
+            const bankDoc = documents.find(d => d.document_type === 'bank_statement');
+            
+            // Update ID status
+            if (idStatus && idDoc) {
+                const isVerified = idDoc.status === 'verified' || idDoc.status === 'approved';
+                const isPending = idDoc.status === 'pending' || idDoc.status === 'processing';
+                
+                if (isVerified) {
+                    idStatus.style.background = 'rgba(16, 185, 129, 0.1)';
+                    idStatus.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+                    idStatus.querySelector('i').style.color = '#10b981';
+                    idStatus.querySelector('span').style.color = '#10b981';
+                    idStatus.querySelector('p').innerHTML = '<i class="fas fa-check-circle"></i> Verified';
+                    idStatus.querySelector('p').style.color = '#10b981';
+                    
+                    // Show verified info if OCR data available
+                    if (idDoc.ocr_data && verifiedInfo) {
+                        const ocrFields = idDoc.ocr_data.extracted_fields || idDoc.ocr_data.parsedFields || {};
+                        verifiedInfo.style.display = 'block';
+                        
+                        const verifiedName = document.getElementById('verified-name');
+                        const verifiedId = document.getElementById('verified-id');
+                        const verifiedDob = document.getElementById('verified-dob');
+                        
+                        if (verifiedName) verifiedName.textContent = ocrFields.fullName || ocrFields.firstName + ' ' + ocrFields.lastName || '--';
+                        if (verifiedId) verifiedId.textContent = ocrFields.idNumber || '--';
+                        if (verifiedDob) verifiedDob.textContent = ocrFields.dateOfBirth || '--';
+                    }
+                } else if (isPending) {
+                    idStatus.style.background = 'rgba(245, 158, 11, 0.1)';
+                    idStatus.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+                    idStatus.querySelector('i').style.color = '#f59e0b';
+                    idStatus.querySelector('span').style.color = '#f59e0b';
+                    idStatus.querySelector('p').innerHTML = '<i class="fas fa-clock"></i> Pending';
+                    idStatus.querySelector('p').style.color = '#f59e0b';
+                }
+            }
+            
+            // Update Selfie status
+            if (selfieStatus && selfieDoc) {
+                const isVerified = selfieDoc.status === 'verified' || selfieDoc.status === 'approved';
+                const isPending = selfieDoc.status === 'pending' || selfieDoc.status === 'processing';
+                const faceDetected = selfieDoc.ocr_data?.faceDetection?.faceDetected || selfieDoc.ocr_data?.faceDetected;
+                
+                if (isVerified || faceDetected) {
+                    selfieStatus.style.background = 'rgba(16, 185, 129, 0.1)';
+                    selfieStatus.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+                    selfieStatus.querySelector('i').style.color = '#10b981';
+                    selfieStatus.querySelector('span').style.color = '#10b981';
+                    selfieStatus.querySelector('p').innerHTML = '<i class="fas fa-check-circle"></i> Face Detected';
+                    selfieStatus.querySelector('p').style.color = '#10b981';
+                } else if (isPending) {
+                    selfieStatus.style.background = 'rgba(245, 158, 11, 0.1)';
+                    selfieStatus.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+                    selfieStatus.querySelector('i').style.color = '#f59e0b';
+                    selfieStatus.querySelector('span').style.color = '#f59e0b';
+                    selfieStatus.querySelector('p').innerHTML = '<i class="fas fa-clock"></i> Pending';
+                    selfieStatus.querySelector('p').style.color = '#f59e0b';
+                }
+            }
+            
+            // Update Bank Statement status
+            if (bankStatus && bankDoc) {
+                const isVerified = bankDoc.status === 'verified' || bankDoc.status === 'approved';
+                const isPending = bankDoc.status === 'pending' || bankDoc.status === 'processing';
+                
+                if (isVerified) {
+                    bankStatus.style.background = 'rgba(16, 185, 129, 0.1)';
+                    bankStatus.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+                    bankStatus.querySelector('i').style.color = '#10b981';
+                    bankStatus.querySelector('span').style.color = '#10b981';
+                    bankStatus.querySelector('p').innerHTML = '<i class="fas fa-check-circle"></i> Analyzed';
+                    bankStatus.querySelector('p').style.color = '#10b981';
+                } else if (isPending) {
+                    bankStatus.style.background = 'rgba(245, 158, 11, 0.1)';
+                    bankStatus.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+                    bankStatus.querySelector('i').style.color = '#f59e0b';
+                    bankStatus.querySelector('span').style.color = '#f59e0b';
+                    bankStatus.querySelector('p').innerHTML = '<i class="fas fa-clock"></i> Processing';
+                    bankStatus.querySelector('p').style.color = '#f59e0b';
+                }
+            }
+            
+            // Update ZimScore in KYC card
+            const zimscoreData = JSON.parse(localStorage.getItem('zimscoreData') || '{}');
+            if (zimscoreData.score_value) {
+                const kycZimscoreValue = document.getElementById('kyc-zimscore-value');
+                const kycZimscoreStars = document.getElementById('kyc-zimscore-stars');
+                
+                if (kycZimscoreValue) kycZimscoreValue.textContent = `${zimscoreData.score_value}/85`;
+                
+                if (kycZimscoreStars) {
+                    const starRating = zimscoreData.star_rating || Math.ceil(zimscoreData.score_value / 17);
+                    kycZimscoreStars.textContent = '★'.repeat(starRating) + '☆'.repeat(5 - starRating);
+                }
+            }
         }
 
         function updateWalletBalance(walletData) {
