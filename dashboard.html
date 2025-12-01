@@ -3457,8 +3457,26 @@
 
         <!-- Overview Section -->
         <section id="overview-section" class="dashboard-section active">
+            <!-- Account Blocked/Suspended Notice -->
+            <div id="accountBlockedBanner" style="display: none; background: rgba(220, 38, 38, 0.15); border: 1px solid rgba(220, 38, 38, 0.4); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; align-items: flex-start; gap: 14px;">
+                <div style="width: 40px; height: 40px; background: rgba(220, 38, 38, 0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fas fa-ban" style="color: #dc2626; font-size: 18px;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <p style="color: #fca5a5; font-size: 14px; margin: 0 0 8px 0; line-height: 1.5;">
+                        <strong style="color: #f87171;">Account Restricted</strong> — Your account has been temporarily suspended.
+                    </p>
+                    <p id="accountBlockedReason" style="color: #94a3b8; font-size: 13px; margin: 0; line-height: 1.5;">
+                        Reason: <span id="blockReasonText">Pending verification review</span>
+                    </p>
+                </div>
+                <a href="contact-support.html" style="background: linear-gradient(135deg, #64748b, #475569); color: white; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(100, 116, 139, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                    <i class="fas fa-headset" style="margin-right: 6px;"></i>Contact Support
+                </a>
+            </div>
+
             <!-- Profile Completion Notice -->
-            <div id="profileCompletionBanner" style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px;">
+            <div id="profileCompletionBanner" style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; align-items: center; gap: 14px;">
                 <div style="width: 40px; height: 40px; background: rgba(239, 68, 68, 0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                     <i class="fas fa-user-clock" style="color: #ef4444; font-size: 18px;"></i>
                 </div>
@@ -9689,6 +9707,69 @@ How it works:
             }
         }
 
+        // Show account blocked/suspended banner
+        function showAccountBlockedBanner(reason, status) {
+            const banner = document.getElementById('accountBlockedBanner');
+            const reasonText = document.getElementById('blockReasonText');
+            const statusText = banner?.querySelector('strong');
+            
+            if (banner) {
+                banner.style.display = 'flex';
+                
+                // Update reason text
+                if (reasonText && reason) {
+                    reasonText.textContent = reason;
+                }
+                
+                // Update status text based on account status
+                if (statusText) {
+                    if (status === 'blocked') {
+                        statusText.textContent = 'Account Blocked';
+                        statusText.parentElement.innerHTML = statusText.parentElement.innerHTML.replace(
+                            'temporarily suspended',
+                            'blocked due to policy violations'
+                        );
+                    } else if (status === 'suspended') {
+                        statusText.textContent = 'Account Suspended';
+                    } else if (status === 'closed') {
+                        statusText.textContent = 'Account Closed';
+                        statusText.parentElement.innerHTML = statusText.parentElement.innerHTML.replace(
+                            'temporarily suspended',
+                            'permanently closed'
+                        );
+                    }
+                }
+                
+                // Hide profile completion banner if account is blocked
+                const profileBanner = document.getElementById('profileCompletionBanner');
+                if (profileBanner) {
+                    profileBanner.style.display = 'none';
+                }
+            }
+        }
+
+        // Check account status on load
+        async function checkAccountStatus() {
+            try {
+                const authToken = localStorage.getItem('authToken');
+                if (!authToken) return;
+                
+                const response = await DashboardAPI.request('/api/account/status');
+                if (response && response.success && response.data) {
+                    const { status, reason, blocked_at, blocked_reason } = response.data;
+                    
+                    if (status === 'blocked' || status === 'suspended' || status === 'closed') {
+                        showAccountBlockedBanner(
+                            blocked_reason || reason || 'Please contact support for more information.',
+                            status
+                        );
+                    }
+                }
+            } catch (error) {
+                console.log('Account status check:', error.message);
+            }
+        }
+
         // ============================================
         // ZIMSCORE DISPLAY FUNCTIONS
         // ============================================
@@ -9829,6 +9910,8 @@ How it works:
             loadZimScore();
             // Load user documents for settings tab
             loadUserDocuments();
+            // Check if account is blocked/suspended
+            checkAccountStatus();
         });
 
         // ============================================
