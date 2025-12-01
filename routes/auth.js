@@ -275,6 +275,62 @@ router.post('/resend-otp', [
     }
 });
 
+// @route   POST /api/auth/refresh
+// @desc    Refresh access token using refresh token
+// @access  Public
+router.post('/refresh', async (req, res) => {
+    try {
+        const { refresh_token } = req.body;
+        
+        if (!refresh_token) {
+            return res.status(400).json({
+                success: false,
+                message: 'Refresh token is required'
+            });
+        }
+        
+        // Use Supabase to refresh the session
+        const { createClient } = require('@supabase/supabase-js');
+        const supabase = createClient(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_ANON_KEY
+        );
+        
+        const { data, error } = await supabase.auth.refreshSession({
+            refresh_token: refresh_token
+        });
+        
+        if (error) {
+            console.error('Token refresh error:', error);
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid or expired refresh token'
+            });
+        }
+        
+        if (data.session) {
+            res.json({
+                success: true,
+                access_token: data.session.access_token,
+                refresh_token: data.session.refresh_token,
+                expires_in: data.session.expires_in,
+                user: data.user
+            });
+        } else {
+            res.status(401).json({
+                success: false,
+                message: 'Could not refresh session'
+            });
+        }
+    } catch (error) {
+        console.error('Token refresh error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to refresh token'
+        });
+    }
+});
+
 // @route   POST /api/auth/logout
 // @desc    Logout user (client-side clears localStorage, this is for logging)
 // @access  Public

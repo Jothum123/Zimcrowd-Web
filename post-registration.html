@@ -1294,10 +1294,69 @@
             };
 
             try {
-                const authToken = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
+                let authToken = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
+                
+                // Check if token exists
+                if (!authToken) {
+                    hideProcessingModal();
+                    alert('Session expired. Please log in again.');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // Helper function to make authenticated requests with token refresh
+                const makeAuthRequest = async (url, options) => {
+                    let response = await fetch(url, options);
+                    
+                    // If unauthorized, try to refresh token
+                    if (response.status === 401) {
+                        console.log('Token expired, attempting refresh...');
+                        
+                        // Try to refresh the token using Supabase
+                        const refreshToken = localStorage.getItem('refreshToken') || localStorage.getItem('refresh_token');
+                        if (refreshToken) {
+                            try {
+                                const refreshResponse = await fetch(`${API_BASE}/api/auth/refresh`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ refresh_token: refreshToken })
+                                });
+                                
+                                if (refreshResponse.ok) {
+                                    const refreshData = await refreshResponse.json();
+                                    if (refreshData.access_token) {
+                                        authToken = refreshData.access_token;
+                                        localStorage.setItem('authToken', authToken);
+                                        localStorage.setItem('token', authToken);
+                                        if (refreshData.refresh_token) {
+                                            localStorage.setItem('refreshToken', refreshData.refresh_token);
+                                        }
+                                        
+                                        // Retry the original request with new token
+                                        options.headers['Authorization'] = `Bearer ${authToken}`;
+                                        response = await fetch(url, options);
+                                    }
+                                }
+                            } catch (refreshError) {
+                                console.error('Token refresh failed:', refreshError);
+                            }
+                        }
+                        
+                        // If still unauthorized after refresh attempt
+                        if (response.status === 401) {
+                            hideProcessingModal();
+                            alert('Session expired. Please log in again.');
+                            localStorage.clear();
+                            window.location.href = 'login.html';
+                            return null;
+                        }
+                    }
+                    
+                    return response;
+                };
                 
                 // First, save all profile data to the user profile API
-                const profileResponse = await fetch(`${API_BASE}/api/user/profile`, {
+                const profileResponse = await makeAuthRequest(`${API_BASE}/api/user/profile`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
@@ -1306,11 +1365,13 @@
                     body: JSON.stringify(profileData)
                 });
                 
+                if (!profileResponse) return; // Auth failed and user redirected
+                
                 const profileResult = await profileResponse.json();
                 console.log('Profile save result:', profileResult);
                 
                 // Then call the complete-setup API to trigger OCR verification
-                const response = await fetch(`${API_BASE}/api/profile-setup/complete-setup`, {
+                const response = await makeAuthRequest(`${API_BASE}/api/profile-setup/complete-setup`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
@@ -1319,6 +1380,8 @@
                     body: JSON.stringify(profileData)
                 });
 
+                if (!response) return; // Auth failed and user redirected
+                
                 const result = await response.json();
 
                 if (result.success) {
