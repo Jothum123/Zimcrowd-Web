@@ -10155,6 +10155,9 @@ How it works:
          * Fetch and display user's ZimScore in the header
          */
         async function loadZimScore() {
+            // First, try to load from localStorage for instant display
+            loadCachedZimScore();
+            
             try {
                 const authToken = localStorage.getItem('authToken');
                 if (!authToken) return;
@@ -10182,11 +10185,14 @@ How it works:
                         max_loan_amount: data.zimScore.max_loan_amount || 0,
                         risk_level: data.zimScore.risk_level || 'unknown'
                     });
+                } else {
+                    // API didn't return score, use cached or show default
+                    console.log('📊 No ZimScore from API, using cached data');
+                    loadCachedZimScore();
                 }
             } catch (error) {
                 console.error('Error loading ZimScore:', error);
-                // Try to load from localStorage as fallback
-                loadCachedZimScore();
+                // Already loaded from cache at start
             }
         }
 
@@ -10202,11 +10208,16 @@ How it works:
             const zimScoreCard = document.getElementById('zimScore');
             const headerAvatar = document.getElementById('nav-avatar');
 
-            if (!zimscoreDisplay) return;
+            if (!zimscoreDisplay) {
+                console.warn('ZimScore display element not found');
+                return;
+            }
             
-            // Calculate star rating if not provided
-            let starRating = zimscoreData.star_rating || 0;
-            const scoreValue = zimscoreData.score_value || 0;
+            // Get score value from various possible formats
+            let starRating = zimscoreData.star_rating || zimscoreData.starRating || 0;
+            const scoreValue = zimscoreData.score_value || zimscoreData.scoreValue || zimscoreData.score || zimscoreData.zimScore || 0;
+            
+            console.log('📊 Displaying ZimScore:', { scoreValue, starRating, zimscoreData });
             
             if (!starRating && scoreValue) {
                 if (scoreValue >= 70) starRating = 5;
@@ -10313,14 +10324,57 @@ How it works:
          * Load cached ZimScore immediately (for fast display)
          */
         function loadCachedZimScore() {
+            // Try multiple localStorage keys where ZimScore might be stored
             const cached = localStorage.getItem('zimscoreData');
+            const zimScoreStorage = localStorage.getItem('zimScore');
+            const userDataStorage = localStorage.getItem('userData');
+            
+            let zimscoreData = null;
+            
             if (cached) {
                 try {
-                    const zimscoreData = JSON.parse(cached);
-                    displayZimScore(zimscoreData);
+                    zimscoreData = JSON.parse(cached);
                 } catch (e) {
                     console.warn('Invalid cached ZimScore data');
                 }
+            }
+            
+            // Try zimScore storage
+            if (!zimscoreData && zimScoreStorage) {
+                try {
+                    const parsed = JSON.parse(zimScoreStorage);
+                    zimscoreData = {
+                        score_value: parsed.score || parsed.score_value || parsed.zimScore || 0,
+                        star_rating: parsed.star_rating || parsed.starRating || 0
+                    };
+                } catch (e) {
+                    console.warn('Invalid zimScore storage');
+                }
+            }
+            
+            // Try userData storage
+            if (!zimscoreData && userDataStorage) {
+                try {
+                    const parsed = JSON.parse(userDataStorage);
+                    if (parsed.zimScore || parsed.zim_score) {
+                        zimscoreData = {
+                            score_value: parsed.zimScore || parsed.zim_score || 0,
+                            star_rating: 0
+                        };
+                    }
+                } catch (e) {
+                    console.warn('Invalid userData storage');
+                }
+            }
+            
+            // If we have data, display it
+            if (zimscoreData) {
+                console.log('📊 Loading cached ZimScore:', zimscoreData);
+                displayZimScore(zimscoreData);
+            } else {
+                // Show default ZimScore display (0 stars) to replace "Premium Member"
+                console.log('📊 No cached ZimScore, showing default');
+                displayZimScore({ score_value: 0, star_rating: 0 });
             }
         }
 
