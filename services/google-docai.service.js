@@ -93,6 +93,11 @@ class GoogleDocAIService {
         if (buffer.toString('utf8', 0, 4) === '%PDF') {
             return 'application/pdf';
         }
+        // Check for CSV
+        const text = buffer.toString('utf8', 0, 1000);
+        if (text.includes(',') && (text.includes('\n') || text.includes('\r'))) {
+            return 'text/csv';
+        }
         // Check for PNG
         if (buffer.toString('hex', 0, 8) === '89504e470d0a1a0a') {
             return 'image/png';

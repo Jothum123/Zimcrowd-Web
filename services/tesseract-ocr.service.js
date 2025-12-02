@@ -1,5 +1,6 @@
 const Tesseract = require('tesseract.js');
 const pdfParse = require('pdf-parse');
+const csv = require('csv-parse/sync');
 
 class TesseractOCRService {
     constructor() {
@@ -11,6 +12,15 @@ class TesseractOCRService {
      */
     isPDF(buffer) {
         return buffer.toString('utf8', 0, 4) === '%PDF';
+    }
+
+    /**
+     * Check if buffer is a CSV
+     */
+    isCSV(buffer) {
+        const text = buffer.toString('utf8', 0, 1000);
+        // Check for common CSV patterns
+        return text.includes(',') && (text.includes('\n') || text.includes('\r'));
     }
 
     /**
@@ -39,6 +49,43 @@ class TesseractOCRService {
     }
 
     /**
+     * Parse CSV data
+     */
+    async parseCSV(csvBuffer) {
+        try {
+            console.log('📊 Parsing CSV data...');
+            
+            const csvText = csvBuffer.toString('utf8');
+            const records = csv.parse(csvText, {
+                columns: true,
+                skip_empty_lines: true,
+                trim: true
+            });
+            
+            console.log('✅ CSV parsed');
+            console.log('📊 Rows:', records.length);
+            console.log('📋 Columns:', Object.keys(records[0] || {}).join(', '));
+            
+            // Convert to text format for OCR compatibility
+            const textLines = [Object.keys(records[0] || {}).join(', ')];
+            records.forEach(record => {
+                textLines.push(Object.values(record).join(', '));
+            });
+            
+            return {
+                text: textLines.join('\n'),
+                records: records,
+                rowCount: records.length,
+                columns: Object.keys(records[0] || {})
+            };
+            
+        } catch (error) {
+            console.error('❌ CSV parsing failed:', error.message);
+            throw new Error('Failed to parse CSV: ' + error.message);
+        }
+    }
+
+    /**
      * Extract text from ID document using Tesseract
      */
     async extractIDText(imageBuffer) {
@@ -58,6 +105,22 @@ class TesseractOCRService {
                     blocks: pdfData.text.split('\n').filter(line => line.trim().length > 0),
                     blockCount: pdfData.text.split('\n').filter(line => line.trim().length > 0).length,
                     source: 'PDF text extraction'
+                };
+            }
+            
+            // Check if CSV and parse directly
+            if (this.isCSV(imageBuffer)) {
+                console.log('📊 CSV detected, parsing data...');
+                const csvData = await this.parseCSV(imageBuffer);
+                
+                return {
+                    success: true,
+                    fullText: csvData.text,
+                    confidence: 95, // High confidence for CSV parsing
+                    blocks: csvData.text.split('\n').filter(line => line.trim().length > 0),
+                    blockCount: csvData.rowCount,
+                    source: 'CSV parsing',
+                    csvData: csvData.records // Include structured data
                 };
             }
             
