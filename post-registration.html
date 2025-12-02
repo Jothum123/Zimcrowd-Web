@@ -1775,6 +1775,7 @@
                 };
                 
                 // Upload ID Front with OCR
+                updateVerificationStep('id-front', 'active', 'Processing ID Front...');
                 const idFrontFile = document.getElementById('idFront').files[0];
                 if (idFrontFile) {
                     console.log('📤 Uploading ID Front with OCR...');
@@ -1789,20 +1790,27 @@
                         if (ocrName && !ocrName.toLowerCase().includes(enteredName.split(' ')[0])) {
                             console.warn('⚠️ ID name may not match entered name');
                         }
-                        updateVerificationStep('id', 'done', 'ID Front Verified ✓');
+                        updateVerificationStep('id-front', 'done', 'ID Front Verified ✓');
                     } else {
-                        updateVerificationStep('id', 'warning', 'ID uploaded (OCR pending)');
+                        updateVerificationStep('id-front', 'warning', 'ID Front uploaded (OCR pending)');
                     }
                 }
                 
                 // Upload ID Back with OCR
+                updateVerificationStep('id-back', 'active', 'Processing ID Back...');
                 const idBackFile = document.getElementById('idBack').files[0];
                 if (idBackFile) {
                     console.log('📤 Uploading ID Back with OCR...');
                     ocrResults.idBack = await uploadDocumentWithOCR(idBackFile, 'id_back');
+                    
+                    if (ocrResults.idBack.success) {
+                        updateVerificationStep('id-back', 'done', 'ID Back Verified ✓');
+                    } else {
+                        updateVerificationStep('id-back', 'warning', 'ID Back uploaded (OCR pending)');
+                    }
                 }
                 
-                updateVerificationStep('selfie', 'active', 'Analyzing selfie for face detection...');
+                updateVerificationStep('selfie', 'active', 'Verifying Face...');
                 
                 // Upload Selfie with Face Detection
                 const selfieFile = document.getElementById('selfiePhoto').files[0];
@@ -1879,11 +1887,12 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    // Mark all steps as done
-                    updateVerificationStep('id', 'done', 'ID Verified');
-                    updateVerificationStep('selfie', 'done', 'Face Detected');
-                    updateVerificationStep('bank', 'done', 'Bank Statement Processed');
-                    updateVerificationStep('score', 'done', 'ZimScore Calculated');
+                    // Mark all steps as done with checkmarks
+                    updateVerificationStep('id-front', 'done', 'ID Front Verified ✓');
+                    updateVerificationStep('id-back', 'done', 'ID Back Verified ✓');
+                    updateVerificationStep('selfie', 'done', 'Face Verified ✓');
+                    updateVerificationStep('bank', 'done', 'Bank Statement Processed ✓');
+                    updateVerificationStep('score', 'done', 'ZimScore Calculated ✓');
                     
                     // Store completion flags
                     localStorage.setItem('profileCompleted', 'true');
@@ -2000,17 +2009,20 @@
                             <h3 id="processingTitle">🔍 Verifying Your Documents</h3>
                             <p id="processingStatus">Processing ID document...</p>
                             <div class="processing-steps">
-                                <div class="step" id="step-id">
-                                    <i class="fas fa-spinner fa-spin"></i> Verifying National ID
+                                <div class="step" id="step-id-front">
+                                    <i class="fas fa-spinner fa-spin"></i> ID Front Verification
+                                </div>
+                                <div class="step" id="step-id-back">
+                                    <i class="fas fa-clock"></i> ID Back Verification
                                 </div>
                                 <div class="step" id="step-selfie">
-                                    <i class="fas fa-clock"></i> Face Detection
+                                    <i class="fas fa-clock"></i> Face Verification
                                 </div>
                                 <div class="step" id="step-bank">
-                                    <i class="fas fa-clock"></i> Processing Bank Statement
+                                    <i class="fas fa-clock"></i> Bank Statement Processing
                                 </div>
                                 <div class="step" id="step-score">
-                                    <i class="fas fa-clock"></i> Calculating ZimScore
+                                    <i class="fas fa-clock"></i> ZimScore Calculation
                                 </div>
                             </div>
                             <div id="errorActions" style="display: none; margin-top: 20px;">
@@ -2128,6 +2140,30 @@
                     .processing-steps .step.warning i {
                         color: #f59e0b;
                     }
+                    .check-circle {
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        width: 20px;
+                        height: 20px;
+                        border-radius: 50%;
+                        background: #22c55e;
+                        color: white;
+                        font-size: 12px;
+                        margin-right: 8px;
+                    }
+                    .error-circle {
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        width: 20px;
+                        height: 20px;
+                        border-radius: 50%;
+                        background: #ef4444;
+                        color: white;
+                        font-size: 12px;
+                        margin-right: 8px;
+                    }
                 `;
                 document.head.appendChild(style);
             }
@@ -2138,19 +2174,24 @@
 
             // Simulate progress (will be overridden by actual API responses)
             verificationTimeouts.push(setTimeout(() => {
-                updateVerificationStep('id', 'done', 'ID Verified');
-                updateVerificationStep('selfie', 'active', 'Detecting Face...');
+                updateVerificationStep('id-front', 'done', 'ID Front Verified ✓');
+                updateVerificationStep('id-back', 'active', 'Verifying ID Back...');
             }, 1500));
 
             verificationTimeouts.push(setTimeout(() => {
-                updateVerificationStep('selfie', 'done', 'Face Detected');
-                updateVerificationStep('bank', 'active', 'Processing Bank Statement...');
+                updateVerificationStep('id-back', 'done', 'ID Back Verified ✓');
+                updateVerificationStep('selfie', 'active', 'Verifying Face...');
             }, 3000));
 
             verificationTimeouts.push(setTimeout(() => {
-                updateVerificationStep('bank', 'done', 'Bank Statement Processed');
-                updateVerificationStep('score', 'active', 'Calculating ZimScore...');
+                updateVerificationStep('selfie', 'done', 'Face Verified ✓');
+                updateVerificationStep('bank', 'active', 'Processing Bank Statement...');
             }, 4500));
+
+            verificationTimeouts.push(setTimeout(() => {
+                updateVerificationStep('bank', 'done', 'Bank Statement Processed ✓');
+                updateVerificationStep('score', 'active', 'Calculating ZimScore...');
+            }, 6000));
         }
         
         function resetProcessingModal() {
@@ -2176,25 +2217,26 @@
             if (errorActions) errorActions.style.display = 'none';
             
             // Reset all steps
-            ['id', 'selfie', 'bank', 'score'].forEach(step => {
+            ['id-front', 'id-back', 'selfie', 'bank', 'score'].forEach(step => {
                 const el = document.getElementById(`step-${step}`);
                 if (el) {
                     el.classList.remove('done', 'active', 'error', 'warning');
                     const labels = {
-                        'id': 'Verifying National ID',
-                        'selfie': 'Face Detection',
-                        'bank': 'Processing Bank Statement',
-                        'score': 'Calculating ZimScore'
+                        'id-front': 'ID Front Verification',
+                        'id-back': 'ID Back Verification',
+                        'selfie': 'Face Verification',
+                        'bank': 'Bank Statement Processing',
+                        'score': 'ZimScore Calculation'
                     };
                     el.innerHTML = `<i class="fas fa-clock"></i> ${labels[step]}`;
                 }
             });
             
             // Set first step as active
-            const idStep = document.getElementById('step-id');
+            const idStep = document.getElementById('step-id-front');
             if (idStep) {
                 idStep.classList.add('active');
-                idStep.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying National ID';
+                idStep.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ID Front Verification';
             }
         }
         
@@ -2206,13 +2248,13 @@
             
             if (status === 'done') {
                 el.classList.add('done');
-                el.innerHTML = `<i class="fas fa-check"></i> ${message}`;
+                el.innerHTML = `<span class="check-circle"><i class="fas fa-check"></i></span> ${message}`;
             } else if (status === 'active') {
                 el.classList.add('active');
                 el.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${message}`;
             } else if (status === 'error') {
                 el.classList.add('error');
-                el.innerHTML = `<i class="fas fa-times-circle"></i> ${message}`;
+                el.innerHTML = `<span class="error-circle"><i class="fas fa-times"></i></span> ${message}`;
             } else if (status === 'warning') {
                 el.classList.add('warning');
                 el.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
