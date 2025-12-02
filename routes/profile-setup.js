@@ -592,6 +592,32 @@ router.post('/upload-document-with-ocr', authenticateUser, upload.single('docume
 
         console.log(`📄 Processing ${document_type} for user ${req.user.id}`);
 
+        // Ensure user exists in users table (for foreign key constraint)
+        const { data: existingUser } = await supabase
+            .from('users')
+            .select('id')
+            .eq('id', req.user.id)
+            .single();
+        
+        if (!existingUser) {
+            console.log('📝 Creating user record for:', req.user.id);
+            const { error: userError } = await supabase
+                .from('users')
+                .insert({
+                    id: req.user.id,
+                    email: req.user.email,
+                    created_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+            
+            if (userError && !userError.message.includes('duplicate')) {
+                console.error('❌ Failed to create user record:', userError.message);
+            } else {
+                console.log('✅ User record created');
+            }
+        }
+
         // Process document with OCR
         let ocrData = null;
         if (ocrService) {
