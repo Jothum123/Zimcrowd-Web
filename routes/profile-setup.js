@@ -1080,20 +1080,35 @@ router.post('/complete-setup', authenticateUser, async (req, res) => {
 
         console.log('✅ All required documents uploaded');
 
-        // Step 2: Check profile completion
+        // Step 2: Check profile completion from profiles table directly
         const { data: profile, error: profileError } = await supabase
-            .from('user_profile_completion')
-            .select('*')
+            .from('profiles')
+            .select('first_name, last_name, employment_status, employment_type, monthly_income, profile_completed, employment_completed')
             .eq('id', userId)
             .single();
 
-        if (profileError) throw profileError;
+        if (profileError) {
+            console.error('❌ Error fetching profile:', profileError);
+            throw profileError;
+        }
 
-        if (!profile.profile_completed || !profile.employment_completed) {
+        // Check if essential fields are filled (more lenient check)
+        const hasBasicProfile = profile.first_name && profile.last_name;
+        const hasEmployment = profile.employment_status || profile.employment_type;
+        
+        // Accept if either the flags are set OR the essential fields are filled
+        const isProfileComplete = profile.profile_completed || hasBasicProfile;
+        const isEmploymentComplete = profile.employment_completed || hasEmployment;
+
+        if (!isProfileComplete || !isEmploymentComplete) {
+            console.log('❌ Profile incomplete:', { hasBasicProfile, hasEmployment, profile_completed: profile.profile_completed, employment_completed: profile.employment_completed });
             return res.status(400).json({
                 success: false,
                 message: 'Profile not complete',
-                pending_steps: profile.pending_steps.filter(s => s !== null)
+                pending_steps: [
+                    !isProfileComplete ? 'basic_profile' : null,
+                    !isEmploymentComplete ? 'employment' : null
+                ].filter(s => s !== null)
             });
         }
 
