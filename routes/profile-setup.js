@@ -190,6 +190,17 @@ router.post('/employment', authenticateUser, async (req, res) => {
             });
         }
 
+        // Convert income range string to numeric value (use midpoint of range)
+        let parsedMonthlyIncome = monthly_income;
+        if (typeof monthly_income === 'string' && monthly_income.includes('-')) {
+            const [min, max] = monthly_income.split('-').map(v => parseFloat(v.replace(/[^0-9.]/g, '')));
+            parsedMonthlyIncome = (min + max) / 2; // Use midpoint
+        } else if (typeof monthly_income === 'string' && monthly_income.includes('+')) {
+            parsedMonthlyIncome = parseFloat(monthly_income.replace(/[^0-9.]/g, ''));
+        } else if (monthly_income) {
+            parsedMonthlyIncome = parseFloat(monthly_income);
+        }
+
         // Validate employment_type for ZimScore (REQUIRED)
         const validEmploymentTypes = ['government', 'private', 'business', 'informal'];
         if (!employment_type || !validEmploymentTypes.includes(employment_type.toLowerCase())) {
@@ -212,7 +223,7 @@ router.post('/employment', authenticateUser, async (req, res) => {
                 employment_type: employment_type.toLowerCase(),
                 industry,
                 years_employed,
-                monthly_income,
+                monthly_income: parsedMonthlyIncome,
                 other_income_sources,
                 employer_phone,
                 employer_email,

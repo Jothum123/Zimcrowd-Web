@@ -941,12 +941,23 @@ router.post('/settings/employment-details', authenticateUser, async (req, res) =
 
         console.log('💼 Saving employment details for user:', userId);
 
+        // Convert income range string to numeric value (use midpoint of range)
+        let parsedMonthlyIncome = monthly_income;
+        if (typeof monthly_income === 'string' && monthly_income.includes('-')) {
+            const [min, max] = monthly_income.split('-').map(v => parseFloat(v.replace(/[^0-9.]/g, '')));
+            parsedMonthlyIncome = (min + max) / 2; // Use midpoint
+        } else if (typeof monthly_income === 'string' && monthly_income.includes('+')) {
+            parsedMonthlyIncome = parseFloat(monthly_income.replace(/[^0-9.]/g, ''));
+        } else if (monthly_income) {
+            parsedMonthlyIncome = parseFloat(monthly_income);
+        }
+
         const employmentData = {
             employment_type,
             employment_status: employment_status === '' ? null : employment_status,
             employer_name,
             occupation,
-            monthly_income,
+            monthly_income: parsedMonthlyIncome || null,
             annual_income,
             source_of_funds,
             updated_at: new Date().toISOString()
