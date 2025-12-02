@@ -1111,7 +1111,18 @@
             color: #e2e8f0 !important;
             cursor: pointer;
             font-size: 14px;
-            min-width: 140px;
+            width: auto !important;
+            min-width: unset !important;
+            max-width: 150px;
+        }
+
+        /* Transaction Filters Container */
+        .transaction-filters {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: nowrap;
         }
 
         .filter-select option {
@@ -4853,7 +4864,7 @@
         <section id="transactions-section" class="dashboard-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
                 <h2>Transaction History</h2>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <div class="transaction-filters">
                     <select id="transactionTypeFilter" class="filter-select" onchange="filterTransactions()">
                         <option value="">All Types</option>
                         <option value="deposit">Deposits</option>
