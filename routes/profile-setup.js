@@ -606,6 +606,7 @@ router.post('/upload-document-with-ocr', authenticateUser, upload.single('docume
                 .insert({
                     id: req.user.id,
                     email: req.user.email,
+                    password_hash: 'supabase_auth_managed', // Placeholder - actual auth is managed by Supabase Auth
                     created_at: new Date().toISOString()
                 })
                 .select()
