@@ -1,19 +1,33 @@
 /**
- * Master AI Service - Primary AI with Kairo AI Fallback
+ * Master AI Service - Gemini Primary with OpenRouter Fallback
  * Handles multiple AI providers with intelligent fallback system
+ * 
+ * Priority Order:
+ * 1. Gemini AI (Primary - FREE with generous limits)
+ * 2. OpenRouter (Fallback - Multiple free models)
+ * 3. Rule-based Kairo AI (Emergency fallback)
  */
 
 const GeminiKairoAIService = require('./gemini-kairo-ai.service');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 class MasterAIService {
     constructor() {
-        // Initialize Kairo AI as fallback
+        // Initialize rule-based Kairo AI as emergency fallback
         this.kairoAI = new GeminiKairoAIService();
         
-        // Primary AI configuration with multi-model support
-        this.primaryAI = {
-            enabled: !!process.env.PRIMARY_AI_ENABLED,
-            provider: process.env.PRIMARY_AI_PROVIDER || 'openai', // openai, claude, openrouter, custom
+        // Primary AI: Gemini (FREE with generous limits)
+        this.geminiAI = {
+            enabled: !!process.env.GEMINI_API_KEY,
+            apiKey: process.env.GEMINI_API_KEY,
+            model: 'gemini-pro',
+            client: null
+        };
+        
+        // Fallback AI: OpenRouter (FREE models)
+        this.openrouterAI = {
+            enabled: !!process.env.PRIMARY_AI_API_KEY,
+            provider: 'openrouter',
             apiKey: process.env.PRIMARY_AI_API_KEY,
             models: [
                 process.env.PRIMARY_AI_MODEL || 'deepseek/deepseek-chat-v3.1:free',
@@ -23,123 +37,137 @@ class MasterAIService {
             ].filter(Boolean),
             currentModelIndex: 0,
             rotationEnabled: process.env.AI_MODEL_ROTATION === 'true',
-            maxRetries: 2
+            maxRetries: 2,
+            client: null
         };
         
-        // Initialize primary AI if configured
-        this.initializePrimaryAI();
+        // Initialize AI providers
+        this.initializeGemini();
+        this.initializeOpenRouter();
         
-        // Fallback statistics
+        // Statistics
         this.stats = {
-            primaryAIUsed: 0,
+            geminiUsed: 0,
+            openrouterUsed: 0,
             kairoFallbackUsed: 0,
             totalRequests: 0
         };
         
-        console.log(`🤖 Master AI initialized:`);
-        console.log(`   Primary AI: ${this.primaryAI.enabled ? this.primaryAI.provider : 'Disabled'}`);
-        if (this.primaryAI.enabled && this.primaryAI.models.length > 0) {
-            console.log(`   Models: ${this.primaryAI.models.length} free models available`);
-            console.log(`   Rotation: ${this.primaryAI.rotationEnabled ? 'Enabled' : 'Disabled'}`);
+        console.log(`🤖 Master AI initialized (Kairo):`);
+        console.log(`   Primary: Gemini AI ${this.geminiAI.enabled ? '✅' : '❌'}`);
+        console.log(`   Fallback: OpenRouter ${this.openrouterAI.enabled ? '✅' : '❌'} (${this.openrouterAI.models.length} models)`);
+        console.log(`   Emergency: Rule-based Kairo AI`);
+    }
+    
+    /**
+     * Initialize Gemini AI (Primary)
+     */
+    initializeGemini() {
+        if (!this.geminiAI.enabled) return;
+        
+        try {
+            const genAI = new GoogleGenerativeAI(this.geminiAI.apiKey);
+            this.geminiAI.client = genAI.getGenerativeModel({ model: this.geminiAI.model });
+            console.log('✅ Gemini AI initialized successfully');
+        } catch (error) {
+            console.error('❌ Failed to initialize Gemini AI:', error.message);
+            this.geminiAI.enabled = false;
         }
-        console.log(`   Fallback: Kairo AI (Gemini-powered)`);
+    }
+    
+    /**
+     * Initialize OpenRouter AI (Fallback)
+     */
+    initializeOpenRouter() {
+        if (!this.openrouterAI.enabled) return;
+        
+        try {
+            const OpenAI = require('openai');
+            this.openrouterAI.client = new OpenAI({
+                apiKey: this.openrouterAI.apiKey,
+                baseURL: 'https://openrouter.ai/api/v1'
+            });
+            console.log('✅ OpenRouter AI initialized successfully');
+        } catch (error) {
+            console.error('❌ Failed to initialize OpenRouter AI:', error.message);
+            this.openrouterAI.enabled = false;
+        }
     }
 
     /**
      * Initialize primary AI based on configuration
      */
-    initializePrimaryAI() {
-        if (!this.primaryAI.enabled) return;
-
-        try {
-            switch (this.primaryAI.provider) {
-                case 'openai':
-                    const OpenAI = require('openai');
-                    this.openai = new OpenAI({ apiKey: this.primaryAI.apiKey });
-                    break;
-                    
-                case 'claude':
-                    const Anthropic = require('@anthropic-ai/sdk');
-                    this.claude = new Anthropic({ apiKey: this.primaryAI.apiKey });
-                    break;
-                    
-                case 'openrouter':
-                    const OpenAIRouter = require('openai');
-                    this.openrouter = new OpenAIRouter({ 
-                        apiKey: this.primaryAI.apiKey,
-                        baseURL: 'https://openrouter.ai/api/v1'
-                    });
-                    break;
-                    
-                case 'custom':
-                    // Initialize your custom AI service here
-                    this.customAI = this.initializeCustomAI();
-                    break;
-                    
-                default:
-                    console.warn(`⚠️ Unknown primary AI provider: ${this.primaryAI.provider}`);
-                    this.primaryAI.enabled = false;
-            }
-        } catch (error) {
-            console.error('❌ Failed to initialize primary AI:', error.message);
-            this.primaryAI.enabled = false;
-        }
-    }
-
     /**
-     * Get current model and rotate if enabled
+     * Get current OpenRouter model and rotate if enabled
      */
-    getCurrentModel() {
-        if (!this.primaryAI.models || this.primaryAI.models.length === 0) {
-            return 'deepseek/deepseek-chat-v3.1:free'; // Default fallback
+    getCurrentOpenRouterModel() {
+        if (!this.openrouterAI.models || this.openrouterAI.models.length === 0) {
+            return 'deepseek/deepseek-chat-v3.1:free';
         }
 
-        const currentModel = this.primaryAI.models[this.primaryAI.currentModelIndex];
+        const currentModel = this.openrouterAI.models[this.openrouterAI.currentModelIndex];
 
-        // Rotate to next model if rotation is enabled
-        if (this.primaryAI.rotationEnabled) {
-            this.primaryAI.currentModelIndex = (this.primaryAI.currentModelIndex + 1) % this.primaryAI.models.length;
+        if (this.openrouterAI.rotationEnabled) {
+            this.openrouterAI.currentModelIndex = (this.openrouterAI.currentModelIndex + 1) % this.openrouterAI.models.length;
         }
 
         return currentModel;
     }
 
     /**
-     * Main message processing with intelligent fallback
+     * Main message processing with Gemini → OpenRouter → Kairo fallback chain
      */
     async processMessage(userId, message, conversationContext = {}) {
         this.stats.totalRequests++;
         
         try {
-            // Try primary AI first if enabled
-            if (this.primaryAI.enabled) {
-                const primaryResponse = await this.tryPrimaryAI(userId, message, conversationContext);
-                if (primaryResponse.success) {
-                    this.stats.primaryAIUsed++;
+            // 1. Try Gemini AI first (Primary)
+            if (this.geminiAI.enabled) {
+                console.log('🤖 Trying Gemini AI (Primary)...');
+                const geminiResponse = await this.tryGeminiAI(userId, message, conversationContext);
+                if (geminiResponse.success) {
+                    this.stats.geminiUsed++;
                     return {
-                        ...primaryResponse,
-                        aiProvider: this.primaryAI.provider,
+                        ...geminiResponse,
+                        aiProvider: 'gemini',
+                        model: 'gemini-pro',
                         fallbackUsed: false
                     };
                 }
+                console.log('⚠️ Gemini AI failed, trying OpenRouter...');
             }
             
-            // Fallback to Kairo AI
-            console.log('🔄 Falling back to Kairo AI');
+            // 2. Try OpenRouter AI (Fallback)
+            if (this.openrouterAI.enabled) {
+                console.log('🔄 Trying OpenRouter AI (Fallback)...');
+                const openrouterResponse = await this.tryOpenRouterAI(userId, message, conversationContext);
+                if (openrouterResponse.success) {
+                    this.stats.openrouterUsed++;
+                    return {
+                        ...openrouterResponse,
+                        aiProvider: 'openrouter',
+                        fallbackUsed: true,
+                        fallbackReason: 'Gemini AI failed or disabled'
+                    };
+                }
+                console.log('⚠️ OpenRouter AI failed, using Kairo rule-based...');
+            }
+            
+            // 3. Emergency fallback to rule-based Kairo AI
+            console.log('🔄 Using Kairo AI (Emergency fallback)');
             const kairoResponse = await this.kairoAI.processMessage(userId, message, conversationContext);
             this.stats.kairoFallbackUsed++;
             
             return {
                 ...kairoResponse,
-                aiProvider: 'kairo-ai',
+                aiProvider: 'kairo-rules',
                 fallbackUsed: true,
-                fallbackReason: this.primaryAI.enabled ? 'Primary AI failed' : 'Primary AI disabled'
+                fallbackReason: 'All AI providers failed'
             };
             
         } catch (error) {
             console.error('❌ All AI systems failed:', error);
             
-            // Emergency fallback - basic response
             return {
                 success: true,
                 response: "I apologize, but I'm experiencing technical difficulties right now. Please try again in a moment, or contact our support team for immediate assistance.",
@@ -153,7 +181,131 @@ class MasterAIService {
     }
 
     /**
-     * Try primary AI with retry logic
+     * Try Gemini AI (Primary)
+     */
+    async tryGeminiAI(userId, message, conversationContext, retryCount = 0) {
+        try {
+            const userProfile = await this.kairoAI.getUserFinancialProfile(userId);
+            const prompt = this.buildGeminiPrompt(message, userProfile);
+            
+            const result = await this.geminiAI.client.generateContent(prompt);
+            const response = await result.response;
+            let aiResponse = response.text();
+            
+            // Post-process response
+            aiResponse = this.enhanceResponseWithBranding(aiResponse, userProfile);
+            
+            const intent = await this.kairoAI.analyzeIntent(message);
+            const suggestions = await this.kairoAI.generateSuggestions(intent, userProfile);
+            
+            return {
+                success: true,
+                response: aiResponse,
+                intent: intent,
+                suggestions: suggestions
+            };
+            
+        } catch (error) {
+            console.error(`❌ Gemini AI attempt ${retryCount + 1} failed:`, error.message);
+            
+            if (retryCount < 2) {
+                await this.delay(1000 * (retryCount + 1));
+                return await this.tryGeminiAI(userId, message, conversationContext, retryCount + 1);
+            }
+            
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Try OpenRouter AI (Fallback)
+     */
+    async tryOpenRouterAI(userId, message, conversationContext, retryCount = 0) {
+        try {
+            const userProfile = await this.kairoAI.getUserFinancialProfile(userId);
+            const currentModel = this.getCurrentOpenRouterModel();
+            const systemPrompt = this.buildAdvancedSystemPrompt(userProfile);
+            
+            console.log(`🤖 Using OpenRouter model: ${currentModel}`);
+            
+            const response = await this.openrouterAI.client.chat.completions.create({
+                model: currentModel,
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: message }
+                ],
+                max_tokens: 600,
+                temperature: 0.7
+            });
+
+            const aiResponse = response.choices[0].message.content;
+            const intent = await this.kairoAI.analyzeIntent(message);
+            const suggestions = await this.kairoAI.generateSuggestions(intent, userProfile);
+
+            return {
+                success: true,
+                response: aiResponse,
+                intent: intent,
+                suggestions: suggestions,
+                model: currentModel
+            };
+            
+        } catch (error) {
+            console.error(`❌ OpenRouter AI attempt ${retryCount + 1} failed:`, error.message);
+            
+            if (retryCount < this.openrouterAI.maxRetries) {
+                await this.delay(1000 * (retryCount + 1));
+                return await this.tryOpenRouterAI(userId, message, conversationContext, retryCount + 1);
+            }
+            
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Build Gemini-specific prompt
+     */
+    buildGeminiPrompt(userMessage, userProfile) {
+        return `You are Kairo, ZimCrowd's friendly and knowledgeable AI financial assistant.
+
+ABOUT ZIMCROWD:
+- ZimCrowd is a peer-to-peer lending platform connecting borrowers with investors
+- We offer loans from $50 to $5,000 with competitive interest rates
+- Our ZimScore system (0-85) determines loan eligibility and rates
+
+USER CONTEXT:
+- Name: ${userProfile.firstName || 'User'}
+- ZimScore: ${userProfile.zimScore || 'Not calculated'}
+- Loan Eligibility: ${userProfile.loanEligibility || 'Unknown'}
+- Current Balance: $${userProfile.walletBalance || 0}
+
+GUIDELINES:
+1. Be helpful, friendly, and professional
+2. Provide accurate information about ZimCrowd services
+3. Help users understand their financial options
+4. Never provide specific financial advice - suggest consulting professionals for complex decisions
+5. Keep responses concise but informative (under 200 words)
+6. Use emojis sparingly for friendliness
+
+USER MESSAGE: ${userMessage}
+
+Respond as Kairo:`;
+    }
+
+    /**
+     * Enhance response with ZimCrowd branding
+     */
+    enhanceResponseWithBranding(response, userProfile) {
+        // Add personalization if user name is available
+        if (userProfile.firstName && !response.includes(userProfile.firstName)) {
+            // Don't add name if response is already personalized
+        }
+        
+        return response;
+    }
+
+    /**
+     * Try primary AI with retry logic (Legacy - kept for compatibility)
      */
     async tryPrimaryAI(userId, message, conversationContext, retryCount = 0) {
         try {
