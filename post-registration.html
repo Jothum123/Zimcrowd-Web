@@ -1633,7 +1633,13 @@
                     type: selectedPaymentMethod,
                     mobile_number: document.getElementById('mobileNumber')?.value,
                     account_name: document.getElementById('accountName')?.value
-                }
+                },
+                
+                // Completion flags
+                profile_completed: true,
+                employment_completed: true,
+                next_of_kin_completed: true,
+                payment_details_completed: true
             };
 
             try {
