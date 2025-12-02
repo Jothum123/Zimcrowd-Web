@@ -86,9 +86,29 @@ class GoogleDocAIService {
     }
 
     /**
+     * Detect mime type from buffer
+     */
+    detectMimeType(buffer) {
+        // Check for PDF
+        if (buffer.toString('utf8', 0, 4) === '%PDF') {
+            return 'application/pdf';
+        }
+        // Check for PNG
+        if (buffer.toString('hex', 0, 8) === '89504e470d0a1a0a') {
+            return 'image/png';
+        }
+        // Check for JPEG
+        if (buffer.toString('hex', 0, 2) === 'ffd8') {
+            return 'image/jpeg';
+        }
+        // Default to JPEG
+        return 'image/jpeg';
+    }
+
+    /**
      * Process document with specified processor
      */
-    async processDocument(imageBuffer, processorId, mimeType = 'image/jpeg') {
+    async processDocument(imageBuffer, processorId, mimeType = null) {
         if (!this.client) {
             return { success: false, message: 'Google Document AI not configured' };
         }
@@ -96,8 +116,14 @@ class GoogleDocAIService {
         try {
             const processorName = this.getProcessorName(processorId);
             
+            // Auto-detect mime type if not provided
+            if (!mimeType) {
+                mimeType = this.detectMimeType(imageBuffer);
+            }
+            
             console.log(`🔍 Processing with Google Document AI...`);
             console.log(`   Processor: ${processorId}`);
+            console.log(`   MIME Type: ${mimeType}`);
 
             const request = {
                 name: processorName,

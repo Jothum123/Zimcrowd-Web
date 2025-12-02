@@ -51,6 +51,7 @@
     "openai": "^6.9.0",
     "otplib": "^12.0.1",
     "paynow": "^2.2.2",
+    "pdf-parse": "^1.1.1",
     "pg": "^8.11.3",
     "resend": "^3.0.0",
     "tesseract.js": "^6.0.1",

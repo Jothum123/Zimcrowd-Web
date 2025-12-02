@@ -1,8 +1,41 @@
 const Tesseract = require('tesseract.js');
+const pdfParse = require('pdf-parse');
 
 class TesseractOCRService {
     constructor() {
         console.log('✅ Tesseract OCR Service initialized (FREE - No billing required)');
+    }
+
+    /**
+     * Check if buffer is a PDF
+     */
+    isPDF(buffer) {
+        return buffer.toString('utf8', 0, 4) === '%PDF';
+    }
+
+    /**
+     * Extract text from PDF using pdf-parse
+     */
+    async extractPDFText(pdfBuffer) {
+        try {
+            console.log('📄 Extracting text from PDF...');
+            
+            const data = await pdfParse(pdfBuffer);
+            
+            console.log('✅ PDF text extracted');
+            console.log('📝 Text length:', data.text.length);
+            console.log('📄 Pages:', data.numpages);
+            
+            return {
+                text: data.text,
+                pages: data.numpages,
+                info: data.info
+            };
+            
+        } catch (error) {
+            console.error('❌ PDF text extraction failed:', error.message);
+            throw new Error('Failed to extract text from PDF: ' + error.message);
+        }
     }
 
     /**
@@ -12,6 +45,21 @@ class TesseractOCRService {
         try {
             console.log('🔍 Starting Tesseract OCR...');
             console.log('📦 Image buffer size:', imageBuffer.length, 'bytes');
+            
+            // Check if PDF and extract text directly
+            if (this.isPDF(imageBuffer)) {
+                console.log('📄 PDF detected, extracting text...');
+                const pdfData = await this.extractPDFText(imageBuffer);
+                
+                return {
+                    success: true,
+                    fullText: pdfData.text,
+                    confidence: 85, // Default confidence for PDF text extraction
+                    blocks: pdfData.text.split('\n').filter(line => line.trim().length > 0),
+                    blockCount: pdfData.text.split('\n').filter(line => line.trim().length > 0).length,
+                    source: 'PDF text extraction'
+                };
+            }
             
             const { data: { text, confidence, words } } = await Tesseract.recognize(
                 imageBuffer,
