@@ -3,14 +3,9 @@
  * Handle manual deposits, credits, debits, and adjustments
  */
 
-const { createClient } = require('@supabase/supabase-js');
+const { supabase, isSupabaseAvailable } = require('./supabase-client');
 const WalletService = require('./wallet.service');
 const NotificationService = require('./notification.service');
-
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 class AdminManualTransactionsService {
     constructor() {

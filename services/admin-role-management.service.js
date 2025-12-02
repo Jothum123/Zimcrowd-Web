@@ -3,13 +3,8 @@
  * Handle role-based access control for admin dashboard
  */
 
-const { createClient } = require('@supabase/supabase-js');
+const { supabase, isSupabaseAvailable } = require('./supabase-client');
 const crypto = require('crypto');
-
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 class AdminRoleManagementService {
     

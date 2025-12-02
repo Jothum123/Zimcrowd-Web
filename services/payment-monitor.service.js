@@ -1,10 +1,5 @@
-const { createClient } = require('@supabase/supabase-js');
+const { supabase, isSupabaseAvailable } = require('./supabase-client');
 const { PaymentStatusType, PaymentErrorType } = require('../types/payment-types');
-
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 /**
  * Payment Monitoring Service
