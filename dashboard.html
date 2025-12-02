@@ -3363,6 +3363,18 @@
             <img src="assets/images/Zimcrowd_Dark.png" alt="ZimCrowd">
         </div>
 
+        <!-- User Info with ZimScore -->
+        <div class="user-info" id="sidebar-user-info">
+            <div class="user-avatar" id="sidebar-avatar"></div>
+            <div class="user-details">
+                <h4 id="sidebar-user-name">Loading...</h4>
+                <p id="sidebar-zimscore-display" style="color: #fbbf24; font-size: 12px; margin: 0;">
+                    <span id="sidebar-zimscore-stars">☆☆☆☆☆</span>
+                    <span id="sidebar-zimscore-value" style="color: #38e77b; margin-left: 4px;">--/85</span>
+                </p>
+            </div>
+        </div>
+
         <nav>
             <ul class="nav-menu">
                 <li>
@@ -7747,6 +7759,24 @@ How it works:
                     }
                 }
                 
+                // Update sidebar user name and avatar
+                const sidebarUserNameEl = document.getElementById('sidebar-user-name');
+                if (sidebarUserNameEl) {
+                    sidebarUserNameEl.textContent = displayName;
+                    console.log('Updated sidebar user name:', displayName);
+                }
+                
+                const sidebarAvatarEl = document.getElementById('sidebar-avatar');
+                if (sidebarAvatarEl) {
+                    if (userInfo.avatarUrl) {
+                        sidebarAvatarEl.innerHTML = `<img src="${userInfo.avatarUrl}" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+                    } else {
+                        const initials = getInitials();
+                        sidebarAvatarEl.textContent = initials;
+                        sidebarAvatarEl.innerHTML = initials;
+                    }
+                }
+                
                 // Show welcome message for new social auth users
                 if (socialAuthData.provider && window.location.search.includes('newUser=true')) {
                     setTimeout(() => {
@@ -10041,19 +10071,34 @@ How it works:
                 const authToken = localStorage.getItem('authToken');
                 if (!authToken) return;
 
-                const response = await fetch('/api/zimscore/current', {
+                const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                    ? 'http://localhost:3000'
+                    : 'https://zimcrowd-api.onrender.com';
+
+                const response = await fetch(`${apiUrl}/api/zimscore/current`, {
                     headers: {
                         'Authorization': `Bearer ${authToken}`
                     }
                 });
 
                 const data = await response.json();
+                console.log('📊 ZimScore API response:', data);
 
                 if (data.success && data.data) {
                     displayZimScore(data.data);
+                } else if (data.success && data.zimScore) {
+                    // Handle alternative response format
+                    displayZimScore({
+                        score_value: data.zimScore.score || data.zimScore.score_value || 0,
+                        star_rating: data.zimScore.star_rating || 0,
+                        max_loan_amount: data.zimScore.max_loan_amount || 0,
+                        risk_level: data.zimScore.risk_level || 'unknown'
+                    });
                 }
             } catch (error) {
                 console.error('Error loading ZimScore:', error);
+                // Try to load from localStorage as fallback
+                loadCachedZimScore();
             }
         }
 
@@ -10115,7 +10160,13 @@ How it works:
                 zimScoreCard.textContent = scoreValue;
             }
             
-            // Add star badge to avatar
+            // Update sidebar ZimScore display
+            const sidebarZimscoreStars = document.getElementById('sidebar-zimscore-stars');
+            const sidebarZimscoreValue = document.getElementById('sidebar-zimscore-value');
+            if (sidebarZimscoreStars) sidebarZimscoreStars.textContent = starsHtml;
+            if (sidebarZimscoreValue) sidebarZimscoreValue.textContent = `${scoreValue}/85`;
+            
+            // Add star badge to header avatar
             if (headerAvatar && starRating > 0) {
                 // Remove existing badge if any
                 const existingBadge = headerAvatar.querySelector('.avatar-star-badge');
@@ -10138,6 +10189,30 @@ How it works:
                 `;
                 headerAvatar.style.position = 'relative';
                 headerAvatar.appendChild(badge);
+            }
+            
+            // Add star badge to sidebar avatar
+            const sidebarAvatar = document.getElementById('sidebar-avatar');
+            if (sidebarAvatar && starRating > 0) {
+                const existingBadge = sidebarAvatar.querySelector('.avatar-star-badge');
+                if (existingBadge) existingBadge.remove();
+                
+                const badge = document.createElement('div');
+                badge.className = 'avatar-star-badge';
+                badge.innerHTML = `<span style="color: #fbbf24; font-size: 10px;">${'★'.repeat(Math.min(fullStars, 5))}</span>`;
+                badge.style.cssText = `
+                    position: absolute;
+                    bottom: -3px;
+                    right: -3px;
+                    background: linear-gradient(135deg, #1e293b, #0f172a);
+                    border: 1px solid #fbbf24;
+                    border-radius: 6px;
+                    padding: 1px 3px;
+                    font-size: 7px;
+                    line-height: 1;
+                `;
+                sidebarAvatar.style.position = 'relative';
+                sidebarAvatar.appendChild(badge);
             }
 
             // Store in localStorage for quick access
