@@ -559,6 +559,20 @@ router.put('/profile', authenticateUser, async (req, res) => {
             profileUpdates.date_of_birth = null;
         }
         
+        // Convert income range string to numeric value (use midpoint of range)
+        if (profileUpdates.monthly_income) {
+            const income = profileUpdates.monthly_income;
+            if (typeof income === 'string' && income.includes('-')) {
+                const [min, max] = income.split('-').map(v => parseFloat(v.replace(/[^0-9.]/g, '')));
+                profileUpdates.monthly_income = (min + max) / 2; // Use midpoint
+            } else if (typeof income === 'string' && income.includes('+')) {
+                profileUpdates.monthly_income = parseFloat(income.replace(/[^0-9.]/g, ''));
+            } else if (typeof income === 'string') {
+                profileUpdates.monthly_income = parseFloat(income) || null;
+            }
+            console.log('📊 Converted monthly_income:', income, '->', profileUpdates.monthly_income);
+        }
+        
         // Store extended data (employment details, next of kin, payment method) as JSON
         if (Object.keys(extendedData).length > 0) {
             profileUpdates.extended_profile_data = extendedData;
