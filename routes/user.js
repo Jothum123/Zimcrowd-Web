@@ -940,6 +940,7 @@ router.post('/settings/employment-details', authenticateUser, async (req, res) =
         } = req.body;
 
         console.log('💼 Saving employment details for user:', userId);
+        console.log('📊 Monthly income received:', monthly_income);
 
         // Convert income range string to numeric value (use midpoint of range)
         let parsedMonthlyIncome = monthly_income;
