@@ -55,9 +55,37 @@ class NotificationBell {
         }
     }
 
+    getAuthToken() {
+        // Check multiple possible token locations
+        const token = localStorage.getItem('authToken') || 
+               localStorage.getItem('token') ||
+               localStorage.getItem('access_token');
+        
+        if (token) return token;
+        
+        // Check Supabase session for social auth users
+        try {
+            const supabaseAuth = localStorage.getItem('sb-gjtkdrrvnffrmzigdqyp-auth-token');
+            if (supabaseAuth) {
+                const session = JSON.parse(supabaseAuth);
+                if (session?.access_token) return session.access_token;
+            }
+        } catch (e) {}
+        
+        // Check socialAuthData for social login users
+        try {
+            const socialAuth = JSON.parse(localStorage.getItem('socialAuthData') || '{}');
+            if (socialAuth.social_id) {
+                return `social:${socialAuth.social_id}`;
+            }
+        } catch (e) {}
+        
+        return null;
+    }
+
     async loadNotifications() {
         try {
-            const token = localStorage.getItem('authToken');
+            const token = this.getAuthToken();
             if (!token) return;
 
             const response = await fetch(`${this.apiBase}/api/notifications?limit=5`, {

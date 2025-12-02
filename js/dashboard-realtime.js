@@ -45,8 +45,9 @@ const DashboardRealtime = {
                 return;
             }
 
-            // Supabase Realtime connection
-            const wsUrl = `wss://gjtkdrrvnffrmzigdqyp.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqdGtkcnJ2bmZmcm16aWdkcXlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE2NzU4NzcsImV4cCI6MjA0NzI1MTg3N30.Qo-yzVxOXHDPGRpzVFjjVHyQDqGBqjYPVmxAEqDqEJ0&vsn=1.0.0`;
+            // Supabase Realtime connection - use correct anon key
+            const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqdGtkcnJ2bmZmcm16aWdkcXlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NzcyMjcsImV4cCI6MjA3ODM1MzIyN30.IlE2yODTRQCl29OlwuZ-CtMxkg1OSPpSEqQVl-X0DtA';
+            const wsUrl = `wss://gjtkdrrvnffrmzigdqyp.supabase.co/realtime/v1/websocket?apikey=${supabaseAnonKey}&vsn=1.0.0`;
 
             this.ws = new WebSocket(wsUrl);
 

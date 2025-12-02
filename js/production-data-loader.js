@@ -64,13 +64,42 @@ const ProductionDataLoader = {
     },
 
     /**
-     * Get auth token from localStorage or API
+     * Get auth token from localStorage (supports both regular and social auth)
      */
     getAuthToken() {
-        return localStorage.getItem('authToken') || 
+        // Check multiple possible token locations
+        const token = localStorage.getItem('authToken') || 
                localStorage.getItem('token') ||
-               localStorage.getItem('access_token') ||
-               JSON.parse(localStorage.getItem('authData') || '{}').access_token;
+               localStorage.getItem('access_token');
+        
+        if (token) return token;
+        
+        // Check authData object
+        try {
+            const authData = JSON.parse(localStorage.getItem('authData') || '{}');
+            if (authData.access_token) return authData.access_token;
+        } catch (e) {}
+        
+        // Check Supabase session for social auth users
+        try {
+            const supabaseAuth = localStorage.getItem('sb-gjtkdrrvnffrmzigdqyp-auth-token');
+            if (supabaseAuth) {
+                const session = JSON.parse(supabaseAuth);
+                if (session?.access_token) return session.access_token;
+            }
+        } catch (e) {}
+        
+        // Check socialAuthData for social login users
+        try {
+            const socialAuth = JSON.parse(localStorage.getItem('socialAuthData') || '{}');
+            if (socialAuth.social_id) {
+                // Social auth user - use their user ID as identifier
+                // The backend should accept this for social auth users
+                return `social:${socialAuth.social_id}`;
+            }
+        } catch (e) {}
+        
+        return null;
     },
 
     /**
