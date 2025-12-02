@@ -15,8 +15,8 @@ const SUPABASE_CONFIG = {
         if (isLocalhost) {
             return 'http://localhost:3000/dashboard.html';
         } else {
-            // GitHub Pages URL
-            return 'https://jothum123.github.io/Zimcrowd-Web/dashboard.html';
+            // Production URL
+            return 'https://zimcrowd.com/dashboard.html';
         }
     }
 };
