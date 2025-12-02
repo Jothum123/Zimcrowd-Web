@@ -1102,6 +1102,90 @@
             border-color: #38e77b;
         }
 
+        /* Filter Select Dropdowns */
+        .filter-select {
+            padding: 10px 15px !important;
+            background: #1e293b !important;
+            border: 1px solid #334155 !important;
+            border-radius: 8px !important;
+            color: #e2e8f0 !important;
+            cursor: pointer;
+            font-size: 14px;
+            min-width: 140px;
+        }
+
+        .filter-select option {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+
+        body.light-mode .filter-select {
+            background: white !important;
+            border: 1px solid #d1d5db !important;
+            color: #1f2937 !important;
+        }
+
+        body.light-mode .filter-select option {
+            background: white;
+            color: #1f2937;
+        }
+
+        .filter-select:focus {
+            border-color: #38e77b !important;
+            box-shadow: 0 0 0 2px rgba(56, 231, 123, 0.2);
+        }
+
+        /* Export Menu */
+        .export-menu {
+            background: #1e293b !important;
+            border: 1px solid #334155 !important;
+        }
+
+        body.light-mode .export-menu {
+            background: white !important;
+            border: 1px solid #d1d5db !important;
+        }
+
+        .export-menu-header {
+            padding: 10px 15px;
+            border-bottom: 1px solid #334155;
+            color: #94a3b8;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        body.light-mode .export-menu-header {
+            border-bottom-color: #e5e7eb;
+            color: #6b7280;
+        }
+
+        .export-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px 15px;
+            background: transparent;
+            border: none;
+            color: #e2e8f0;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: left;
+            transition: background 0.2s;
+        }
+
+        .export-option:hover {
+            background: rgba(56, 231, 123, 0.1);
+        }
+
+        body.light-mode .export-option {
+            color: #1f2937;
+        }
+
+        body.light-mode .export-option:hover {
+            background: #f3f4f6;
+        }
+
         label {
             color: #94a3b8;
         }
@@ -1125,6 +1209,39 @@
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(56, 231, 123, 0.3);
+        }
+
+        /* Secondary Button */
+        .btn-secondary {
+            padding: 10px 20px;
+            background: #1e293b;
+            color: #e2e8f0;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .btn-secondary:hover {
+            background: #334155;
+            border-color: #38e77b;
+            transform: translateY(-1px);
+        }
+
+        body.light-mode .btn-secondary {
+            background: white;
+            color: #1f2937;
+            border: 1px solid #d1d5db;
+        }
+
+        body.light-mode .btn-secondary:hover {
+            background: #f3f4f6;
+            border-color: #38e77b;
         }
 
         /* Page Number Buttons */
@@ -4734,10 +4851,10 @@
 
         <!-- Transactions Section -->
         <section id="transactions-section" class="dashboard-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
                 <h2>Transaction History</h2>
-                <div style="display: flex; gap: 10px;">
-                    <select id="transactionTypeFilter" onchange="filterTransactions()" style="padding: 10px 15px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; cursor: pointer;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <select id="transactionTypeFilter" class="filter-select" onchange="filterTransactions()">
                         <option value="">All Types</option>
                         <option value="deposit">Deposits</option>
                         <option value="withdrawal">Withdrawals</option>
@@ -4747,7 +4864,7 @@
                         <option value="investment_return">Investment Returns</option>
                         <option value="transfer">Transfers</option>
                     </select>
-                    <select id="transactionDateFilter" onchange="filterTransactions()" style="padding: 10px 15px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; cursor: pointer;">
+                    <select id="transactionDateFilter" class="filter-select" onchange="filterTransactions()">
                         <option value="">All Time</option>
                         <option value="today">Today</option>
                         <option value="week">This Week</option>
@@ -4759,8 +4876,8 @@
                         <button onclick="toggleExportMenu()" class="btn-secondary" style="padding: 10px 20px;">
                             <i class="fas fa-download"></i> Export <i class="fas fa-chevron-down" style="margin-left: 5px; font-size: 10px;"></i>
                         </button>
-                        <div id="exportMenu" class="export-menu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 5px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; min-width: 200px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); z-index: 100;">
-                            <div style="padding: 10px 15px; border-bottom: 1px solid #334155; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Export Format</div>
+                        <div id="exportMenu" class="export-menu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 5px; border-radius: 8px; min-width: 200px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); z-index: 100;">
+                            <div class="export-menu-header">Export Format</div>
                             <button onclick="exportTransactions('pdf')" class="export-option"><i class="fas fa-file-pdf" style="color: #ef4444;"></i> PDF Document (.pdf)</button>
                             <button onclick="exportTransactions('docx')" class="export-option"><i class="fas fa-file-word" style="color: #2563eb;"></i> Microsoft Word (.docx)</button>
                             <button onclick="exportTransactions('xlsx')" class="export-option"><i class="fas fa-file-excel" style="color: #10b981;"></i> Microsoft Excel (.xlsx)</button>
