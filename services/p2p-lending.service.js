@@ -2,13 +2,16 @@
  * P2P Lending Service
  * Handles Primary and Secondary Market operations for peer-to-peer lending
  * 
- * COLD START RULES (First-time borrowers from marketplace):
+ * COLD START RULES (Applies to P2P Marketplace ONLY, NOT Direct Lending):
  * - Government: NO cold start - full DTNI-based limit ($25-$3000)
- * - Private: $300 cold start cap
- * - Informal: $100 cold start cap
- * - Business: $200 cold start cap
+ * - Private: $300 cold start cap for first-time borrowers
+ * - Informal: $100 cold start cap for first-time borrowers
+ * - Business: $200 cold start cap for first-time borrowers
+ * 
+ * After first successful repayment, cold start is lifted and full limits apply.
  * 
  * INTEREST RATE: User selectable 0-10% per month
+ * (Direct Lending has fixed 8% rate)
  */
 
 const { supabase } = require('../utils/supabase-auth');

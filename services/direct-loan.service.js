@@ -15,9 +15,10 @@ class DirectLoanService {
         this.OFFER_EXPIRY_HOURS = 24;
         this.DEFAULT_LOAN_DURATION_DAYS = 30;
         
-        // NO COLD START in Direct Lending for Government
-        // Private and Informal have cold start caps
-        this.COLD_START_ENABLED = true;
+        // DIRECT LENDING: NO COLD START
+        // Loan approval based on DTNI calculation + verified documents
+        // Cold start ONLY applies to P2P Marketplace
+        this.COLD_START_ENABLED = false;
         
         // DIRECT LENDING: FIXED 8% INTEREST RATE PER MONTH
         // (P2P Marketplace has user-selectable 0-10% rate)
@@ -27,34 +28,27 @@ class DirectLoanService {
         // DTNI Configuration by employment type
         // Max Loan: Govt $3000, Private $1000, Informal $500
         // Max Tenure: Govt 24 months, Private 12 months, Informal 6 months
+        // NO COLD START - uses DTNI + verified documents for approval
         this.DTNI_CONFIG = {
             government: { 
                 ratio: 0.40, 
                 maxTenureMonths: 24, 
-                maxLoan: 3000, 
-                coldStartCap: null,
-                coldStartActive: false
+                maxLoan: 3000
             },
             private: { 
                 ratio: 0.33, 
                 maxTenureMonths: 12, 
-                maxLoan: 1000, 
-                coldStartCap: 300,
-                coldStartActive: true
+                maxLoan: 1000
             },
             business: { 
                 ratio: 0.30, 
                 maxTenureMonths: 12, 
-                maxLoan: 1000, 
-                coldStartCap: 200,
-                coldStartActive: true
+                maxLoan: 1000
             },
             informal: { 
                 ratio: 0.25, 
                 maxTenureMonths: 6, 
-                maxLoan: 500, 
-                coldStartCap: 100,
-                coldStartActive: true
+                maxLoan: 500
             }
         };
         

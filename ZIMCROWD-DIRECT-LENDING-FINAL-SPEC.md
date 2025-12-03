@@ -56,17 +56,23 @@ Anyone registered can apply for Direct Lending. The system checks for **required
 
 ## Cold Start Rules
 
-**Cold start applies to BOTH Direct Lending AND P2P Marketplace for first-time borrowers:**
+### Direct Lending (ZimCrowd Direct)
+- **NO COLD START** for any employment type
+- Loan approval based on **DTNI calculation** + **verified documents**
+- Users can access full limit based on their income and DTNI ratio
+
+### P2P Marketplace (Cold Start Applies)
+**Cold start applies ONLY to P2P Marketplace for first-time private/informal borrowers:**
 
 | Employment Type | First Loan (Cold Start) | After First Repayment |
 |-----------------|-------------------------|----------------------|
 | **Government** | Full limit ($25-$3,000) | Full limit |
-| **Private** | Max $300 | Up to $1,000 |
-| **Informal** | Max $100 | Up to $500 |
-| **Business** | Max $200 | Up to $1,000 |
+| **Private** | Max **$300** | Up to $1,000 |
+| **Informal** | Max **$100** | Up to $500 |
+| **Business** | Max **$200** | Up to $1,000 |
 
-- Government employees are **exempt** from cold start
-- Private and Informal employees must complete their first loan successfully to unlock higher limits
+- Government employees are **exempt** from cold start (both Direct & P2P)
+- Private and Informal employees must complete their first P2P loan successfully to unlock higher marketplace limits
 
 ## Interest Rates
 
