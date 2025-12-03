@@ -26,10 +26,17 @@ class P2PLendingService {
             business: { coldStartCap: 200, maxLoan: 1000, maxTenureMonths: 12, coldStartActive: true }
         };
         
-        // Interest rate range (user selectable)
+        // Interest rate range (user selectable by borrower)
         this.MIN_INTEREST_RATE = 0.00;  // 0% per month
         this.MAX_INTEREST_RATE = 0.10;  // 10% per month
         this.MIN_LOAN_AMOUNT = 25;
+        
+        // Investment/Lending limits (insurable range)
+        // Lenders can deposit $10-$10,000 to fund loans
+        this.MIN_INVESTMENT_AMOUNT = 10;    // Minimum $10 per investment
+        this.MAX_INVESTMENT_AMOUNT = 10000; // Maximum $10,000 per investment
+        this.MIN_DEPOSIT_AMOUNT = 10;       // Minimum deposit to lender wallet
+        this.MAX_DEPOSIT_AMOUNT = 10000;    // Maximum deposit to lender wallet
     }
 
     /**
@@ -232,9 +239,29 @@ class P2PLendingService {
 
     /**
      * Make a funding offer as a lender
+     * Investment amount must be within insurable range: $10 - $10,000
      */
     async makeFundingOffer(lenderId, offerData) {
         try {
+            const offerAmount = parseFloat(offerData.offerAmount);
+
+            // Validate investment amount (insurable range: $10 - $10,000)
+            if (offerAmount < this.MIN_INVESTMENT_AMOUNT) {
+                return {
+                    success: false,
+                    message: `Minimum investment amount is $${this.MIN_INVESTMENT_AMOUNT}`,
+                    minAmount: this.MIN_INVESTMENT_AMOUNT
+                };
+            }
+
+            if (offerAmount > this.MAX_INVESTMENT_AMOUNT) {
+                return {
+                    success: false,
+                    message: `Maximum investment amount is $${this.MAX_INVESTMENT_AMOUNT} (insurable limit)`,
+                    maxAmount: this.MAX_INVESTMENT_AMOUNT
+                };
+            }
+
             // Validate interest rate (0-10%)
             const offeredRate = parseFloat(offerData.offeredInterestRate);
             if (offeredRate < 0 || offeredRate > 0.10) {
@@ -259,7 +286,6 @@ class P2PLendingService {
             }
 
             // Check if lender has sufficient balance (implement wallet check)
-            const offerAmount = parseFloat(offerData.offerAmount);
 
             // Create funding offer
             const { data: offer, error } = await supabase
@@ -557,6 +583,63 @@ class P2PLendingService {
     /**
      * UTILITY FUNCTIONS
      */
+
+    /**
+     * Validate deposit amount for lender wallet
+     * Must be within insurable range: $10 - $10,000
+     * @param {number} amount - Deposit amount
+     * @returns {Object} Validation result
+     */
+    validateDepositAmount(amount) {
+        const depositAmount = parseFloat(amount);
+
+        if (isNaN(depositAmount) || depositAmount <= 0) {
+            return {
+                valid: false,
+                message: 'Invalid deposit amount'
+            };
+        }
+
+        if (depositAmount < this.MIN_DEPOSIT_AMOUNT) {
+            return {
+                valid: false,
+                message: `Minimum deposit amount is $${this.MIN_DEPOSIT_AMOUNT}`,
+                minAmount: this.MIN_DEPOSIT_AMOUNT
+            };
+        }
+
+        if (depositAmount > this.MAX_DEPOSIT_AMOUNT) {
+            return {
+                valid: false,
+                message: `Maximum deposit amount is $${this.MAX_DEPOSIT_AMOUNT} (insurable limit)`,
+                maxAmount: this.MAX_DEPOSIT_AMOUNT
+            };
+        }
+
+        return {
+            valid: true,
+            amount: depositAmount,
+            message: 'Deposit amount is valid'
+        };
+    }
+
+    /**
+     * Get investment limits
+     * @returns {Object} Investment limits configuration
+     */
+    getInvestmentLimits() {
+        return {
+            minInvestment: this.MIN_INVESTMENT_AMOUNT,
+            maxInvestment: this.MAX_INVESTMENT_AMOUNT,
+            minDeposit: this.MIN_DEPOSIT_AMOUNT,
+            maxDeposit: this.MAX_DEPOSIT_AMOUNT,
+            insurableRange: {
+                min: this.MIN_INVESTMENT_AMOUNT,
+                max: this.MAX_INVESTMENT_AMOUNT
+            },
+            message: `Investment amounts must be between $${this.MIN_INVESTMENT_AMOUNT} and $${this.MAX_INVESTMENT_AMOUNT} (insurable range)`
+        };
+    }
 
     /**
      * Calculate monthly payment for a loan

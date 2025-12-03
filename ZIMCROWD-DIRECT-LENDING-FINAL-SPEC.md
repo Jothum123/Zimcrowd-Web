@@ -100,6 +100,20 @@ If any check fails, the user cannot apply for a Direct Loan until resolved.
 - Lower rates may attract more lenders but take longer to fund
 - Higher rates fund faster but cost more
 
+## Investment/Lender Limits (Insurable Range)
+
+| Limit | Amount | Description |
+|-------|--------|-------------|
+| **Minimum Investment** | **$10** | Minimum amount per loan funding |
+| **Maximum Investment** | **$10,000** | Maximum amount per loan funding |
+| **Minimum Deposit** | **$10** | Minimum deposit to lender wallet |
+| **Maximum Deposit** | **$10,000** | Maximum deposit to lender wallet |
+
+**Why these limits?**
+- All investments within $10-$10,000 are within the **insurable range**
+- Provides protection for lenders through insurance coverage
+- Ensures diversification and risk management
+
 ### Government Employees
 - **NO cold start** - Can access full DTNI-based limit immediately
 - **Loan range: $25 - $3,000** (based on DTNI)
