@@ -41,7 +41,13 @@ class P2PLendingService {
         // AML (Anti-Money Laundering) Thresholds
         // Deposits $5,000+ require additional proof of income
         this.AML_THRESHOLD = 5000;          // Trigger AML check at $5,000
-        this.AML_CUMULATIVE_THRESHOLD = 10000; // Cumulative deposits in 30 days
+        this.AML_CUMULATIVE_THRESHOLD = 10000; // Cumulative deposits in 30 days triggers AML
+        this.AML_WINDOW_DAYS = 30;          // Rolling window for cumulative check
+        this.SMURFING_DETECTION = {
+            rapidDeposits: { count: 3, windowHours: 24 },  // 3+ deposits in 24 hours
+            patternThreshold: 4500,         // Suspicious if deposits consistently just under $5,000
+            frequencyThreshold: 5           // 5+ deposits in a week triggers review
+        };
         
         // Activity Types for logging
         this.ACTIVITY_TYPES = {
@@ -53,6 +59,7 @@ class P2PLendingService {
             LOAN_DISBURSEMENT: 'loan_disbursement',
             TRANSFER: 'transfer',
             AML_FLAG: 'aml_flag',
+            SMURFING_FLAG: 'smurfing_flag',
             DOCUMENT_UPLOAD: 'document_upload',
             KYC_VERIFICATION: 'kyc_verification'
         };
@@ -795,6 +802,161 @@ class P2PLendingService {
     }
 
     /**
+     * ANTI-SMURFING DETECTION
+     * Detects structuring/smurfing attempts to avoid AML thresholds
+     * 
+     * Detection Methods:
+     * 1. Cumulative deposits in 30 days exceeding $10,000
+     * 2. Rapid deposits (3+ in 24 hours)
+     * 3. Pattern detection (deposits consistently just under $5,000)
+     * 4. High frequency (5+ deposits in a week)
+     * 
+     * @param {string} userId - User ID
+     * @param {number} newAmount - New deposit amount
+     * @returns {Promise<Object>} Smurfing detection result
+     */
+    async detectSmurfing(userId, newAmount) {
+        try {
+            const flags = [];
+            const now = new Date();
+            
+            // Get deposit history
+            const thirtyDaysAgo = new Date(now.getTime() - (this.AML_WINDOW_DAYS * 24 * 60 * 60 * 1000));
+            const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+            const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+
+            const { data: deposits, error } = await supabase
+                .from('user_activities')
+                .select('metadata, created_at')
+                .eq('user_id', userId)
+                .eq('activity_type', this.ACTIVITY_TYPES.DEPOSIT)
+                .gte('created_at', thirtyDaysAgo.toISOString())
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching deposit history:', error);
+                return { detected: false, flags: [] };
+            }
+
+            const depositHistory = deposits || [];
+            
+            // Extract amounts from metadata
+            const getAmount = (d) => parseFloat(d.metadata?.amount || 0);
+            
+            // CHECK 1: Cumulative deposits in 30 days
+            const cumulativeTotal = depositHistory.reduce((sum, d) => sum + getAmount(d), 0) + newAmount;
+            if (cumulativeTotal >= this.AML_CUMULATIVE_THRESHOLD) {
+                flags.push({
+                    type: 'CUMULATIVE_THRESHOLD',
+                    severity: 'high',
+                    message: `Cumulative deposits in 30 days ($${cumulativeTotal.toLocaleString()}) exceed $${this.AML_CUMULATIVE_THRESHOLD.toLocaleString()}`,
+                    details: { cumulativeTotal, threshold: this.AML_CUMULATIVE_THRESHOLD, windowDays: 30 }
+                });
+            }
+
+            // CHECK 2: Rapid deposits (3+ in 24 hours)
+            const last24Hours = depositHistory.filter(d => new Date(d.created_at) >= twentyFourHoursAgo);
+            if (last24Hours.length + 1 >= this.SMURFING_DETECTION.rapidDeposits.count) {
+                flags.push({
+                    type: 'RAPID_DEPOSITS',
+                    severity: 'medium',
+                    message: `${last24Hours.length + 1} deposits in 24 hours detected (threshold: ${this.SMURFING_DETECTION.rapidDeposits.count})`,
+                    details: { depositsIn24Hours: last24Hours.length + 1, threshold: this.SMURFING_DETECTION.rapidDeposits.count }
+                });
+            }
+
+            // CHECK 3: Pattern detection - deposits just under $5,000
+            const suspiciousAmounts = depositHistory.filter(d => {
+                const amt = getAmount(d);
+                return amt >= this.SMURFING_DETECTION.patternThreshold && amt < this.AML_THRESHOLD;
+            });
+            // If new amount is also suspicious
+            const newAmountSuspicious = newAmount >= this.SMURFING_DETECTION.patternThreshold && newAmount < this.AML_THRESHOLD;
+            if (suspiciousAmounts.length >= 2 || (suspiciousAmounts.length >= 1 && newAmountSuspicious)) {
+                flags.push({
+                    type: 'STRUCTURING_PATTERN',
+                    severity: 'high',
+                    message: `Multiple deposits just under $${this.AML_THRESHOLD.toLocaleString()} threshold detected - possible structuring`,
+                    details: { 
+                        suspiciousDeposits: suspiciousAmounts.length + (newAmountSuspicious ? 1 : 0),
+                        patternThreshold: this.SMURFING_DETECTION.patternThreshold,
+                        amlThreshold: this.AML_THRESHOLD
+                    }
+                });
+            }
+
+            // CHECK 4: High frequency (5+ deposits in a week)
+            const lastWeek = depositHistory.filter(d => new Date(d.created_at) >= sevenDaysAgo);
+            if (lastWeek.length + 1 >= this.SMURFING_DETECTION.frequencyThreshold) {
+                flags.push({
+                    type: 'HIGH_FREQUENCY',
+                    severity: 'medium',
+                    message: `${lastWeek.length + 1} deposits in 7 days (threshold: ${this.SMURFING_DETECTION.frequencyThreshold})`,
+                    details: { depositsInWeek: lastWeek.length + 1, threshold: this.SMURFING_DETECTION.frequencyThreshold }
+                });
+            }
+
+            const detected = flags.length > 0;
+            const highSeverity = flags.some(f => f.severity === 'high');
+
+            // Log smurfing flag if detected
+            if (detected) {
+                await this.logActivity(userId, this.ACTIVITY_TYPES.SMURFING_FLAG, {
+                    amount: newAmount,
+                    flags: flags,
+                    cumulativeTotal: cumulativeTotal,
+                    requiresReview: highSeverity,
+                    detectedAt: now.toISOString()
+                });
+
+                console.log(`🚨 SMURFING DETECTED for user ${userId}: ${flags.map(f => f.type).join(', ')}`);
+            }
+
+            return {
+                detected,
+                flags,
+                requiresReview: highSeverity,
+                requiresDocuments: highSeverity,
+                cumulativeTotal,
+                message: detected 
+                    ? `⚠️ Suspicious activity detected. ${highSeverity ? 'Additional verification required.' : 'Your account is under review.'}`
+                    : 'No suspicious activity detected'
+            };
+        } catch (error) {
+            console.error('Smurfing detection error:', error);
+            return { detected: false, flags: [], error: error.message };
+        }
+    }
+
+    /**
+     * Enhanced deposit validation with smurfing detection
+     * @param {number} amount - Deposit amount
+     * @param {string} userId - User ID
+     * @returns {Promise<Object>} Validation result with AML and smurfing checks
+     */
+    async validateDepositWithSmurfingCheck(amount, userId) {
+        // First run basic validation
+        const basicValidation = await this.validateDepositAmount(amount, userId);
+        if (!basicValidation.valid) {
+            return basicValidation;
+        }
+
+        // Run smurfing detection
+        const smurfingCheck = await this.detectSmurfing(userId, amount);
+
+        // Combine results
+        return {
+            ...basicValidation,
+            smurfingCheck: smurfingCheck,
+            requiresAdditionalDocuments: basicValidation.requiresAdditionalDocuments || smurfingCheck.requiresDocuments,
+            blocked: smurfingCheck.requiresReview, // Block deposit if high severity smurfing detected
+            message: smurfingCheck.detected 
+                ? smurfingCheck.message 
+                : basicValidation.message
+        };
+    }
+
+    /**
      * Get investment limits
      * @returns {Object} Investment limits configuration
      */
@@ -805,12 +967,15 @@ class P2PLendingService {
             minDeposit: this.MIN_DEPOSIT_AMOUNT,
             maxDeposit: this.MAX_DEPOSIT_AMOUNT,
             amlThreshold: this.AML_THRESHOLD,
+            cumulativeThreshold: this.AML_CUMULATIVE_THRESHOLD,
+            cumulativeWindowDays: this.AML_WINDOW_DAYS,
             insurableRange: {
                 min: this.MIN_INVESTMENT_AMOUNT,
                 max: this.MAX_INVESTMENT_AMOUNT
             },
             message: `Investment amounts must be between $${this.MIN_INVESTMENT_AMOUNT} and $${this.MAX_INVESTMENT_AMOUNT} (insurable range)`,
-            amlMessage: `Deposits of $${this.AML_THRESHOLD.toLocaleString()} or more require additional proof of income for AML compliance.`
+            amlMessage: `Deposits of $${this.AML_THRESHOLD.toLocaleString()} or more require additional proof of income for AML compliance.`,
+            smurfingMessage: `Cumulative deposits exceeding $${this.AML_CUMULATIVE_THRESHOLD.toLocaleString()} in ${this.AML_WINDOW_DAYS} days will trigger additional verification.`
         };
     }
 

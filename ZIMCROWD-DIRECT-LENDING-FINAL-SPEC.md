@@ -132,6 +132,52 @@ If any check fails, the user cannot apply for a Direct Loan until resolved.
 4. Documents are verified by compliance team
 5. Once verified, deposit is approved
 
+## Anti-Smurfing Detection
+
+**Smurfing** (also called "structuring") is when users make multiple smaller deposits to avoid AML detection thresholds.
+
+### Detection Methods
+
+| Check | Threshold | Severity | Action |
+|-------|-----------|----------|--------|
+| **Cumulative Deposits** | $10,000+ in 30 days | 🔴 High | Block + Require docs |
+| **Rapid Deposits** | 3+ deposits in 24 hours | 🟡 Medium | Flag for review |
+| **Structuring Pattern** | Multiple deposits $4,500-$4,999 | 🔴 High | Block + Require docs |
+| **High Frequency** | 5+ deposits in 7 days | 🟡 Medium | Flag for review |
+
+### Smurfing Detection Flow
+```
+User attempts deposit
+        ↓
+Check 1: Is cumulative 30-day total ≥ $10,000?
+        ↓
+Check 2: Are there 3+ deposits in last 24 hours?
+        ↓
+Check 3: Are deposits consistently just under $5,000?
+        ↓
+Check 4: Are there 5+ deposits in last 7 days?
+        ↓
+If HIGH severity → Block deposit, require documents
+If MEDIUM severity → Allow but flag for admin review
+```
+
+### Example Smurfing Scenarios
+
+**Scenario 1: Cumulative Threshold**
+- Day 1: $4,000 deposit ✅
+- Day 5: $3,500 deposit ✅
+- Day 10: $3,000 deposit 🚨 (Total: $10,500 - triggers AML)
+
+**Scenario 2: Structuring Pattern**
+- Deposit 1: $4,800 ⚠️
+- Deposit 2: $4,900 ⚠️
+- Deposit 3: $4,750 🚨 (Pattern detected - blocked)
+
+**Scenario 3: Rapid Deposits**
+- 9:00 AM: $2,000 ✅
+- 11:00 AM: $1,500 ✅
+- 3:00 PM: $2,500 🚨 (3rd deposit in 24 hours - flagged)
+
 ## Activity Logging
 
 All user activities are logged for compliance and audit purposes:
