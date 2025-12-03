@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Agreement | ZimCrowd Direct</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #0f172a;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            transform: translateX(-5px);
+        }
+
+        .agreement-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .agreement-header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .agreement-header h1 {
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .agreement-header p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+
+        .loan-summary {
+            background: #f8fafc;
+            padding: 25px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .summary-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .summary-value.highlight {
+            color: #38e07b;
+        }
+
+        .currency-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .agreement-body {
+            padding: 30px;
+        }
+
+        .agreement-scroll {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            height: 300px;
+            overflow-y: auto;
+            padding: 20px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            line-height: 1.7;
+            color: #475569;
+        }
+
+        .agreement-scroll h3 {
+            color: #1e293b;
+            font-size: 16px;
+            margin: 20px 0 10px;
+        }
+
+        .agreement-scroll h3:first-child {
+            margin-top: 0;
+        }
+
+        .agreement-scroll ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .agreement-scroll li {
+            margin-bottom: 8px;
+        }
+
+        .checkbox-group {
+            margin-bottom: 25px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .checkbox-item:hover {
+            background: #f0fdf4;
+            border-color: #38e07b;
+        }
+
+        .checkbox-item.checked {
+            background: #f0fdf4;
+            border-color: #38e07b;
+        }
+
+        .checkbox-item input {
+            width: 22px;
+            height: 22px;
+            accent-color: #38e07b;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .checkbox-label {
+            font-size: 14px;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .signature-section {
+            background: #fffbeb;
+            border: 2px solid #fbbf24;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .signature-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 15px;
+        }
+
+        .signature-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 18px;
+            font-family: 'Brush Script MT', cursive;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .signature-input:focus {
+            outline: none;
+            border-color: #38e07b;
+            box-shadow: 0 0 0 3px rgba(56, 224, 123, 0.2);
+        }
+
+        .signature-note {
+            font-size: 12px;
+            color: #92400e;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: #38e07b;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            background: #2ecc71;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(56, 224, 123, 0.4);
+        }
+
+        .submit-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .security-note {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #38e07b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .success-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .success-modal.active {
+            display: flex;
+        }
+
+        .success-content {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: popIn 0.5s ease-out;
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #38e07b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 40px;
+            color: white;
+        }
+
+        .success-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .success-amount {
+            font-size: 36px;
+            font-weight: 700;
+            color: #38e07b;
+            margin-bottom: 20px;
+        }
+
+        .success-message {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .success-btn {
+            width: 100%;
+            padding: 15px;
+            background: #1e293b;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .success-btn:hover {
+            background: #334155;
+        }
+
+        @media (max-width: 768px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-value {
+                font-size: 20px;
+            }
+
+            .agreement-scroll {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="direct-loan-request.html" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            Back to Offer
+        </a>
+
+        <div class="agreement-card">
+            <div class="agreement-header">
+                <h1>Loan Agreement</h1>
+                <p>Please review and sign to receive your funds</p>
+            </div>
+
+            <div class="loan-summary" id="loan-summary">
+                <div style="text-align: center; padding: 20px;">
+                    <div class="loading-spinner" style="margin: 0 auto;"></div>
+                    <p style="color: #64748b; margin-top: 15px;">Loading loan details...</p>
+                </div>
+            </div>
+
+            <div class="agreement-body">
+                <div class="agreement-scroll" id="agreement-text">
+                    <h3>ZIMCROWD DIRECT LOAN AGREEMENT</h3>
+                    <p>This Loan Agreement ("Agreement") is entered into between ZimCrowd (Pvt) Ltd ("Lender") and the borrower identified below ("Borrower").</p>
+
+                    <h3>1. LOAN TERMS</h3>
+                    <p>The Lender agrees to provide the Borrower with a loan under the following terms:</p>
+                    <ul>
+                        <li><strong>Principal Amount:</strong> As specified in the loan offer</li>
+                        <li><strong>Interest Rate:</strong> USD: 8% per month (96% per annum) / ZWG: 10% per month (120% per annum)</li>
+                        <li><strong>Loan Term:</strong> As specified in the loan offer</li>
+                        <li><strong>Repayment:</strong> Monthly installments or single payment as agreed</li>
+                    </ul>
+
+                    <h3>2. DISBURSEMENT</h3>
+                    <p>Upon acceptance of this Agreement, the loan amount will be credited to the Borrower's ZimCrowd wallet within minutes.</p>
+
+                    <h3>3. REPAYMENT OBLIGATIONS</h3>
+                    <ul>
+                        <li>The Borrower agrees to repay the total amount (principal + interest) by the due date</li>
+                        <li>Payments can be made via EcoCash, bank transfer, or other approved methods</li>
+                        <li>Early repayment is allowed without penalty</li>
+                    </ul>
+
+                    <h3>4. LATE PAYMENT</h3>
+                    <ul>
+                        <li>A grace period of 24 hours is provided after the due date</li>
+                        <li>Late fee: 10% of the payment amount (minimum $50 USD / ZWG 1,350)</li>
+                        <li>Late payments will negatively impact your ZimScore</li>
+                    </ul>
+
+                    <h3>5. DEFAULT</h3>
+                    <p>If the Borrower fails to make payment within 30 days of the due date:</p>
+                    <ul>
+                        <li>The loan will be marked as defaulted</li>
+                        <li>Collection proceedings may be initiated</li>
+                        <li>The Borrower's credit profile will be affected</li>
+                        <li>Legal action may be taken to recover the debt</li>
+                    </ul>
+
+                    <h3>6. ELECTRONIC SIGNATURE</h3>
+                    <p>By typing your full legal name below and clicking "Accept & Sign", you acknowledge that:</p>
+                    <ul>
+                        <li>This electronic signature is legally binding</li>
+                        <li>You have read and understood all terms</li>
+                        <li>You agree to repay the loan as specified</li>
+                        <li>You authorize ZimCrowd to disburse funds to your wallet</li>
+                    </ul>
+
+                    <h3>7. GOVERNING LAW</h3>
+                    <p>This Agreement shall be governed by the laws of Zimbabwe. Any disputes shall be resolved through arbitration in Harare.</p>
+
+                    <h3>8. CONTACT</h3>
+                    <p>For questions or support, contact us at support@zimcrowd.co.zw or call +263 78 XXX XXXX.</p>
+                </div>
+
+                <div class="checkbox-group">
+                    <label class="checkbox-item" id="checkbox1">
+                        <input type="checkbox" id="agree1" onchange="updateCheckbox(this)">
+                        <span class="checkbox-label">I have read and understood the loan agreement terms, including the interest rate, repayment schedule, and late payment penalties.</span>
+                    </label>
+                    <label class="checkbox-item" id="checkbox2">
+                        <input type="checkbox" id="agree2" onchange="updateCheckbox(this)">
+                        <span class="checkbox-label">I confirm that I am the account holder and I authorize ZimCrowd to disburse the loan amount to my wallet.</span>
+                    </label>
+                    <label class="checkbox-item" id="checkbox3">
+                        <input type="checkbox" id="agree3" onchange="updateCheckbox(this)">
+                        <span class="checkbox-label">I understand that failure to repay will result in late fees, negative credit impact, and potential legal action.</span>
+                    </label>
+                </div>
+
+                <div class="signature-section">
+                    <div class="signature-title">
+                        <i class="fas fa-signature"></i>
+                        Electronic Signature
+                    </div>
+                    <input type="text" class="signature-input" id="signature" placeholder="Type your full legal name" oninput="validateForm()">
+                    <p class="signature-note">By typing your name, you are signing this agreement electronically</p>
+                </div>
+
+                <button class="submit-btn" id="submit-btn" disabled onclick="submitAgreement()">
+                    <i class="fas fa-check-circle"></i>
+                    Accept & Sign Agreement
+                </button>
+
+                <div class="security-note">
+                    <i class="fas fa-lock"></i>
+                    Your signature is encrypted and legally binding
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Processing your loan...</div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="success-modal" id="success-modal">
+        <div class="success-content">
+            <div class="success-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            <h2 class="success-title">Loan Approved!</h2>
+            <div class="success-amount" id="success-amount">$0.00</div>
+            <p class="success-message">
+                Your funds have been deposited to your ZimCrowd wallet. 
+                You can now use them for payments or withdraw to your bank/mobile money.
+            </p>
+            <button class="success-btn" onclick="window.location.href='dashboard.html'">
+                Go to Dashboard
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:3000'
+            : 'https://zimcrowd-api.onrender.com';
+
+        const authToken = localStorage.getItem('authToken');
+        let offerData = null;
+
+        // Currency configuration
+        const CURRENCY_CONFIG = {
+            USD: { symbol: '$', flag: '🇺🇸', rate: 8 },
+            ZWG: { symbol: 'ZWG ', flag: '🇿🇼', rate: 10 }
+        };
+
+        if (!authToken) {
+            window.location.href = 'login.html';
+        }
+
+        // Get offer ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const offerId = urlParams.get('offer_id');
+
+        if (!offerId) {
+            alert('No offer ID provided');
+            window.location.href = 'direct-loan-request.html';
+        }
+
+        // Load offer details
+        document.addEventListener('DOMContentLoaded', loadOfferDetails);
+
+        async function loadOfferDetails() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/direct-loans/offers/${offerId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    offerData = result.data;
+                    displayLoanSummary(offerData);
+                } else {
+                    // Try to get from localStorage as fallback
+                    const storedOffer = localStorage.getItem('directLoanOffer');
+                    if (storedOffer) {
+                        offerData = JSON.parse(storedOffer);
+                        displayLoanSummary(offerData);
+                    } else {
+                        alert('Offer not found or expired');
+                        window.location.href = 'direct-loan-request.html';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading offer:', error);
+                // Try localStorage fallback
+                const storedOffer = localStorage.getItem('directLoanOffer');
+                if (storedOffer) {
+                    offerData = JSON.parse(storedOffer);
+                    displayLoanSummary(offerData);
+                }
+            }
+        }
+
+        function formatAmount(amount, currency = 'USD') {
+            const config = CURRENCY_CONFIG[currency] || CURRENCY_CONFIG.USD;
+            return `${config.symbol}${parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function displayLoanSummary(offer) {
+            const currency = offer.currency || 'USD';
+            const config = CURRENCY_CONFIG[currency];
+            const principal = offer.principalAmount || offer.amount || offer.offered_amount;
+            const interest = offer.interestAmount || offer.fixedFee || offer.fixed_fee || (principal * config.rate / 100);
+            const total = offer.totalRepayment || offer.total_repayment || (principal + interest);
+            const termMonths = offer.termMonths || offer.loan_duration_days ? Math.ceil(offer.loan_duration_days / 30) : 1;
+
+            document.getElementById('loan-summary').innerHTML = `
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <span class="currency-badge">
+                        <span>${config.flag}</span>
+                        <span>${currency} Loan</span>
+                        <span style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 10px; font-size: 12px; margin-left: 5px;">${config.rate}%/mo</span>
+                    </span>
+                </div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div class="summary-label">You Receive</div>
+                        <div class="summary-value highlight">${formatAmount(principal, currency)}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Interest</div>
+                        <div class="summary-value">${formatAmount(interest, currency)}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Total Repayment</div>
+                        <div class="summary-value">${formatAmount(total, currency)}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Term</div>
+                        <div class="summary-value">${termMonths} month${termMonths > 1 ? 's' : ''}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateCheckbox(checkbox) {
+            const parent = checkbox.closest('.checkbox-item');
+            if (checkbox.checked) {
+                parent.classList.add('checked');
+            } else {
+                parent.classList.remove('checked');
+            }
+            validateForm();
+        }
+
+        function validateForm() {
+            const agree1 = document.getElementById('agree1').checked;
+            const agree2 = document.getElementById('agree2').checked;
+            const agree3 = document.getElementById('agree3').checked;
+            const signature = document.getElementById('signature').value.trim();
+
+            const isValid = agree1 && agree2 && agree3 && signature.length >= 3;
+            document.getElementById('submit-btn').disabled = !isValid;
+        }
+
+        async function submitAgreement() {
+            const signature = document.getElementById('signature').value.trim();
+            
+            if (!signature || signature.length < 3) {
+                alert('Please enter your full legal name');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loading-overlay').classList.add('active');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/direct-loans/accept-offer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        offerId: offerId,
+                        signatureName: signature
+                    })
+                });
+
+                const result = await response.json();
+
+                // Hide loading
+                document.getElementById('loading-overlay').classList.remove('active');
+
+                if (result.success) {
+                    // Show success modal
+                    const currency = offerData?.currency || 'USD';
+                    const principal = offerData?.principalAmount || offerData?.amount || offerData?.offered_amount || 0;
+                    document.getElementById('success-amount').textContent = formatAmount(principal, currency);
+                    document.getElementById('success-modal').classList.add('active');
+                    
+                    // Clear stored offer
+                    localStorage.removeItem('directLoanOffer');
+                } else {
+                    alert(result.message || 'Failed to process agreement. Please try again.');
+                }
+            } catch (error) {
+                document.getElementById('loading-overlay').classList.remove('active');
+                console.error('Error submitting agreement:', error);
+                alert('Unable to connect to server. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -98,6 +98,54 @@
             color: rgba(255, 255, 255, 0.9);
             font-size: 16px;
             position: relative;
+        }
+        
+        /* Currency Selector */
+        .currency-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+        
+        .currency-btn {
+            padding: 12px 30px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .currency-btn:hover {
+            border-color: #38e07b;
+            background: #f0fdf4;
+        }
+        
+        .currency-btn.active {
+            border-color: #38e07b;
+            background: #38e07b;
+            color: white;
+        }
+        
+        .currency-btn .flag {
+            font-size: 20px;
+        }
+        
+        .rate-badge {
+            display: inline-block;
+            background: #fef3c7;
+            color: #92400e;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
             z-index: 1;
         }
 
@@ -380,10 +428,31 @@
     <script>
         const API_BASE_URL = window.location.hostname === 'localhost'
             ? 'http://localhost:3000'
-            : 'https://zimcrowd-backend.vercel.app';
+            : 'https://zimcrowd-api.onrender.com';
 
         let offerData = null;
         let countdownInterval = null;
+        let selectedCurrency = 'USD';
+        
+        // Currency configuration
+        const CURRENCY_CONFIG = {
+            USD: {
+                symbol: '$',
+                name: 'US Dollar',
+                flag: '🇺🇸',
+                interestRate: 8,
+                minLoan: 25,
+                maxLoan: 3000
+            },
+            ZWG: {
+                symbol: 'ZWG ',
+                name: 'Zimbabwe Gold',
+                flag: '🇿🇼',
+                interestRate: 10,
+                minLoan: 675,
+                maxLoan: 40000
+            }
+        };
 
         // Get auth token
         const authToken = localStorage.getItem('authToken');
@@ -393,26 +462,101 @@
         }
 
         // Load offer on page load
-        document.addEventListener('DOMContentLoaded', loadOffer);
+        document.addEventListener('DOMContentLoaded', () => {
+            showCurrencySelector();
+        });
+        
+        function showCurrencySelector() {
+            const content = document.getElementById('offer-content');
+            content.innerHTML = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h3 style="color: #1e293b; margin-bottom: 10px;">Select Your Currency</h3>
+                    <p style="color: #64748b; font-size: 14px;">Choose the currency for your loan</p>
+                </div>
+                
+                <div class="currency-selector">
+                    <button class="currency-btn ${selectedCurrency === 'USD' ? 'active' : ''}" onclick="selectCurrency('USD')">
+                        <span class="flag">🇺🇸</span>
+                        <span>USD</span>
+                        <span class="rate-badge" style="${selectedCurrency === 'USD' ? 'background: white; color: #38e07b;' : ''}">8%/mo</span>
+                    </button>
+                    <button class="currency-btn ${selectedCurrency === 'ZWG' ? 'active' : ''}" onclick="selectCurrency('ZWG')">
+                        <span class="flag">🇿🇼</span>
+                        <span>ZWG</span>
+                        <span class="rate-badge" style="${selectedCurrency === 'ZWG' ? 'background: white; color: #38e07b;' : ''}">10%/mo</span>
+                    </button>
+                </div>
+                
+                <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: #64748b;">Loan Range:</span>
+                        <span style="font-weight: 600; color: #1e293b;" id="loan-range">$25 - $3,000</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: #64748b;">Interest Rate:</span>
+                        <span style="font-weight: 600; color: #1e293b;" id="interest-rate">8% per month</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #64748b;">Annual Rate:</span>
+                        <span style="font-weight: 600; color: #1e293b;" id="annual-rate">96% per annum</span>
+                    </div>
+                </div>
+                
+                <button class="cta-button" onclick="loadOffer()">
+                    <i class="fas fa-bolt"></i> Get My Instant Offer
+                </button>
+            `;
+            updateCurrencyDisplay();
+        }
+        
+        function selectCurrency(currency) {
+            selectedCurrency = currency;
+            showCurrencySelector();
+        }
+        
+        function updateCurrencyDisplay() {
+            const config = CURRENCY_CONFIG[selectedCurrency];
+            document.getElementById('loan-range').textContent = 
+                `${config.symbol}${config.minLoan.toLocaleString()} - ${config.symbol}${config.maxLoan.toLocaleString()}`;
+            document.getElementById('interest-rate').textContent = `${config.interestRate}% per month`;
+            document.getElementById('annual-rate').textContent = `${config.interestRate * 12}% per annum`;
+        }
+        
+        function formatAmount(amount, currency = selectedCurrency) {
+            const config = CURRENCY_CONFIG[currency];
+            return `${config.symbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
 
         async function loadOffer() {
+            const content = document.getElementById('offer-content');
+            content.innerHTML = `
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p style="color: #64748b;">Preparing your personalized ${selectedCurrency} offer...</p>
+                </div>
+            `;
+            
             try {
                 const response = await fetch(`${API_BASE_URL}/api/direct-loans/create-offer`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${authToken}`
-                    }
+                    },
+                    body: JSON.stringify({ currency: selectedCurrency })
                 });
 
                 const result = await response.json();
 
-                if (result.success) {
-                    offerData = result.data;
+                if (result.success && result.data.offer) {
+                    offerData = result.data.offer;
+                    offerData.currency = selectedCurrency;
                     displayOffer(offerData);
-                    startCountdown(offerData.expiresAt);
+                    if (offerData.expiresAt) {
+                        startCountdown(offerData.expiresAt);
+                    }
                 } else {
-                    showError(result.message || 'Failed to create offer');
+                    showError(result.message || result.data?.error || 'Failed to create offer');
                 }
             } catch (error) {
                 console.error('Error loading offer:', error);
@@ -422,38 +566,56 @@
 
         function displayOffer(offer) {
             const content = document.getElementById('offer-content');
+            const config = CURRENCY_CONFIG[offer.currency || selectedCurrency];
+            const principal = offer.principalAmount || offer.amount;
+            const interest = offer.interestAmount || offer.fixedFee || (principal * config.interestRate / 100);
+            const total = offer.totalRepayment || (principal + interest);
+            const termMonths = offer.termMonths || 1;
+            const monthlyPayment = offer.monthlyPayment || (total / termMonths);
             
             content.innerHTML = `
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <span class="currency-btn active" style="display: inline-flex; cursor: default;">
+                        <span class="flag">${config.flag}</span>
+                        <span>${offer.currency || selectedCurrency}</span>
+                        <span class="rate-badge" style="background: white; color: #38e07b;">${config.interestRate}%/mo</span>
+                    </span>
+                </div>
+                
                 <div class="amount-display">
                     <div class="amount-label">You Get</div>
-                    <div class="amount-value">$${offer.amount.toLocaleString()}</div>
-                    <div class="amount-subtitle">Instant deposit to your wallet</div>
+                    <div class="amount-value">${formatAmount(principal)}</div>
+                    <div class="amount-subtitle">Instant deposit to your ${offer.currency || selectedCurrency} wallet</div>
                 </div>
 
                 <div class="breakdown-section">
                     <div class="breakdown-title">💰 Loan Breakdown</div>
                     <div class="breakdown-row">
                         <span class="breakdown-label">Principal Amount</span>
-                        <span class="breakdown-value">$${offer.amount.toFixed(2)}</span>
+                        <span class="breakdown-value">${formatAmount(principal)}</span>
                     </div>
                     <div class="breakdown-row">
-                        <span class="breakdown-label">Fixed Finance Fee (${offer.feePercentage}%)</span>
-                        <span class="breakdown-value">$${offer.fixedFee.toFixed(2)}</span>
+                        <span class="breakdown-label">Interest (${config.interestRate}% × ${termMonths} month${termMonths > 1 ? 's' : ''})</span>
+                        <span class="breakdown-value">${formatAmount(interest)}</span>
+                    </div>
+                    <div class="breakdown-row">
+                        <span class="breakdown-label">Monthly Payment</span>
+                        <span class="breakdown-value">${formatAmount(monthlyPayment)}</span>
                     </div>
                     <div class="breakdown-row">
                         <span class="breakdown-label">Total Repayment</span>
-                        <span class="breakdown-value">$${offer.totalRepayment.toFixed(2)}</span>
+                        <span class="breakdown-value">${formatAmount(total)}</span>
                     </div>
                 </div>
 
                 <div class="apr-disclosure">
-                    <strong>📊 APR Disclosure: ${offer.apr}%</strong>
-                    <p>This is the Annual Percentage Rate for your ${offer.durationDays}-day loan. 
-                    Due date: ${new Date(offer.dueDate).toLocaleDateString('en-US', { 
+                    <strong>📊 Interest Rate: ${config.interestRate}% per month (${config.interestRate * 12}% per annum)</strong>
+                    <p>Term: ${termMonths} month${termMonths > 1 ? 's' : ''}. 
+                    ${offer.dueDate ? `Due date: ${new Date(offer.dueDate).toLocaleDateString('en-US', { 
                         month: 'long', 
                         day: 'numeric', 
                         year: 'numeric' 
-                    })}</p>
+                    })}` : ''}</p>
                 </div>
 
                 <div class="features-grid">
@@ -479,6 +641,10 @@
                     <strong>⏰ Offer expires in:</strong>
                     <div class="timer-display" id="countdown">23:59:59</div>
                 </div>
+                
+                <button onclick="showCurrencySelector()" style="width: 100%; margin-top: 15px; padding: 12px; background: transparent; border: 2px solid #e2e8f0; border-radius: 12px; color: #64748b; font-weight: 600; cursor: pointer;">
+                    <i class="fas fa-exchange-alt"></i> Change Currency
+                </button>
             `;
         }
 
@@ -508,6 +674,9 @@
 
         function acceptOffer() {
             if (!offerData) return;
+            
+            // Store offer data for agreement page
+            localStorage.setItem('directLoanOffer', JSON.stringify(offerData));
             
             // Redirect to agreement page with offer ID
             window.location.href = `direct-loan-agreement.html?offer_id=${offerData.offerId}`;
