@@ -19,10 +19,10 @@ class DirectLoanService {
         // Private and Informal have cold start caps
         this.COLD_START_ENABLED = true;
         
-        // USER-SELECTABLE INTEREST RATE (0-10% per month)
-        this.MIN_MONTHLY_INTEREST_RATE = 0.00;  // 0% per month minimum
-        this.MAX_MONTHLY_INTEREST_RATE = 0.10;  // 10% per month maximum
-        this.DEFAULT_MONTHLY_INTEREST_RATE = 0.05; // 5% default
+        // DIRECT LENDING: FIXED 8% INTEREST RATE PER MONTH
+        // (P2P Marketplace has user-selectable 0-10% rate)
+        this.MONTHLY_INTEREST_RATE = 0.08;  // 8% per month FIXED
+        this.ANNUAL_INTEREST_RATE = 0.96;   // 96% per annum (8% × 12)
         
         // DTNI Configuration by employment type
         // Max Loan: Govt $3000, Private $1000, Informal $500

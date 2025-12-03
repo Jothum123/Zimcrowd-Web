@@ -47,35 +47,43 @@ Anyone registered can apply for Direct Lending. The system checks for **required
 
 ## Employment Types & Loan Limits
 
-| Employment Type | Cold Start | Max Loan (Verified) | Max Tenure | DTNI Max | Interest Rate |
-|-----------------|------------|---------------------|------------|----------|---------------|
-| **Government** | ❌ NO | **$3,000** | **24 months** | 40% | 0-10% /month |
-| **Private** | ✅ $300 | **$1,000** | **12 months** | 33% | 0-10% /month |
-| **Informal** | ✅ $100 | **$500** | **6 months** | 25% | 0-10% /month |
-| **Business** | ✅ $200 | **$1,000** | **12 months** | 30% | 0-10% /month |
+| Employment Type | Cold Start | Loan Range | Max Tenure | DTNI Max |
+|-----------------|------------|------------|------------|----------|
+| **Government** | ❌ NO | **$25 - $3,000** | **24 months** | 40% |
+| **Private** | ✅ $300 | **$25 - $1,000** | **12 months** | 33% |
+| **Informal** | ✅ $100 | **$25 - $500** | **6 months** | 25% |
+| **Business** | ✅ $200 | **$25 - $1,000** | **12 months** | 30% |
 
-### Interest Rate
+## Interest Rates
+
+### Direct Lending (ZimCrowd Direct)
+- **FIXED 8% per month** (96% per annum)
+- No negotiation - instant funding from ZimCrowd Capital
+- Same rate for all employment types
+
+### P2P Marketplace
 - **User selectable: 0% - 10% per month**
-- Borrower chooses their preferred interest rate when applying
-- Lower rates may result in faster funding from lenders
+- Borrower chooses their preferred interest rate when requesting
+- Lower rates may attract more lenders but take longer to fund
+- Higher rates fund faster but cost more
 
 ### Government Employees
 - **NO cold start** - Can access full DTNI-based limit immediately
-- **Maximum loan: $3,000** (verified)
+- **Loan range: $25 - $3,000** (based on DTNI)
 - **Maximum tenure: 24 months**
 - Higher ZimScore bonus (+10 points)
 - Same documents as private employees
 
 ### Private Employees (Verified)
 - **Cold start: $300** - For verified private employees only
-- **Maximum loan: $1,000** (after verification)
+- **Loan range: $25 - $1,000** (after verification)
 - **Maximum tenure: 12 months**
 - After first successful repayment: Unlocks full limit
 - ZimScore bonus: +6 points
 
 ### Informal Employees
 - **Cold start: $100** - Lower initial limit
-- **Maximum loan: $500** (after verification)
+- **Loan range: $25 - $500** (after verification)
 - **Maximum tenure: 6 months**
 - Different document requirements (see below)
 - ZimScore bonus: 0 points
