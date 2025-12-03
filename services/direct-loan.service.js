@@ -4,22 +4,41 @@ const { supabase, isSupabaseAvailable } = require('./supabase-client');
  * Direct Loan Service
  * Manages "ZimCrowd Direct" guaranteed instant funding
  * Alternative to P2P marketplace - funded by ZimCrowd Capital
+ * 
+ * KEY DIFFERENCE FROM P2P:
+ * - NO COLD START - Users get full DTNI-based limit immediately
+ * - Fixed fee based on ZimScore (not user-selected interest)
+ * - Instant disbursement (no waiting for lenders)
  */
 class DirectLoanService {
     constructor() {
         this.OFFER_EXPIRY_HOURS = 24;
         this.DEFAULT_LOAN_DURATION_DAYS = 30;
         
-        // Fee structure based on ZimScore
+        // NO COLD START in Direct Lending
+        // Users get full DTNI-based limit immediately
+        this.COLD_START_ENABLED = false;
+        
+        // Fee structure based on ZimScore (30-85 range)
         this.FEE_TIERS = [
-            { minScore: 90, feePercentage: 5 },   // Excellent: 5%
-            { minScore: 80, feePercentage: 6 },   // Great: 6%
-            { minScore: 70, feePercentage: 7 },   // Good: 7%
-            { minScore: 60, feePercentage: 8 },   // Fair: 8%
-            { minScore: 50, feePercentage: 9 },   // Building: 9%
-            { minScore: 40, feePercentage: 10 },  // Early: 10%
-            { minScore: 0, feePercentage: 12 }    // New: 12%
+            { minScore: 80, feePercentage: 5 },   // Very Low Risk: 5%
+            { minScore: 70, feePercentage: 6 },   // Low Risk: 6%
+            { minScore: 60, feePercentage: 7 },   // Medium Risk: 7%
+            { minScore: 50, feePercentage: 8 },   // High Risk: 8%
+            { minScore: 40, feePercentage: 9 },   // Very High Risk: 9%
+            { minScore: 30, feePercentage: 10 }   // Building Credit: 10%
         ];
+        
+        // DTNI Configuration (same for all employment types in Direct)
+        this.DTNI_CONFIG = {
+            government: { ratio: 0.40, maxTenureMonths: 24 },
+            private: { ratio: 0.33, maxTenureMonths: 12 },
+            business: { ratio: 0.33, maxTenureMonths: 12 },
+            informal: { ratio: 0.33, maxTenureMonths: 12 }
+        };
+        
+        // Maximum loan ceiling
+        this.MAX_LOAN_CEILING = 3000;
     }
 
     /**
@@ -50,7 +69,108 @@ class DirectLoanService {
     }
 
     /**
+     * Calculate maximum loan amount for Direct Lending (NO COLD START)
+     * Uses DTNI calculation without any cold start caps
+     * @param {string} userId - User ID
+     * @param {number} termDays - Loan term in days
+     * @returns {Promise<Object>} Max loan details
+     */
+    async calculateMaxLoanAmount(userId, termDays = 90) {
+        try {
+            // Get user's employment details
+            const { data: employment, error: empError } = await supabase
+                .from('employment_details')
+                .select('monthly_income, employment_type, existing_monthly_payments')
+                .eq('user_id', userId)
+                .single();
+
+            if (empError || !employment) {
+                return { success: false, error: 'Employment details not found' };
+            }
+
+            // Get user's ZimScore
+            const { data: zimScore, error: scoreError } = await supabase
+                .from('user_zimscores')
+                .select('score_value, score_based_limit')
+                .eq('user_id', userId)
+                .single();
+
+            const netSalary = parseFloat(employment.monthly_income) || 0;
+            const employmentType = (employment.employment_type || 'private').toLowerCase();
+            const existingDebt = parseFloat(employment.existing_monthly_payments) || 0;
+
+            // Get DTNI config for employment type
+            const dtniConfig = this.DTNI_CONFIG[employmentType] || this.DTNI_CONFIG.private;
+            
+            // Calculate DTNI-based limit (NO COLD START CAP)
+            const maxInstallment = netSalary * dtniConfig.ratio;
+            const availableInstallment = Math.max(0, maxInstallment - existingDebt);
+            
+            // Calculate max loan using reducing balance method
+            const annualRate = 0.05; // 5% annual
+            const monthlyRate = annualRate / 12;
+            const termMonths = Math.ceil(termDays / 30);
+            
+            let dtniBasedLimit;
+            if (monthlyRate > 0 && termMonths > 0) {
+                const powerTerm = Math.pow(1 + monthlyRate, termMonths);
+                dtniBasedLimit = (availableInstallment * (powerTerm - 1)) / (monthlyRate * powerTerm);
+            } else {
+                dtniBasedLimit = availableInstallment * termMonths;
+            }
+
+            // Get ZimScore-based limit
+            const scoreBasedLimit = zimScore?.score_based_limit || this.getScoreBasedLimit(zimScore?.score_value || 30);
+            
+            // Final max = min(DTNI, ZimScore limit, Ceiling)
+            // NO COLD START CAP APPLIED
+            const finalMaxLoan = Math.min(
+                Math.floor(dtniBasedLimit),
+                scoreBasedLimit,
+                this.MAX_LOAN_CEILING
+            );
+
+            console.log(`💰 Direct Loan Max Calculation (NO COLD START):`);
+            console.log(`   Employment: ${employmentType} (${dtniConfig.ratio * 100}% DTNI)`);
+            console.log(`   Net Salary: $${netSalary}`);
+            console.log(`   DTNI-based: $${Math.floor(dtniBasedLimit)}`);
+            console.log(`   Score-based: $${scoreBasedLimit}`);
+            console.log(`   Final Max: $${finalMaxLoan}`);
+
+            return {
+                success: true,
+                maxLoanAmount: finalMaxLoan,
+                dtniBasedLimit: Math.floor(dtniBasedLimit),
+                scoreBasedLimit: scoreBasedLimit,
+                employmentType: employmentType,
+                dtniRatio: dtniConfig.ratio,
+                maxTenureMonths: dtniConfig.maxTenureMonths,
+                coldStartActive: false, // ALWAYS false for Direct Lending
+                message: `Your maximum Direct Loan amount is $${finalMaxLoan} based on your income and ZimScore.`
+            };
+        } catch (error) {
+            console.error('Error calculating max loan:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Get score-based loan limit
+     * @param {number} scoreValue - ZimScore (30-85)
+     * @returns {number} Max loan amount
+     */
+    getScoreBasedLimit(scoreValue) {
+        if (scoreValue >= 80) return 3000;
+        if (scoreValue >= 70) return 2000;
+        if (scoreValue >= 60) return 1500;
+        if (scoreValue >= 50) return 1000;
+        if (scoreValue >= 40) return 500;
+        return 100;
+    }
+
+    /**
      * Create a guaranteed loan offer for user
+     * NO COLD START - Users get full DTNI-based limit immediately
      * @param {string} userId - User ID
      * @param {number} amount - Requested amount (optional, uses max if not provided)
      * @param {number} durationDays - Loan duration (default: 30)
@@ -58,27 +178,32 @@ class DirectLoanService {
      */
     async createOffer(userId, amount = null, durationDays = this.DEFAULT_LOAN_DURATION_DAYS) {
         try {
-            console.log(`💰 Creating direct loan offer for user ${userId}`);
+            console.log(`💰 Creating direct loan offer for user ${userId} (NO COLD START)`);
 
-            // Get user's ZimScore and max loan amount
+            // Calculate max loan amount (NO COLD START)
+            const maxLoanResult = await this.calculateMaxLoanAmount(userId, durationDays);
+            
+            if (!maxLoanResult.success) {
+                throw new Error(maxLoanResult.error || 'Could not calculate max loan amount');
+            }
+
+            // Get user's ZimScore
             const { data: zimScore, error: scoreError } = await supabase
                 .from('user_zimscores')
-                .select('score_value, max_loan_amount')
+                .select('score_value')
                 .eq('user_id', userId)
                 .single();
 
-            if (scoreError) throw scoreError;
-
-            if (!zimScore) {
-                throw new Error('User does not have a ZimScore yet');
+            if (scoreError || !zimScore) {
+                throw new Error('User does not have a ZimScore yet. Complete KYC first.');
             }
 
             // Use max loan amount if no amount specified
-            const offerAmount = amount || zimScore.max_loan_amount;
+            const offerAmount = amount || maxLoanResult.maxLoanAmount;
 
             // Validate amount doesn't exceed max
-            if (offerAmount > zimScore.max_loan_amount) {
-                throw new Error(`Amount exceeds maximum loan limit of $${zimScore.max_loan_amount}`);
+            if (offerAmount > maxLoanResult.maxLoanAmount) {
+                throw new Error(`Amount exceeds maximum loan limit of $${maxLoanResult.maxLoanAmount}`);
             }
 
             // Calculate fee and totals
@@ -100,7 +225,7 @@ class DirectLoanService {
             const expiresAt = new Date();
             expiresAt.setHours(expiresAt.getHours() + this.OFFER_EXPIRY_HOURS);
 
-            console.log(`✅ Direct loan offer created: $${offerAmount} + $${fixedFee} fee (${apr}% APR)`);
+            console.log(`✅ Direct loan offer created: $${offerAmount} + $${fixedFee} fee (${apr}% APR) - NO COLD START`);
 
             return {
                 success: true,
@@ -112,7 +237,11 @@ class DirectLoanService {
                     apr: apr,
                     durationDays: durationDays,
                     expiresAt: expiresAt.toISOString(),
-                    zimScore: zimScore.score_value
+                    zimScore: zimScore.score_value,
+                    maxLoanAmount: maxLoanResult.maxLoanAmount,
+                    coldStartActive: false, // NO COLD START in Direct Lending
+                    employmentType: maxLoanResult.employmentType,
+                    dtniRatio: maxLoanResult.dtniRatio
                 }
             };
         } catch (error) {
