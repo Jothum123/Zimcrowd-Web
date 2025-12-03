@@ -186,9 +186,11 @@ class DirectLoanService {
     /**
      * Check if user is eligible for Direct Lending
      * RULES:
-     * 1. No loans in arrears from P2P marketplace
+     * 1. All required documents must be VERIFIED in Document Center
      * 2. Account must not be suspended
      * 3. Account must not be banned
+     * 4. No loans in arrears from P2P marketplace
+     * 5. No Direct Loans in arrears
      * @param {string} userId - User ID
      * @returns {Promise<Object>} Eligibility status
      */
@@ -197,11 +199,13 @@ class DirectLoanService {
             console.log(`🔍 Checking Direct Lending eligibility for user ${userId}`);
             
             const violations = [];
+            let documentStatus = null;
+            let employmentType = 'private';
             
-            // Check 1: Is user suspended or banned?
+            // Get user profile for employment type and status
             const { data: userProfile, error: profileError } = await supabase
                 .from('user_profiles')
-                .select('status, suspension_reason, suspension_date, ban_reason, ban_date')
+                .select('status, suspension_reason, suspension_date, ban_reason, ban_date, employment_type, employment_status')
                 .eq('user_id', userId)
                 .single();
 
@@ -210,7 +214,9 @@ class DirectLoanService {
             }
 
             if (userProfile) {
-                // Check for suspension
+                employmentType = userProfile.employment_type || userProfile.employment_status || 'private';
+                
+                // Check 1: Is user suspended?
                 if (userProfile.status === 'suspended') {
                     violations.push({
                         rule: this.ELIGIBILITY_RULES.NOT_SUSPENDED,
@@ -221,7 +227,7 @@ class DirectLoanService {
                     });
                 }
                 
-                // Check for ban
+                // Check 2: Is user banned?
                 if (userProfile.status === 'banned') {
                     violations.push({
                         rule: this.ELIGIBILITY_RULES.NOT_BANNED,
@@ -233,7 +239,84 @@ class DirectLoanService {
                 }
             }
 
-            // Check 2: Does user have loans in arrears from P2P marketplace?
+            // Check 3: Verify all required documents are VERIFIED in Document Center
+            const requiredDocs = this.getRequiredDocuments(employmentType);
+            const requiredDocTypes = requiredDocs.filter(d => d.required).map(d => d.type);
+            
+            const { data: userDocuments, error: docsError } = await supabase
+                .from('user_documents')
+                .select('document_type, status, rejection_reason')
+                .eq('user_id', userId);
+
+            if (docsError && docsError.code !== 'PGRST116') {
+                console.error('Error checking documents:', docsError);
+            }
+
+            // Build document status map
+            const docStatusMap = {};
+            (userDocuments || []).forEach(doc => {
+                docStatusMap[doc.document_type] = {
+                    status: doc.status,
+                    rejectionReason: doc.rejection_reason
+                };
+            });
+
+            // Check each required document
+            const missingDocs = [];
+            const pendingDocs = [];
+            const rejectedDocs = [];
+            const verifiedDocs = [];
+
+            for (const docType of requiredDocTypes) {
+                const docStatus = docStatusMap[docType];
+                if (!docStatus) {
+                    missingDocs.push(docType);
+                } else if (docStatus.status === 'verified') {
+                    verifiedDocs.push(docType);
+                } else if (docStatus.status === 'pending') {
+                    pendingDocs.push(docType);
+                } else if (docStatus.status === 'rejected') {
+                    rejectedDocs.push({ type: docType, reason: docStatus.rejectionReason });
+                }
+            }
+
+            documentStatus = {
+                required: requiredDocTypes.length,
+                verified: verifiedDocs.length,
+                pending: pendingDocs.length,
+                rejected: rejectedDocs.length,
+                missing: missingDocs.length,
+                allVerified: verifiedDocs.length === requiredDocTypes.length,
+                missingDocs,
+                pendingDocs,
+                rejectedDocs,
+                verifiedDocs
+            };
+
+            // Add violation if documents not all verified
+            if (!documentStatus.allVerified) {
+                let docMessage = 'Your documents are not fully verified. ';
+                if (missingDocs.length > 0) {
+                    docMessage += `Missing: ${missingDocs.join(', ')}. `;
+                }
+                if (pendingDocs.length > 0) {
+                    docMessage += `Pending verification: ${pendingDocs.join(', ')}. `;
+                }
+                if (rejectedDocs.length > 0) {
+                    docMessage += `Rejected: ${rejectedDocs.map(d => d.type).join(', ')}. `;
+                }
+                
+                violations.push({
+                    rule: {
+                        code: 'DOCUMENTS_NOT_VERIFIED',
+                        message: docMessage.trim(),
+                        action: 'UPLOAD_DOCUMENTS'
+                    },
+                    details: documentStatus
+                });
+            }
+
+            // Check 4: Does user have loans in arrears from P2P marketplace?
             const { data: arrearsLoans, error: loansError } = await supabase
                 .from('loans')
                 .select('loan_id, amount, status, due_date, days_overdue')
@@ -261,7 +344,7 @@ class DirectLoanService {
                 });
             }
 
-            // Also check direct loans in arrears
+            // Check 5: Does user have Direct Loans in arrears?
             const { data: directArrearsLoans, error: directLoansError } = await supabase
                 .from('direct_loans')
                 .select('direct_loan_id, principal_amount, status, due_date, days_late')
@@ -296,6 +379,8 @@ class DirectLoanService {
             const isEligible = violations.length === 0;
 
             console.log(`🔍 Eligibility Check Result:`);
+            console.log(`   Employment Type: ${employmentType}`);
+            console.log(`   Documents: ${documentStatus.verified}/${documentStatus.required} verified`);
             console.log(`   Eligible: ${isEligible}`);
             if (!isEligible) {
                 console.log(`   Violations: ${violations.map(v => v.rule.code).join(', ')}`);
@@ -304,10 +389,13 @@ class DirectLoanService {
             return {
                 success: true,
                 eligible: isEligible,
+                employmentType: employmentType,
+                documentStatus: documentStatus,
                 violations: violations,
                 message: isEligible 
-                    ? 'You are eligible for Direct Lending.'
-                    : violations[0].rule.message
+                    ? 'You are eligible for Direct Lending. All documents verified.'
+                    : violations[0].rule.message,
+                loanLimits: this.getLoanLimits(employmentType, false) // No cold start for Direct
             };
         } catch (error) {
             console.error('Error checking eligibility:', error);

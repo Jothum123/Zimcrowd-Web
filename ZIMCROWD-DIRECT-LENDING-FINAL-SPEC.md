@@ -61,6 +61,19 @@ Anyone registered can apply for Direct Lending. The system checks for **required
 - Loan approval based on **DTNI calculation** + **verified documents**
 - Users can access full limit based on their income and DTNI ratio
 
+#### Eligibility Requirements for Direct Lending
+To qualify for a Direct Loan, the system checks:
+
+| Check | Requirement |
+|-------|-------------|
+| **1. Verified Documents** | All required documents must be VERIFIED in Document Center |
+| **2. Account Status** | Account must NOT be suspended |
+| **3. Account Status** | Account must NOT be banned |
+| **4. P2P Arrears** | No loans in arrears from P2P Marketplace |
+| **5. Direct Arrears** | No previous Direct Loans in arrears |
+
+If any check fails, the user cannot apply for a Direct Loan until resolved.
+
 ### P2P Marketplace (Cold Start Applies)
 **Cold start applies ONLY to P2P Marketplace for first-time private/informal borrowers:**
 
