@@ -85,18 +85,24 @@ COMMENT ON TABLE direct_loans IS 'Direct loans funded by ZimCrowd Capital - guar
 
 CREATE TABLE IF NOT EXISTS direct_loan_offers (
     offer_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    borrower_user_id UUID NOT NULL REFERENCES zimscore_users(user_id) ON DELETE CASCADE,
+    borrower_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     
-    -- Offer Details
-    offered_amount DECIMAL(10, 2) NOT NULL,
-    fixed_fee DECIMAL(10, 2) NOT NULL,
-    total_repayment DECIMAL(10, 2) NOT NULL,
+    -- Currency & Offer Details
+    currency VARCHAR(3) NOT NULL DEFAULT 'USD' CHECK (currency IN ('USD', 'ZWG')),
+    offered_amount DECIMAL(15, 2) NOT NULL,
+    interest_rate DECIMAL(5, 2) NOT NULL,  -- Monthly rate (8% USD, 10% ZWG)
+    fixed_fee DECIMAL(15, 2) NOT NULL,
+    total_repayment DECIMAL(15, 2) NOT NULL,
     apr DECIMAL(5, 2) NOT NULL,
     loan_duration_days INT NOT NULL,
+    term_months INT DEFAULT 1,
+    monthly_payment DECIMAL(15, 2),
     
     -- User's ZimScore at time of offer
     zimscore_at_offer INT,
-    max_loan_amount_at_offer DECIMAL(10, 2),
+    max_loan_amount_at_offer DECIMAL(15, 2),
+    employment_type VARCHAR(20),
+    dtni_ratio DECIMAL(5, 2),
     
     -- Offer Status
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN (
@@ -417,16 +423,27 @@ $$ LANGUAGE plpgsql;
 -- ============================================
 
 -- View: Active Direct Loans Summary
+-- Uses user_profiles (first_name, last_name) or auth.users metadata
 CREATE OR REPLACE VIEW v_active_direct_loans AS
 SELECT 
     dl.direct_loan_id,
     dl.borrower_user_id,
-    u.full_name as borrower_name,
-    u.phone_number,
+    COALESCE(
+        up.first_name || ' ' || up.last_name,
+        au.raw_user_meta_data->>'full_name',
+        au.email
+    ) as borrower_name,
+    COALESCE(up.phone_number, au.phone) as phone_number,
     uz.score_value as current_zimscore,
     dl.principal_amount,
+    dl.currency,
+    dl.interest_rate,
+    dl.total_interest,
     dl.fixed_finance_fee,
     dl.total_repayment_amount,
+    dl.monthly_payment,
+    dl.term_months,
+    dl.employment_type,
     dl.apr,
     dl.due_date,
     dl.status,
@@ -436,7 +453,8 @@ SELECT
     dl.disbursed_at,
     dl.signed_at
 FROM direct_loans dl
-JOIN zimscore_users u ON dl.borrower_user_id = u.user_id
+LEFT JOIN user_profiles up ON dl.borrower_user_id = up.user_id
+LEFT JOIN auth.users au ON dl.borrower_user_id = au.id
 LEFT JOIN user_zimscores uz ON dl.borrower_user_id = uz.user_id
 WHERE dl.status IN ('disbursed', 'late');
 
@@ -445,8 +463,13 @@ CREATE OR REPLACE VIEW v_pending_direct_offers AS
 SELECT 
     dlo.offer_id,
     dlo.borrower_user_id,
-    u.full_name as borrower_name,
+    COALESCE(
+        up.first_name || ' ' || up.last_name,
+        au.raw_user_meta_data->>'full_name',
+        au.email
+    ) as borrower_name,
     dlo.offered_amount,
+    dlo.currency,
     dlo.fixed_fee,
     dlo.total_repayment,
     dlo.apr,
@@ -456,7 +479,8 @@ SELECT
     dlo.created_at,
     EXTRACT(EPOCH FROM (dlo.expires_at - NOW())) / 3600 as hours_until_expiry
 FROM direct_loan_offers dlo
-JOIN zimscore_users u ON dlo.borrower_user_id = u.user_id
+LEFT JOIN user_profiles up ON dlo.borrower_user_id = up.user_id
+LEFT JOIN auth.users au ON dlo.borrower_user_id = au.id
 WHERE dlo.status = 'pending'
   AND dlo.expires_at > NOW();
 
