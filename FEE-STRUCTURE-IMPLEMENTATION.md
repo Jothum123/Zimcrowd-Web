@@ -447,6 +447,7 @@ recovery_fees
 - ✅ No monthly fees
 
 **Other:**
+- ✅ 3% withdrawal fee
 - ✅ 30% recovery fee
 
 **Platform Revenue:**

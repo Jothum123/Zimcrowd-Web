@@ -94,6 +94,12 @@ const LENDER_SECONDARY_FEES = {
 // ============================================
 
 const PLATFORM_FEES = {
+    WITHDRAWAL_FEE: {
+        rate: 0.03, // 3%
+        description: 'Withdrawal processing fee',
+        type: 'transaction'
+    },
+    
     RECOVERY_FEE: {
         rate: 0.30, // 30% of recovered amounts
         description: 'Collection agency recovery fee',
@@ -237,6 +243,23 @@ const FEE_HELPERS = {
         return {
             recoveryFee: Math.round(recoveryFee * 100) / 100,
             netToLender: Math.round(netToLender * 100) / 100
+        };
+    },
+    
+    /**
+     * Calculate withdrawal fee
+     * @param {number} withdrawalAmount - Amount to withdraw
+     * @returns {Object} Fee breakdown
+     */
+    calculateWithdrawalFee(withdrawalAmount) {
+        const withdrawalFee = withdrawalAmount * PLATFORM_FEES.WITHDRAWAL_FEE.rate;
+        const netAmount = withdrawalAmount - withdrawalFee;
+        
+        return {
+            withdrawalAmount: Math.round(withdrawalAmount * 100) / 100,
+            withdrawalFee: Math.round(withdrawalFee * 100) / 100,
+            feeRate: PLATFORM_FEES.WITHDRAWAL_FEE.rate * 100, // 3%
+            netAmount: Math.round(netAmount * 100) / 100
         };
     }
 };
