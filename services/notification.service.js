@@ -259,6 +259,7 @@ class NotificationService {
             deposit_pending: '⏳ Deposit Pending',
             deposit_flagged: '⚠️ Deposit Flagged for Verification',
             withdrawal_completed: '💸 Withdrawal Completed',
+            withdrawal_initiated: '💸 Withdrawal Initiated',
             withdrawal_pending: '⏳ Withdrawal Processing',
             withdrawal_failed: '❌ Withdrawal Failed',
             transfer_sent: '📤 Transfer Sent',
