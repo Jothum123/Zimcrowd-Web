@@ -10,31 +10,38 @@ const { authenticateUser, requireAdmin } = require('../middleware/auth');
 const { supabase } = require('../utils/supabase-auth');
 const WalletService = require('../services/wallet.service');
 const NotificationService = require('../services/notification.service');
+const { PLATFORM_FEES } = require('../constants/fees');
 
 const walletService = new WalletService();
 const notificationService = new NotificationService();
 
 console.log('🔄 Loading referral credits routes...');
 
-// Referral reward configuration
+// Referral reward configuration from centralized constants
+// $5 per qualifying activity for both Advocate and Friend
+// Monthly limit: $1,000 for advocates
 const REFERRAL_REWARDS = {
-    signup: {
-        referrer: { amount: 5, currency: 'USD' },
-        referee: { amount: 3, currency: 'USD' }
-    },
-    first_deposit: {
-        referrer: { amount: 10, currency: 'USD' },
-        referee: { amount: 5, currency: 'USD' }
-    },
+    // Advocate (Referrer) earns $5 when Friend completes:
     first_loan: {
-        referrer: { amount: 15, currency: 'USD' },
-        referee: { amount: 0, currency: 'USD' }
+        referrer: { amount: PLATFORM_FEES.REFERRAL_CREDIT.rewards.advocate.friend_first_loan, currency: 'USD' },
+        referee: { amount: PLATFORM_FEES.REFERRAL_CREDIT.rewards.friend.first_loan, currency: 'USD' }
+    },
+    loan_repaid: {
+        referrer: { amount: PLATFORM_FEES.REFERRAL_CREDIT.rewards.advocate.friend_loan_repaid, currency: 'USD' },
+        referee: { amount: 0, currency: 'USD' }  // Friend doesn't earn for repayment
+    },
+    first_funding: {
+        referrer: { amount: PLATFORM_FEES.REFERRAL_CREDIT.rewards.advocate.friend_first_funding, currency: 'USD' },
+        referee: { amount: PLATFORM_FEES.REFERRAL_CREDIT.rewards.friend.first_funding, currency: 'USD' }
     },
     first_investment: {
-        referrer: { amount: 20, currency: 'USD' },
-        referee: { amount: 10, currency: 'USD' }
+        referrer: { amount: PLATFORM_FEES.REFERRAL_CREDIT.rewards.advocate.friend_first_investment, currency: 'USD' },
+        referee: { amount: PLATFORM_FEES.REFERRAL_CREDIT.rewards.friend.first_investment, currency: 'USD' }
     }
 };
+
+const MONTHLY_LIMIT = PLATFORM_FEES.REFERRAL_CREDIT.monthlyLimit;
+const CREDIT_EXPIRY_DAYS = PLATFORM_FEES.REFERRAL_CREDIT.expirationDays;
 
 // Tier multipliers based on total referrals
 const TIER_MULTIPLIERS = {
