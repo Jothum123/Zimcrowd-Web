@@ -1181,43 +1181,110 @@ class GoogleDocAIService {
 
             case 'proof_of_residence':
             case 'utility_bill':
-                // Verify account holder name
+            case 'utility_bill_electricity':
+            case 'utility_bill_water':
+            case 'utility_bill_telecom':
+            case 'council_rates':
+            case 'lease_agreement':
+            case 'bank_statement_with_address':
+                // REQUIRED: Verify account holder name matches user's full name
+                const porFullName = `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim();
+                totalChecks++;
+                
                 if (extractedFields.accountHolder) {
-                    totalChecks++;
-                    const fullName = `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim();
-                    if (compareNames(extractedFields.accountHolder, fullName)) {
-                        result.matches.accountHolder = { extracted: extractedFields.accountHolder, profile: fullName };
+                    if (compareNames(extractedFields.accountHolder, porFullName)) {
+                        result.matches.accountHolder = { 
+                            extracted: extractedFields.accountHolder, 
+                            profile: porFullName,
+                            status: 'MATCHED'
+                        };
                         matchCount++;
                     } else {
-                        result.mismatches.accountHolder = { extracted: extractedFields.accountHolder, profile: fullName };
+                        result.mismatches.accountHolder = { 
+                            extracted: extractedFields.accountHolder, 
+                            profile: porFullName,
+                            status: 'MISMATCH',
+                            reason: 'Name on document does not match your registered name'
+                        };
+                        result.warnings.push(`Name mismatch: Document shows "${extractedFields.accountHolder}", but your registered name is "${porFullName}"`);
                     }
+                } else {
+                    result.mismatches.accountHolder = { 
+                        extracted: null, 
+                        profile: porFullName,
+                        status: 'NOT_FOUND',
+                        reason: 'Could not find name on document'
+                    };
+                    result.warnings.push('Could not extract name from document. Please ensure your full name is clearly visible.');
                 }
 
-                // Verify address
+                // REQUIRED: Verify address matches user's registered address
+                totalChecks++;
+                
                 if (extractedFields.serviceAddress && userProfile.address) {
-                    totalChecks++;
                     if (compareAddresses(extractedFields.serviceAddress, userProfile.address)) {
-                        result.matches.address = { extracted: extractedFields.serviceAddress, profile: userProfile.address };
+                        result.matches.address = { 
+                            extracted: extractedFields.serviceAddress, 
+                            profile: userProfile.address,
+                            status: 'MATCHED'
+                        };
                         matchCount++;
                     } else {
-                        result.mismatches.address = { extracted: extractedFields.serviceAddress, profile: userProfile.address };
+                        result.mismatches.address = { 
+                            extracted: extractedFields.serviceAddress, 
+                            profile: userProfile.address,
+                            status: 'MISMATCH',
+                            reason: 'Address on document does not match your registered address'
+                        };
+                        result.warnings.push(`Address mismatch: Document shows "${extractedFields.serviceAddress}", but your registered address is "${userProfile.address}"`);
                     }
+                } else if (!extractedFields.serviceAddress) {
+                    result.mismatches.address = { 
+                        extracted: null, 
+                        profile: userProfile.address,
+                        status: 'NOT_FOUND',
+                        reason: 'Could not find address on document'
+                    };
+                    result.warnings.push('Could not extract address from document. Please ensure your address is clearly visible.');
+                } else if (!userProfile.address) {
+                    result.warnings.push('Please update your profile with your residential address first.');
                 }
 
-                // Verify city
+                // Verify city if available
                 if (extractedFields.city && userProfile.city) {
                     totalChecks++;
                     if (extractedFields.city.toUpperCase() === userProfile.city.toUpperCase()) {
-                        result.matches.city = { extracted: extractedFields.city, profile: userProfile.city };
+                        result.matches.city = { 
+                            extracted: extractedFields.city, 
+                            profile: userProfile.city,
+                            status: 'MATCHED'
+                        };
                         matchCount++;
                     } else {
-                        result.mismatches.city = { extracted: extractedFields.city, profile: userProfile.city };
+                        result.mismatches.city = { 
+                            extracted: extractedFields.city, 
+                            profile: userProfile.city,
+                            status: 'MISMATCH'
+                        };
                     }
                 }
 
-                // Check document recency
+                // Check document recency (must be within 3 months)
                 if (!extractedFields.isRecent) {
-                    result.warnings.push('Document may be older than 3 months');
+                    result.warnings.push('Document appears to be older than 3 months. Please upload a recent document.');
+                }
+
+                // For proof of residence, BOTH name AND address must match
+                if (result.mismatches.accountHolder || result.mismatches.address) {
+                    result.verified = false;
+                    result.recommendation = 'reject';
+                    if (result.mismatches.accountHolder && result.mismatches.address) {
+                        result.rejectionReason = 'Both name and address on document do not match your profile';
+                    } else if (result.mismatches.accountHolder) {
+                        result.rejectionReason = 'Name on document does not match your registered name';
+                    } else {
+                        result.rejectionReason = 'Address on document does not match your registered address';
+                    }
                 }
                 break;
 

@@ -45,7 +45,40 @@ Users can upload ANY of the following as proof of residence:
 | **Bank Statement** | Must show full name AND residential address |
 | **Council Rates** | City council rates statement |
 
-**Note:** Bank statement with full name and address is a valid proof of residence option.
+### ⚠️ MANDATORY VERIFICATION
+
+**ALL proof of residence documents MUST show:**
+
+1. **User's Full Name** - Must match the name in user profile
+2. **Residential Address** - Must match the address user entered during registration
+
+### Document AI Verification Process
+
+```
+Document Uploaded
+    ↓
+AI extracts: Name + Address from document
+    ↓
+System compares:
+    ├── Document Name vs Profile Name → MATCH/MISMATCH
+    └── Document Address vs Profile Address → MATCH/MISMATCH
+    ↓
+Result:
+    ✅ BOTH match → APPROVED
+    ❌ Name mismatch → REJECTED (reason: "Name does not match")
+    ❌ Address mismatch → REJECTED (reason: "Address does not match")
+    ❌ Both mismatch → REJECTED (reason: "Name and address do not match")
+```
+
+### Rejection Reasons
+
+| Issue | Message |
+|-------|---------|
+| Name not found | "Could not extract name from document. Please ensure your full name is clearly visible." |
+| Name mismatch | "Name on document does not match your registered name" |
+| Address not found | "Could not extract address from document. Please ensure your address is clearly visible." |
+| Address mismatch | "Address on document does not match your registered address" |
+| Document too old | "Document appears to be older than 3 months. Please upload a recent document." |
 
 ### Document Status Badges
 
