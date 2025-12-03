@@ -90,7 +90,7 @@ const LENDER_PRIMARY_FEES = {
 
 const LENDER_SECONDARY_FEES = {
     DEAL_FEE: {
-        rate: 0.10, // 10%
+        rate: 0.05, // 5%
         description: 'One-time secondary market purchase fee',
         type: 'upfront'
     }

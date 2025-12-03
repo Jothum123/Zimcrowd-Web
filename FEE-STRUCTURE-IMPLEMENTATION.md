@@ -37,7 +37,7 @@
 
 | Fee Type | Rate | When Charged | Description |
 |----------|------|--------------|-------------|
-| **Deal Fee** | 10% | Upfront (one-time) | Secondary market purchase fee |
+| **Deal Fee** | 5% | Upfront (one-time) | Secondary market purchase fee |
 
 **No ongoing fees** on secondary market purchases.
 
@@ -438,7 +438,7 @@ recovery_fees
 - ✅ 5% collection fee (borrowers)
 - ✅ 1.5% collection fee (lenders)
 - ✅ 10% late fee ($50 min)
-- ✅ 10% secondary market deal fee
+- ✅ 5% secondary market deal fee
 - ✅ 30% recovery fee
 
 **Platform Revenue:**
