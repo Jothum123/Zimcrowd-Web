@@ -47,32 +47,45 @@
 
 ---
 
-## 📊 Fee Structure
+## 📊 Interest Rate
 
-### Option A: One-Time Fixed Fee (Current Implementation)
+### SINGLE FIXED RATE FOR ALL USERS
 
-Based on ZimScore tier - charged once at disbursement:
+**8% per month = 96% per annum**
 
-| ZimScore | Fee % | Example ($100 loan) | APR (30 days) |
-|----------|-------|---------------------|---------------|
-| 80-85 | 5% | $5 fee | 61% |
-| 70-79 | 6% | $6 fee | 73% |
-| 60-69 | 7% | $7 fee | 85% |
-| 50-59 | 8% | $8 fee | 97% |
-| 40-49 | 9% | $9 fee | 110% |
-| 30-39 | 10% | $10 fee | 122% |
+| Rate Type | Value |
+|-----------|-------|
+| **Monthly Interest Rate** | 8% |
+| **Annual Interest Rate** | 96% |
+| **Calculation Method** | Simple Interest |
 
-**APR Formula:** `APR = (Fee / Principal) × (365 / Days) × 100`
+### Interest Calculation Examples
 
-### Option B: Monthly Interest (From Fee Document)
+| Principal | Term | Monthly Interest | Total Interest | Total Repayment |
+|-----------|------|------------------|----------------|-----------------|
+| $100 | 1 month | $8 | $8 | $108 |
+| $100 | 3 months | $8 | $24 | $124 |
+| $500 | 1 month | $40 | $40 | $540 |
+| $500 | 3 months | $40 | $120 | $620 |
+| $1,000 | 1 month | $80 | $80 | $1,080 |
+| $1,000 | 6 months | $80 | $480 | $1,480 |
+| $3,000 | 12 months | $240 | $2,880 | $5,880 |
 
-5% monthly interest rate (60% APR):
+### Formula
 
-| Loan Amount | Monthly Interest | Term | Total Interest |
-|-------------|------------------|------|----------------|
-| $100 | $5 | 3 months | $15 |
-| $500 | $25 | 6 months | $150 |
-| $1,000 | $50 | 12 months | $600 |
+```
+Monthly Interest = Principal × 8%
+Total Interest = Monthly Interest × Term (months)
+Total Repayment = Principal + Total Interest
+Monthly Payment = Total Repayment ÷ Term (months)
+```
+
+### Key Points
+
+- ✅ **Same rate for ALL users** - No tiered pricing based on ZimScore
+- ✅ **Simple interest** - Easy to understand
+- ✅ **Transparent** - No hidden fees
+- ✅ **ZimScore determines LIMIT only** - Not the interest rate
 
 ---
 

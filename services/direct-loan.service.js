@@ -19,15 +19,10 @@ class DirectLoanService {
         // Users get full DTNI-based limit immediately
         this.COLD_START_ENABLED = false;
         
-        // Fee structure based on ZimScore (30-85 range)
-        this.FEE_TIERS = [
-            { minScore: 80, feePercentage: 5 },   // Very Low Risk: 5%
-            { minScore: 70, feePercentage: 6 },   // Low Risk: 6%
-            { minScore: 60, feePercentage: 7 },   // Medium Risk: 7%
-            { minScore: 50, feePercentage: 8 },   // High Risk: 8%
-            { minScore: 40, feePercentage: 9 },   // Very High Risk: 9%
-            { minScore: 30, feePercentage: 10 }   // Building Credit: 10%
-        ];
+        // SINGLE FIXED INTEREST RATE FOR ALL USERS
+        // 8% per month = 96% per annum
+        this.MONTHLY_INTEREST_RATE = 0.08;  // 8% per month
+        this.ANNUAL_INTEREST_RATE = 0.96;   // 96% per annum (8% × 12)
         
         // DTNI Configuration (same for all employment types in Direct)
         this.DTNI_CONFIG = {
@@ -42,17 +37,40 @@ class DirectLoanService {
     }
 
     /**
-     * Calculate fixed finance fee based on amount and ZimScore
-     * @param {number} amount - Loan amount
-     * @param {number} zimScore - User's ZimScore
-     * @returns {number} Fixed fee
+     * Calculate interest for Direct Loan
+     * FIXED RATE: 8% per month (96% per annum) for ALL users
+     * @param {number} principal - Loan principal amount
+     * @param {number} termMonths - Loan term in months
+     * @returns {Object} Interest calculation details
      */
-    calculateFixedFee(amount, zimScore) {
-        // Find appropriate fee tier
-        const tier = this.FEE_TIERS.find(t => zimScore >= t.minScore);
-        const feePercentage = tier ? tier.feePercentage : 12;
+    calculateInterest(principal, termMonths) {
+        // Simple interest: Principal × Rate × Time
+        const monthlyInterest = principal * this.MONTHLY_INTEREST_RATE;
+        const totalInterest = monthlyInterest * termMonths;
+        const totalRepayment = principal + totalInterest;
+        const monthlyPayment = totalRepayment / termMonths;
         
-        return (amount * feePercentage) / 100;
+        return {
+            principal: principal,
+            monthlyInterestRate: this.MONTHLY_INTEREST_RATE * 100, // 8%
+            annualInterestRate: this.ANNUAL_INTEREST_RATE * 100,   // 96%
+            termMonths: termMonths,
+            monthlyInterest: Math.round(monthlyInterest * 100) / 100,
+            totalInterest: Math.round(totalInterest * 100) / 100,
+            totalRepayment: Math.round(totalRepayment * 100) / 100,
+            monthlyPayment: Math.round(monthlyPayment * 100) / 100
+        };
+    }
+
+    /**
+     * Calculate fixed finance fee (for short-term loans < 1 month)
+     * FIXED RATE: 8% of principal
+     * @param {number} amount - Loan amount
+     * @returns {number} Fixed fee (8%)
+     */
+    calculateFixedFee(amount) {
+        // 8% fixed fee for all users (same as 1 month interest)
+        return Math.round(amount * this.MONTHLY_INTEREST_RATE * 100) / 100;
     }
 
     /**
@@ -206,16 +224,20 @@ class DirectLoanService {
                 throw new Error(`Amount exceeds maximum loan limit of $${maxLoanResult.maxLoanAmount}`);
             }
 
-            // Calculate fee and totals
-            const fixedFee = this.calculateFixedFee(offerAmount, zimScore.score_value);
-            const totalRepayment = offerAmount + fixedFee;
-            const apr = this.calculateAPR(offerAmount, fixedFee, durationDays);
+            // Calculate interest - FIXED 8% per month (96% per annum)
+            const termMonths = Math.ceil(durationDays / 30);
+            const interestCalc = this.calculateInterest(offerAmount, termMonths);
+            
+            // For short-term loans (< 30 days), use fixed fee
+            const isShortTerm = durationDays <= 30;
+            const totalInterest = isShortTerm ? this.calculateFixedFee(offerAmount) : interestCalc.totalInterest;
+            const totalRepayment = offerAmount + totalInterest;
 
             // Create offer using database function
             const { data: offerId, error: offerError } = await supabase.rpc('create_direct_loan_offer', {
                 p_borrower_user_id: userId,
                 p_amount: offerAmount,
-                p_fee: fixedFee,
+                p_fee: totalInterest,
                 p_duration_days: durationDays
             });
 
@@ -225,17 +247,21 @@ class DirectLoanService {
             const expiresAt = new Date();
             expiresAt.setHours(expiresAt.getHours() + this.OFFER_EXPIRY_HOURS);
 
-            console.log(`✅ Direct loan offer created: $${offerAmount} + $${fixedFee} fee (${apr}% APR) - NO COLD START`);
+            console.log(`✅ Direct loan offer: $${offerAmount} @ 8%/month × ${termMonths} months = $${totalInterest} interest`);
+            console.log(`   Total Repayment: $${totalRepayment} | APR: 96%`);
 
             return {
                 success: true,
                 offer: {
                     offerId,
                     principalAmount: offerAmount,
-                    fixedFinanceFee: fixedFee,
+                    interestAmount: totalInterest,
                     totalRepayment: totalRepayment,
-                    apr: apr,
+                    monthlyInterestRate: 8, // 8% per month
+                    annualInterestRate: 96, // 96% per annum
+                    termMonths: termMonths,
                     durationDays: durationDays,
+                    monthlyPayment: isShortTerm ? totalRepayment : interestCalc.monthlyPayment,
                     expiresAt: expiresAt.toISOString(),
                     zimScore: zimScore.score_value,
                     maxLoanAmount: maxLoanResult.maxLoanAmount,
