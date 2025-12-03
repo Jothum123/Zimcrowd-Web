@@ -1,6 +1,8 @@
 const { 
     BORROWER_FEES, 
     LENDER_PRIMARY_FEES, 
+    LENDER_SECONDARY_FEES,
+    PLATFORM_FEES,
     FEE_HELPERS 
 } = require('../constants/fees');
 
@@ -106,29 +108,30 @@ class FeeCalculatorService {
     
     /**
      * Calculate lender primary market investment fees
+     * NEW STRUCTURE: 10% platform fee + 5% optional insurance, NO monthly fees
      * @param {Object} params - Investment parameters
      * @param {number} params.investmentAmount - Investment amount
      * @param {number} params.estimatedMonthlyYield - Expected monthly yield
      * @param {number} params.termMonths - Investment term
+     * @param {boolean} params.includeInsurance - Whether to include optional insurance (default: false)
      * @returns {Object} Complete fee breakdown
      */
-    static calculateLenderPrimaryMarketFees({ investmentAmount, estimatedMonthlyYield, termMonths = 12 }) {
-        // Calculate upfront fees
-        const upfrontFees = FEE_HELPERS.calculateLenderPrimaryUpfrontFees(investmentAmount);
+    static calculateLenderPrimaryMarketFees({ investmentAmount, estimatedMonthlyYield, termMonths = 12, includeInsurance = false }) {
+        // Calculate upfront fees (platform fee required, insurance optional)
+        const upfrontFees = FEE_HELPERS.calculateLenderPrimaryUpfrontFees(investmentAmount, includeInsurance);
         
-        // Calculate monthly fees
-        const monthlyFees = FEE_HELPERS.calculateLenderMonthlyFees(investmentAmount, estimatedMonthlyYield);
+        // No monthly fees - lenders receive full yield
+        const monthlyReturns = FEE_HELPERS.calculateLenderReturns(estimatedMonthlyYield);
         
         // Calculate totals
         const totalGrossYield = estimatedMonthlyYield * termMonths;
-        const totalMonthlyFees = monthlyFees.totalMonthlyFees * termMonths;
-        const totalNetReturn = monthlyFees.netMonthlyReturn * termMonths;
+        const totalNetReturn = monthlyReturns.netReturn * termMonths;
         
-        // Calculate ROI
+        // Calculate ROI based on total investment (including fees)
         const roi = ((totalNetReturn / upfrontFees.totalInvestment) * 100).toFixed(2);
         
         // Calculate payback period
-        const paybackPeriod = upfrontFees.totalInvestment / monthlyFees.netMonthlyReturn;
+        const paybackPeriod = upfrontFees.totalInvestment / monthlyReturns.netReturn;
         
         return {
             // Investment Details
@@ -136,36 +139,43 @@ class FeeCalculatorService {
             estimatedMonthlyYield,
             termMonths,
             
-            // Upfront Fees
+            // Upfront Fees (NEW STRUCTURE)
             upfrontFees: {
-                serviceFee: upfrontFees.serviceFee,
+                platformFee: upfrontFees.platformFee,
                 insuranceFee: upfrontFees.insuranceFee,
+                insuranceOptedIn: includeInsurance,
                 total: upfrontFees.totalUpfront
             },
             
             // Total Investment
             totalInvestment: upfrontFees.totalInvestment,
             
-            // Monthly Returns
+            // Monthly Returns (NO FEES DEDUCTED)
             monthlyReturns: {
                 grossYield: estimatedMonthlyYield,
-                collectionFee: monthlyFees.collectionFee,
-                tenureFee: monthlyFees.tenureFee,
-                totalFees: monthlyFees.totalMonthlyFees,
-                netReturn: monthlyFees.netMonthlyReturn
+                fees: 0,  // No monthly fees
+                netReturn: monthlyReturns.netReturn
             },
             
             // Total Returns
             totalReturns: {
                 grossYield: Math.round(totalGrossYield * 100) / 100,
-                totalFees: Math.round(totalMonthlyFees * 100) / 100,
+                totalFees: upfrontFees.totalUpfront, // Only upfront fees
                 netReturn: Math.round(totalNetReturn * 100) / 100
             },
             
             // Performance Metrics
             roi: parseFloat(roi),
             paybackPeriod: Math.round(paybackPeriod * 10) / 10,
-            annualizedReturn: parseFloat(roi) // Same as ROI for 12-month term
+            annualizedReturn: parseFloat(roi),
+            
+            // Fee Structure Info
+            feeStructure: {
+                platformFeeRate: LENDER_PRIMARY_FEES.PLATFORM_FEE.rate * 100,
+                insuranceFeeRate: LENDER_PRIMARY_FEES.INSURANCE_FEE.rate * 100,
+                insuranceOptional: true,
+                monthlyFees: false
+            }
         };
     }
     
@@ -296,6 +306,72 @@ class FeeCalculatorService {
             platformShare: lateFeeCalc.platformShare,
             lenderShare: lateFeeCalc.lenderShare,
             totalDue: lateFeeCalc.totalDue
+        };
+    }
+    
+    /**
+     * Calculate withdrawal fee
+     * Bank: 3% | Mobile Wallet: 5%
+     * @param {number} amount - Withdrawal amount
+     * @param {string} method - 'bank' or 'mobile'
+     * @param {string} currency - Currency code
+     * @returns {Object} Withdrawal fee breakdown
+     */
+    static calculateWithdrawalFee(amount, method = 'bank', currency = 'USD') {
+        const feeCalc = FEE_HELPERS.calculateWithdrawalFee(amount, method);
+        
+        return {
+            withdrawalAmount: amount,
+            method: method,
+            currency: currency,
+            feeRate: feeCalc.feeRate,
+            feeRateDescription: method === 'mobile' ? '5% mobile wallet fee' : '3% bank transfer fee',
+            withdrawalFee: feeCalc.withdrawalFee,
+            netAmount: feeCalc.netAmount
+        };
+    }
+    
+    /**
+     * Get complete fee structure summary
+     * @returns {Object} All fee rates and descriptions
+     */
+    static getFeeStructure() {
+        return {
+            borrowerFees: {
+                upfront: {
+                    serviceFee: { rate: BORROWER_FEES.SERVICE_FEE.rate * 100, description: BORROWER_FEES.SERVICE_FEE.description },
+                    insuranceFee: { rate: BORROWER_FEES.INSURANCE_FEE.rate * 100, description: BORROWER_FEES.INSURANCE_FEE.description }
+                },
+                monthly: {
+                    tenureFee: { rate: BORROWER_FEES.TENURE_FEE.rate * 100, description: BORROWER_FEES.TENURE_FEE.description },
+                    collectionFee: { rate: BORROWER_FEES.COLLECTION_FEE.rate * 100, description: BORROWER_FEES.COLLECTION_FEE.description }
+                },
+                penalty: {
+                    lateFee: { 
+                        rate: BORROWER_FEES.LATE_FEE.rate * 100, 
+                        minimum: BORROWER_FEES.LATE_FEE.minimumAmount,
+                        gracePeriodHours: BORROWER_FEES.LATE_FEE.gracePeriodHours,
+                        description: BORROWER_FEES.LATE_FEE.description 
+                    }
+                }
+            },
+            lenderFees: {
+                upfront: {
+                    platformFee: { rate: LENDER_PRIMARY_FEES.PLATFORM_FEE.rate * 100, required: true, description: LENDER_PRIMARY_FEES.PLATFORM_FEE.description },
+                    insuranceFee: { rate: LENDER_PRIMARY_FEES.INSURANCE_FEE.rate * 100, required: false, optional: true, description: LENDER_PRIMARY_FEES.INSURANCE_FEE.description }
+                },
+                monthly: null, // No monthly fees for lenders
+                secondaryMarket: {
+                    dealFee: { rate: LENDER_SECONDARY_FEES.DEAL_FEE.rate * 100, description: LENDER_SECONDARY_FEES.DEAL_FEE.description }
+                }
+            },
+            withdrawalFees: {
+                bank: { rate: PLATFORM_FEES.WITHDRAWAL_FEE.bank.rate * 100, description: PLATFORM_FEES.WITHDRAWAL_FEE.bank.description },
+                mobile: { rate: PLATFORM_FEES.WITHDRAWAL_FEE.mobile.rate * 100, description: PLATFORM_FEES.WITHDRAWAL_FEE.mobile.description }
+            },
+            otherFees: {
+                recoveryFee: { rate: PLATFORM_FEES.RECOVERY_FEE.rate * 100, description: PLATFORM_FEES.RECOVERY_FEE.description }
+            }
         };
     }
 }
