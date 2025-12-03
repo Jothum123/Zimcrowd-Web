@@ -183,6 +183,44 @@
             font-size: 10px;
         }
 
+        .sidebar-user-id {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 4px;
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+
+        .sidebar-user-id .user-id-label {
+            color: #475569;
+        }
+
+        .sidebar-user-id .user-id-value {
+            color: #38e77b;
+            background: rgba(56, 231, 123, 0.1);
+            padding: 1px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sidebar-user-id .user-id-value:hover {
+            background: rgba(56, 231, 123, 0.2);
+        }
+
+        .sidebar-user-id .copy-icon {
+            color: #475569;
+            font-size: 9px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .sidebar-user-id .copy-icon:hover {
+            color: #38e77b;
+        }
+
         .nav-menu {
             list-style: none;
         }
@@ -3576,6 +3614,11 @@
                 <div id="sidebar-verified-badge" class="sidebar-verified-badge" style="display: none;">
                     <i class="fas fa-check-circle"></i>
                     <span>Verified</span>
+                </div>
+                <div class="sidebar-user-id" id="sidebar-user-id">
+                    <span class="user-id-label">ID:</span>
+                    <span class="user-id-value" id="sidebar-user-id-value" onclick="copyUserId()" title="Click to copy">---</span>
+                    <i class="fas fa-copy copy-icon" onclick="copyUserId()" title="Copy ID"></i>
                 </div>
             </div>
         </div>
@@ -7098,6 +7141,49 @@
             }
         };
 
+        // ============================================
+        // USER ID FUNCTIONS
+        // ============================================
+        
+        /**
+         * Generate a short, readable user ID from UUID
+         * Format: ZC-XXXXXX (ZimCrowd prefix + 6 alphanumeric chars)
+         */
+        function generateShortUserId(uuid) {
+            if (!uuid) return '---';
+            // Take first 8 chars of UUID and convert to uppercase alphanumeric
+            const cleanUuid = uuid.replace(/-/g, '').toUpperCase();
+            const shortId = cleanUuid.substring(0, 6);
+            return `ZC-${shortId}`;
+        }
+        
+        /**
+         * Copy user ID to clipboard
+         */
+        function copyUserId() {
+            const userIdEl = document.getElementById('sidebar-user-id-value');
+            if (!userIdEl) return;
+            
+            const userId = userIdEl.textContent;
+            const fullId = userIdEl.getAttribute('data-full-id') || userId;
+            
+            navigator.clipboard.writeText(userId).then(() => {
+                // Show feedback
+                const originalText = userIdEl.textContent;
+                userIdEl.textContent = 'Copied!';
+                userIdEl.style.color = '#fbbf24';
+                
+                setTimeout(() => {
+                    userIdEl.textContent = originalText;
+                    userIdEl.style.color = '';
+                }, 1500);
+                
+                console.log('User ID copied:', userId);
+            }).catch(err => {
+                console.error('Failed to copy user ID:', err);
+            });
+        }
+
         // Mobile Menu Toggle
         const mobileMenuToggle = document.getElementById('mobileMenuToggle');
         const sidebar = document.getElementById('sidebar');
@@ -8016,6 +8102,15 @@ How it works:
                                    localStorage.getItem('kycVerified') === 'true';
                 if (sidebarVerifiedBadge && isVerified) {
                     sidebarVerifiedBadge.style.display = 'inline-flex';
+                }
+                
+                // Generate and display User ID
+                const userIdEl = document.getElementById('sidebar-user-id-value');
+                if (userIdEl && userInfo.userId) {
+                    const shortUserId = generateShortUserId(userInfo.userId);
+                    userIdEl.textContent = shortUserId;
+                    userIdEl.setAttribute('data-full-id', userInfo.userId);
+                    console.log('Updated sidebar user ID:', shortUserId);
                 }
                 
                 // Show welcome message for new social auth users
