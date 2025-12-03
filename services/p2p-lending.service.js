@@ -32,14 +32,19 @@ class P2PLendingService {
         this.MIN_LOAN_AMOUNT = 25;
         
         // Investment/Lending limits (insurable range)
-        // Lenders can deposit $10-$10,000 to fund loans
         this.MIN_INVESTMENT_AMOUNT = 10;    // Minimum $10 per investment
         this.MAX_INVESTMENT_AMOUNT = 10000; // Maximum $10,000 per investment
+        
+        // Deposit limits - NO MAXIMUM, but $5,000+ requires source verification
         this.MIN_DEPOSIT_AMOUNT = 10;       // Minimum deposit to lender wallet
-        this.MAX_DEPOSIT_AMOUNT = 10000;    // Maximum deposit to lender wallet
+        this.MAX_DEPOSIT_AMOUNT = null;     // NO maximum deposit limit
+        
+        // Withdrawal limits
+        this.MIN_WITHDRAWAL_AMOUNT = 20;    // Minimum withdrawal $20
+        this.MAX_WITHDRAWAL_PER_DAY = 1000; // Maximum $1,000 per day
         
         // AML (Anti-Money Laundering) Thresholds
-        // Deposits $5,000+ require additional proof of income
+        // Deposits $5,000+ require source of funds verification
         this.AML_THRESHOLD = 5000;          // Trigger AML check at $5,000
         this.AML_CUMULATIVE_THRESHOLD = 10000; // Cumulative deposits in 30 days triggers AML
         this.AML_WINDOW_DAYS = 30;          // Rolling window for cumulative check
@@ -612,8 +617,7 @@ class P2PLendingService {
 
     /**
      * Validate deposit amount for lender wallet
-     * Must be within insurable range: $10 - $10,000
-     * Deposits $5,000+ trigger AML check requiring additional proof of income
+     * NO maximum deposit limit, but $5,000+ requires source verification
      * @param {number} amount - Deposit amount
      * @param {string} userId - User ID for AML check
      * @returns {Object} Validation result with AML flag if applicable
@@ -633,15 +637,9 @@ class P2PLendingService {
             };
         }
 
-        if (depositAmount > this.MAX_DEPOSIT_AMOUNT) {
-            return {
-                valid: false,
-                message: `Maximum deposit amount is $${this.MAX_DEPOSIT_AMOUNT} (insurable limit)`,
-                maxAmount: this.MAX_DEPOSIT_AMOUNT
-            };
-        }
+        // NO maximum deposit limit - removed the max check
 
-        // AML Check: Deposits $5,000+ require additional proof of income
+        // AML Check: Deposits $5,000+ require source of funds verification
         let amlFlag = null;
         if (depositAmount >= this.AML_THRESHOLD) {
             amlFlag = {
@@ -651,7 +649,8 @@ class P2PLendingService {
                 amount: depositAmount,
                 requiresDocuments: true,
                 requiredDocuments: ['proof_of_income', 'source_of_funds'],
-                message: `⚠️ AML Alert: Deposits of $${this.AML_THRESHOLD.toLocaleString()} or more require additional proof of income for compliance.`
+                status: 'pending_verification',
+                message: `⚠️ AML Alert: Deposits of $${this.AML_THRESHOLD.toLocaleString()} or more require source of funds verification. Your deposit is flagged until verified.`
             };
 
             // Log AML flag
@@ -660,7 +659,8 @@ class P2PLendingService {
                     amount: depositAmount,
                     reason: 'HIGH_VALUE_DEPOSIT',
                     threshold: this.AML_THRESHOLD,
-                    action: 'ADDITIONAL_DOCUMENTS_REQUIRED'
+                    action: 'SOURCE_VERIFICATION_REQUIRED',
+                    status: 'pending_verification'
                 });
             }
         }
@@ -670,7 +670,80 @@ class P2PLendingService {
             amount: depositAmount,
             message: amlFlag ? amlFlag.message : 'Deposit amount is valid',
             amlFlag: amlFlag,
-            requiresAdditionalDocuments: amlFlag?.requiresDocuments || false
+            requiresSourceVerification: amlFlag?.requiresDocuments || false,
+            flaggedUntilVerified: depositAmount >= this.AML_THRESHOLD
+        };
+    }
+
+    /**
+     * Validate withdrawal amount
+     * Minimum: $20, Maximum: $1,000 per day
+     * @param {number} amount - Withdrawal amount
+     * @param {string} userId - User ID to check daily limit
+     * @returns {Promise<Object>} Validation result
+     */
+    async validateWithdrawalAmount(amount, userId) {
+        const withdrawalAmount = parseFloat(amount);
+
+        if (isNaN(withdrawalAmount) || withdrawalAmount <= 0) {
+            return { valid: false, message: 'Invalid withdrawal amount' };
+        }
+
+        // Check minimum
+        if (withdrawalAmount < this.MIN_WITHDRAWAL_AMOUNT) {
+            return {
+                valid: false,
+                message: `Minimum withdrawal amount is $${this.MIN_WITHDRAWAL_AMOUNT}`,
+                minAmount: this.MIN_WITHDRAWAL_AMOUNT
+            };
+        }
+
+        // Check if single withdrawal exceeds daily limit
+        if (withdrawalAmount > this.MAX_WITHDRAWAL_PER_DAY) {
+            return {
+                valid: false,
+                message: `Maximum withdrawal is $${this.MAX_WITHDRAWAL_PER_DAY} per day`,
+                maxAmount: this.MAX_WITHDRAWAL_PER_DAY
+            };
+        }
+
+        // Check cumulative withdrawals today
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+
+        const { data: todayWithdrawals, error } = await supabase
+            .from('user_activities')
+            .select('metadata')
+            .eq('user_id', userId)
+            .eq('activity_type', this.ACTIVITY_TYPES.WITHDRAWAL)
+            .gte('created_at', todayStart.toISOString());
+
+        if (error) {
+            console.error('Error checking daily withdrawals:', error);
+        }
+
+        const totalWithdrawnToday = (todayWithdrawals || [])
+            .reduce((sum, w) => sum + parseFloat(w.metadata?.amount || 0), 0);
+
+        const remainingLimit = this.MAX_WITHDRAWAL_PER_DAY - totalWithdrawnToday;
+
+        if (withdrawalAmount > remainingLimit) {
+            return {
+                valid: false,
+                message: `Daily withdrawal limit exceeded. You have $${remainingLimit.toFixed(2)} remaining today.`,
+                dailyLimit: this.MAX_WITHDRAWAL_PER_DAY,
+                withdrawnToday: totalWithdrawnToday,
+                remainingLimit: remainingLimit
+            };
+        }
+
+        return {
+            valid: true,
+            amount: withdrawalAmount,
+            message: 'Withdrawal amount is valid',
+            dailyLimit: this.MAX_WITHDRAWAL_PER_DAY,
+            withdrawnToday: totalWithdrawnToday,
+            remainingLimit: remainingLimit - withdrawalAmount
         };
     }
 
@@ -957,25 +1030,38 @@ class P2PLendingService {
     }
 
     /**
-     * Get investment limits
-     * @returns {Object} Investment limits configuration
+     * Get investment and transaction limits
+     * @returns {Object} Limits configuration
      */
-    getInvestmentLimits() {
+    getTransactionLimits() {
         return {
-            minInvestment: this.MIN_INVESTMENT_AMOUNT,
-            maxInvestment: this.MAX_INVESTMENT_AMOUNT,
-            minDeposit: this.MIN_DEPOSIT_AMOUNT,
-            maxDeposit: this.MAX_DEPOSIT_AMOUNT,
-            amlThreshold: this.AML_THRESHOLD,
-            cumulativeThreshold: this.AML_CUMULATIVE_THRESHOLD,
-            cumulativeWindowDays: this.AML_WINDOW_DAYS,
-            insurableRange: {
+            // Investment limits (insurable range)
+            investment: {
                 min: this.MIN_INVESTMENT_AMOUNT,
-                max: this.MAX_INVESTMENT_AMOUNT
+                max: this.MAX_INVESTMENT_AMOUNT,
+                message: `Investment amounts must be between $${this.MIN_INVESTMENT_AMOUNT} and $${this.MAX_INVESTMENT_AMOUNT} (insurable range)`
             },
-            message: `Investment amounts must be between $${this.MIN_INVESTMENT_AMOUNT} and $${this.MAX_INVESTMENT_AMOUNT} (insurable range)`,
-            amlMessage: `Deposits of $${this.AML_THRESHOLD.toLocaleString()} or more require additional proof of income for AML compliance.`,
-            smurfingMessage: `Cumulative deposits exceeding $${this.AML_CUMULATIVE_THRESHOLD.toLocaleString()} in ${this.AML_WINDOW_DAYS} days will trigger additional verification.`
+            // Deposit limits - NO maximum
+            deposit: {
+                min: this.MIN_DEPOSIT_AMOUNT,
+                max: null, // No maximum
+                amlThreshold: this.AML_THRESHOLD,
+                message: `Minimum deposit: $${this.MIN_DEPOSIT_AMOUNT}. No maximum limit.`,
+                amlMessage: `Deposits of $${this.AML_THRESHOLD.toLocaleString()} or more are flagged until source of funds is verified.`
+            },
+            // Withdrawal limits
+            withdrawal: {
+                min: this.MIN_WITHDRAWAL_AMOUNT,
+                maxPerDay: this.MAX_WITHDRAWAL_PER_DAY,
+                message: `Minimum: $${this.MIN_WITHDRAWAL_AMOUNT}. Maximum: $${this.MAX_WITHDRAWAL_PER_DAY} per day.`
+            },
+            // AML thresholds
+            aml: {
+                singleDepositThreshold: this.AML_THRESHOLD,
+                cumulativeThreshold: this.AML_CUMULATIVE_THRESHOLD,
+                windowDays: this.AML_WINDOW_DAYS,
+                smurfingMessage: `Cumulative deposits exceeding $${this.AML_CUMULATIVE_THRESHOLD.toLocaleString()} in ${this.AML_WINDOW_DAYS} days will trigger additional verification.`
+            }
         };
     }
 

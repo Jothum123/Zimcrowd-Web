@@ -100,16 +100,34 @@ If any check fails, the user cannot apply for a Direct Loan until resolved.
 - Lower rates may attract more lenders but take longer to fund
 - Higher rates fund faster but cost more
 
-## Investment/Lender Limits (Insurable Range)
+## Transaction Limits
 
+### Deposit Limits
+| Limit | Amount | Description |
+|-------|--------|-------------|
+| **Minimum Deposit** | **$10** | Minimum deposit to wallet |
+| **Maximum Deposit** | **No Limit** | No maximum deposit limit |
+| **AML Threshold** | **$5,000+** | Flagged until source verified |
+
+- Deposits of **$5,000 or more** are flagged and held until source of funds is verified
+- No upper limit on deposits, but AML compliance applies
+
+### Withdrawal Limits
+| Limit | Amount | Description |
+|-------|--------|-------------|
+| **Minimum Withdrawal** | **$20** | Minimum withdrawal amount |
+| **Maximum per Day** | **$1,000** | Daily withdrawal limit |
+
+- Users can withdraw up to **$1,000 per day**
+- Daily limit resets at midnight
+
+### Investment Limits (Insurable Range)
 | Limit | Amount | Description |
 |-------|--------|-------------|
 | **Minimum Investment** | **$10** | Minimum amount per loan funding |
 | **Maximum Investment** | **$10,000** | Maximum amount per loan funding |
-| **Minimum Deposit** | **$10** | Minimum deposit to lender wallet |
-| **Maximum Deposit** | **$10,000** | Maximum deposit to lender wallet |
 
-**Why these limits?**
+**Why investment limits?**
 - All investments within $10-$10,000 are within the **insurable range**
 - Provides protection for lenders through insurance coverage
 - Ensures diversification and risk management
