@@ -1,60 +1,82 @@
 const { supabase, isSupabaseAvailable } = require('./supabase-client');
+const { PLATFORM_FEES } = require('../constants/fees');
 
 /**
  * Direct Loan Service
  * Manages "ZimCrowd Direct" guaranteed instant funding
  * Alternative to P2P marketplace - funded by ZimCrowd Capital
  * 
- * KEY DIFFERENCE FROM P2P:
- * - NO COLD START - Users get full DTNI-based limit immediately
- * - Fixed fee based on ZimScore (not user-selected interest)
+ * KEY FEATURES:
+ * - Multi-currency support (USD & ZWG)
+ * - NO COLD START for Direct Lending
+ * - Fixed interest rates: USD 8%, ZWG 10% per month
  * - Instant disbursement (no waiting for lenders)
+ * - Late fees 100% to ZimCrowd
  */
 class DirectLoanService {
     constructor() {
         this.OFFER_EXPIRY_HOURS = 24;
         this.DEFAULT_LOAN_DURATION_DAYS = 30;
         
+        // Load config from centralized constants
+        this.CONFIG = PLATFORM_FEES.DIRECT_LENDING;
+        
         // DIRECT LENDING: NO COLD START
-        // Loan approval based on DTNI calculation + verified documents
-        // Cold start ONLY applies to P2P Marketplace
         this.COLD_START_ENABLED = false;
         
-        // DIRECT LENDING: FIXED 8% INTEREST RATE PER MONTH
-        // (P2P Marketplace has user-selectable 0-10% rate)
-        this.MONTHLY_INTEREST_RATE = 0.08;  // 8% per month FIXED
-        this.ANNUAL_INTEREST_RATE = 0.96;   // 96% per annum (8% × 12)
+        // MULTI-CURRENCY INTEREST RATES (Fixed Monthly)
+        // USD: 8% per month (96% per annum)
+        // ZWG: 10% per month (120% per annum)
+        this.INTEREST_RATES = {
+            USD: { monthly: 0.08, annual: 0.96 },
+            ZWG: { monthly: 0.10, annual: 1.20 }
+        };
         
-        // DTNI Configuration by employment type
-        // Max Loan: Govt $3000, Private $1000, Informal $500
-        // Max Tenure: Govt 24 months, Private 12 months, Informal 6 months
-        // NO COLD START - uses DTNI + verified documents for approval
+        // LOAN LIMITS BY CURRENCY
+        this.LOAN_LIMITS = {
+            USD: { min: 25, max: 3000 },
+            ZWG: { min: 675, max: 40000 }
+        };
+        
+        // DTNI Configuration by employment type (multi-currency)
         this.DTNI_CONFIG = {
             government: { 
                 ratio: 0.40, 
                 maxTenureMonths: 24, 
-                maxLoan: 3000
+                maxLoan: { USD: 3000, ZWG: 40000 },
+                coldStart: null  // No cold start
             },
             private: { 
                 ratio: 0.33, 
                 maxTenureMonths: 12, 
-                maxLoan: 1000
+                maxLoan: { USD: 1000, ZWG: 27000 },
+                coldStart: { USD: 300, ZWG: 8100 }
             },
             business: { 
                 ratio: 0.30, 
                 maxTenureMonths: 12, 
-                maxLoan: 1000
+                maxLoan: { USD: 1000, ZWG: 27000 },
+                coldStart: { USD: 200, ZWG: 5400 }
             },
             informal: { 
                 ratio: 0.25, 
                 maxTenureMonths: 6, 
-                maxLoan: 500
+                maxLoan: { USD: 500, ZWG: 13500 },
+                coldStart: { USD: 100, ZWG: 2700 }
             }
         };
         
-        // Maximum loan ceiling by employment type
-        this.MAX_LOAN_CEILING = 3000; // Government max
-        this.MIN_LOAN_AMOUNT = 25;
+        // LATE FEES (100% to ZimCrowd)
+        this.LATE_FEE = {
+            rate: 0.10,  // 10% of payment
+            minimum: { USD: 50, ZWG: 1350 },
+            gracePeriodHours: 24,
+            zimcrowdShare: 1.0  // 100%
+        };
+        
+        // Supported currencies
+        this.SUPPORTED_CURRENCIES = ['USD', 'ZWG'];
+        this.DEFAULT_CURRENCY = 'USD';
         
         // Required documents by employment type
         this.REQUIRED_DOCUMENTS_BY_TYPE = {
@@ -660,40 +682,118 @@ class DirectLoanService {
     }
 
     /**
+     * Get interest rate for currency
+     * @param {string} currency - USD or ZWG
+     * @returns {Object} Interest rates
+     */
+    getInterestRate(currency = 'USD') {
+        const curr = this.SUPPORTED_CURRENCIES.includes(currency) ? currency : this.DEFAULT_CURRENCY;
+        return this.INTEREST_RATES[curr];
+    }
+    
+    /**
+     * Get loan limits for currency
+     * @param {string} currency - USD or ZWG
+     * @returns {Object} Loan limits
+     */
+    getLoanLimitsForCurrency(currency = 'USD') {
+        const curr = this.SUPPORTED_CURRENCIES.includes(currency) ? currency : this.DEFAULT_CURRENCY;
+        return this.LOAN_LIMITS[curr];
+    }
+    
+    /**
+     * Get max loan for employment type and currency
+     * @param {string} employmentType - Employment type
+     * @param {string} currency - USD or ZWG
+     * @returns {number} Max loan amount
+     */
+    getMaxLoanForType(employmentType, currency = 'USD') {
+        const type = employmentType?.toLowerCase() || 'private';
+        const config = this.DTNI_CONFIG[type] || this.DTNI_CONFIG.private;
+        const curr = this.SUPPORTED_CURRENCIES.includes(currency) ? currency : this.DEFAULT_CURRENCY;
+        return config.maxLoan[curr] || this.LOAN_LIMITS[curr].max;
+    }
+    
+    /**
+     * Format currency amount for display
+     * @param {number} amount - Amount
+     * @param {string} currency - USD or ZWG
+     * @returns {string} Formatted amount
+     */
+    formatAmount(amount, currency = 'USD') {
+        if (currency === 'ZWG') {
+            return `ZWG ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+        return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    /**
      * Calculate interest for Direct Loan
-     * FIXED RATE: 8% per month (96% per annum) for ALL users
+     * FIXED RATES: USD 8% per month, ZWG 10% per month
      * @param {number} principal - Loan principal amount
      * @param {number} termMonths - Loan term in months
+     * @param {string} currency - USD or ZWG
      * @returns {Object} Interest calculation details
      */
-    calculateInterest(principal, termMonths) {
+    calculateInterest(principal, termMonths, currency = 'USD') {
+        const rates = this.getInterestRate(currency);
+        
         // Simple interest: Principal × Rate × Time
-        const monthlyInterest = principal * this.MONTHLY_INTEREST_RATE;
+        const monthlyInterest = principal * rates.monthly;
         const totalInterest = monthlyInterest * termMonths;
         const totalRepayment = principal + totalInterest;
         const monthlyPayment = totalRepayment / termMonths;
         
         return {
             principal: principal,
-            monthlyInterestRate: this.MONTHLY_INTEREST_RATE * 100, // 8%
-            annualInterestRate: this.ANNUAL_INTEREST_RATE * 100,   // 96%
+            currency: currency,
+            monthlyInterestRate: rates.monthly * 100,
+            annualInterestRate: rates.annual * 100,
             termMonths: termMonths,
             monthlyInterest: Math.round(monthlyInterest * 100) / 100,
             totalInterest: Math.round(totalInterest * 100) / 100,
             totalRepayment: Math.round(totalRepayment * 100) / 100,
-            monthlyPayment: Math.round(monthlyPayment * 100) / 100
+            monthlyPayment: Math.round(monthlyPayment * 100) / 100,
+            formattedTotal: this.formatAmount(totalRepayment, currency),
+            formattedMonthly: this.formatAmount(monthlyPayment, currency)
         };
     }
 
     /**
      * Calculate fixed finance fee (for short-term loans < 1 month)
-     * FIXED RATE: 8% of principal
+     * USD: 8%, ZWG: 10%
      * @param {number} amount - Loan amount
-     * @returns {number} Fixed fee (8%)
+     * @param {string} currency - USD or ZWG
+     * @returns {number} Fixed fee
      */
-    calculateFixedFee(amount) {
-        // 8% fixed fee for all users (same as 1 month interest)
-        return Math.round(amount * this.MONTHLY_INTEREST_RATE * 100) / 100;
+    calculateFixedFee(amount, currency = 'USD') {
+        const rates = this.getInterestRate(currency);
+        return Math.round(amount * rates.monthly * 100) / 100;
+    }
+    
+    /**
+     * Calculate late fee
+     * 10% of payment, minimum $50 USD / ZWG 1350
+     * 100% goes to ZimCrowd
+     * @param {number} paymentAmount - Payment amount
+     * @param {string} currency - USD or ZWG
+     * @returns {Object} Late fee details
+     */
+    calculateLateFee(paymentAmount, currency = 'USD') {
+        const curr = this.SUPPORTED_CURRENCIES.includes(currency) ? currency : this.DEFAULT_CURRENCY;
+        const calculatedFee = paymentAmount * this.LATE_FEE.rate;
+        const minimumFee = this.LATE_FEE.minimum[curr];
+        const lateFee = Math.max(calculatedFee, minimumFee);
+        
+        return {
+            lateFee: Math.round(lateFee * 100) / 100,
+            currency: curr,
+            rate: this.LATE_FEE.rate * 100,
+            minimum: minimumFee,
+            zimcrowdShare: lateFee,  // 100% to ZimCrowd
+            lenderShare: 0,  // 0% to lenders (Direct is ZimCrowd funded)
+            formattedFee: this.formatAmount(lateFee, curr)
+        };
     }
 
     /**

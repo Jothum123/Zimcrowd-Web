@@ -155,6 +155,67 @@ const PLATFORM_FEES = {
         expirationDays: 90,
         description: 'Referral program credits - $5 USD or ZWG 135 per qualifying activity',
         type: 'credit'
+    },
+    
+    // ZimCrowd Direct Lending Configuration
+    DIRECT_LENDING: {
+        // Interest Rates (Fixed Monthly)
+        interestRates: {
+            USD: 0.08,  // 8% per month
+            ZWG: 0.10   // 10% per month
+        },
+        
+        // Loan Limits
+        limits: {
+            USD: { min: 25, max: 3000 },
+            ZWG: { min: 675, max: 40000 }
+        },
+        
+        // Employment Type Configuration
+        employmentTypes: {
+            government: {
+                coldStart: null,        // No cold start
+                maxLoan: { USD: 3000, ZWG: 40000 },
+                maxTenureMonths: 24,
+                dtniRatio: 0.40         // 40%
+            },
+            private: {
+                coldStart: { USD: 300, ZWG: 8100 },
+                maxLoan: { USD: 1000, ZWG: 27000 },
+                maxTenureMonths: 12,
+                dtniRatio: 0.33         // 33%
+            },
+            business: {
+                coldStart: { USD: 200, ZWG: 5400 },
+                maxLoan: { USD: 1000, ZWG: 27000 },
+                maxTenureMonths: 12,
+                dtniRatio: 0.30         // 30%
+            },
+            informal: {
+                coldStart: { USD: 100, ZWG: 2700 },
+                maxLoan: { USD: 500, ZWG: 13500 },
+                maxTenureMonths: 6,
+                dtniRatio: 0.25         // 25%
+            }
+        },
+        
+        // Late Fees (100% to ZimCrowd)
+        lateFee: {
+            rate: 0.10,             // 10% of payment
+            minimum: { USD: 50, ZWG: 1350 },
+            gracePeriodHours: 24,
+            zimcrowdShare: 1.0      // 100% to ZimCrowd
+        },
+        
+        // Loan Terms
+        shortTermDays: [7, 14, 30],
+        mediumTermMonths: [3, 6],
+        longTermMonths: [9, 12, 18, 24],  // Government only
+        
+        // Offer Expiry
+        offerExpiryHours: 24,
+        
+        description: 'ZimCrowd Direct - Instant funding from ZimCrowd Capital'
     }
 };
 

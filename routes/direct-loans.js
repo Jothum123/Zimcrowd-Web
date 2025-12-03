@@ -1,20 +1,144 @@
 const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
-const directLoanService = require('../services/direct-loan.service');
+const DirectLoanService = require('../services/direct-loan.service');
+
+// Initialize service
+const directLoanService = new DirectLoanService();
 
 // Middleware to authenticate user
 const { authenticateUser } = require('../middleware/auth');
 
-// @route   POST /api/direct-loans/create-offer
-// @desc    Create or get pending direct loan offer
-// @access  Private
+/**
+ * @route   GET /api/direct-loans/eligibility
+ * @desc    Check if user is eligible for Direct Lending
+ * @access  Private
+ */
+router.get('/eligibility', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { currency = 'USD' } = req.query;
+        
+        console.log(`🔍 Checking Direct Lending eligibility for user ${userId} (${currency})`);
+        
+        const eligibility = await directLoanService.checkUserEligibility(userId);
+        
+        // Add currency-specific limits
+        if (eligibility.eligible) {
+            const limits = directLoanService.getLoanLimitsForCurrency(currency);
+            const rates = directLoanService.getInterestRate(currency);
+            eligibility.loanLimits = {
+                ...eligibility.loanLimits,
+                currency,
+                minLoan: limits.min,
+                maxLoan: Math.min(eligibility.loanLimits?.maxLoan || limits.max, limits.max),
+                interestRate: rates.monthly * 100,
+                annualRate: rates.annual * 100
+            };
+        }
+        
+        res.json({
+            success: true,
+            data: eligibility
+        });
+    } catch (error) {
+        console.error('Eligibility check error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to check eligibility'
+        });
+    }
+});
+
+/**
+ * @route   GET /api/direct-loans/documents
+ * @desc    Check document verification status
+ * @access  Private
+ */
+router.get('/documents', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        const docStatus = await directLoanService.checkRequiredDocuments(userId);
+        
+        res.json({
+            success: true,
+            data: docStatus
+        });
+    } catch (error) {
+        console.error('Document check error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to check documents'
+        });
+    }
+});
+
+/**
+ * @route   GET /api/direct-loans/calculate
+ * @desc    Calculate loan details (interest, payments)
+ * @access  Private
+ */
+router.get('/calculate', authenticateUser, async (req, res) => {
+    try {
+        const { amount, termMonths = 1, currency = 'USD' } = req.query;
+        
+        if (!amount || isNaN(amount)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Valid amount required'
+            });
+        }
+        
+        const principal = parseFloat(amount);
+        const term = parseInt(termMonths);
+        
+        // Validate limits
+        const limits = directLoanService.getLoanLimitsForCurrency(currency);
+        if (principal < limits.min || principal > limits.max) {
+            return res.status(400).json({
+                success: false,
+                message: `Loan amount must be between ${directLoanService.formatAmount(limits.min, currency)} and ${directLoanService.formatAmount(limits.max, currency)}`
+            });
+        }
+        
+        const calculation = directLoanService.calculateInterest(principal, term, currency);
+        
+        res.json({
+            success: true,
+            data: {
+                ...calculation,
+                limits
+            }
+        });
+    } catch (error) {
+        console.error('Calculate error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to calculate loan'
+        });
+    }
+});
+
+/**
+ * @route   POST /api/direct-loans/create-offer
+ * @desc    Create or get pending direct loan offer
+ * @access  Private
+ */
 router.post('/create-offer', authenticateUser, async (req, res) => {
     try {
         const userId = req.user.id;
-        const { amount, durationDays } = req.body;
+        const { amount, durationDays, currency = 'USD' } = req.body;
 
-        console.log(`📝 Creating direct loan offer for user ${userId}`);
+        console.log(`📝 Creating direct loan offer for user ${userId} (${currency})`);
+
+        // Validate currency
+        if (!['USD', 'ZWG'].includes(currency)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid currency. Must be USD or ZWG'
+            });
+        }
 
         // Check if user already has a pending offer
         const pendingOffer = await directLoanService.getPendingOffer(userId);
@@ -28,8 +152,8 @@ router.post('/create-offer', authenticateUser, async (req, res) => {
             });
         }
 
-        // Create new offer
-        const offer = await directLoanService.createOffer(userId, amount, durationDays);
+        // Create new offer with currency
+        const offer = await directLoanService.createOffer(userId, amount, durationDays, currency);
 
         res.json({
             success: true,

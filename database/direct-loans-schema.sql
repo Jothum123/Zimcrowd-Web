@@ -10,13 +10,26 @@
 
 CREATE TABLE IF NOT EXISTS direct_loans (
     direct_loan_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    borrower_user_id UUID NOT NULL REFERENCES zimscore_users(user_id) ON DELETE CASCADE,
+    borrower_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    
+    -- Currency (USD or ZWG)
+    currency VARCHAR(3) NOT NULL DEFAULT 'USD' CHECK (currency IN ('USD', 'ZWG')),
     
     -- Loan Details
-    principal_amount DECIMAL(10, 2) NOT NULL,
-    fixed_finance_fee DECIMAL(10, 2) NOT NULL,
-    total_repayment_amount DECIMAL(10, 2) NOT NULL,
-    apr DECIMAL(5, 2) NOT NULL,
+    principal_amount DECIMAL(15, 2) NOT NULL,
+    interest_rate DECIMAL(5, 2) NOT NULL, -- 8% USD, 10% ZWG monthly
+    total_interest DECIMAL(15, 2) NOT NULL,
+    total_repayment_amount DECIMAL(15, 2) NOT NULL,
+    monthly_payment DECIMAL(15, 2), -- For installment loans
+    
+    -- Term
+    term_days INT, -- For short-term (7, 14, 30 days)
+    term_months INT, -- For installment loans (3, 6, 12, 24 months)
+    
+    -- Employment & DTNI
+    employment_type VARCHAR(20) CHECK (employment_type IN ('government', 'private', 'business', 'informal')),
+    dtni_ratio DECIMAL(5, 2),
+    is_cold_start BOOLEAN DEFAULT false,
     
     -- Dates
     offer_created_at TIMESTAMPTZ DEFAULT now(),
@@ -138,7 +151,46 @@ CREATE INDEX IF NOT EXISTS idx_direct_loan_repayments_loan ON direct_loan_repaym
 COMMENT ON TABLE direct_loan_repayments IS 'Repayment transactions for direct loans';
 
 -- ============================================
--- 4. HELPER FUNCTIONS
+-- 4. DIRECT LOAN INSTALLMENTS TABLE
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS direct_loan_installments (
+    installment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    direct_loan_id UUID NOT NULL REFERENCES direct_loans(direct_loan_id) ON DELETE CASCADE,
+    
+    -- Installment Details
+    installment_number INT NOT NULL,
+    due_date DATE NOT NULL,
+    principal_portion DECIMAL(15, 2) NOT NULL,
+    interest_portion DECIMAL(15, 2) NOT NULL,
+    total_amount DECIMAL(15, 2) NOT NULL,
+    
+    -- Payment Status
+    amount_paid DECIMAL(15, 2) DEFAULT 0,
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'partial', 'late', 'missed')),
+    days_overdue INT DEFAULT 0,
+    
+    -- Late Fee
+    late_fee DECIMAL(15, 2) DEFAULT 0,
+    late_fee_paid DECIMAL(15, 2) DEFAULT 0,
+    
+    -- Payment Info
+    paid_at TIMESTAMPTZ,
+    payment_method VARCHAR(50),
+    transaction_reference TEXT,
+    
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_direct_loan_installments_loan ON direct_loan_installments(direct_loan_id);
+CREATE INDEX IF NOT EXISTS idx_direct_loan_installments_due_date ON direct_loan_installments(due_date);
+CREATE INDEX IF NOT EXISTS idx_direct_loan_installments_status ON direct_loan_installments(status);
+
+COMMENT ON TABLE direct_loan_installments IS 'Monthly installment schedule for direct loans';
+
+-- ============================================
+-- 5. HELPER FUNCTIONS
 -- ============================================
 
 -- Function to calculate APR for direct loan
