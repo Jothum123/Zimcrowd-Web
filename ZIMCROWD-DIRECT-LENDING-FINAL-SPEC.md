@@ -54,6 +54,20 @@ Anyone registered can apply for Direct Lending. The system checks for **required
 | **Informal** | ✅ $100 | **$25 - $500** | **6 months** | 25% |
 | **Business** | ✅ $200 | **$25 - $1,000** | **12 months** | 30% |
 
+## Cold Start Rules
+
+**Cold start applies to BOTH Direct Lending AND P2P Marketplace for first-time borrowers:**
+
+| Employment Type | First Loan (Cold Start) | After First Repayment |
+|-----------------|-------------------------|----------------------|
+| **Government** | Full limit ($25-$3,000) | Full limit |
+| **Private** | Max $300 | Up to $1,000 |
+| **Informal** | Max $100 | Up to $500 |
+| **Business** | Max $200 | Up to $1,000 |
+
+- Government employees are **exempt** from cold start
+- Private and Informal employees must complete their first loan successfully to unlock higher limits
+
 ## Interest Rates
 
 ### Direct Lending (ZimCrowd Direct)

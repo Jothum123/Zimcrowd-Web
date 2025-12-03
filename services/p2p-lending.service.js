@@ -1,11 +1,34 @@
 /**
  * P2P Lending Service
  * Handles Primary and Secondary Market operations for peer-to-peer lending
+ * 
+ * COLD START RULES (First-time borrowers from marketplace):
+ * - Government: NO cold start - full DTNI-based limit ($25-$3000)
+ * - Private: $300 cold start cap
+ * - Informal: $100 cold start cap
+ * - Business: $200 cold start cap
+ * 
+ * INTEREST RATE: User selectable 0-10% per month
  */
 
 const { supabase } = require('../utils/supabase-auth');
 
 class P2PLendingService {
+    constructor() {
+        // Cold start limits by employment type (same as Direct Lending)
+        this.COLD_START_LIMITS = {
+            government: { coldStartCap: null, maxLoan: 3000, maxTenureMonths: 24, coldStartActive: false },
+            private: { coldStartCap: 300, maxLoan: 1000, maxTenureMonths: 12, coldStartActive: true },
+            informal: { coldStartCap: 100, maxLoan: 500, maxTenureMonths: 6, coldStartActive: true },
+            business: { coldStartCap: 200, maxLoan: 1000, maxTenureMonths: 12, coldStartActive: true }
+        };
+        
+        // Interest rate range (user selectable)
+        this.MIN_INTEREST_RATE = 0.00;  // 0% per month
+        this.MAX_INTEREST_RATE = 0.10;  // 10% per month
+        this.MIN_LOAN_AMOUNT = 25;
+    }
+
     /**
      * PRIMARY MARKET OPERATIONS
      */
@@ -15,26 +38,68 @@ class P2PLendingService {
      */
     async createLoanListing(userId, loanData) {
         try {
+            // Get user profile to check employment type
+            const { data: userProfile } = await supabase
+                .from('user_profiles')
+                .select('employment_type, employment_status')
+                .eq('user_id', userId)
+                .single();
+
+            const employmentType = userProfile?.employment_type || userProfile?.employment_status || 'private';
+            const employmentConfig = this.COLD_START_LIMITS[employmentType] || this.COLD_START_LIMITS.private;
+
             // Check if user is first-time borrower
             const { data: isFirstTime } = await supabase
                 .rpc('is_first_time_borrower', { borrower_id: userId });
 
-            // Enforce cold start limits for first-time borrowers
+            // Enforce cold start limits for first-time borrowers based on employment type
             let amount = parseFloat(loanData.amount);
-            if (isFirstTime && amount > 100) {
+            const termMonths = parseInt(loanData.termMonths);
+
+            // Validate minimum loan amount
+            if (amount < this.MIN_LOAN_AMOUNT) {
                 return {
                     success: false,
-                    message: 'First-time borrowers are limited to $50-100. Build your reputation with a smaller loan first!',
-                    coldStartLimit: 100
+                    message: `Minimum loan amount is $${this.MIN_LOAN_AMOUNT}`
+                };
+            }
+
+            // Apply cold start cap for first-time private/informal borrowers
+            if (isFirstTime && employmentConfig.coldStartActive && employmentConfig.coldStartCap) {
+                if (amount > employmentConfig.coldStartCap) {
+                    return {
+                        success: false,
+                        message: `First-time ${employmentType} borrowers are limited to $${this.MIN_LOAN_AMOUNT}-$${employmentConfig.coldStartCap}. Build your reputation with a smaller loan first!`,
+                        coldStartLimit: employmentConfig.coldStartCap,
+                        employmentType: employmentType
+                    };
+                }
+            }
+
+            // Validate max loan amount based on employment type
+            if (amount > employmentConfig.maxLoan) {
+                return {
+                    success: false,
+                    message: `Maximum loan amount for ${employmentType} employees is $${employmentConfig.maxLoan}`,
+                    maxLoan: employmentConfig.maxLoan
+                };
+            }
+
+            // Validate max tenure based on employment type
+            if (termMonths > employmentConfig.maxTenureMonths) {
+                return {
+                    success: false,
+                    message: `Maximum loan tenure for ${employmentType} employees is ${employmentConfig.maxTenureMonths} months`,
+                    maxTenure: employmentConfig.maxTenureMonths
                 };
             }
 
             // Validate interest rate (0-10%)
             const interestRate = parseFloat(loanData.requestedInterestRate);
-            if (interestRate < 0 || interestRate > 0.10) {
+            if (interestRate < this.MIN_INTEREST_RATE || interestRate > this.MAX_INTEREST_RATE) {
                 return {
                     success: false,
-                    message: 'Interest rate must be between 0% and 10%'
+                    message: 'Interest rate must be between 0% and 10% per month'
                 };
             }
 
