@@ -1297,6 +1297,115 @@
             }
         }
         
+        // Store documents in Document Center with status badges
+        async function storeDocumentsInCenter(authToken, apiBase, profileData) {
+            const documentStatus = {
+                success: true,
+                documents: {},
+                summary: {
+                    total: 0,
+                    verified: 0,
+                    pending: 0,
+                    rejected: 0
+                }
+            };
+
+            // Document types to store
+            const documentsToStore = [
+                { inputId: 'idFront', type: 'national_id', name: 'National ID (Front)' },
+                { inputId: 'idBack', type: 'national_id', name: 'National ID (Back)' },
+                { inputId: 'selfiePhoto', type: 'selfie', name: 'Selfie Photo' },
+                { inputId: 'bankStatement', type: 'bank_statement', name: 'Bank Statement' },
+                { inputId: 'payslip', type: 'payslip', name: 'Payslip' },
+                { inputId: 'proofOfResidence', type: 'proof_of_address', name: 'Proof of Residence' },
+                { inputId: 'employmentContract', type: 'employment_contract', name: 'Employment Contract' }
+            ];
+
+            for (const doc of documentsToStore) {
+                const fileInput = document.getElementById(doc.inputId);
+                const file = fileInput?.files?.[0];
+
+                if (file) {
+                    documentStatus.summary.total++;
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('document', file);
+                        formData.append('document_type', doc.type);
+                        formData.append('store_in_center', 'true');
+
+                        const response = await fetch(`${apiBase}/api/documents/store`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${authToken}`
+                            },
+                            body: formData
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            const status = result.status || 'pending';
+                            documentStatus.documents[doc.type] = {
+                                name: doc.name,
+                                status: status,
+                                statusBadge: getStatusBadge(status),
+                                documentId: result.documentId,
+                                url: result.url,
+                                uploadedAt: new Date().toISOString()
+                            };
+
+                            if (status === 'verified') {
+                                documentStatus.summary.verified++;
+                            } else if (status === 'rejected') {
+                                documentStatus.summary.rejected++;
+                            } else {
+                                documentStatus.summary.pending++;
+                            }
+
+                            console.log(`✅ ${doc.name} stored with status: ${status}`);
+                        } else {
+                            // Document uploaded but center storage failed - mark as pending
+                            documentStatus.documents[doc.type] = {
+                                name: doc.name,
+                                status: 'pending',
+                                statusBadge: getStatusBadge('pending'),
+                                uploadedAt: new Date().toISOString(),
+                                error: result.message
+                            };
+                            documentStatus.summary.pending++;
+                            console.warn(`⚠️ ${doc.name} storage issue:`, result.message);
+                        }
+                    } catch (error) {
+                        // Network error - mark as pending for manual review
+                        documentStatus.documents[doc.type] = {
+                            name: doc.name,
+                            status: 'pending',
+                            statusBadge: getStatusBadge('pending'),
+                            uploadedAt: new Date().toISOString(),
+                            error: error.message
+                        };
+                        documentStatus.summary.pending++;
+                        console.error(`❌ ${doc.name} storage error:`, error);
+                    }
+                }
+            }
+
+            return documentStatus;
+        }
+
+        // Get status badge for document
+        function getStatusBadge(status) {
+            const badges = {
+                'verified': { icon: '✅', color: '#38e77b', label: 'Verified' },
+                'pending': { icon: '🟡', color: '#f59e0b', label: 'Pending Review' },
+                'rejected': { icon: '🔴', color: '#ef4444', label: 'Rejected' },
+                'expired': { icon: '⚠️', color: '#f97316', label: 'Expired' },
+                'missing': { icon: '❌', color: '#6b7280', label: 'Not Uploaded' }
+            };
+            return badges[status] || badges['missing'];
+        }
+
         // Generic document upload handler
         function handleDocumentUpload(event, docType, maxSizeMB = 5) {
             const file = event.target.files[0];
@@ -2108,6 +2217,23 @@
                     updateVerificationStep('selfie', 'done', 'Face Verified ✓');
                     updateVerificationStep('bank', 'done', 'Bank Statement Processed ✓');
                     updateVerificationStep('score', 'done', 'ZimScore Calculated ✓');
+                    
+                    // Store documents in Document Center with status badges
+                    updateVerificationStep('documents', 'active', 'Storing documents in Document Center...');
+                    
+                    try {
+                        const documentResults = await storeDocumentsInCenter(authToken, API_BASE, profileData);
+                        console.log('📁 Document Center storage results:', documentResults);
+                        
+                        // Store document status for dashboard display
+                        if (documentResults.success) {
+                            localStorage.setItem('documentCenterStatus', JSON.stringify(documentResults));
+                            updateVerificationStep('documents', 'done', 'Documents stored in Document Center ✓');
+                        }
+                    } catch (docError) {
+                        console.warn('⚠️ Document Center storage warning:', docError.message);
+                        // Continue even if document center fails - documents are already uploaded
+                    }
                     
                     // Store completion flags
                     localStorage.setItem('profileCompleted', 'true');

@@ -363,4 +363,313 @@ router.get('/types', async (req, res) => {
     }
 });
 
+// @route   POST /api/documents/store
+// @desc    Store document in Document Center with AI verification
+// @access  Private
+router.post('/store', authenticateUser, upload.single('document'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No file uploaded'
+            });
+        }
+
+        const { document_type, store_in_center } = req.body;
+        const file = req.file;
+        const userId = req.user.id;
+
+        console.log(`📄 Storing ${document_type} for user ${userId}`);
+
+        // Generate unique file path
+        const timestamp = Date.now();
+        const fileExt = file.originalname.split('.').pop();
+        const storagePath = `${userId}/${document_type}/${timestamp}.${fileExt}`;
+
+        // Upload to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('user-documents')
+            .upload(storagePath, file.buffer, {
+                contentType: file.mimetype,
+                upsert: true
+            });
+
+        if (uploadError) {
+            console.error('❌ Storage upload failed:', uploadError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to upload document',
+                error: uploadError.message
+            });
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+            .from('user-documents')
+            .getPublicUrl(storagePath);
+
+        const documentUrl = urlData?.publicUrl || storagePath;
+
+        // Get user profile for verification
+        const { data: userProfile, error: profileError } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+
+        // Initialize Document AI for verification
+        let verificationResult = null;
+        let initialStatus = 'pending';
+        let metadata = {
+            originalFileName: file.originalname,
+            fileSize: file.size,
+            mimeType: file.mimetype,
+            uploadedAt: new Date().toISOString()
+        };
+
+        // Try Document AI verification if available
+        try {
+            const { DocumentCenterService } = require('../services/document-center.service');
+            const docService = new DocumentCenterService();
+            
+            if (docService.docAI && docService.docAI.isAvailable && docService.docAI.isAvailable()) {
+                const analysisResult = await docService.docAI.analyzeDocument(file.buffer, document_type);
+                
+                if (analysisResult.success) {
+                    verificationResult = docService.docAI.verifyDocumentAgainstProfile(
+                        analysisResult.extractedFields,
+                        userProfile,
+                        document_type
+                    );
+
+                    metadata.extractedFields = analysisResult.extractedFields;
+                    metadata.ocrConfidence = analysisResult.confidence;
+                    metadata.detectedType = analysisResult.detectedType;
+                    metadata.verificationResult = verificationResult;
+
+                    // Auto-verify if high confidence match
+                    if (verificationResult.verified && verificationResult.confidence >= 80) {
+                        initialStatus = 'verified';
+                        console.log(`✅ Auto-verified ${document_type} with ${verificationResult.confidence}% confidence`);
+                    } else if (verificationResult.recommendation === 'reject') {
+                        initialStatus = 'rejected';
+                        metadata.rejectionReason = verificationResult.rejectionReason;
+                        console.log(`❌ Auto-rejected ${document_type}: ${verificationResult.rejectionReason}`);
+                    }
+                }
+            }
+        } catch (aiError) {
+            console.warn('⚠️ Document AI verification skipped:', aiError.message);
+            metadata.aiError = aiError.message;
+        }
+
+        // Check if document already exists for this type
+        const { data: existingDoc } = await supabase
+            .from('user_documents')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('document_type', document_type)
+            .single();
+
+        let documentRecord;
+
+        if (existingDoc) {
+            // Update existing document
+            const { data, error } = await supabase
+                .from('user_documents')
+                .update({
+                    document_url: documentUrl,
+                    file_name: file.originalname,
+                    file_size: file.size,
+                    mime_type: file.mimetype,
+                    status: initialStatus,
+                    rejection_reason: metadata.rejectionReason || null,
+                    metadata: metadata,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', existingDoc.id)
+                .select()
+                .single();
+
+            if (error) {
+                console.error('❌ Document update error:', error);
+                // Continue even if DB update fails - document is uploaded
+            }
+            documentRecord = data || { id: existingDoc.id };
+            console.log(`📝 Updated existing ${document_type} document`);
+        } else {
+            // Insert new document
+            const { data, error } = await supabase
+                .from('user_documents')
+                .insert({
+                    user_id: userId,
+                    document_type: document_type,
+                    document_url: documentUrl,
+                    file_name: file.originalname,
+                    file_size: file.size,
+                    mime_type: file.mimetype,
+                    status: initialStatus,
+                    rejection_reason: metadata.rejectionReason || null,
+                    metadata: metadata
+                })
+                .select()
+                .single();
+
+            if (error) {
+                console.error('❌ Document insert error:', error);
+                // Continue even if DB insert fails - document is uploaded
+            }
+            documentRecord = data || { id: `temp_${timestamp}` };
+            console.log(`📝 Created new ${document_type} document`);
+        }
+
+        // Get status badge
+        const statusBadges = {
+            'verified': { icon: '✅', color: '#38e77b', label: 'Verified' },
+            'pending': { icon: '🟡', color: '#f59e0b', label: 'Pending Review' },
+            'rejected': { icon: '🔴', color: '#ef4444', label: 'Rejected' },
+            'expired': { icon: '⚠️', color: '#f97316', label: 'Expired' }
+        };
+
+        res.status(201).json({
+            success: true,
+            message: `Document stored with status: ${initialStatus}`,
+            documentId: documentRecord?.id,
+            documentType: document_type,
+            status: initialStatus,
+            statusBadge: statusBadges[initialStatus] || statusBadges['pending'],
+            url: documentUrl,
+            verification: verificationResult,
+            rejectionReason: metadata.rejectionReason || null
+        });
+
+    } catch (error) {
+        console.error('❌ Store document error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to store document',
+            error: error.message
+        });
+    }
+});
+
+// @route   GET /api/documents/center
+// @desc    Get all documents from Document Center with status badges
+// @access  Private
+router.get('/center', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Get all documents for user
+        const { data: documents, error } = await supabase
+            .from('user_documents')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('❌ Get documents error:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to retrieve documents'
+            });
+        }
+
+        // Required documents for Direct Lending
+        const requiredDocs = [
+            { type: 'national_id', name: 'National ID', required: true },
+            { type: 'selfie', name: 'Selfie Photo', required: true },
+            { type: 'payslip', name: 'Payslip', required: true },
+            { type: 'bank_statement', name: 'Bank Statement', required: true },
+            { type: 'proof_of_address', name: 'Proof of Residence', required: true },
+            { type: 'employment_contract', name: 'Employment Contract', required: true }
+        ];
+
+        // Status badges
+        const statusBadges = {
+            'verified': { icon: '✅', color: '#38e77b', label: 'Verified' },
+            'pending': { icon: '🟡', color: '#f59e0b', label: 'Pending Review' },
+            'rejected': { icon: '🔴', color: '#ef4444', label: 'Rejected' },
+            'expired': { icon: '⚠️', color: '#f97316', label: 'Expired' },
+            'missing': { icon: '❌', color: '#6b7280', label: 'Not Uploaded' }
+        };
+
+        // Build document map
+        const documentMap = {};
+        
+        // Initialize all required documents as MISSING
+        for (const reqDoc of requiredDocs) {
+            documentMap[reqDoc.type] = {
+                type: reqDoc.type,
+                name: reqDoc.name,
+                required: reqDoc.required,
+                status: 'missing',
+                statusBadge: statusBadges['missing'],
+                document: null
+            };
+        }
+
+        // Update with actual documents
+        for (const doc of documents || []) {
+            const docType = doc.document_type;
+            if (documentMap[docType]) {
+                documentMap[docType] = {
+                    ...documentMap[docType],
+                    status: doc.status,
+                    statusBadge: statusBadges[doc.status] || statusBadges['missing'],
+                    document: {
+                        id: doc.id,
+                        url: doc.document_url,
+                        fileName: doc.file_name,
+                        uploadedAt: doc.created_at,
+                        verifiedAt: doc.verified_at,
+                        rejectionReason: doc.rejection_reason,
+                        metadata: doc.metadata
+                    }
+                };
+            }
+        }
+
+        // Calculate stats
+        let stats = {
+            total: 0,
+            verified: 0,
+            pending: 0,
+            rejected: 0,
+            missing: 0
+        };
+
+        for (const doc of Object.values(documentMap)) {
+            if (doc.required) {
+                stats.total++;
+                switch (doc.status) {
+                    case 'verified': stats.verified++; break;
+                    case 'pending': stats.pending++; break;
+                    case 'rejected': stats.rejected++; break;
+                    default: stats.missing++;
+                }
+            }
+        }
+
+        stats.completionPercentage = stats.total > 0 
+            ? Math.round((stats.verified / stats.total) * 100) 
+            : 0;
+
+        res.json({
+            success: true,
+            documents: documentMap,
+            stats: stats,
+            allVerified: stats.verified === stats.total,
+            readyForDirectLending: stats.verified === stats.total
+        });
+
+    } catch (error) {
+        console.error('❌ Get document center error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+});
+
 module.exports = router;
