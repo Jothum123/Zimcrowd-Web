@@ -37,7 +37,8 @@ class P2PLendingService {
         
         // Interest rate range (user selectable by borrower)
         this.MIN_INTEREST_RATE = 0.00;  // 0% per month
-        this.MAX_INTEREST_RATE = 0.10;  // 10% per month
+        this.MAX_INTEREST_RATE = 0.10;  // 10% per month (USD)
+        this.MAX_INTEREST_RATE_ZWG = 0.15;  // 15% per month (ZWG)
         this.MIN_LOAN_AMOUNT = 25;
         
         // Investment/Lending limits (insurable range) - USD
@@ -66,7 +67,8 @@ class P2PLendingService {
                 maxLoan: 80000,  // Max for government employees
                 minInvestment: 250,
                 maxInvestment: 80000,
-                symbol: 'ZWG '
+                symbol: 'ZWG ',
+                maxInterestRate: 0.15  // 15% per month for ZWG
             }
         };
         
@@ -198,12 +200,18 @@ class P2PLendingService {
                 };
             }
 
-            // Validate interest rate (0-10%)
+            // Validate interest rate based on currency
+            // USD: 0-10% | ZWG: 0-15%
             const interestRate = parseFloat(loanData.requestedInterestRate);
-            if (interestRate < this.MIN_INTEREST_RATE || interestRate > this.MAX_INTEREST_RATE) {
+            const maxRate = currency === 'ZWG' ? this.MAX_INTEREST_RATE_ZWG : this.MAX_INTEREST_RATE;
+            const maxRatePercent = maxRate * 100;
+            
+            if (interestRate < this.MIN_INTEREST_RATE || interestRate > maxRate) {
                 return {
                     success: false,
-                    message: 'Interest rate must be between 0% and 10% per month'
+                    message: `Interest rate for ${currency} loans must be between 0% and ${maxRatePercent}% per month`,
+                    currency: currency,
+                    maxInterestRate: maxRatePercent
                 };
             }
 
@@ -391,12 +399,17 @@ class P2PLendingService {
                 };
             }
 
-            // Validate interest rate (0-10%)
+            // Validate interest rate based on currency (USD: 0-10%, ZWG: 0-15%)
             const offeredRate = parseFloat(offerData.offeredInterestRate);
-            if (offeredRate < 0 || offeredRate > 0.10) {
+            const maxRate = currency === 'ZWG' ? this.MAX_INTEREST_RATE_ZWG : this.MAX_INTEREST_RATE;
+            const maxRatePercent = maxRate * 100;
+            
+            if (offeredRate < 0 || offeredRate > maxRate) {
                 return {
                     success: false,
-                    message: 'Interest rate must be between 0% and 10%'
+                    message: `Interest rate for ${currency} must be between 0% and ${maxRatePercent}%`,
+                    currency: currency,
+                    maxInterestRate: maxRatePercent
                 };
             }
 
@@ -1425,12 +1438,20 @@ class P2PLendingService {
                     maxInvestment: this.LOAN_LIMITS.ZWG.maxInvestment,
                     symbol: 'ZWG ',
                     byEmployment: this.COLD_START_LIMITS_ZWG,
+                    maxInterestRate: this.MAX_INTEREST_RATE_ZWG * 100,
                     message: `Max loans by employment: Govt ZWG 80,000 | Private ZWG 28,000 | Informal ZWG 14,000`
                 },
                 interestRate: {
-                    min: this.MIN_INTEREST_RATE * 100,
-                    max: this.MAX_INTEREST_RATE * 100,
-                    message: `Interest rate: ${this.MIN_INTEREST_RATE * 100}% - ${this.MAX_INTEREST_RATE * 100}% per month`
+                    USD: {
+                        min: this.MIN_INTEREST_RATE * 100,
+                        max: this.MAX_INTEREST_RATE * 100,
+                        message: `USD: ${this.MIN_INTEREST_RATE * 100}% - ${this.MAX_INTEREST_RATE * 100}% per month`
+                    },
+                    ZWG: {
+                        min: this.MIN_INTEREST_RATE * 100,
+                        max: this.MAX_INTEREST_RATE_ZWG * 100,
+                        message: `ZWG: ${this.MIN_INTEREST_RATE * 100}% - ${this.MAX_INTEREST_RATE_ZWG * 100}% per month`
+                    }
                 }
             },
             

@@ -40,8 +40,9 @@ async function testMultiCurrencyLending() {
     console.log(`   Min Investment: ZWG ${limits.lending.ZWG.minInvestment}`);
     console.log(`   Max Investment: ZWG ${limits.lending.ZWG.maxInvestment.toLocaleString()}`);
 
-    console.log('\n📈 INTEREST RATE:');
-    console.log(`   ${limits.lending.interestRate.message}`);
+    console.log('\n📈 INTEREST RATES (by Currency):');
+    console.log(`   ${limits.lending.interestRate.USD.message}`);
+    console.log(`   ${limits.lending.interestRate.ZWG.message}`);
 
     // ============================================
     // TEST LOAN LIMITS
@@ -187,7 +188,7 @@ async function testMultiCurrencyLending() {
     console.log('   - Private: ZWG 500 - ZWG 28,000');
     console.log('   - Informal: ZWG 500 - ZWG 14,000');
     console.log('   - Investments: ZWG 250 - ZWG 80,000');
-    console.log('   - Interest: 0% - 10% per month');
+    console.log('   - Interest: 0% - 15% per month');
 
     console.log('\n✅ Features:');
     console.log('   - Lenders can fund loans in either currency');
