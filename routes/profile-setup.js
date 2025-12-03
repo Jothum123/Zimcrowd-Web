@@ -5,6 +5,7 @@ const { createClient } = require('@supabase/supabase-js');
 const { authenticateUser, requireAdmin } = require('../middleware/auth');
 const VisionOCRService = require('../services/vision-ocr.service');
 const AzureFaceService = require('../services/azure-face.service');
+const { getVisionService } = require('../services/google-vision.service');
 const { getZimScoreService } = require('../services/zimscore.service');
 
 // Create Supabase client only if credentials are available
@@ -38,14 +39,51 @@ const upload = multer({
 });
 
 // Initialize OCR, Face, and ZimScore services
-let ocrService, faceService, zimScoreService;
+let ocrService, faceService, googleVisionService, zimScoreService;
 try {
     ocrService = new VisionOCRService();
     faceService = new AzureFaceService();
+    googleVisionService = getVisionService(); // Primary for face comparison
     zimScoreService = getZimScoreService();
-    console.log('✅ OCR, Face, and ZimScore services initialized for KYC');
+    console.log('✅ OCR, Face (Google Vision + Azure), and ZimScore services initialized for KYC');
 } catch (error) {
     console.warn('⚠️  Services not available:', error.message);
+}
+
+// Storage bucket configuration
+const STORAGE_BUCKET = 'kyc-documents';
+let storageBucketReady = false;
+
+// Ensure storage bucket exists
+async function ensureStorageBucket() {
+    if (storageBucketReady || !supabase) return true;
+    
+    try {
+        // Check if bucket exists
+        const { data: buckets } = await supabase.storage.listBuckets();
+        const bucketExists = buckets?.some(b => b.name === STORAGE_BUCKET);
+        
+        if (!bucketExists) {
+            // Create bucket
+            const { error } = await supabase.storage.createBucket(STORAGE_BUCKET, {
+                public: true,
+                fileSizeLimit: 10485760, // 10MB
+                allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf']
+            });
+            
+            if (error && !error.message.includes('already exists')) {
+                console.warn('⚠️ Could not create storage bucket:', error.message);
+                return false;
+            }
+            console.log('✅ Storage bucket created:', STORAGE_BUCKET);
+        }
+        
+        storageBucketReady = true;
+        return true;
+    } catch (error) {
+        console.warn('⚠️ Storage bucket check failed:', error.message);
+        return false;
+    }
 }
 
 /**
@@ -652,25 +690,17 @@ router.post('/upload-document-with-ocr', authenticateUser, upload.single('docume
         }
 
         // Upload file to Supabase Storage
-        const bucketName = 'kyc-documents';
         const fileName = `${req.user.id}/${document_type}_${Date.now()}_${req.file.originalname}`;
         
-        // Try to create bucket if it doesn't exist
+        // Ensure storage bucket exists
+        await ensureStorageBucket();
+        
         let publicUrl = null;
-        try {
-            // First, try to create the bucket (will fail silently if exists)
-            await supabase.storage.createBucket(bucketName, {
-                public: true,
-                fileSizeLimit: 10485760 // 10MB
-            });
-        } catch (bucketError) {
-            // Bucket might already exist, that's fine
-            console.log('Bucket check:', bucketError?.message || 'exists');
-        }
+        let uploadSuccess = false;
         
         // Try to upload to storage
         const { data: uploadData, error: uploadError } = await supabase.storage
-            .from(bucketName)
+            .from(STORAGE_BUCKET)
             .upload(fileName, req.file.buffer, {
                 contentType: req.file.mimetype,
                 upsert: true
@@ -678,18 +708,50 @@ router.post('/upload-document-with-ocr', authenticateUser, upload.single('docume
 
         if (uploadError) {
             console.warn('⚠️ Storage upload failed:', uploadError.message);
-            // Fallback: Store as base64 data URL if storage fails
-            const base64Data = req.file.buffer.toString('base64');
-            publicUrl = `data:${req.file.mimetype};base64,${base64Data.substring(0, 100)}...`; // Truncated for logging
-            console.log('📦 Using base64 fallback for document storage');
-            // Store full base64 in database instead
-            publicUrl = `data:${req.file.mimetype};base64,${base64Data}`;
+            
+            // Try creating bucket one more time if it doesn't exist
+            if (uploadError.message.includes('not found') || uploadError.statusCode === '404') {
+                console.log('📦 Attempting to create storage bucket...');
+                const { error: createError } = await supabase.storage.createBucket(STORAGE_BUCKET, {
+                    public: true,
+                    fileSizeLimit: 10485760,
+                    allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf']
+                });
+                
+                if (!createError || createError.message.includes('already exists')) {
+                    // Retry upload
+                    const { data: retryData, error: retryError } = await supabase.storage
+                        .from(STORAGE_BUCKET)
+                        .upload(fileName, req.file.buffer, {
+                            contentType: req.file.mimetype,
+                            upsert: true
+                        });
+                    
+                    if (!retryError) {
+                        uploadSuccess = true;
+                        const { data: urlData } = supabase.storage
+                            .from(STORAGE_BUCKET)
+                            .getPublicUrl(fileName);
+                        publicUrl = urlData?.publicUrl || null;
+                        console.log('✅ Document uploaded successfully after bucket creation');
+                    }
+                }
+            }
+            
+            // Fallback: Store as base64 data URL if storage still fails
+            if (!uploadSuccess) {
+                const base64Data = req.file.buffer.toString('base64');
+                publicUrl = `data:${req.file.mimetype};base64,${base64Data}`;
+                console.log('📦 Using base64 fallback for document storage');
+            }
         } else {
+            uploadSuccess = true;
             // Get public URL from successful upload
             const { data: urlData } = supabase.storage
-                .from(bucketName)
+                .from(STORAGE_BUCKET)
                 .getPublicUrl(fileName);
             publicUrl = urlData?.publicUrl || null;
+            console.log('✅ Document uploaded to storage:', fileName);
         }
 
         // Extract document number from OCR if available
@@ -1320,25 +1382,80 @@ router.post('/complete-setup', authenticateUser, async (req, res) => {
         }
 
         // Step 5: Face Comparison (ID photo vs Selfie)
-        if (verificationResults.idFront.verified && verificationResults.selfie.faceDetected && faceService) {
+        // Primary: Google Cloud Vision, Fallback: Azure Face API
+        if (verificationResults.idFront.verified && verificationResults.selfie.faceDetected) {
             console.log('🔍 Comparing faces (ID vs Selfie)...');
             try {
                 const idBuffer = await fetchDocumentBuffer(idFront.file_url);
                 const selfieBuffer = await fetchDocumentBuffer(selfie.file_url);
                 
-                if (idBuffer && selfieBuffer && faceService.isAvailable()) {
-                    const compareResult = await faceService.compareFaces(idBuffer, selfieBuffer);
-                    verificationResults.faceMatch = {
-                        matched: compareResult.isMatch || compareResult.confidence > 0.7,
-                        confidence: compareResult.confidence || 0,
-                        provider: 'Azure Face API'
-                    };
-                    console.log(verificationResults.faceMatch.matched ? 
-                        `✅ Face match: ${(verificationResults.faceMatch.confidence * 100).toFixed(1)}%` : 
-                        '❌ Face mismatch');
+                if (idBuffer && selfieBuffer) {
+                    let compareResult = null;
+                    let provider = 'none';
+                    
+                    // Try Google Vision first (no Limited Access restrictions)
+                    if (googleVisionService) {
+                        try {
+                            console.log('   Using Google Cloud Vision for face comparison...');
+                            compareResult = await googleVisionService.compareFaces(idBuffer, selfieBuffer);
+                            provider = 'Google Cloud Vision';
+                        } catch (gErr) {
+                            console.warn('   Google Vision face comparison failed:', gErr.message);
+                        }
+                    }
+                    
+                    // Fallback to Azure if Google fails (detection only due to Limited Access)
+                    if (!compareResult?.success && faceService?.isAvailable()) {
+                        try {
+                            console.log('   Falling back to Azure Face API...');
+                            compareResult = await faceService.compareFaces(idBuffer, selfieBuffer);
+                            provider = 'Azure Face API';
+                        } catch (aErr) {
+                            console.warn('   Azure Face comparison failed:', aErr.message);
+                        }
+                    }
+                    
+                    if (compareResult) {
+                        // Google Vision returns 'match' and 'score', Azure returns 'isMatch' and 'confidence'
+                        const isMatched = compareResult.match ?? compareResult.isMatch ?? (compareResult.score > 0.7 || compareResult.confidence > 0.7);
+                        const matchScore = compareResult.score ?? compareResult.confidence ?? 0;
+                        
+                        verificationResults.faceMatch = {
+                            matched: isMatched,
+                            confidence: matchScore,
+                            provider: provider
+                        };
+                        
+                        if (isMatched) {
+                            console.log(`✅ Face match: ${(matchScore * 100).toFixed(1)}% (${provider})`);
+                        } else if (matchScore > 0) {
+                            console.log(`⚠️ Low face match: ${(matchScore * 100).toFixed(1)}% - Manual review recommended`);
+                            verificationResults.faceMatch.needsReview = true;
+                        } else {
+                            console.log('❌ Face mismatch or comparison unavailable');
+                        }
+                    } else {
+                        // Both services failed - auto-approve with manual review flag
+                        console.log('⚠️ Face comparison unavailable - flagging for manual review');
+                        verificationResults.faceMatch = {
+                            matched: true, // Auto-approve but flag
+                            confidence: 0,
+                            provider: 'auto-approved',
+                            needsReview: true,
+                            note: 'Face comparison services unavailable - manual verification required'
+                        };
+                    }
                 }
             } catch (err) {
                 console.error('❌ Face comparison failed:', err.message);
+                // Don't block verification, flag for manual review
+                verificationResults.faceMatch = {
+                    matched: true,
+                    confidence: 0,
+                    provider: 'auto-approved',
+                    needsReview: true,
+                    error: err.message
+                };
             }
         }
 
