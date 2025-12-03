@@ -683,9 +683,78 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Address <span class="required">*</span></label>
-                        <input type="text" class="form-input" id="address" placeholder="123 Main Street, Harare" required>
+                    <!-- User Address Section -->
+                    <div style="margin-top: 30px; padding-top: 25px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #38e77b;">
+                            <i class="fas fa-map-marker-alt"></i> Residential Address
+                        </h3>
+
+                        <div class="form-group">
+                            <label class="form-label">Physical Address <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="address" placeholder="123 Main Street, Harare" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">City/Town <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="city" placeholder="e.g., Harare" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Province <span class="required">*</span></label>
+                                <select class="form-select" id="province" required>
+                                    <option value="">Select Province</option>
+                                    <option value="harare">Harare</option>
+                                    <option value="bulawayo">Bulawayo</option>
+                                    <option value="manicaland">Manicaland</option>
+                                    <option value="mashonaland_central">Mashonaland Central</option>
+                                    <option value="mashonaland_east">Mashonaland East</option>
+                                    <option value="mashonaland_west">Mashonaland West</option>
+                                    <option value="masvingo">Masvingo</option>
+                                    <option value="matabeleland_north">Matabeleland North</option>
+                                    <option value="matabeleland_south">Matabeleland South</option>
+                                    <option value="midlands">Midlands</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Proof of Residence Upload -->
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label class="form-label">
+                                <i class="fas fa-home" style="color: #f59e0b; margin-right: 8px;"></i>
+                                Proof of Residence <span class="required">*</span>
+                            </label>
+                            <p style="color: #94a3b8; font-size: 13px; margin-bottom: 15px;">
+                                Upload a document that confirms your residential address (utility bill, lease agreement, bank statement with address, or council rates)
+                            </p>
+                            
+                            <div class="info-box" style="background: rgba(245, 158, 14, 0.1); border-color: rgba(245, 158, 14, 0.3); margin-bottom: 15px;">
+                                <i class="fas fa-info-circle info-icon" style="color: #f59e0b;"></i>
+                                <div class="info-text">
+                                    <strong>Accepted documents:</strong><br>
+                                    • Utility bill (ZESA, water, internet) - not older than 3 months<br>
+                                    • Lease/rental agreement<br>
+                                    • Bank statement showing your address<br>
+                                    • Council rates statement
+                                </div>
+                            </div>
+
+                            <div class="upload-area" id="proofOfResidenceUploadArea" onclick="document.getElementById('proofOfResidence').click()" style="border-color: rgba(245, 158, 14, 0.5);">
+                                <i class="fas fa-file-alt upload-icon" style="color: #f59e0b;"></i>
+                                <div class="upload-text">Click to upload Proof of Residence</div>
+                                <div class="upload-hint">PDF, PNG or JPG (max. 5MB)</div>
+                            </div>
+                            <input type="file" id="proofOfResidence" class="file-input" accept=".pdf,image/*">
+                            <div class="uploaded-file" id="proofOfResidenceFilePreview">
+                                <i class="fas fa-check-circle file-icon" style="color: #f59e0b;"></i>
+                                <div class="file-info">
+                                    <div class="file-name" id="proofOfResidenceFileName"></div>
+                                    <div class="file-size" id="proofOfResidenceFileSize"></div>
+                                </div>
+                                <button type="button" class="remove-file" onclick="removeFile('proofOfResidence')" title="Remove file">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-row">
@@ -778,10 +847,55 @@
                             <label class="form-label">Supervisor Contact Number</label>
                             <input type="tel" class="form-input" id="supervisorPhone" placeholder="+263 77 123 4567">
                         </div>
+
+                        <!-- Employment Contract / Confirmation of Employment Upload -->
+                        <div class="form-group" style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+                            <label class="form-label">
+                                <i class="fas fa-file-contract" style="color: #8b5cf6; margin-right: 8px;"></i>
+                                Employment Contract / Confirmation Letter <span class="required">*</span>
+                            </label>
+                            <p style="color: #94a3b8; font-size: 13px; margin-bottom: 15px;">
+                                Upload your employment contract or a letter from your employer confirming your employment
+                            </p>
+                            
+                            <div class="info-box" style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3); margin-bottom: 15px;">
+                                <i class="fas fa-info-circle info-icon" style="color: #8b5cf6;"></i>
+                                <div class="info-text">
+                                    <strong>Accepted documents:</strong><br>
+                                    • Employment contract (signed)<br>
+                                    • Confirmation of employment letter (on company letterhead)<br>
+                                    • Appointment letter<br>
+                                    • HR confirmation letter
+                                </div>
+                            </div>
+
+                            <div class="upload-area" id="employmentContractUploadArea" onclick="document.getElementById('employmentContract').click()" style="border-color: rgba(139, 92, 246, 0.5);">
+                                <i class="fas fa-file-signature upload-icon" style="color: #8b5cf6;"></i>
+                                <div class="upload-text">Click to upload Employment Contract</div>
+                                <div class="upload-hint">PDF, PNG or JPG (max. 5MB)</div>
+                            </div>
+                            <input type="file" id="employmentContract" class="file-input" accept=".pdf,image/*">
+                            <div class="uploaded-file" id="employmentContractFilePreview">
+                                <i class="fas fa-check-circle file-icon" style="color: #8b5cf6;"></i>
+                                <div class="file-info">
+                                    <div class="file-name" id="employmentContractFileName"></div>
+                                    <div class="file-size" id="employmentContractFileSize"></div>
+                                </div>
+                                <button type="button" class="remove-file" onclick="removeFile('employmentContract')" title="Remove file">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
+                    <!-- Financial Documents Section -->
+                    <div style="margin-top: 30px; padding-top: 25px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #38e77b;">
+                            <i class="fas fa-file-invoice-dollar"></i> Financial Documents
+                        </h3>
+
                     <div class="form-group">
-                        <label class="form-label">Upload Bank Statement (Last 3 months)</label>
+                        <label class="form-label">Upload Bank Statement (Last 3 months) <span class="required">*</span></label>
                         <div class="upload-area" id="bankStatementUploadArea" onclick="document.getElementById('bankStatement').click()">
                             <i class="fas fa-file-invoice-dollar upload-icon"></i>
                             <div class="upload-text">Click to upload or drag and drop</div>
@@ -798,6 +912,45 @@
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
+                    </div>
+
+                    <!-- Payslip Upload -->
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label class="form-label">
+                            <i class="fas fa-money-check-alt" style="color: #10b981; margin-right: 8px;"></i>
+                            Upload Payslip (Latest) <span class="required">*</span>
+                        </label>
+                        <p style="color: #94a3b8; font-size: 13px; margin-bottom: 15px;">
+                            Upload your most recent payslip to verify your income
+                        </p>
+                        
+                        <div class="info-box" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); margin-bottom: 15px;">
+                            <i class="fas fa-info-circle info-icon" style="color: #10b981;"></i>
+                            <div class="info-text">
+                                <strong>Requirements:</strong><br>
+                                • Must be from the last 3 months<br>
+                                • Should show your name, employer, and net salary<br>
+                                • Government employees: Include EC number
+                            </div>
+                        </div>
+
+                        <div class="upload-area" id="payslipUploadArea" onclick="document.getElementById('payslip').click()" style="border-color: rgba(16, 185, 129, 0.5);">
+                            <i class="fas fa-money-check-alt upload-icon" style="color: #10b981;"></i>
+                            <div class="upload-text">Click to upload Payslip</div>
+                            <div class="upload-hint">PDF, PNG or JPG (max. 5MB)</div>
+                        </div>
+                        <input type="file" id="payslip" class="file-input" accept=".pdf,image/*">
+                        <div class="uploaded-file" id="payslipFilePreview">
+                            <i class="fas fa-check-circle file-icon" style="color: #10b981;"></i>
+                            <div class="file-info">
+                                <div class="file-name" id="payslipFileName"></div>
+                                <div class="file-size" id="payslipFileSize"></div>
+                            </div>
+                            <button type="button" class="remove-file" onclick="removeFile('payslip')" title="Remove file">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
                     </div>
 
                     <!-- Next of Kin Section -->
@@ -1035,6 +1188,19 @@
             handleSelfieUpload(e);
         });
 
+        // New document upload handlers
+        document.getElementById('proofOfResidence').addEventListener('change', function(e) {
+            handleDocumentUpload(e, 'proofOfResidence', 5);
+        });
+
+        document.getElementById('employmentContract').addEventListener('change', function(e) {
+            handleDocumentUpload(e, 'employmentContract', 5);
+        });
+
+        document.getElementById('payslip').addEventListener('change', function(e) {
+            handleDocumentUpload(e, 'payslip', 5);
+        });
+
         function handleFileUpload(event, side) {
             const file = event.target.files[0];
             if (file) {
@@ -1079,6 +1245,18 @@
                 document.getElementById('selfiePreviewContainer').style.display = 'none';
                 uploadAreaId = 'selfieUploadArea';
                 filePreviewId = 'selfieFilePreview';
+            } else if (side === 'proofOfResidence') {
+                document.getElementById('proofOfResidence').value = '';
+                uploadAreaId = 'proofOfResidenceUploadArea';
+                filePreviewId = 'proofOfResidenceFilePreview';
+            } else if (side === 'employmentContract') {
+                document.getElementById('employmentContract').value = '';
+                uploadAreaId = 'employmentContractUploadArea';
+                filePreviewId = 'employmentContractFilePreview';
+            } else if (side === 'payslip') {
+                document.getElementById('payslip').value = '';
+                uploadAreaId = 'payslipUploadArea';
+                filePreviewId = 'payslipFilePreview';
             }
             
             // Hide file preview, show upload area again (UX pattern)
@@ -1114,6 +1292,32 @@
             }
         }
         
+        // Generic document upload handler
+        function handleDocumentUpload(event, docType, maxSizeMB = 5) {
+            const file = event.target.files[0];
+            if (file) {
+                // Validate file size
+                if (file.size > maxSizeMB * 1024 * 1024) {
+                    alert(`File size must be less than ${maxSizeMB}MB`);
+                    event.target.value = '';
+                    return;
+                }
+                
+                const fileName = file.name;
+                const fileSize = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                
+                // Update file info display
+                document.getElementById(`${docType}FileName`).textContent = fileName;
+                document.getElementById(`${docType}FileSize`).textContent = fileSize;
+                
+                // Hide upload area, show file preview
+                document.getElementById(`${docType}UploadArea`).classList.add('hidden');
+                document.getElementById(`${docType}FilePreview`).classList.add('show');
+                
+                console.log(`✅ ${docType} uploaded: ${fileName}`);
+            }
+        }
+
         // Selfie upload handler with preview
         function handleSelfieUpload(event) {
             const file = event.target.files[0];

@@ -32,6 +32,7 @@ Anyone registered can apply for Direct Lending. The system checks for **required
 | **Payslip** | ✅ Yes | Income verification |
 | **Bank Statement** | ✅ Yes | Financial history & DTNI calculation |
 | **Proof of Residence** | ✅ Yes | Address verification |
+| **Employment Contract** | ✅ Yes | Employment confirmation |
 
 ### Document Status Badges
 

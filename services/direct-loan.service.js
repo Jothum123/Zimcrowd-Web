@@ -41,7 +41,8 @@ class DirectLoanService {
             { type: 'selfie', name: 'Selfie Photo', required: true },
             { type: 'payslip', name: 'Payslip', required: true },
             { type: 'bank_statement', name: 'Bank Statement', required: true },
-            { type: 'proof_of_residence', name: 'Proof of Residence', required: true }
+            { type: 'proof_of_residence', name: 'Proof of Residence', required: true },
+            { type: 'employment_contract', name: 'Employment Contract / Confirmation Letter', required: true }
         ];
         
         // ELIGIBILITY RULES
