@@ -5511,26 +5511,51 @@
                 <!-- Employment Details Section -->
                 <div class="loan-card" style="margin-top: 20px;">
                     <h3 style="margin-bottom: 20px;"><i class="fas fa-briefcase" style="color: #38e77b; margin-right: 10px;"></i>Employment Details</h3>
+                    
+                    <!-- Employment Type Notice -->
+                    <div id="employmentTypeNotice" style="background: rgba(56, 231, 123, 0.1); border: 1px solid rgba(56, 231, 123, 0.3); border-radius: 12px; padding: 15px; margin-bottom: 20px; display: none;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-info-circle" style="color: #38e77b; font-size: 20px;"></i>
+                            <div>
+                                <strong style="color: #38e77b;">Employment Type Affects Your Loan Limit</strong>
+                                <p style="color: #94a3b8; font-size: 13px; margin-top: 5px;">
+                                    <strong>Government employees:</strong> No cold start cap - get full DTNI-based limit (40% of salary)<br>
+                                    <strong>Private/Other employees:</strong> $100 cold start cap, unlocks after first repayment (33% DTNI)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Employment Type <span style="color: #f59e0b;">*</span></label>
+                            <select id="employmentType" onchange="updateEmploymentTypeNotice()">
+                                <option value="">Select Type</option>
+                                <option value="government">Government / Civil Servant</option>
+                                <option value="private">Private Sector Employee</option>
+                                <option value="business">Business Owner / Self-Employed</option>
+                                <option value="informal">Informal / Casual Worker</option>
+                            </select>
+                            <small style="color: #64748b; font-size: 11px; margin-top: 4px; display: block;">
+                                This determines your DTNI ratio and cold start eligibility
+                            </small>
+                        </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Employment Status</label>
                             <select id="employmentStatus">
                                 <option value="">Select Status</option>
-                                <option value="employed">Employed</option>
+                                <option value="employed">Employed Full-Time</option>
+                                <option value="part-time">Employed Part-Time</option>
+                                <option value="contract">Contract Worker</option>
                                 <option value="self-employed">Self-Employed</option>
-                                <option value="unemployed">Unemployed</option>
-                                <option value="student">Student</option>
                             </select>
                         </div>
                         <div>
-                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Monthly Income (USD)</label>
-                            <select id="monthlyIncome">
-                                <option value="">Select Range</option>
-                                <option value="0-500">$0 - $500</option>
-                                <option value="500-1000">$500 - $1,000</option>
-                                <option value="1000-2000">$1,000 - $2,000</option>
-                                <option value="2000+">$2,000+</option>
-                            </select>
+                            <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Monthly Net Income (USD) <span style="color: #f59e0b;">*</span></label>
+                            <input type="number" id="monthlyIncome" placeholder="e.g., 450" min="0" step="1">
+                            <small style="color: #64748b; font-size: 11px; margin-top: 4px; display: block;">
+                                Your take-home pay after deductions
+                            </small>
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 14px;">Employer/Business Name</label>
@@ -8036,6 +8061,54 @@ How it works:
 
             // Update social login status
             updateSocialLoginStatus();
+            
+            // Load employment type from localStorage
+            const employmentData = JSON.parse(localStorage.getItem('employmentDetails') || '{}');
+            if (employmentData.employment_type) {
+                const empTypeSelect = document.getElementById('employmentType');
+                if (empTypeSelect) {
+                    empTypeSelect.value = employmentData.employment_type;
+                    updateEmploymentTypeNotice();
+                }
+            }
+            if (employmentData.monthly_income) {
+                const incomeInput = document.getElementById('monthlyIncome');
+                if (incomeInput) incomeInput.value = employmentData.monthly_income;
+            }
+        }
+        
+        // Show/hide employment type notice based on selection
+        function updateEmploymentTypeNotice() {
+            const empType = document.getElementById('employmentType')?.value;
+            const notice = document.getElementById('employmentTypeNotice');
+            
+            if (notice && empType) {
+                notice.style.display = 'block';
+                
+                // Update notice content based on employment type
+                const noticeContent = notice.querySelector('p');
+                if (noticeContent) {
+                    if (empType === 'government') {
+                        noticeContent.innerHTML = `
+                            <strong style="color: #38e77b;">You selected: Government / Civil Servant</strong><br>
+                            <span style="color: #38e77b;">✓ No cold start cap</span> - You get your full DTNI-based limit immediately<br>
+                            <span style="color: #38e77b;">✓ 40% DTNI ratio</span> - Higher borrowing capacity<br>
+                            <span style="color: #38e77b;">✓ Up to 24 months</span> loan tenure available
+                        `;
+                    } else {
+                        const typeLabel = empType === 'private' ? 'Private Sector' : 
+                                         empType === 'business' ? 'Business Owner' : 'Informal Worker';
+                        noticeContent.innerHTML = `
+                            <strong style="color: #f59e0b;">You selected: ${typeLabel}</strong><br>
+                            <span style="color: #f59e0b;">⚠ $100 cold start cap</span> - First loan limited to $100<br>
+                            <span style="color: #94a3b8;">✓ 33% DTNI ratio</span> applies<br>
+                            <span style="color: #94a3b8;">✓ After first successful repayment</span>, your limit unlocks to full ZimScore-based amount
+                        `;
+                    }
+                }
+            } else if (notice) {
+                notice.style.display = 'none';
+            }
         }
 
         function updateSocialLoginStatus() {
