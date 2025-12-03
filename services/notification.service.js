@@ -72,18 +72,34 @@ class NotificationService {
         };
 
         try {
-            // Get user details
+            // Get user details from profiles table
             const { data: user, error } = await supabase
                 .from('profiles')
-                .select('first_name, last_name, email, phone, notification_preferences')
+                .select('first_name, email')
                 .eq('id', userId)
                 .single();
 
             if (error || !user) {
+                console.error('User lookup error:', error);
                 throw new Error('User not found');
             }
 
-            const userPrefs = user.notification_preferences || {};
+            // Get phone from user_profiles if available
+            const { data: userProfile } = await supabase
+                .from('user_profiles')
+                .select('phone_number, first_name, last_name')
+                .eq('user_id', userId)
+                .single();
+
+            // Merge user data
+            const mergedUser = {
+                first_name: user.first_name || userProfile?.first_name || 'User',
+                last_name: userProfile?.last_name || '',
+                email: user.email,
+                phone: userProfile?.phone_number || null
+            };
+
+            const userPrefs = {}; // Default preferences
 
             // Send in-app notification
             if (channels.includes('in_app')) {
@@ -91,13 +107,13 @@ class NotificationService {
             }
 
             // Send email notification
-            if (channels.includes('email') && user.email && userPrefs.email !== false) {
-                results.email = await this.sendEmailNotification(user, type, data);
+            if (channels.includes('email') && mergedUser.email && userPrefs.email !== false) {
+                results.email = await this.sendEmailNotification(mergedUser, type, data);
             }
 
             // Send SMS notification
-            if (channels.includes('sms') && user.phone && userPrefs.sms !== false) {
-                results.sms = await this.sendSMSNotification(user, type, data);
+            if (channels.includes('sms') && mergedUser.phone && userPrefs.sms !== false) {
+                results.sms = await this.sendSMSNotification(mergedUser, type, data);
             }
 
             return {
@@ -124,9 +140,8 @@ class NotificationService {
                 type: type,
                 title: this.getNotificationTitle(type, data),
                 message: this.getNotificationMessage(type, data),
-                data: data,
-                is_read: false,
-                created_at: new Date().toISOString()
+                metadata: data, // Changed from 'data' to 'metadata'
+                is_read: false
             };
 
             const { data: result, error } = await supabase
@@ -238,7 +253,19 @@ class NotificationService {
             welcome: '🎊 Welcome to ZimCrowd!',
             zimscore_updated: '📊 ZimScore Updated',
             document_verified: '✅ Document Verified',
-            document_rejected: '❌ Document Rejected'
+            document_rejected: '❌ Document Rejected',
+            // Wallet activity notifications
+            deposit_received: '💵 Deposit Received',
+            deposit_pending: '⏳ Deposit Pending',
+            deposit_flagged: '⚠️ Deposit Flagged for Verification',
+            withdrawal_completed: '💸 Withdrawal Completed',
+            withdrawal_pending: '⏳ Withdrawal Processing',
+            withdrawal_failed: '❌ Withdrawal Failed',
+            transfer_sent: '📤 Transfer Sent',
+            transfer_received: '📥 Transfer Received',
+            aml_verification_required: '🔒 Verification Required',
+            wallet_credited: '💰 Wallet Credited',
+            wallet_debited: '💳 Wallet Debited'
         };
 
         return titles[type] || 'ZimCrowd Notification';
@@ -258,7 +285,20 @@ class NotificationService {
             welcome: `Welcome to ZimCrowd! Your account is set up and ready. Start exploring our investment and lending opportunities.`,
             zimscore_updated: `Your ZimScore has been updated to ${data.newScore}. ${data.change > 0 ? 'Congratulations on the improvement!' : 'Keep building your credit history.'}`,
             document_verified: `Your ${data.documentType} has been verified successfully.`,
-            document_rejected: `Your ${data.documentType} was rejected. ${data.reason || 'Please upload a clearer document.'}`
+            document_rejected: `Your ${data.documentType} was rejected. ${data.reason || 'Please upload a clearer document.'}`,
+            // Wallet activity messages
+            deposit_received: `$${data.amount} has been deposited to your wallet. Reference: ${data.reference || 'N/A'}. New balance: $${data.newBalance || 'N/A'}.`,
+            deposit_pending: `Your deposit of $${data.amount} is being processed. Reference: ${data.reference || 'N/A'}. You'll be notified once completed.`,
+            deposit_flagged: `Your deposit of $${data.amount} requires source of funds verification. Please upload proof of income or source of funds documents to proceed.`,
+            withdrawal_completed: `Your withdrawal of ${data.currency || '$'}${data.amount} has been processed successfully! Expect your funds in your bank account or mobile wallet within 2-3 business days. Reference: ${data.reference || 'N/A'}.`,
+            withdrawal_pending: `Your withdrawal request of ${data.currency || '$'}${data.amount} is being processed. Funds will arrive in your account within 2-3 business days.`,
+            withdrawal_failed: `Your withdrawal of ${data.currency || '$'}${data.amount} could not be processed. ${data.reason || 'Please contact support for assistance.'}`,
+            withdrawal_initiated: `Your withdrawal of ${data.currency || '$'}${data.amount} has been initiated! Your funds will be sent to your ${data.destination || 'registered account'} within 2-3 business days. Reference: ${data.reference || 'N/A'}.`,
+            transfer_sent: `You sent $${data.amount} to ${data.recipientName || 'another user'}. Reference: ${data.reference || 'N/A'}. New balance: $${data.newBalance || 'N/A'}.`,
+            transfer_received: `You received $${data.amount} from ${data.senderName || 'another user'}. ${data.note ? `Note: "${data.note}"` : ''} New balance: $${data.newBalance || 'N/A'}.`,
+            aml_verification_required: `Due to regulatory requirements, your account requires additional verification. Please submit the required documents to continue using wallet services.`,
+            wallet_credited: `$${data.amount} has been credited to your wallet. ${data.description || ''} New balance: $${data.newBalance || 'N/A'}.`,
+            wallet_debited: `$${data.amount} has been debited from your wallet. ${data.description || ''} New balance: $${data.newBalance || 'N/A'}.`
         };
 
         return messages[type] || 'You have a new notification from ZimCrowd.';

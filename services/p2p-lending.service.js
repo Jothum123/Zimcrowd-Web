@@ -39,9 +39,16 @@ class P2PLendingService {
         this.MIN_DEPOSIT_AMOUNT = 10;       // Minimum deposit to lender wallet
         this.MAX_DEPOSIT_AMOUNT = null;     // NO maximum deposit limit
         
-        // Withdrawal limits
-        this.MIN_WITHDRAWAL_AMOUNT = 20;    // Minimum withdrawal $20
-        this.MAX_WITHDRAWAL_PER_DAY = 1000; // Maximum $1,000 per day
+        // Withdrawal limits - USD
+        this.MIN_WITHDRAWAL_AMOUNT = 20;    // Minimum withdrawal $20 USD
+        this.MAX_WITHDRAWAL_PER_DAY = 1000; // Maximum $1,000 USD per day
+        
+        // Withdrawal limits - ZWG (Zimbabwe Gold)
+        this.MIN_WITHDRAWAL_AMOUNT_ZWG = 500;   // Minimum withdrawal ZWG 500
+        this.MAX_WITHDRAWAL_PER_DAY_ZWG = 3000; // Maximum ZWG 3,000 per day
+        
+        // Withdrawal processing time (2-3 business days)
+        this.WITHDRAWAL_PROCESSING_DAYS = '2-3 business days';
         
         // AML (Anti-Money Laundering) Thresholds
         // Deposits $5,000+ require source of funds verification
@@ -677,37 +684,48 @@ class P2PLendingService {
 
     /**
      * Validate withdrawal amount
-     * Minimum: $20, Maximum: $1,000 per day
+     * USD: Minimum $20, Maximum $1,000 per day
+     * ZWG: Minimum ZWG 500, Maximum ZWG 3,000 per day
+     * Withdrawals are processed instantly but funds arrive in 2-3 business days
      * @param {number} amount - Withdrawal amount
      * @param {string} userId - User ID to check daily limit
+     * @param {string} currency - Currency code ('USD' or 'ZWG')
      * @returns {Promise<Object>} Validation result
      */
-    async validateWithdrawalAmount(amount, userId) {
+    async validateWithdrawalAmount(amount, userId, currency = 'USD') {
         const withdrawalAmount = parseFloat(amount);
+        const currencyUpper = (currency || 'USD').toUpperCase();
+
+        // Get limits based on currency
+        const minAmount = currencyUpper === 'ZWG' ? this.MIN_WITHDRAWAL_AMOUNT_ZWG : this.MIN_WITHDRAWAL_AMOUNT;
+        const maxPerDay = currencyUpper === 'ZWG' ? this.MAX_WITHDRAWAL_PER_DAY_ZWG : this.MAX_WITHDRAWAL_PER_DAY;
+        const currencySymbol = currencyUpper === 'ZWG' ? 'ZWG ' : '$';
 
         if (isNaN(withdrawalAmount) || withdrawalAmount <= 0) {
             return { valid: false, message: 'Invalid withdrawal amount' };
         }
 
         // Check minimum
-        if (withdrawalAmount < this.MIN_WITHDRAWAL_AMOUNT) {
+        if (withdrawalAmount < minAmount) {
             return {
                 valid: false,
-                message: `Minimum withdrawal amount is $${this.MIN_WITHDRAWAL_AMOUNT}`,
-                minAmount: this.MIN_WITHDRAWAL_AMOUNT
+                message: `Minimum withdrawal amount is ${currencySymbol}${minAmount}`,
+                minAmount: minAmount,
+                currency: currencyUpper
             };
         }
 
         // Check if single withdrawal exceeds daily limit
-        if (withdrawalAmount > this.MAX_WITHDRAWAL_PER_DAY) {
+        if (withdrawalAmount > maxPerDay) {
             return {
                 valid: false,
-                message: `Maximum withdrawal is $${this.MAX_WITHDRAWAL_PER_DAY} per day`,
-                maxAmount: this.MAX_WITHDRAWAL_PER_DAY
+                message: `Maximum withdrawal is ${currencySymbol}${maxPerDay} per day`,
+                maxAmount: maxPerDay,
+                currency: currencyUpper
             };
         }
 
-        // Check cumulative withdrawals today
+        // Check cumulative withdrawals today for this currency
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
 
@@ -722,26 +740,31 @@ class P2PLendingService {
             console.error('Error checking daily withdrawals:', error);
         }
 
+        // Filter by currency and sum
         const totalWithdrawnToday = (todayWithdrawals || [])
+            .filter(w => (w.metadata?.currency || 'USD').toUpperCase() === currencyUpper)
             .reduce((sum, w) => sum + parseFloat(w.metadata?.amount || 0), 0);
 
-        const remainingLimit = this.MAX_WITHDRAWAL_PER_DAY - totalWithdrawnToday;
+        const remainingLimit = maxPerDay - totalWithdrawnToday;
 
         if (withdrawalAmount > remainingLimit) {
             return {
                 valid: false,
-                message: `Daily withdrawal limit exceeded. You have $${remainingLimit.toFixed(2)} remaining today.`,
-                dailyLimit: this.MAX_WITHDRAWAL_PER_DAY,
+                message: `Daily withdrawal limit exceeded. You have ${currencySymbol}${remainingLimit.toFixed(2)} remaining today.`,
+                dailyLimit: maxPerDay,
                 withdrawnToday: totalWithdrawnToday,
-                remainingLimit: remainingLimit
+                remainingLimit: remainingLimit,
+                currency: currencyUpper
             };
         }
 
         return {
             valid: true,
             amount: withdrawalAmount,
-            message: 'Withdrawal amount is valid',
-            dailyLimit: this.MAX_WITHDRAWAL_PER_DAY,
+            currency: currencyUpper,
+            message: `Withdrawal approved. Funds will arrive in ${this.WITHDRAWAL_PROCESSING_DAYS}.`,
+            processingTime: this.WITHDRAWAL_PROCESSING_DAYS,
+            dailyLimit: maxPerDay,
             withdrawnToday: totalWithdrawnToday,
             remainingLimit: remainingLimit - withdrawalAmount
         };
@@ -1300,11 +1323,20 @@ class P2PLendingService {
                 message: `Minimum deposit: $${this.MIN_DEPOSIT_AMOUNT}. No maximum limit.`,
                 amlMessage: `Deposits of $${this.AML_THRESHOLD.toLocaleString()} or more are flagged until source of funds is verified.`
             },
-            // Withdrawal limits
+            // Withdrawal limits - USD
             withdrawal: {
-                min: this.MIN_WITHDRAWAL_AMOUNT,
-                maxPerDay: this.MAX_WITHDRAWAL_PER_DAY,
-                message: `Minimum: $${this.MIN_WITHDRAWAL_AMOUNT}. Maximum: $${this.MAX_WITHDRAWAL_PER_DAY} per day.`
+                USD: {
+                    min: this.MIN_WITHDRAWAL_AMOUNT,
+                    maxPerDay: this.MAX_WITHDRAWAL_PER_DAY,
+                    message: `Minimum: $${this.MIN_WITHDRAWAL_AMOUNT}. Maximum: $${this.MAX_WITHDRAWAL_PER_DAY} per day.`
+                },
+                ZWG: {
+                    min: this.MIN_WITHDRAWAL_AMOUNT_ZWG,
+                    maxPerDay: this.MAX_WITHDRAWAL_PER_DAY_ZWG,
+                    message: `Minimum: ZWG ${this.MIN_WITHDRAWAL_AMOUNT_ZWG}. Maximum: ZWG ${this.MAX_WITHDRAWAL_PER_DAY_ZWG} per day.`
+                },
+                processingTime: this.WITHDRAWAL_PROCESSING_DAYS,
+                note: 'Withdrawals are processed instantly. Funds arrive in your bank account or mobile wallet within 2-3 business days.'
             },
             // AML thresholds
             aml: {
