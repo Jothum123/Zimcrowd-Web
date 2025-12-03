@@ -1085,7 +1085,7 @@ class ZimScoreService {
                         coldStartActive: isColdStart,
                         scoreBasedLimit: zimScore.score_based_limit
                     },
-                    requiresBankStatement: true
+                    requiresBankStatement: false // User has ZimScore, KYC already completed
                 };
             }
 
@@ -1126,7 +1126,7 @@ class ZimScoreService {
                     maxDays: isColdStart ? 90 : (isGovernment ? 720 : 360),
                     maxMonths: isColdStart ? 3 : (isGovernment ? 24 : 12)
                 },
-                requiresBankStatement: true, // Always required
+                requiresBankStatement: false, // User has ZimScore, so KYC/bank statement already completed
                 message: isColdStart ? 
                     `Cold start limit: $${finalMaxLoan}. After first successful repayment, your limit will unlock to $${zimScore.score_based_limit}.` :
                     `Your maximum loan amount is $${finalMaxLoan} based on your ZimScore and DTNI.`
