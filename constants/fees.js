@@ -172,30 +172,27 @@ const PLATFORM_FEES = {
         },
         
         // Employment Type Configuration
+        // NO COLD START in Direct Lending - uses DTNI for affordability
         employmentTypes: {
             government: {
-                coldStart: null,        // No cold start
                 maxLoan: { USD: 3000, ZWG: 40000 },
                 maxTenureMonths: 24,
-                dtniRatio: 0.40         // 40%
+                dtniRatio: 0.40         // 40% of net income
             },
             private: {
-                coldStart: { USD: 300, ZWG: 8100 },
                 maxLoan: { USD: 1000, ZWG: 27000 },
                 maxTenureMonths: 12,
-                dtniRatio: 0.33         // 33%
+                dtniRatio: 0.33         // 33% of net income
             },
             business: {
-                coldStart: { USD: 200, ZWG: 5400 },
                 maxLoan: { USD: 1000, ZWG: 27000 },
                 maxTenureMonths: 12,
-                dtniRatio: 0.30         // 30%
+                dtniRatio: 0.30         // 30% of net income
             },
             informal: {
-                coldStart: { USD: 100, ZWG: 2700 },
                 maxLoan: { USD: 500, ZWG: 13500 },
                 maxTenureMonths: 6,
-                dtniRatio: 0.25         // 25%
+                dtniRatio: 0.25         // 25% of net income
             }
         },
         

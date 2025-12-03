@@ -39,30 +39,27 @@ class DirectLoanService {
         };
         
         // DTNI Configuration by employment type (multi-currency)
+        // NO COLD START in Direct Lending - uses DTNI for affordability
         this.DTNI_CONFIG = {
             government: { 
-                ratio: 0.40, 
+                ratio: 0.40,  // 40% of net income
                 maxTenureMonths: 24, 
-                maxLoan: { USD: 3000, ZWG: 40000 },
-                coldStart: null  // No cold start
+                maxLoan: { USD: 3000, ZWG: 40000 }
             },
             private: { 
-                ratio: 0.33, 
+                ratio: 0.33,  // 33% of net income
                 maxTenureMonths: 12, 
-                maxLoan: { USD: 1000, ZWG: 27000 },
-                coldStart: { USD: 300, ZWG: 8100 }
+                maxLoan: { USD: 1000, ZWG: 27000 }
             },
             business: { 
-                ratio: 0.30, 
+                ratio: 0.30,  // 30% of net income
                 maxTenureMonths: 12, 
-                maxLoan: { USD: 1000, ZWG: 27000 },
-                coldStart: { USD: 200, ZWG: 5400 }
+                maxLoan: { USD: 1000, ZWG: 27000 }
             },
             informal: { 
-                ratio: 0.25, 
+                ratio: 0.25,  // 25% of net income
                 maxTenureMonths: 6, 
-                maxLoan: { USD: 500, ZWG: 13500 },
-                coldStart: { USD: 100, ZWG: 2700 }
+                maxLoan: { USD: 500, ZWG: 13500 }
             }
         };
         

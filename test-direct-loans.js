@@ -41,18 +41,11 @@ console.log(`ZWG      | ZWG ${config.limits.ZWG.min} | ZWG ${config.limits.ZWG.m
 console.log('\n\n📋 TEST 3: EMPLOYMENT TYPE LIMITS');
 console.log('==================================\n');
 
-console.log('Employment  | Cold Start (USD) | Max Loan (USD) | Max Tenure | DTNI');
-console.log('------------|------------------|----------------|------------|------');
+console.log('NO COLD START - Uses DTNI (Debt-to-Net-Income) for affordability\n');
+console.log('Employment  | DTNI Ratio | Max Loan (USD) | Max Loan (ZWG) | Max Tenure');
+console.log('------------|------------|----------------|----------------|------------');
 for (const [type, cfg] of Object.entries(config.employmentTypes)) {
-    const coldStart = cfg.coldStart ? `$${cfg.coldStart.USD}` : 'None';
-    console.log(`${type.padEnd(11)} | ${coldStart.padEnd(16)} | $${cfg.maxLoan.USD.toLocaleString().padEnd(13)} | ${cfg.maxTenureMonths} months    | ${cfg.dtniRatio * 100}%`);
-}
-
-console.log('\n\nEmployment  | Cold Start (ZWG) | Max Loan (ZWG) | Max Tenure | DTNI');
-console.log('------------|------------------|----------------|------------|------');
-for (const [type, cfg] of Object.entries(config.employmentTypes)) {
-    const coldStart = cfg.coldStart ? `ZWG ${cfg.coldStart.ZWG}` : 'None';
-    console.log(`${type.padEnd(11)} | ${coldStart.padEnd(16)} | ZWG ${cfg.maxLoan.ZWG.toLocaleString().padEnd(10)} | ${cfg.maxTenureMonths} months    | ${cfg.dtniRatio * 100}%`);
+    console.log(`${type.padEnd(11)} | ${(cfg.dtniRatio * 100)}%        | $${cfg.maxLoan.USD.toLocaleString().padEnd(13)} | ZWG ${cfg.maxLoan.ZWG.toLocaleString().padEnd(10)} | ${cfg.maxTenureMonths} months`);
 }
 
 // ============================================
