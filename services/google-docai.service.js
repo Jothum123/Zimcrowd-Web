@@ -233,6 +233,28 @@ class GoogleDocAIService {
     }
 
     /**
+     * Extract data from Proof of Residence
+     * Supports: Utility bills, Lease agreements, Council rates, Bank statements with address
+     */
+    async extractProofOfResidenceData(imageBuffer) {
+        const processorId = this.processors.form || this.processors.ocr;
+        
+        const result = await this.processDocument(imageBuffer, processorId);
+        
+        if (!result.success) return result;
+
+        const fields = this.parseProofOfResidenceFields(result.entities, result.text);
+
+        return {
+            success: true,
+            fullText: result.text,
+            extractedFields: fields,
+            confidence: result.confidence,
+            ocrEngine: 'Google Document AI - Proof of Residence Parser'
+        };
+    }
+
+    /**
      * Extract data from Bank Statement
      */
     async extractBankStatementData(imageBuffer) {
@@ -575,6 +597,316 @@ class GoogleDocAIService {
     }
 
     /**
+     * Parse Proof of Residence fields
+     * Extracts address and name from utility bills, lease agreements, etc.
+     */
+    parseProofOfResidenceFields(entities, text) {
+        const fields = {
+            documentType: null,      // utility_bill, lease, council_rates, bank_statement
+            providerName: null,      // ZESA, ZINWA, Council name, etc.
+            accountHolder: null,     // Name on the document
+            serviceAddress: null,    // Physical address
+            city: null,
+            province: null,
+            meterNumber: null,       // For utility bills
+            accountNumber: null,
+            documentDate: null,
+            dueDate: null,
+            amountDue: null,
+            isRecent: false,         // Within last 3 months
+            addressComponents: {
+                streetNumber: null,
+                streetName: null,
+                suburb: null,
+                city: null,
+                province: null,
+                postalCode: null
+            }
+        };
+
+        if (!text) return fields;
+
+        const upper = text.toUpperCase();
+
+        // Detect document type
+        if (upper.match(/ZESA|ZETDC|ELECTRICITY|POWER|KWATT/)) {
+            fields.documentType = 'utility_bill_electricity';
+            fields.providerName = 'ZESA/ZETDC';
+        } else if (upper.match(/ZINWA|WATER\s+AUTHORITY|WATER\s+BILL/)) {
+            fields.documentType = 'utility_bill_water';
+            fields.providerName = 'ZINWA';
+        } else if (upper.match(/TELONE|ECONET|NETONE|TELECEL|INTERNET|BROADBAND/)) {
+            fields.documentType = 'utility_bill_telecom';
+            const telcoMatch = upper.match(/(TELONE|ECONET|NETONE|TELECEL)/);
+            if (telcoMatch) fields.providerName = telcoMatch[1];
+        } else if (upper.match(/CITY\s+OF\s+HARARE|CITY\s+OF\s+BULAWAYO|MUNICIPALITY|COUNCIL|RATES/)) {
+            fields.documentType = 'council_rates';
+            const councilMatch = upper.match(/(CITY\s+OF\s+[A-Z]+|[A-Z]+\s+MUNICIPALITY|[A-Z]+\s+COUNCIL)/);
+            if (councilMatch) fields.providerName = councilMatch[1];
+        } else if (upper.match(/LEASE|RENTAL|TENANCY|LANDLORD|TENANT/)) {
+            fields.documentType = 'lease_agreement';
+        } else if (upper.match(/BANK\s+STATEMENT|ACCOUNT\s+STATEMENT/)) {
+            fields.documentType = 'bank_statement';
+        }
+
+        // Extract account holder name
+        const namePatterns = [
+            /(?:CUSTOMER|ACCOUNT\s+HOLDER|NAME|TENANT|LESSEE)[:\s]*\n?\s*([A-Z][A-Z\s]+?)(?=\n|ADDRESS|ACCOUNT|$)/i,
+            /(?:DEAR|TO)[:\s]*\n?\s*([A-Z][A-Z\s]+?)(?=\n|,|$)/i,
+            /(?:MR|MRS|MS|MISS|DR)\.?\s+([A-Z][A-Z\s]+?)(?=\n|,|$)/i
+        ];
+        
+        for (const pattern of namePatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                fields.accountHolder = match[1].trim().replace(/\s+/g, ' ');
+                break;
+            }
+        }
+
+        // Extract service address
+        const addressPatterns = [
+            /(?:SERVICE\s+)?ADDRESS[:\s]*\n?\s*([A-Z0-9][A-Z0-9\s,.\-\/]+?)(?=\n\n|\nACCOUNT|\nMETER|\nDATE|$)/i,
+            /(?:PROPERTY|PREMISES|STAND)[:\s]*\n?\s*([A-Z0-9][A-Z0-9\s,.\-\/]+?)(?=\n\n|\nACCOUNT|$)/i,
+            /(?:RESIDENTIAL\s+ADDRESS)[:\s]*\n?\s*([A-Z0-9][A-Z0-9\s,.\-\/]+?)(?=\n\n|$)/i
+        ];
+
+        for (const pattern of addressPatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                fields.serviceAddress = match[1].trim().replace(/\s+/g, ' ');
+                break;
+            }
+        }
+
+        // Parse address components
+        if (fields.serviceAddress) {
+            // Street number
+            const streetNumMatch = fields.serviceAddress.match(/^(\d+[A-Z]?)\s/);
+            if (streetNumMatch) fields.addressComponents.streetNumber = streetNumMatch[1];
+
+            // Common Zimbabwe cities
+            const cities = ['HARARE', 'BULAWAYO', 'MUTARE', 'GWERU', 'KWEKWE', 'KADOMA', 'MASVINGO', 'CHINHOYI', 'MARONDERA', 'CHITUNGWIZA', 'NORTON', 'RUWA', 'BINDURA', 'BEITBRIDGE', 'VICTORIA FALLS', 'HWANGE', 'KARIBA'];
+            for (const city of cities) {
+                if (fields.serviceAddress.toUpperCase().includes(city)) {
+                    fields.city = city;
+                    fields.addressComponents.city = city;
+                    break;
+                }
+            }
+
+            // Provinces
+            const provinces = ['HARARE', 'BULAWAYO', 'MANICALAND', 'MASHONALAND CENTRAL', 'MASHONALAND EAST', 'MASHONALAND WEST', 'MASVINGO', 'MATABELELAND NORTH', 'MATABELELAND SOUTH', 'MIDLANDS'];
+            for (const province of provinces) {
+                if (fields.serviceAddress.toUpperCase().includes(province)) {
+                    fields.province = province;
+                    fields.addressComponents.province = province;
+                    break;
+                }
+            }
+
+            // Suburb extraction
+            const suburbMatch = fields.serviceAddress.match(/,\s*([A-Z][A-Z\s]+?)(?:,|\s+HARARE|\s+BULAWAYO|$)/i);
+            if (suburbMatch) fields.addressComponents.suburb = suburbMatch[1].trim();
+        }
+
+        // Meter number (for utilities)
+        const meterMatch = text.match(/(?:METER\s+(?:NO|NUMBER|#)?)[:\s]*([A-Z0-9]+)/i);
+        if (meterMatch) fields.meterNumber = meterMatch[1];
+
+        // Account number
+        const accMatch = text.match(/(?:ACCOUNT\s+(?:NO|NUMBER|#)?|A\/C)[:\s]*([A-Z0-9\-]+)/i);
+        if (accMatch) fields.accountNumber = accMatch[1];
+
+        // Document date
+        const datePatterns = [
+            /(?:DATE|STATEMENT\s+DATE|BILL\s+DATE)[:\s]*(\d{1,2}[-\/]\w{3}[-\/]\d{4}|\d{1,2}[-\/]\d{1,2}[-\/]\d{4})/i,
+            /(\d{1,2}\s+(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*\s+\d{4})/i
+        ];
+        
+        for (const pattern of datePatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                fields.documentDate = match[1];
+                // Check if document is recent (within 3 months)
+                try {
+                    const docDate = new Date(match[1]);
+                    const threeMonthsAgo = new Date();
+                    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+                    fields.isRecent = docDate >= threeMonthsAgo;
+                } catch (e) {
+                    fields.isRecent = false;
+                }
+                break;
+            }
+        }
+
+        // Due date
+        const dueMatch = text.match(/(?:DUE\s+DATE|PAYABLE\s+BY)[:\s]*(\d{1,2}[-\/]\w{3}[-\/]\d{4}|\d{1,2}[-\/]\d{1,2}[-\/]\d{4})/i);
+        if (dueMatch) fields.dueDate = dueMatch[1];
+
+        // Amount due
+        const amountMatch = text.match(/(?:AMOUNT\s+DUE|TOTAL\s+DUE|BALANCE\s+DUE|TOTAL)[:\s]*\$?\s*([\d,]+\.?\d*)/i);
+        if (amountMatch) fields.amountDue = this.parseAmount(amountMatch[1]);
+
+        return fields;
+    }
+
+    /**
+     * Parse Employment Contract / Confirmation Letter fields
+     */
+    parseEmploymentContractFields(entities, text) {
+        const fields = {
+            documentType: null,      // employment_contract, confirmation_letter, appointment_letter
+            employeeName: null,
+            employeeId: null,
+            employerName: null,
+            employerAddress: null,
+            jobTitle: null,
+            department: null,
+            startDate: null,
+            endDate: null,           // For contracts
+            contractType: null,      // permanent, contract, temporary
+            salary: null,
+            salaryPeriod: null,      // monthly, annual
+            signatureDate: null,
+            isValid: false,
+            hasLetterhead: false,
+            hasSignature: false
+        };
+
+        if (!text) return fields;
+
+        const upper = text.toUpperCase();
+
+        // Detect document type
+        if (upper.match(/EMPLOYMENT\s+CONTRACT|CONTRACT\s+OF\s+EMPLOYMENT/)) {
+            fields.documentType = 'employment_contract';
+        } else if (upper.match(/CONFIRMATION\s+OF\s+EMPLOYMENT|LETTER\s+OF\s+EMPLOYMENT|TO\s+WHOM\s+IT\s+MAY\s+CONCERN/)) {
+            fields.documentType = 'confirmation_letter';
+        } else if (upper.match(/APPOINTMENT\s+LETTER|LETTER\s+OF\s+APPOINTMENT/)) {
+            fields.documentType = 'appointment_letter';
+        } else if (upper.match(/OFFER\s+LETTER|LETTER\s+OF\s+OFFER/)) {
+            fields.documentType = 'offer_letter';
+        }
+
+        // Check for letterhead indicators
+        if (upper.match(/LIMITED|LTD|PVT|PRIVATE|COMPANY|CORPORATION|MINISTRY|GOVERNMENT|DEPARTMENT/)) {
+            fields.hasLetterhead = true;
+        }
+
+        // Extract employer name (usually at top of letterhead)
+        const employerPatterns = [
+            /^([A-Z][A-Z\s&]+(?:LIMITED|LTD|PVT|PRIVATE|COMPANY|CORPORATION))/im,
+            /^(MINISTRY\s+OF\s+[A-Z\s]+)/im,
+            /^(GOVERNMENT\s+OF\s+ZIMBABWE)/im,
+            /(?:EMPLOYER|COMPANY)[:\s]*\n?\s*([A-Z][A-Z\s&]+?)(?=\n|ADDRESS|$)/i
+        ];
+
+        for (const pattern of employerPatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                fields.employerName = match[1].trim().replace(/\s+/g, ' ');
+                break;
+            }
+        }
+
+        // Extract employee name
+        const employeePatterns = [
+            /(?:THIS\s+IS\s+TO\s+CONFIRM\s+THAT|CERTIFY\s+THAT|EMPLOYEE)[:\s]*\n?\s*(?:MR|MRS|MS|MISS|DR)?\.?\s*([A-Z][A-Z\s]+?)(?=\s+IS|\s+HAS|\s+HOLDS|,|\n)/i,
+            /(?:DEAR|NAME\s+OF\s+EMPLOYEE)[:\s]*\n?\s*(?:MR|MRS|MS|MISS|DR)?\.?\s*([A-Z][A-Z\s]+?)(?=\n|,|$)/i,
+            /(?:EMPLOYEE\s+NAME)[:\s]*([A-Z][A-Z\s]+?)(?=\n|EMPLOYEE\s+ID|$)/i
+        ];
+
+        for (const pattern of employeePatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                fields.employeeName = match[1].trim().replace(/\s+/g, ' ');
+                break;
+            }
+        }
+
+        // Employee ID / EC Number
+        const empIdMatch = text.match(/(?:EMPLOYEE\s+(?:ID|NO|NUMBER)|EC\s+(?:NO|NUMBER)|STAFF\s+(?:ID|NO))[:\s]*([A-Z0-9]+)/i);
+        if (empIdMatch) fields.employeeId = empIdMatch[1];
+
+        // Job Title / Position
+        const titlePatterns = [
+            /(?:POSITION|JOB\s+TITLE|DESIGNATION|ROLE|CAPACITY)[:\s]*\n?\s*([A-Z][A-Z\s]+?)(?=\n|IN\s+THE|AT|$)/i,
+            /(?:AS\s+(?:A|AN)?)\s+([A-Z][A-Z\s]+?)(?=\s+IN|\s+AT|\s+WITH|,|\.|$)/i,
+            /(?:HOLDS\s+THE\s+POSITION\s+OF)\s+([A-Z][A-Z\s]+?)(?=\s+IN|\s+AT|,|\.|$)/i
+        ];
+
+        for (const pattern of titlePatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                fields.jobTitle = match[1].trim().replace(/\s+/g, ' ');
+                break;
+            }
+        }
+
+        // Department
+        const deptMatch = text.match(/(?:DEPARTMENT|DIVISION|SECTION|UNIT)[:\s]*\n?\s*([A-Z][A-Z\s]+?)(?=\n|$)/i);
+        if (deptMatch) fields.department = deptMatch[1].trim();
+
+        // Start Date / Employment Date
+        const startPatterns = [
+            /(?:START\s+DATE|COMMENCEMENT\s+DATE|DATE\s+OF\s+EMPLOYMENT|EMPLOYED\s+(?:SINCE|FROM))[:\s]*(\d{1,2}[-\/]\w{3}[-\/]\d{4}|\d{1,2}[-\/]\d{1,2}[-\/]\d{4})/i,
+            /(?:SINCE|FROM)\s+(\d{1,2}\s+(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*\s+\d{4})/i
+        ];
+
+        for (const pattern of startPatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                fields.startDate = match[1];
+                break;
+            }
+        }
+
+        // Contract Type
+        if (upper.includes('PERMANENT')) {
+            fields.contractType = 'permanent';
+        } else if (upper.includes('CONTRACT') && !upper.includes('EMPLOYMENT CONTRACT')) {
+            fields.contractType = 'contract';
+        } else if (upper.includes('TEMPORARY')) {
+            fields.contractType = 'temporary';
+        } else if (upper.includes('PROBATION')) {
+            fields.contractType = 'probationary';
+        }
+
+        // Salary
+        const salaryPatterns = [
+            /(?:SALARY|REMUNERATION|BASIC\s+PAY|GROSS\s+SALARY)[:\s]*\$?\s*([\d,]+\.?\d*)\s*(?:PER\s+)?(MONTH|ANNUM|YEAR)?/i,
+            /(?:EARNS?|RECEIVES?)\s+\$?\s*([\d,]+\.?\d*)\s*(?:PER\s+)?(MONTH|ANNUM|YEAR)?/i
+        ];
+
+        for (const pattern of salaryPatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                fields.salary = this.parseAmount(match[1]);
+                if (match[2]) {
+                    fields.salaryPeriod = match[2].toLowerCase().includes('annum') || match[2].toLowerCase().includes('year') ? 'annual' : 'monthly';
+                }
+                break;
+            }
+        }
+
+        // Signature date
+        const sigDateMatch = text.match(/(?:DATED?|SIGNED)[:\s]*(?:THIS)?\s*(\d{1,2}[-\/\s]\w{3,9}[-\/\s]\d{4}|\d{1,2}[-\/]\d{1,2}[-\/]\d{4})/i);
+        if (sigDateMatch) fields.signatureDate = sigDateMatch[1];
+
+        // Check for signature indicators
+        if (upper.match(/SIGNATURE|SIGNED|AUTHORIZED|AUTHORISED|HR\s+MANAGER|HUMAN\s+RESOURCES/)) {
+            fields.hasSignature = true;
+        }
+
+        // Validate document
+        fields.isValid = !!(fields.employerName && (fields.employeeName || fields.employeeId) && fields.hasLetterhead);
+
+        return fields;
+    }
+
+    /**
      * Parse amount string to number
      */
     parseAmount(value) {
@@ -613,8 +945,24 @@ class GoogleDocAIService {
             return 'employment_letter';
         }
 
-        if (upper.match(/UTILITY|ELECTRICITY|WATER|ZESA|ZETDC/)) {
-            return 'utility_bill';
+        if (upper.match(/ZESA|ZETDC|ELECTRICITY|POWER|KWATT/)) {
+            return 'proof_of_residence';
+        }
+
+        if (upper.match(/ZINWA|WATER\s+AUTHORITY|WATER\s+BILL/)) {
+            return 'proof_of_residence';
+        }
+
+        if (upper.match(/CITY\s+OF\s+HARARE|CITY\s+OF\s+BULAWAYO|MUNICIPALITY|COUNCIL|RATES/)) {
+            return 'proof_of_residence';
+        }
+
+        if (upper.match(/LEASE|RENTAL|TENANCY|LANDLORD|TENANT/)) {
+            return 'proof_of_residence';
+        }
+
+        if (upper.match(/TELONE|ECONET|NETONE|TELECEL/).test(upper) && upper.includes('BILL')) {
+            return 'proof_of_residence';
         }
 
         return 'unknown';
@@ -674,6 +1022,26 @@ class GoogleDocAIService {
                     }
                     break;
 
+                case 'proof_of_residence':
+                case 'utility_bill':
+                case 'utility_bill_electricity':
+                case 'utility_bill_water':
+                case 'council_rates':
+                case 'lease_agreement':
+                    const porResult = await this.extractProofOfResidenceData(imageBuffer);
+                    if (porResult.success) {
+                        extractedFields = porResult.extractedFields;
+                        processorUsed = 'Proof of Residence Parser';
+                    }
+                    break;
+
+                case 'employment_letter':
+                case 'employment_contract':
+                    // Use form parser for employment documents
+                    extractedFields = this.parseEmploymentContractFields([], ocrResult.fullText);
+                    processorUsed = 'Employment Contract Parser';
+                    break;
+
                 default:
                     // Use form parser for unknown types
                     extractedFields = this.parseIDFields([], ocrResult.fullText);
@@ -700,6 +1068,218 @@ class GoogleDocAIService {
                 error: error.message
             };
         }
+    }
+    /**
+     * Verify document against user profile data
+     * @param {Object} extractedFields - Fields extracted from document
+     * @param {Object} userProfile - User's profile data
+     * @param {string} documentType - Type of document being verified
+     * @returns {Object} Verification result with match scores
+     */
+    verifyDocumentAgainstProfile(extractedFields, userProfile, documentType) {
+        const result = {
+            verified: false,
+            confidence: 0,
+            matches: {},
+            mismatches: {},
+            warnings: [],
+            recommendation: 'review'
+        };
+
+        if (!extractedFields || !userProfile) {
+            result.warnings.push('Missing data for verification');
+            return result;
+        }
+
+        let matchCount = 0;
+        let totalChecks = 0;
+
+        // Helper function to compare names (fuzzy match)
+        const compareNames = (name1, name2) => {
+            if (!name1 || !name2) return false;
+            const n1 = name1.toUpperCase().replace(/\s+/g, ' ').trim();
+            const n2 = name2.toUpperCase().replace(/\s+/g, ' ').trim();
+            
+            // Exact match
+            if (n1 === n2) return true;
+            
+            // Check if one contains the other
+            if (n1.includes(n2) || n2.includes(n1)) return true;
+            
+            // Check individual name parts
+            const parts1 = n1.split(' ');
+            const parts2 = n2.split(' ');
+            const matchingParts = parts1.filter(p => parts2.includes(p));
+            return matchingParts.length >= 2; // At least 2 name parts match
+        };
+
+        // Helper to compare addresses
+        const compareAddresses = (addr1, addr2) => {
+            if (!addr1 || !addr2) return false;
+            const a1 = addr1.toUpperCase().replace(/[,.\-]/g, ' ').replace(/\s+/g, ' ').trim();
+            const a2 = addr2.toUpperCase().replace(/[,.\-]/g, ' ').replace(/\s+/g, ' ').trim();
+            
+            // Check for significant overlap
+            const words1 = a1.split(' ').filter(w => w.length > 2);
+            const words2 = a2.split(' ').filter(w => w.length > 2);
+            const matchingWords = words1.filter(w => words2.includes(w));
+            return matchingWords.length >= 3; // At least 3 significant words match
+        };
+
+        switch (documentType) {
+            case 'payslip':
+                // Verify employee name
+                if (extractedFields.employeeName) {
+                    totalChecks++;
+                    const fullName = `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim();
+                    if (compareNames(extractedFields.employeeName, fullName)) {
+                        result.matches.employeeName = { extracted: extractedFields.employeeName, profile: fullName };
+                        matchCount++;
+                    } else {
+                        result.mismatches.employeeName = { extracted: extractedFields.employeeName, profile: fullName };
+                    }
+                }
+
+                // Verify employee ID / EC Number
+                if (extractedFields.employeeId && userProfile.ec_number) {
+                    totalChecks++;
+                    if (extractedFields.employeeId.toUpperCase() === userProfile.ec_number.toUpperCase()) {
+                        result.matches.employeeId = { extracted: extractedFields.employeeId, profile: userProfile.ec_number };
+                        matchCount++;
+                    } else {
+                        result.mismatches.employeeId = { extracted: extractedFields.employeeId, profile: userProfile.ec_number };
+                    }
+                }
+
+                // Verify employer name
+                if (extractedFields.employerName && userProfile.employer_name) {
+                    totalChecks++;
+                    if (compareNames(extractedFields.employerName, userProfile.employer_name)) {
+                        result.matches.employerName = { extracted: extractedFields.employerName, profile: userProfile.employer_name };
+                        matchCount++;
+                    } else {
+                        result.mismatches.employerName = { extracted: extractedFields.employerName, profile: userProfile.employer_name };
+                    }
+                }
+
+                // Check salary consistency
+                if (extractedFields.netSalary && userProfile.monthly_income) {
+                    totalChecks++;
+                    const tolerance = 0.1; // 10% tolerance
+                    const diff = Math.abs(extractedFields.netSalary - userProfile.monthly_income) / userProfile.monthly_income;
+                    if (diff <= tolerance) {
+                        result.matches.salary = { extracted: extractedFields.netSalary, profile: userProfile.monthly_income };
+                        matchCount++;
+                    } else {
+                        result.warnings.push(`Salary mismatch: Payslip shows $${extractedFields.netSalary}, profile shows $${userProfile.monthly_income}`);
+                    }
+                }
+                break;
+
+            case 'proof_of_residence':
+            case 'utility_bill':
+                // Verify account holder name
+                if (extractedFields.accountHolder) {
+                    totalChecks++;
+                    const fullName = `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim();
+                    if (compareNames(extractedFields.accountHolder, fullName)) {
+                        result.matches.accountHolder = { extracted: extractedFields.accountHolder, profile: fullName };
+                        matchCount++;
+                    } else {
+                        result.mismatches.accountHolder = { extracted: extractedFields.accountHolder, profile: fullName };
+                    }
+                }
+
+                // Verify address
+                if (extractedFields.serviceAddress && userProfile.address) {
+                    totalChecks++;
+                    if (compareAddresses(extractedFields.serviceAddress, userProfile.address)) {
+                        result.matches.address = { extracted: extractedFields.serviceAddress, profile: userProfile.address };
+                        matchCount++;
+                    } else {
+                        result.mismatches.address = { extracted: extractedFields.serviceAddress, profile: userProfile.address };
+                    }
+                }
+
+                // Verify city
+                if (extractedFields.city && userProfile.city) {
+                    totalChecks++;
+                    if (extractedFields.city.toUpperCase() === userProfile.city.toUpperCase()) {
+                        result.matches.city = { extracted: extractedFields.city, profile: userProfile.city };
+                        matchCount++;
+                    } else {
+                        result.mismatches.city = { extracted: extractedFields.city, profile: userProfile.city };
+                    }
+                }
+
+                // Check document recency
+                if (!extractedFields.isRecent) {
+                    result.warnings.push('Document may be older than 3 months');
+                }
+                break;
+
+            case 'employment_contract':
+            case 'employment_letter':
+                // Verify employee name
+                if (extractedFields.employeeName) {
+                    totalChecks++;
+                    const fullName = `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim();
+                    if (compareNames(extractedFields.employeeName, fullName)) {
+                        result.matches.employeeName = { extracted: extractedFields.employeeName, profile: fullName };
+                        matchCount++;
+                    } else {
+                        result.mismatches.employeeName = { extracted: extractedFields.employeeName, profile: fullName };
+                    }
+                }
+
+                // Verify employer
+                if (extractedFields.employerName && userProfile.employer_name) {
+                    totalChecks++;
+                    if (compareNames(extractedFields.employerName, userProfile.employer_name)) {
+                        result.matches.employerName = { extracted: extractedFields.employerName, profile: userProfile.employer_name };
+                        matchCount++;
+                    } else {
+                        result.mismatches.employerName = { extracted: extractedFields.employerName, profile: userProfile.employer_name };
+                    }
+                }
+
+                // Verify job title
+                if (extractedFields.jobTitle && userProfile.occupation) {
+                    totalChecks++;
+                    if (compareNames(extractedFields.jobTitle, userProfile.occupation)) {
+                        result.matches.jobTitle = { extracted: extractedFields.jobTitle, profile: userProfile.occupation };
+                        matchCount++;
+                    } else {
+                        result.warnings.push(`Job title may differ: Document shows "${extractedFields.jobTitle}", profile shows "${userProfile.occupation}"`);
+                    }
+                }
+
+                // Check document validity
+                if (!extractedFields.hasLetterhead) {
+                    result.warnings.push('Document may not have official letterhead');
+                }
+                if (!extractedFields.hasSignature) {
+                    result.warnings.push('Document may not be signed');
+                }
+                break;
+        }
+
+        // Calculate confidence
+        result.confidence = totalChecks > 0 ? Math.round((matchCount / totalChecks) * 100) : 0;
+        
+        // Determine verification status
+        if (result.confidence >= 80 && Object.keys(result.mismatches).length === 0) {
+            result.verified = true;
+            result.recommendation = 'approve';
+        } else if (result.confidence >= 60) {
+            result.verified = false;
+            result.recommendation = 'review';
+        } else {
+            result.verified = false;
+            result.recommendation = 'reject';
+        }
+
+        return result;
     }
 }
 
