@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
-const DirectLoanService = require('../services/direct-loan.service');
 
-// Initialize service
-const directLoanService = new DirectLoanService();
+// Service already exports an instance
+const directLoanService = require('../services/direct-loan.service');
 
 // Middleware to authenticate user
 const { authenticateUser } = require('../middleware/auth');
