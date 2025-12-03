@@ -645,8 +645,11 @@ class GoogleDocAIService {
             if (councilMatch) fields.providerName = councilMatch[1];
         } else if (upper.match(/LEASE|RENTAL|TENANCY|LANDLORD|TENANT/)) {
             fields.documentType = 'lease_agreement';
-        } else if (upper.match(/BANK\s+STATEMENT|ACCOUNT\s+STATEMENT/)) {
-            fields.documentType = 'bank_statement';
+        } else if (upper.match(/BANK\s+STATEMENT|ACCOUNT\s+STATEMENT|STATEMENT\s+OF\s+ACCOUNT/)) {
+            fields.documentType = 'bank_statement_with_address';
+            // Extract bank name
+            const bankMatch = upper.match(/(GETBUCKS|CBZ|CABS|STEWARD|STANBIC|STANDARD\s+CHARTERED|FBC|NMB|ZB\s+BANK|ECOBANK|NEDBANK|FIRST\s+CAPITAL)(?:\s+(?:MICROFINANCE|BANK))?/);
+            if (bankMatch) fields.providerName = bankMatch[1];
         }
 
         // Extract account holder name

@@ -34,6 +34,19 @@ Anyone registered can apply for Direct Lending. The system checks for **required
 | **Proof of Residence** | ✅ Yes | Address verification |
 | **Employment Contract** | ✅ Yes | Employment confirmation |
 
+### Proof of Residence Options
+
+Users can upload ANY of the following as proof of residence:
+
+| Document Type | Requirements |
+|---------------|--------------|
+| **Utility Bill** | ZESA, water, internet - not older than 3 months |
+| **Lease Agreement** | Signed rental/lease contract |
+| **Bank Statement** | Must show full name AND residential address |
+| **Council Rates** | City council rates statement |
+
+**Note:** Bank statement with full name and address is a valid proof of residence option.
+
 ### Document Status Badges
 
 Documents are fetched from the **Document Center** with status badges:
