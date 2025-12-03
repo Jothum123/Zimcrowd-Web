@@ -65,6 +65,7 @@ const analyticsRoutes = require('./routes/analytics');
 
 // Referrals
 const referralsRoutes = require('./routes/referrals');
+const referralAutomationRoutes = require('./routes/referral-automation');
 
 // =====================================================
 // REGISTER ROUTES
@@ -118,6 +119,7 @@ app.use('/api/analytics', analyticsRoutes);
 
 // Referrals
 app.use('/api/referrals', referralsRoutes);
+app.use('/api/referral-automation', referralAutomationRoutes);
 
 // =====================================================
 // ERROR HANDLING
