@@ -1,5 +1,5 @@
 /**
- * Test Referral System
+ * Test Referral System - Multi-Currency Support
  * Run: node test-referral-system.js
  */
 
@@ -8,106 +8,158 @@ require('dotenv').config();
 const { PLATFORM_FEES } = require('./constants/fees');
 
 console.log('\n========================================');
-console.log('🎁 Testing Referral System');
+console.log('🎁 Testing Referral System (Multi-Currency)');
 console.log('========================================\n');
 
 // ============================================
-// TEST 1: REWARD STRUCTURE
+// TEST 1: USD REWARD STRUCTURE
 // ============================================
-console.log('📋 TEST 1: REWARD STRUCTURE');
-console.log('============================\n');
+console.log('📋 TEST 1: USD REWARD STRUCTURE');
+console.log('================================\n');
 
-const rewards = PLATFORM_FEES.REFERRAL_CREDIT.rewards;
+const usdRewards = PLATFORM_FEES.REFERRAL_CREDIT.rewards.USD;
 
-console.log('ADVOCATE (Referrer) earns $5 when Friend:');
-console.log(`  ✅ Receives first loan: $${rewards.advocate.friend_first_loan}`);
-console.log(`  ✅ Pays back first loan: $${rewards.advocate.friend_loan_repaid}`);
-console.log(`  ✅ Funds first loan: $${rewards.advocate.friend_first_funding}`);
-console.log(`  ✅ Makes first investment: $${rewards.advocate.friend_first_investment}`);
+console.log('ADVOCATE (Referrer) earns when Friend (USD):');
+console.log(`  ✅ Receives first loan: $${usdRewards.advocate.friend_first_loan}`);
+console.log(`  ✅ Pays back first loan: $${usdRewards.advocate.friend_loan_repaid}`);
+console.log(`  ✅ Funds first loan: $${usdRewards.advocate.friend_first_funding}`);
+console.log(`  ✅ Makes first investment: $${usdRewards.advocate.friend_first_investment}`);
 
-console.log('\nFRIEND (Referee) earns $5 when they:');
-console.log(`  ✅ Receive first loan: $${rewards.friend.first_loan}`);
-console.log(`  ✅ Fund first loan: $${rewards.friend.first_funding}`);
-console.log(`  ✅ Make first investment: $${rewards.friend.first_investment}`);
+console.log('\nFRIEND (Referee) earns when they (USD):');
+console.log(`  ✅ Receive first loan: $${usdRewards.friend.first_loan}`);
+console.log(`  ✅ Fund first loan: $${usdRewards.friend.first_funding}`);
+console.log(`  ✅ Make first investment: $${usdRewards.friend.first_investment}`);
 
 // ============================================
-// TEST 2: LIMITS
+// TEST 2: ZWG REWARD STRUCTURE
 // ============================================
-console.log('\n\n📋 TEST 2: LIMITS');
-console.log('==================\n');
+console.log('\n\n📋 TEST 2: ZWG REWARD STRUCTURE');
+console.log('================================\n');
 
-console.log(`Monthly Limit (Advocates): $${PLATFORM_FEES.REFERRAL_CREDIT.monthlyLimit}`);
+const zwgRewards = PLATFORM_FEES.REFERRAL_CREDIT.rewards.ZWG;
+
+console.log('ADVOCATE (Referrer) earns when Friend (ZWG):');
+console.log(`  ✅ Receives first loan: ZWG ${zwgRewards.advocate.friend_first_loan}`);
+console.log(`  ✅ Pays back first loan: ZWG ${zwgRewards.advocate.friend_loan_repaid}`);
+console.log(`  ✅ Funds first loan: ZWG ${zwgRewards.advocate.friend_first_funding}`);
+console.log(`  ✅ Makes first investment: ZWG ${zwgRewards.advocate.friend_first_investment}`);
+
+console.log('\nFRIEND (Referee) earns when they (ZWG):');
+console.log(`  ✅ Receive first loan: ZWG ${zwgRewards.friend.first_loan}`);
+console.log(`  ✅ Fund first loan: ZWG ${zwgRewards.friend.first_funding}`);
+console.log(`  ✅ Make first investment: ZWG ${zwgRewards.friend.first_investment}`);
+
+// ============================================
+// TEST 3: LIMITS (Multi-Currency)
+// ============================================
+console.log('\n\n📋 TEST 3: LIMITS (Multi-Currency)');
+console.log('===================================\n');
+
+const limits = PLATFORM_FEES.REFERRAL_CREDIT.monthlyLimit;
+console.log(`Monthly Limit (USD): $${limits.USD}`);
+console.log(`Monthly Limit (ZWG): ZWG ${limits.ZWG}`);
 console.log(`Credit Expiration: ${PLATFORM_FEES.REFERRAL_CREDIT.expirationDays} days`);
 
 // ============================================
-// TEST 3: POTENTIAL EARNINGS
+// TEST 4: POTENTIAL EARNINGS (Multi-Currency)
 // ============================================
-console.log('\n\n📋 TEST 3: POTENTIAL EARNINGS');
+console.log('\n\n📋 TEST 4: POTENTIAL EARNINGS');
 console.log('==============================\n');
 
-const advocatePerReferral = 
-    rewards.advocate.friend_first_loan +
-    rewards.advocate.friend_loan_repaid +
-    rewards.advocate.friend_first_funding +
-    rewards.advocate.friend_first_investment;
+// USD Earnings
+const usdAdvocatePerReferral = 
+    usdRewards.advocate.friend_first_loan +
+    usdRewards.advocate.friend_loan_repaid +
+    usdRewards.advocate.friend_first_funding +
+    usdRewards.advocate.friend_first_investment;
 
-const friendTotal = 
-    rewards.friend.first_loan +
-    rewards.friend.first_funding +
-    rewards.friend.first_investment;
+const usdFriendTotal = 
+    usdRewards.friend.first_loan +
+    usdRewards.friend.first_funding +
+    usdRewards.friend.first_investment;
 
-console.log(`Max Advocate earnings per referral: $${advocatePerReferral}`);
-console.log(`Max Friend earnings: $${friendTotal}`);
-console.log(`Combined max per referral: $${advocatePerReferral + friendTotal}`);
+console.log('USD EARNINGS:');
+console.log(`  Max Advocate earnings per referral: $${usdAdvocatePerReferral}`);
+console.log(`  Max Friend earnings: $${usdFriendTotal}`);
+console.log(`  Combined max per referral: $${usdAdvocatePerReferral + usdFriendTotal}`);
+console.log(`  Referrals to hit monthly limit: ${Math.ceil(limits.USD / usdAdvocatePerReferral)}`);
 
-// How many referrals to hit monthly limit
-const referralsToHitLimit = Math.ceil(PLATFORM_FEES.REFERRAL_CREDIT.monthlyLimit / advocatePerReferral);
-console.log(`\nReferrals needed to hit monthly limit: ${referralsToHitLimit}`);
+// ZWG Earnings
+const zwgAdvocatePerReferral = 
+    zwgRewards.advocate.friend_first_loan +
+    zwgRewards.advocate.friend_loan_repaid +
+    zwgRewards.advocate.friend_first_funding +
+    zwgRewards.advocate.friend_first_investment;
+
+const zwgFriendTotal = 
+    zwgRewards.friend.first_loan +
+    zwgRewards.friend.first_funding +
+    zwgRewards.friend.first_investment;
+
+console.log('\nZWG EARNINGS:');
+console.log(`  Max Advocate earnings per referral: ZWG ${zwgAdvocatePerReferral}`);
+console.log(`  Max Friend earnings: ZWG ${zwgFriendTotal}`);
+console.log(`  Combined max per referral: ZWG ${zwgAdvocatePerReferral + zwgFriendTotal}`);
+console.log(`  Referrals to hit monthly limit: ${Math.ceil(limits.ZWG / zwgAdvocatePerReferral)}`);
 
 // ============================================
-// TEST 4: EXAMPLE SCENARIOS
+// TEST 5: EXAMPLE SCENARIOS
 // ============================================
-console.log('\n\n📋 TEST 4: EXAMPLE SCENARIOS');
+console.log('\n\n📋 TEST 5: EXAMPLE SCENARIOS');
 console.log('=============================\n');
 
-console.log('Scenario 1: Friend takes and repays a loan');
-console.log('  Advocate earns: $5 (first loan) + $5 (repaid) = $10');
-console.log('  Friend earns: $5 (first loan)');
+console.log('Scenario 1: Friend takes USD loan and repays');
+console.log('  Advocate earns: $5 (first loan) + $5 (repaid) = $10 USD');
+console.log('  Friend earns: $5 USD (first loan)');
 
-console.log('\nScenario 2: Friend funds a loan and invests');
-console.log('  Advocate earns: $5 (funding) + $5 (investment) = $10');
-console.log('  Friend earns: $5 (funding) + $5 (investment) = $10');
+console.log('\nScenario 2: Friend takes ZWG loan and repays');
+console.log('  Advocate earns: ZWG 135 (first loan) + ZWG 135 (repaid) = ZWG 270');
+console.log('  Friend earns: ZWG 135 (first loan)');
 
-console.log('\nScenario 3: Friend completes ALL activities');
-console.log(`  Advocate earns: $${advocatePerReferral}`);
-console.log(`  Friend earns: $${friendTotal}`);
+console.log('\nScenario 3: Friend funds USD loan and invests');
+console.log('  Advocate earns: $5 (funding) + $5 (investment) = $10 USD');
+console.log('  Friend earns: $5 (funding) + $5 (investment) = $10 USD');
+
+console.log('\nScenario 4: Friend completes ALL activities in USD');
+console.log(`  Advocate earns: $${usdAdvocatePerReferral}`);
+console.log(`  Friend earns: $${usdFriendTotal}`);
+
+console.log('\nScenario 5: Friend completes ALL activities in ZWG');
+console.log(`  Advocate earns: ZWG ${zwgAdvocatePerReferral}`);
+console.log(`  Friend earns: ZWG ${zwgFriendTotal}`);
 
 // ============================================
-// TEST 5: CREDIT USAGE
+// TEST 6: CREDIT USAGE
 // ============================================
-console.log('\n\n📋 TEST 5: CREDIT USAGE');
+console.log('\n\n📋 TEST 6: CREDIT USAGE');
 console.log('========================\n');
 
 console.log('Credits can be used for:');
-console.log('  ✅ Loan payments');
-console.log('  ✅ Funding loans (as investor)');
+console.log('  ✅ Loan payments (in matching currency)');
+console.log('  ✅ Funding loans (in matching currency)');
 console.log('  ✅ Platform fees');
 console.log('  ❌ Cash withdrawal (no cash value)');
+console.log('  ❌ Cross-currency use (USD credits for USD, ZWG for ZWG)');
 
 // ============================================
 // SUMMARY
 // ============================================
-console.log('\n\n📋 REFERRAL PROGRAM SUMMARY');
-console.log('============================\n');
+console.log('\n\n📋 REFERRAL PROGRAM SUMMARY (Multi-Currency)');
+console.log('=============================================\n');
 
 console.log('REWARD STRUCTURE:');
-console.log('  - $5 per qualifying activity');
+console.log('  - USD: $5 per qualifying activity');
+console.log('  - ZWG: ZWG 135 per qualifying activity');
+console.log('  - Credits issued in SAME currency as activity');
 console.log('  - Both Advocate and Friend earn');
-console.log(`  - Max $${advocatePerReferral} per referral (Advocate)`);
-console.log(`  - Max $${friendTotal} per referral (Friend)`);
 
-console.log('\nLIMITS:');
-console.log(`  - Monthly limit: $${PLATFORM_FEES.REFERRAL_CREDIT.monthlyLimit}`);
+console.log('\nMAX EARNINGS PER REFERRAL:');
+console.log(`  USD: Advocate $${usdAdvocatePerReferral}, Friend $${usdFriendTotal}`);
+console.log(`  ZWG: Advocate ZWG ${zwgAdvocatePerReferral}, Friend ZWG ${zwgFriendTotal}`);
+
+console.log('\nMONTHLY LIMITS:');
+console.log(`  - USD: $${limits.USD}`);
+console.log(`  - ZWG: ZWG ${limits.ZWG}`);
 console.log(`  - Credit expiration: ${PLATFORM_FEES.REFERRAL_CREDIT.expirationDays} days`);
 console.log('  - Unlimited referrals allowed');
 
@@ -116,6 +168,13 @@ console.log('  - First loan received');
 console.log('  - First loan repaid');
 console.log('  - First loan funded');
 console.log('  - First investment made');
+
+console.log('\nUSAGE EXAMPLE:');
+console.log('  // In loan service when disbursing USD loan:');
+console.log('  await onFirstLoanReceived(userId, "USD");');
+console.log('');
+console.log('  // In loan service when disbursing ZWG loan:');
+console.log('  await onFirstLoanReceived(userId, "ZWG");');
 
 console.log('\n========================================');
 console.log('✅ Referral System Test Complete!');

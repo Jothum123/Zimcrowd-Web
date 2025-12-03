@@ -20,10 +20,40 @@ class ReferralAutomationService {
         this.walletService = new WalletService();
         this.notificationService = new NotificationService();
         
-        // Reward configuration from centralized constants
+        // Reward configuration from centralized constants - Multi-currency
         this.REWARDS = PLATFORM_FEES.REFERRAL_CREDIT.rewards;
         this.MONTHLY_LIMIT = PLATFORM_FEES.REFERRAL_CREDIT.monthlyLimit;
         this.CREDIT_EXPIRY_DAYS = PLATFORM_FEES.REFERRAL_CREDIT.expirationDays;
+        
+        // Supported currencies
+        this.SUPPORTED_CURRENCIES = ['USD', 'ZWG'];
+        this.DEFAULT_CURRENCY = 'USD';
+    }
+    
+    /**
+     * Get reward amount for activity in specified currency
+     */
+    getRewardAmount(role, activityType, currency = 'USD') {
+        const curr = this.SUPPORTED_CURRENCIES.includes(currency) ? currency : this.DEFAULT_CURRENCY;
+        return this.REWARDS[curr]?.[role]?.[activityType] || 0;
+    }
+    
+    /**
+     * Get monthly limit for currency
+     */
+    getMonthlyLimit(currency = 'USD') {
+        const curr = this.SUPPORTED_CURRENCIES.includes(currency) ? currency : this.DEFAULT_CURRENCY;
+        return this.MONTHLY_LIMIT[curr] || this.MONTHLY_LIMIT.USD;
+    }
+    
+    /**
+     * Format currency amount for display
+     */
+    formatAmount(amount, currency) {
+        if (currency === 'ZWG') {
+            return `ZWG ${amount.toFixed(2)}`;
+        }
+        return `$${amount.toFixed(2)}`;
     }
     
     /**
@@ -130,10 +160,13 @@ class ReferralAutomationService {
      * Called when a referred user completes a qualifying activity
      * @param {string} friendUserId - Friend (referred user) ID
      * @param {string} activityType - Activity type: first_loan, loan_repaid, first_funding, first_investment
+     * @param {string} currency - Currency for the credit (USD or ZWG)
      */
-    async processQualifyingActivity(friendUserId, activityType) {
+    async processQualifyingActivity(friendUserId, activityType, currency = 'USD') {
         try {
-            console.log(`🎯 Processing qualifying activity: ${activityType} for user ${friendUserId}`);
+            // Validate currency
+            const creditCurrency = this.SUPPORTED_CURRENCIES.includes(currency) ? currency : this.DEFAULT_CURRENCY;
+            console.log(`🎯 Processing qualifying activity: ${activityType} for user ${friendUserId} in ${creditCurrency}`);
             
             // Get referral record
             const { data: referral, error: referralError } = await supabase
@@ -195,11 +228,13 @@ class ReferralAutomationService {
                 return { success: false, error: `Unknown activity type: ${activityType}` };
             }
             
-            // Issue Advocate credit
+            // Issue Advocate credit (in same currency as friend's activity)
             if (mapping.advocate) {
+                const advocateAmount = this.getRewardAmount('advocate', mapping.advocate, creditCurrency);
                 results.advocate = await this.issueCredit(
                     advocateUserId,
-                    this.REWARDS.advocate[mapping.advocate],
+                    advocateAmount,
+                    creditCurrency,
                     'referral_reward',
                     mapping.advocateMsg,
                     referral.id,
@@ -209,9 +244,11 @@ class ReferralAutomationService {
             
             // Issue Friend credit (if applicable)
             if (mapping.friend) {
+                const friendAmount = this.getRewardAmount('friend', mapping.friend, creditCurrency);
                 results.friend = await this.issueCredit(
                     friendUserId,
-                    this.REWARDS.friend[mapping.friend],
+                    friendAmount,
+                    creditCurrency,
                     'friend_bonus',
                     mapping.friendMsg,
                     referral.id,
@@ -255,26 +292,38 @@ class ReferralAutomationService {
     
     /**
      * Issue credit to user's wallet
+     * @param {string} userId - User ID
+     * @param {number} amount - Credit amount
+     * @param {string} currency - Currency (USD or ZWG)
+     * @param {string} creditType - Type of credit
+     * @param {string} description - Description
+     * @param {string} referralId - Referral ID
+     * @param {string} activityType - Activity type
      */
-    async issueCredit(userId, amount, creditType, description, referralId, activityType) {
+    async issueCredit(userId, amount, currency, creditType, description, referralId, activityType) {
         try {
             if (!amount || amount <= 0) {
-                return { success: false, amount: 0 };
+                return { success: false, amount: 0, currency };
             }
+            
+            // Validate currency
+            const creditCurrency = this.SUPPORTED_CURRENCIES.includes(currency) ? currency : this.DEFAULT_CURRENCY;
+            const monthlyLimit = this.getMonthlyLimit(creditCurrency);
             
             // Check monthly limit for advocates
             if (creditType === 'referral_reward') {
-                const monthlyEarned = await this.getMonthlyEarnings(userId);
-                if (monthlyEarned >= this.MONTHLY_LIMIT) {
-                    console.log(`⚠️ User ${userId} has reached monthly limit of $${this.MONTHLY_LIMIT}`);
+                const monthlyEarned = await this.getMonthlyEarnings(userId, creditCurrency);
+                if (monthlyEarned >= monthlyLimit) {
+                    const limitDisplay = this.formatAmount(monthlyLimit, creditCurrency);
+                    console.log(`⚠️ User ${userId} has reached monthly limit of ${limitDisplay}`);
                     
                     await this.notificationService.sendNotification(userId, {
                         type: 'monthly_limit_reached',
                         title: 'Monthly Limit Reached',
-                        message: `You've reached your monthly referral earnings limit of $${this.MONTHLY_LIMIT}. Your limit resets next month!`
+                        message: `You've reached your monthly referral earnings limit of ${limitDisplay}. Your limit resets next month!`
                     });
                     
-                    return { success: false, amount: 0, reason: 'Monthly limit reached' };
+                    return { success: false, amount: 0, currency: creditCurrency, reason: 'Monthly limit reached' };
                 }
             }
             
@@ -288,6 +337,7 @@ class ReferralAutomationService {
                 .insert({
                     user_id: userId,
                     credit_amount: amount,
+                    currency: creditCurrency,
                     credit_type: creditType,
                     activity_type: activityType,
                     source_referral_id: referralId,
@@ -300,11 +350,11 @@ class ReferralAutomationService {
             
             if (creditError) throw creditError;
             
-            // Credit user's wallet
+            // Credit user's wallet in the correct currency
             await this.walletService.creditWallet(
                 userId,
                 amount,
-                'USD',
+                creditCurrency,
                 `Referral Credit: ${description}`
             );
             
@@ -314,7 +364,7 @@ class ReferralAutomationService {
                 .insert({
                     user_id: userId,
                     amount: amount,
-                    currency: 'USD',
+                    currency: creditCurrency,
                     referral_id: referralId,
                     activity_type: activityType,
                     description: description
@@ -328,26 +378,30 @@ class ReferralAutomationService {
                     credit_id: credit.id,
                     transaction_type: 'earned',
                     amount: amount,
+                    currency: creditCurrency,
                     description: description
                 });
             
-            // Send notification
+            // Send notification with formatted amount
+            const amountDisplay = this.formatAmount(amount, creditCurrency);
             await this.notificationService.sendNotification(userId, {
                 type: 'credit_earned',
-                title: 'You Earned $' + amount + '! 🎉',
+                title: `You Earned ${amountDisplay}! 🎉`,
                 message: description,
                 data: {
                     amount: amount,
+                    currency: creditCurrency,
                     credit_id: credit.id,
                     expiry_date: expiryDate.toISOString()
                 }
             });
             
-            console.log(`💰 Credit issued: $${amount} to user ${userId} for ${activityType}`);
+            console.log(`💰 Credit issued: ${amountDisplay} to user ${userId} for ${activityType}`);
             
             return {
                 success: true,
                 amount: amount,
+                currency: creditCurrency,
                 credit_id: credit.id
             };
         } catch (error) {
@@ -357,9 +411,11 @@ class ReferralAutomationService {
     }
     
     /**
-     * Get user's monthly earnings
+     * Get user's monthly earnings by currency
+     * @param {string} userId - User ID
+     * @param {string} currency - Currency (USD or ZWG)
      */
-    async getMonthlyEarnings(userId) {
+    async getMonthlyEarnings(userId, currency = 'USD') {
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
         startOfMonth.setHours(0, 0, 0, 0);
@@ -368,6 +424,7 @@ class ReferralAutomationService {
             .from('referral_earnings')
             .select('amount')
             .eq('user_id', userId)
+            .eq('currency', currency)
             .gte('created_at', startOfMonth.toISOString());
         
         return earnings?.reduce((sum, e) => sum + parseFloat(e.amount), 0) || 0;

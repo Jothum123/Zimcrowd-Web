@@ -66,11 +66,13 @@ class ReferralHooksService {
     
     /**
      * Hook: Called when user receives their first loan
-     * Triggers: Advocate earns $5, Friend earns $5
+     * Triggers: Advocate earns credit, Friend earns credit (in loan currency)
+     * @param {string} userId - User ID
+     * @param {string} currency - Loan currency (USD or ZWG)
      */
-    async onFirstLoanReceived(userId) {
+    async onFirstLoanReceived(userId, currency = 'USD') {
         try {
-            console.log(`🎯 Hook: First loan received for user ${userId}`);
+            console.log(`🎯 Hook: First loan received for user ${userId} in ${currency}`);
             
             // Check if this is actually their first loan
             const isFirst = await this.isFirstActivity(userId, 'first_loan');
@@ -82,8 +84,8 @@ class ReferralHooksService {
             // Record milestone
             await this.recordMilestone(userId, 'first_loan');
             
-            // Process referral credit
-            const result = await this.automation.processQualifyingActivity(userId, 'first_loan');
+            // Process referral credit in the loan's currency
+            const result = await this.automation.processQualifyingActivity(userId, 'first_loan', currency);
             
             console.log(`✅ First loan hook completed for ${userId}`);
             return result;
@@ -95,11 +97,13 @@ class ReferralHooksService {
     
     /**
      * Hook: Called when user repays their first loan
-     * Triggers: Advocate earns $5
+     * Triggers: Advocate earns credit (in loan currency)
+     * @param {string} userId - User ID
+     * @param {string} currency - Loan currency (USD or ZWG)
      */
-    async onFirstLoanRepaid(userId) {
+    async onFirstLoanRepaid(userId, currency = 'USD') {
         try {
-            console.log(`🎯 Hook: First loan repaid for user ${userId}`);
+            console.log(`🎯 Hook: First loan repaid for user ${userId} in ${currency}`);
             
             const isFirst = await this.isFirstActivity(userId, 'loan_repaid');
             if (!isFirst) {
@@ -109,7 +113,7 @@ class ReferralHooksService {
             
             await this.recordMilestone(userId, 'loan_repaid');
             
-            const result = await this.automation.processQualifyingActivity(userId, 'loan_repaid');
+            const result = await this.automation.processQualifyingActivity(userId, 'loan_repaid', currency);
             
             console.log(`✅ First loan repaid hook completed for ${userId}`);
             return result;
@@ -121,11 +125,13 @@ class ReferralHooksService {
     
     /**
      * Hook: Called when user funds their first loan (as lender)
-     * Triggers: Advocate earns $5, Friend earns $5
+     * Triggers: Advocate earns credit, Friend earns credit (in loan currency)
+     * @param {string} userId - User ID
+     * @param {string} currency - Loan currency (USD or ZWG)
      */
-    async onFirstLoanFunded(userId) {
+    async onFirstLoanFunded(userId, currency = 'USD') {
         try {
-            console.log(`🎯 Hook: First loan funded for user ${userId}`);
+            console.log(`🎯 Hook: First loan funded for user ${userId} in ${currency}`);
             
             const isFirst = await this.isFirstActivity(userId, 'first_funding');
             if (!isFirst) {
@@ -135,7 +141,7 @@ class ReferralHooksService {
             
             await this.recordMilestone(userId, 'first_funding');
             
-            const result = await this.automation.processQualifyingActivity(userId, 'first_funding');
+            const result = await this.automation.processQualifyingActivity(userId, 'first_funding', currency);
             
             console.log(`✅ First funding hook completed for ${userId}`);
             return result;
@@ -147,11 +153,13 @@ class ReferralHooksService {
     
     /**
      * Hook: Called when user makes their first investment
-     * Triggers: Advocate earns $5, Friend earns $5
+     * Triggers: Advocate earns credit, Friend earns credit (in investment currency)
+     * @param {string} userId - User ID
+     * @param {string} currency - Investment currency (USD or ZWG)
      */
-    async onFirstInvestment(userId) {
+    async onFirstInvestment(userId, currency = 'USD') {
         try {
-            console.log(`🎯 Hook: First investment for user ${userId}`);
+            console.log(`🎯 Hook: First investment for user ${userId} in ${currency}`);
             
             const isFirst = await this.isFirstActivity(userId, 'first_investment');
             if (!isFirst) {
@@ -161,7 +169,7 @@ class ReferralHooksService {
             
             await this.recordMilestone(userId, 'first_investment');
             
-            const result = await this.automation.processQualifyingActivity(userId, 'first_investment');
+            const result = await this.automation.processQualifyingActivity(userId, 'first_investment', currency);
             
             console.log(`✅ First investment hook completed for ${userId}`);
             return result;
@@ -200,10 +208,10 @@ const referralHooks = new ReferralHooksService();
 module.exports = {
     ReferralHooksService,
     referralHooks,
-    // Convenience exports for direct use
-    onFirstLoanReceived: (userId) => referralHooks.onFirstLoanReceived(userId),
-    onFirstLoanRepaid: (userId) => referralHooks.onFirstLoanRepaid(userId),
-    onFirstLoanFunded: (userId) => referralHooks.onFirstLoanFunded(userId),
-    onFirstInvestment: (userId) => referralHooks.onFirstInvestment(userId),
+    // Convenience exports for direct use (with currency support)
+    onFirstLoanReceived: (userId, currency = 'USD') => referralHooks.onFirstLoanReceived(userId, currency),
+    onFirstLoanRepaid: (userId, currency = 'USD') => referralHooks.onFirstLoanRepaid(userId, currency),
+    onFirstLoanFunded: (userId, currency = 'USD') => referralHooks.onFirstLoanFunded(userId, currency),
+    onFirstInvestment: (userId, currency = 'USD') => referralHooks.onFirstInvestment(userId, currency),
     onUserSignup: (userId, referralCode) => referralHooks.onUserSignup(userId, referralCode)
 };

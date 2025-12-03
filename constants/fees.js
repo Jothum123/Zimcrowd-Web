@@ -113,25 +113,47 @@ const PLATFORM_FEES = {
     },
     
     REFERRAL_CREDIT: {
-        // Per qualifying activity rewards
+        // Per qualifying activity rewards - Multi-currency support
+        // Credits issued in same currency as user's activity
         rewards: {
-            // Advocate (Referrer) earns when Friend completes:
-            advocate: {
-                friend_first_loan: 5.00,      // Friend receives first loan
-                friend_loan_repaid: 5.00,     // Friend pays back first loan
-                friend_first_funding: 5.00,   // Friend funds first loan
-                friend_first_investment: 5.00 // Friend makes first investment
+            USD: {
+                // Advocate (Referrer) earns when Friend completes:
+                advocate: {
+                    friend_first_loan: 5.00,      // Friend receives first loan
+                    friend_loan_repaid: 5.00,     // Friend pays back first loan
+                    friend_first_funding: 5.00,   // Friend funds first loan
+                    friend_first_investment: 5.00 // Friend makes first investment
+                },
+                // Friend (Referee) earns when they complete:
+                friend: {
+                    first_loan: 5.00,             // Receives first loan
+                    first_funding: 5.00,          // Funds first loan
+                    first_investment: 5.00        // Makes first investment
+                }
             },
-            // Friend (Referee) earns when they complete:
-            friend: {
-                first_loan: 5.00,             // Receives first loan
-                first_funding: 5.00,          // Funds first loan
-                first_investment: 5.00        // Makes first investment
+            ZWG: {
+                // ZWG equivalent rewards (using approximate rate)
+                // Advocate (Referrer) earns when Friend completes:
+                advocate: {
+                    friend_first_loan: 135.00,      // ~$5 USD equivalent
+                    friend_loan_repaid: 135.00,     
+                    friend_first_funding: 135.00,   
+                    friend_first_investment: 135.00 
+                },
+                // Friend (Referee) earns when they complete:
+                friend: {
+                    first_loan: 135.00,             
+                    first_funding: 135.00,          
+                    first_investment: 135.00        
+                }
             }
         },
-        monthlyLimit: 1000.00, // $1,000 max per month for advocates
+        monthlyLimit: {
+            USD: 1000.00,    // $1,000 max per month for advocates
+            ZWG: 27000.00    // ZWG 27,000 max per month (~$1,000 equivalent)
+        },
         expirationDays: 90,
-        description: 'Referral program credits - $5 per qualifying activity',
+        description: 'Referral program credits - $5 USD or ZWG 135 per qualifying activity',
         type: 'credit'
     }
 };
