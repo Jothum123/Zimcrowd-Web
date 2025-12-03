@@ -93,9 +93,23 @@ Anyone registered can apply for Direct Lending. The system checks for **required
 | **Selfie Photo** | ✅ Yes | Face match verification |
 | **Proof of Residence** | ✅ Yes | Address verification |
 | **Bank Statement** | ✅ Yes | Proof of address + income |
-| **EcoCash/Mobile Statement** | ✅ Yes | Proof of income |
+| **Mobile Money Statement** | ✅ Yes | Proof of income |
 | **Payslip** | ❌ No | Not required |
 | **Employment Contract** | ❌ No | Not required |
+
+### Accepted Mobile Money Statements
+
+| Provider | Network | USSD Code |
+|----------|---------|-----------|
+| **EcoCash** | Econet | *151# |
+| **OneMoney** | NetOne | *111# |
+| **Omari** | Telecel | *133# |
+| **InnBucks** | InnBucks | App |
+
+**Requirements:**
+- Statement must be from the **last 3 months**
+- Must show transaction history
+- Must show account holder name
 
 **Note:** Informal employees do NOT need to fill employment fields (employer name, EC number, work address, etc.)
 
