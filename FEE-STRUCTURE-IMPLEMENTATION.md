@@ -446,8 +446,11 @@ recovery_fees
 - ✅ 5% secondary market deal fee
 - ✅ No monthly fees
 
+**Withdrawal Fees:**
+- ✅ 3% bank withdrawal fee
+- ✅ 5% mobile wallet withdrawal fee
+
 **Other:**
-- ✅ 3% withdrawal fee
 - ✅ 30% recovery fee
 
 **Platform Revenue:**

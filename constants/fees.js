@@ -95,8 +95,14 @@ const LENDER_SECONDARY_FEES = {
 
 const PLATFORM_FEES = {
     WITHDRAWAL_FEE: {
-        rate: 0.03, // 3%
-        description: 'Withdrawal processing fee',
+        bank: {
+            rate: 0.03, // 3%
+            description: 'Bank withdrawal processing fee'
+        },
+        mobile: {
+            rate: 0.05, // 5%
+            description: 'Mobile wallet withdrawal processing fee'
+        },
         type: 'transaction'
     },
     
@@ -249,16 +255,22 @@ const FEE_HELPERS = {
     /**
      * Calculate withdrawal fee
      * @param {number} withdrawalAmount - Amount to withdraw
+     * @param {string} method - 'bank' or 'mobile'
      * @returns {Object} Fee breakdown
      */
-    calculateWithdrawalFee(withdrawalAmount) {
-        const withdrawalFee = withdrawalAmount * PLATFORM_FEES.WITHDRAWAL_FEE.rate;
+    calculateWithdrawalFee(withdrawalAmount, method = 'bank') {
+        const feeConfig = method === 'mobile' 
+            ? PLATFORM_FEES.WITHDRAWAL_FEE.mobile 
+            : PLATFORM_FEES.WITHDRAWAL_FEE.bank;
+        
+        const withdrawalFee = withdrawalAmount * feeConfig.rate;
         const netAmount = withdrawalAmount - withdrawalFee;
         
         return {
             withdrawalAmount: Math.round(withdrawalAmount * 100) / 100,
             withdrawalFee: Math.round(withdrawalFee * 100) / 100,
-            feeRate: PLATFORM_FEES.WITHDRAWAL_FEE.rate * 100, // 3%
+            feeRate: feeConfig.rate * 100,
+            method: method,
             netAmount: Math.round(netAmount * 100) / 100
         };
     }
