@@ -22,18 +22,37 @@ class ZimScoreService {
         };
 
         // Cold Start Limits (DTNI-based)
-        // Government employees: NO cold start cap - use full DTNI-based limit
-        // Private/Other employees: $100 cold start cap
+        // Government employees: NO cold start - use full DTNI-based limit ($25-$3000)
+        // Private employees: $300 cold start cap (verified employees only)
+        // Informal employees: $100 cold start cap
         this.COLD_START_LIMITS = {
             government: {
-                max: null,     // NO CAP for civil servants - use DTNI only
+                min: 25,       // Minimum loan $25
+                max: 3000,     // Maximum loan $3000 based on DTNI
+                coldStartCap: null, // NO cold start cap for civil servants
                 dtniMax: 0.40, // Max 40% DTNI for civil servants
                 coldStartActive: false // Government employees skip cold start
             },
-            other: {
-                max: 100,      // Other employment types capped at $100 during cold start
-                dtniMax: 0.33, // Max 33% DTNI for others
-                coldStartActive: true // Cold start applies to non-government
+            private: {
+                min: 25,       // Minimum loan $25
+                max: 3000,     // Maximum after cold start
+                coldStartCap: 300, // $300 cold start cap for verified private employees
+                dtniMax: 0.33, // Max 33% DTNI
+                coldStartActive: true // Cold start applies
+            },
+            informal: {
+                min: 25,       // Minimum loan $25
+                max: 1000,     // Maximum after cold start (lower for informal)
+                coldStartCap: 100, // $100 cold start cap for informal
+                dtniMax: 0.25, // Max 25% DTNI (stricter for informal)
+                coldStartActive: true // Cold start applies
+            },
+            business: {
+                min: 25,       // Minimum loan $25
+                max: 2000,     // Maximum after cold start
+                coldStartCap: 200, // $200 cold start cap for business
+                dtniMax: 0.30, // Max 30% DTNI
+                coldStartActive: true // Cold start applies
             }
         };
 
@@ -296,27 +315,42 @@ class ZimScoreService {
             );
 
             // COLD START LOGIC:
-            // Government employees: NO cold start - use full DTNI-based limit immediately
-            // Private/Other employees: $100 cold start cap, unlocks after first repayment
-            const isGovernment = employmentType === 'government';
+            // Government employees: NO cold start - use full DTNI-based limit ($25-$3000)
+            // Private employees: $300 cold start cap (verified employees only)
+            // Informal employees: $100 cold start cap
             const dtniBasedLimit = coldStartResult.coldStartLimit;
+            const employmentConfig = this.COLD_START_LIMITS[employmentType] || this.COLD_START_LIMITS.informal;
             
             let maxLoanAmount;
             let coldStartActive;
-            let employmentCap;
+            let coldStartCap;
+            let minLoan = employmentConfig.min || 25;
+            let maxLoan = employmentConfig.max || 1000;
             
-            if (isGovernment) {
-                // Government employees: NO cold start cap - use DTNI directly
-                maxLoanAmount = dtniBasedLimit;
+            if (employmentType === 'government') {
+                // Government employees: NO cold start cap - use DTNI directly ($25-$3000)
+                maxLoanAmount = Math.max(minLoan, Math.min(dtniBasedLimit, maxLoan));
                 coldStartActive = false; // No cold start for government
-                employmentCap = null; // No cap
-                console.log(`🏛️ Government Employee: No cold start - using full DTNI limit`);
-            } else {
-                // Private/Other employees: Apply $100 cold start cap
-                employmentCap = 100;
-                maxLoanAmount = Math.min(dtniBasedLimit, employmentCap);
+                coldStartCap = null; // No cap
+                console.log(`🏛️ Government Employee: No cold start - using full DTNI limit ($${minLoan}-$${maxLoan})`);
+            } else if (employmentType === 'private') {
+                // Private employees: $300 cold start cap (verified employees only)
+                coldStartCap = employmentConfig.coldStartCap || 300;
+                maxLoanAmount = Math.max(minLoan, Math.min(dtniBasedLimit, coldStartCap));
                 coldStartActive = true;
-                console.log(`💼 Private Employee: Cold start active - $100 cap applied`);
+                console.log(`💼 Private Employee: Cold start active - $${coldStartCap} cap applied`);
+            } else if (employmentType === 'informal') {
+                // Informal employees: $100 cold start cap
+                coldStartCap = employmentConfig.coldStartCap || 100;
+                maxLoanAmount = Math.max(minLoan, Math.min(dtniBasedLimit, coldStartCap));
+                coldStartActive = true;
+                console.log(`👷 Informal Employee: Cold start active - $${coldStartCap} cap applied`);
+            } else {
+                // Business/Other: $200 cold start cap
+                coldStartCap = employmentConfig.coldStartCap || 200;
+                maxLoanAmount = Math.max(minLoan, Math.min(dtniBasedLimit, coldStartCap));
+                coldStartActive = true;
+                console.log(`🏢 Business/Other Employee: Cold start active - $${coldStartCap} cap applied`);
             }
             
             const scoreBasedLimit = this.calculateMaxLoanAmount(score); // Unlocked after first repayment (for private)

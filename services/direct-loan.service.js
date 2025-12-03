@@ -24,26 +24,61 @@ class DirectLoanService {
         this.MONTHLY_INTEREST_RATE = 0.08;  // 8% per month
         this.ANNUAL_INTEREST_RATE = 0.96;   // 96% per annum (8% × 12)
         
-        // DTNI Configuration (same for all employment types in Direct)
+        // DTNI Configuration by employment type
         this.DTNI_CONFIG = {
-            government: { ratio: 0.40, maxTenureMonths: 24 },
-            private: { ratio: 0.33, maxTenureMonths: 12 },
-            business: { ratio: 0.33, maxTenureMonths: 12 },
-            informal: { ratio: 0.33, maxTenureMonths: 12 }
+            government: { ratio: 0.40, maxTenureMonths: 24, maxLoan: 3000, coldStartCap: null },
+            private: { ratio: 0.33, maxTenureMonths: 12, maxLoan: 3000, coldStartCap: 300 },
+            business: { ratio: 0.30, maxTenureMonths: 12, maxLoan: 2000, coldStartCap: 200 },
+            informal: { ratio: 0.25, maxTenureMonths: 12, maxLoan: 1000, coldStartCap: 100 }
         };
         
         // Maximum loan ceiling
         this.MAX_LOAN_CEILING = 3000;
+        this.MIN_LOAN_AMOUNT = 25;
         
-        // Required documents for Direct Lending (NOT tied to ZimScore)
-        this.REQUIRED_DOCUMENTS = [
-            { type: 'national_id', name: 'National ID', required: true },
-            { type: 'selfie', name: 'Selfie Photo', required: true },
-            { type: 'payslip', name: 'Payslip', required: true },
-            { type: 'bank_statement', name: 'Bank Statement', required: true },
-            { type: 'proof_of_residence', name: 'Proof of Residence', required: true },
-            { type: 'employment_contract', name: 'Employment Contract / Confirmation Letter', required: true }
-        ];
+        // Required documents by employment type
+        this.REQUIRED_DOCUMENTS_BY_TYPE = {
+            // Government & Private employees - same requirements
+            government: [
+                { type: 'national_id', name: 'National ID (Front & Back)', required: true },
+                { type: 'selfie', name: 'Selfie Photo', required: true },
+                { type: 'payslip', name: 'Payslip', required: true },
+                { type: 'bank_statement', name: 'Bank Statement', required: true },
+                { type: 'proof_of_residence', name: 'Proof of Residence', required: true },
+                { type: 'employment_contract', name: 'Employment Contract / Confirmation Letter', required: true }
+            ],
+            private: [
+                { type: 'national_id', name: 'National ID (Front & Back)', required: true },
+                { type: 'selfie', name: 'Selfie Photo', required: true },
+                { type: 'payslip', name: 'Payslip', required: true },
+                { type: 'bank_statement', name: 'Bank Statement', required: true },
+                { type: 'proof_of_residence', name: 'Proof of Residence', required: true },
+                { type: 'employment_contract', name: 'Employment Contract / Confirmation Letter', required: true }
+            ],
+            // Informal employees - different requirements (no payslip, no employment contract)
+            informal: [
+                { type: 'national_id', name: 'National ID (Front & Back)', required: true },
+                { type: 'selfie', name: 'Selfie Photo', required: true },
+                { type: 'proof_of_residence', name: 'Proof of Residence', required: true },
+                { type: 'bank_statement', name: 'Bank Statement (Proof of Address + Income)', required: true },
+                { type: 'ecocash_statement', name: 'EcoCash/Mobile Money Statement (Proof of Income)', required: true },
+                { type: 'payslip', name: 'Payslip', required: false },
+                { type: 'employment_contract', name: 'Employment Contract', required: false }
+            ],
+            // Business owners
+            business: [
+                { type: 'national_id', name: 'National ID (Front & Back)', required: true },
+                { type: 'selfie', name: 'Selfie Photo', required: true },
+                { type: 'bank_statement', name: 'Bank Statement', required: true },
+                { type: 'proof_of_residence', name: 'Proof of Residence', required: true },
+                { type: 'business_registration', name: 'Business Registration Certificate', required: true },
+                { type: 'payslip', name: 'Payslip', required: false },
+                { type: 'employment_contract', name: 'Employment Contract', required: false }
+            ]
+        };
+        
+        // Default required documents (for backwards compatibility)
+        this.REQUIRED_DOCUMENTS = this.REQUIRED_DOCUMENTS_BY_TYPE.private;
         
         // ELIGIBILITY RULES
         this.ELIGIBILITY_RULES = {
@@ -66,6 +101,66 @@ class DirectLoanService {
                 action: 'CONTACT_SUPPORT'
             }
         };
+    }
+
+    /**
+     * Get required documents based on employment type
+     * @param {string} employmentType - Employment type (government, private, informal, business)
+     * @returns {Array} Required documents list
+     */
+    getRequiredDocuments(employmentType) {
+        const type = employmentType?.toLowerCase() || 'private';
+        return this.REQUIRED_DOCUMENTS_BY_TYPE[type] || this.REQUIRED_DOCUMENTS_BY_TYPE.private;
+    }
+
+    /**
+     * Get loan limits based on employment type
+     * @param {string} employmentType - Employment type
+     * @param {boolean} isColdStart - Whether user is in cold start period
+     * @returns {Object} Loan limits configuration
+     */
+    getLoanLimits(employmentType, isColdStart = true) {
+        const type = employmentType?.toLowerCase() || 'private';
+        const config = this.DTNI_CONFIG[type] || this.DTNI_CONFIG.private;
+        
+        let maxLoan;
+        let coldStartActive;
+        
+        if (type === 'government') {
+            // Government: NO cold start - full DTNI-based limit
+            maxLoan = config.maxLoan;
+            coldStartActive = false;
+        } else if (isColdStart && config.coldStartCap) {
+            // Other types: Apply cold start cap
+            maxLoan = config.coldStartCap;
+            coldStartActive = true;
+        } else {
+            // After cold start: Full limit
+            maxLoan = config.maxLoan;
+            coldStartActive = false;
+        }
+        
+        return {
+            minLoan: this.MIN_LOAN_AMOUNT,
+            maxLoan: maxLoan,
+            maxLoanAfterColdStart: config.maxLoan,
+            coldStartCap: config.coldStartCap,
+            coldStartActive: coldStartActive,
+            dtniRatio: config.ratio,
+            maxTenureMonths: config.maxTenureMonths,
+            employmentType: type
+        };
+    }
+
+    /**
+     * Check if employment fields are required
+     * @param {string} employmentType - Employment type
+     * @returns {boolean} Whether employment fields are required
+     */
+    areEmploymentFieldsRequired(employmentType) {
+        const type = employmentType?.toLowerCase() || 'private';
+        // Informal employees do NOT need employment fields
+        return type !== 'informal';
     }
 
     /**

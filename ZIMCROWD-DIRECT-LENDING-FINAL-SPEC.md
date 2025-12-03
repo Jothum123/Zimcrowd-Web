@@ -25,14 +25,79 @@
 
 Anyone registered can apply for Direct Lending. The system checks for **required documents only**:
 
+## User Registration Flow
+
+```
+1. User registers with Phone/Email
+    ↓
+2. OTP sent to confirm Phone/Email
+    ↓
+3. User completes Onboarding
+    ↓
+4. Dashboard - System fetches user details (from input or social account)
+    ↓
+5. User completes KYC & uploads all documents
+    ↓
+6. Documents verified by AI
+    ↓
+7. ZimScore calculated based on employment type
+    ↓
+8. User can request loans based on their limits
+```
+
+## Employment Types & Loan Limits
+
+| Employment Type | Cold Start | Loan Range | DTNI Max | Star Rating |
+|-----------------|------------|------------|----------|-------------|
+| **Government** | ❌ NO | $25 - $3,000 | 40% | Full rating based on score |
+| **Private** | ✅ YES ($300) | $25 - $3,000 | 33% | Cold start rating |
+| **Informal** | ✅ YES ($100) | $25 - $1,000 | 25% | Cold start rating |
+| **Business** | ✅ YES ($200) | $25 - $2,000 | 30% | Cold start rating |
+
+### Government Employees
+- **NO cold start** - Can access full DTNI-based limit immediately
+- Loan range: $25 - $3,000 based on net salary and DTNI
+- Higher ZimScore bonus (+10 points)
+- Same documents as private employees
+
+### Private Employees (Verified)
+- **Cold start: $300** - For verified private employees only
+- After first successful repayment: Unlocks full score-based limit
+- Loan range: $25 - $3,000 (after cold start)
+- ZimScore bonus: +6 points
+
+### Informal Employees
+- **Cold start: $100** - Lower initial limit
+- After first successful repayment: Unlocks up to $1,000
+- Different document requirements (see below)
+- ZimScore bonus: 0 points
+
+## Required Documents by Employment Type
+
+### Government & Private Employees
+
 | Document | Required | Purpose |
 |----------|----------|---------|
-| **National ID** | ✅ Yes | Identity verification |
+| **National ID (Front & Back)** | ✅ Yes | Identity verification |
 | **Selfie Photo** | ✅ Yes | Face match verification |
 | **Payslip** | ✅ Yes | Income verification |
 | **Bank Statement** | ✅ Yes | Financial history & DTNI calculation |
 | **Proof of Residence** | ✅ Yes | Address verification |
 | **Employment Contract** | ✅ Yes | Employment confirmation |
+
+### Informal Employees (Different Requirements)
+
+| Document | Required | Purpose |
+|----------|----------|---------|
+| **National ID (Front & Back)** | ✅ Yes | Identity verification |
+| **Selfie Photo** | ✅ Yes | Face match verification |
+| **Proof of Residence** | ✅ Yes | Address verification |
+| **Bank Statement** | ✅ Yes | Proof of address + income |
+| **EcoCash/Mobile Statement** | ✅ Yes | Proof of income |
+| **Payslip** | ❌ No | Not required |
+| **Employment Contract** | ❌ No | Not required |
+
+**Note:** Informal employees do NOT need to fill employment fields (employer name, EC number, work address, etc.)
 
 ### Proof of Residence Options
 

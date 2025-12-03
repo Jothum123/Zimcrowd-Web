@@ -767,11 +767,12 @@
                             <label class="form-label">Employment Status <span class="required">*</span></label>
                             <select class="form-select" id="employment" required>
                                 <option value="">Select Status</option>
-                                <option value="employed">Employed</option>
-                                <option value="self-employed">Self-Employed</option>
-                                <option value="unemployed">Unemployed</option>
-                                <option value="student">Student</option>
+                                <option value="government">Government Employee</option>
+                                <option value="private">Private Sector Employee</option>
+                                <option value="informal">Informal/Self-Employed</option>
+                                <option value="business">Business Owner</option>
                             </select>
+                            <small id="employmentTypeHint" style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;"></small>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Monthly Income (USD)</label>
@@ -952,6 +953,45 @@
                                 <div class="file-size" id="payslipFileSize"></div>
                             </div>
                             <button type="button" class="remove-file" onclick="removeFile('payslip')" title="Remove file">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- EcoCash/Mobile Money Statement (For Informal Employees Only) -->
+                    <div class="form-group" id="ecocashStatementSection" style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.05); display: none;">
+                        <label class="form-label">
+                            <i class="fas fa-mobile-alt" style="color: #22c55e; margin-right: 8px;"></i>
+                            EcoCash / Mobile Money Statement <span class="required">*</span>
+                        </label>
+                        <p style="color: #94a3b8; font-size: 13px; margin-bottom: 15px;">
+                            Upload your EcoCash or mobile money statement as proof of income (for informal employees)
+                        </p>
+                        
+                        <div class="info-box" style="background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3); margin-bottom: 15px;">
+                            <i class="fas fa-info-circle info-icon" style="color: #22c55e;"></i>
+                            <div class="info-text">
+                                <strong>Accepted statements:</strong><br>
+                                • EcoCash statement (last 3 months)<br>
+                                • OneMoney statement<br>
+                                • InnBucks statement<br>
+                                • Any mobile money statement showing income
+                            </div>
+                        </div>
+
+                        <div class="upload-area" id="ecocashStatementUploadArea" onclick="document.getElementById('ecocashStatement').click()" style="border-color: rgba(34, 197, 94, 0.5);">
+                            <i class="fas fa-mobile-alt upload-icon" style="color: #22c55e;"></i>
+                            <div class="upload-text">Click to upload Mobile Money Statement</div>
+                            <div class="upload-hint">PDF, PNG or JPG (max. 10MB)</div>
+                        </div>
+                        <input type="file" id="ecocashStatement" class="file-input" accept=".pdf,image/*">
+                        <div class="uploaded-file" id="ecocashStatementFilePreview">
+                            <i class="fas fa-check-circle file-icon" style="color: #22c55e;"></i>
+                            <div class="file-info">
+                                <div class="file-name" id="ecocashStatementFileName"></div>
+                                <div class="file-size" id="ecocashStatementFileSize"></div>
+                            </div>
+                            <button type="button" class="remove-file" onclick="removeFile('ecocashStatement')" title="Remove file">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -1176,6 +1216,105 @@
             }
         });
 
+        // Employment type change handler - show/hide fields based on type
+        document.getElementById('employment').addEventListener('change', function(e) {
+            handleEmploymentTypeChange(e.target.value);
+        });
+
+        function handleEmploymentTypeChange(employmentType) {
+            const employmentDetailsSection = document.querySelector('[data-section="employment-details"]') || 
+                document.getElementById('employmentDetailsSection');
+            const employmentContractSection = document.getElementById('employmentContractUploadArea')?.closest('.form-group');
+            const payslipSection = document.getElementById('payslip')?.closest('.form-group');
+            const ecocashSection = document.getElementById('ecocashStatementSection');
+            const hintElement = document.getElementById('employmentTypeHint');
+            
+            // Get all employment-specific fields
+            const employerField = document.getElementById('employer');
+            const occupationField = document.getElementById('occupation');
+            const ecNumberField = document.getElementById('ecNumber');
+            const workAddressField = document.getElementById('workAddress');
+            const yearsEmployedField = document.getElementById('yearsEmployed');
+            
+            // Update hint based on employment type
+            const hints = {
+                'government': '🏛️ Government employees get NO cold start - full DTNI-based limit ($25-$3,000)',
+                'private': '💼 Private employees: $300 cold start cap, unlocks after first repayment',
+                'informal': '👷 Informal: $100 cold start cap. Employment fields NOT required.',
+                'business': '🏢 Business owners: $200 cold start cap'
+            };
+            
+            if (hintElement) {
+                hintElement.textContent = hints[employmentType] || '';
+                hintElement.style.color = employmentType === 'government' ? '#38e77b' : '#f59e0b';
+            }
+            
+            // Handle informal employees - hide employment fields
+            if (employmentType === 'informal') {
+                // Make employment fields optional for informal
+                if (employerField) {
+                    employerField.required = false;
+                    employerField.closest('.form-group').style.display = 'none';
+                }
+                if (occupationField) {
+                    occupationField.required = false;
+                    occupationField.closest('.form-group').style.display = 'none';
+                }
+                if (ecNumberField) {
+                    ecNumberField.required = false;
+                    ecNumberField.closest('.form-group').style.display = 'none';
+                }
+                if (workAddressField) {
+                    workAddressField.required = false;
+                    workAddressField.closest('.form-group').style.display = 'none';
+                }
+                if (yearsEmployedField) {
+                    yearsEmployedField.required = false;
+                    yearsEmployedField.closest('.form-group')?.closest('.form-row')?.style.setProperty('display', 'none');
+                }
+                
+                // Hide employment contract and payslip for informal
+                if (employmentContractSection) employmentContractSection.style.display = 'none';
+                if (payslipSection) payslipSection.style.display = 'none';
+                
+                // Show EcoCash statement for informal (if exists)
+                if (ecocashSection) ecocashSection.style.display = 'block';
+                
+                console.log('👷 Informal employee selected - employment fields hidden');
+            } else {
+                // Show all employment fields for government/private/business
+                if (employerField) {
+                    employerField.required = true;
+                    employerField.closest('.form-group').style.display = 'block';
+                }
+                if (occupationField) {
+                    occupationField.required = true;
+                    occupationField.closest('.form-group').style.display = 'block';
+                }
+                if (ecNumberField) {
+                    ecNumberField.required = true;
+                    ecNumberField.closest('.form-group').style.display = 'block';
+                }
+                if (workAddressField) {
+                    workAddressField.required = true;
+                    workAddressField.closest('.form-group').style.display = 'block';
+                }
+                if (yearsEmployedField) {
+                    yearsEmployedField.required = true;
+                    yearsEmployedField.closest('.form-group')?.closest('.form-row')?.style.setProperty('display', 'flex');
+                }
+                
+                // Show employment contract and payslip
+                if (employmentContractSection) employmentContractSection.style.display = 'block';
+                if (payslipSection) payslipSection.style.display = 'block';
+                
+                // Hide EcoCash statement for formal employees
+                if (ecocashSection) ecocashSection.style.display = 'none';
+                
+                console.log(`💼 ${employmentType} employee selected - all employment fields shown`);
+            }
+        }
+
         // File upload handling
         document.getElementById('idFront').addEventListener('change', function(e) {
             handleFileUpload(e, 'front');
@@ -1205,6 +1344,14 @@
         document.getElementById('payslip').addEventListener('change', function(e) {
             handleDocumentUpload(e, 'payslip', 5);
         });
+
+        // EcoCash statement handler (for informal employees)
+        const ecocashInput = document.getElementById('ecocashStatement');
+        if (ecocashInput) {
+            ecocashInput.addEventListener('change', function(e) {
+                handleDocumentUpload(e, 'ecocashStatement', 10);
+            });
+        }
 
         function handleFileUpload(event, side) {
             const file = event.target.files[0];
