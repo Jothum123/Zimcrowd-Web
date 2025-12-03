@@ -8042,44 +8042,68 @@ How it works:
             const socialAuthData = JSON.parse(localStorage.getItem('socialAuthData') || '{}');
             const userData = JSON.parse(localStorage.getItem('userData') || '{}');
             
-            // Check multiple possible provider field names
-            const provider = socialAuthData.provider || 
+            // Check multiple possible provider field names and normalize
+            let provider = socialAuthData.provider || 
                             socialAuthData.auth_provider || 
                             userData.provider || 
                             userData.auth_provider || 
                             '';
             
+            // Normalize provider name (handle variations like 'Google', 'google', 'GOOGLE')
+            provider = String(provider).toLowerCase().trim();
+            
             const email = socialAuthData.email || userData.email || 'user';
             
-            console.log('📱 Social login status check:', { provider, email, socialAuthData });
+            console.log('📱 Social login status check:', { 
+                provider, 
+                email, 
+                socialAuthData,
+                userData,
+                rawProvider: socialAuthData.provider || socialAuthData.auth_provider
+            });
             
-            // Google status
+            // Reset both statuses first
             const googleStatusEl = document.getElementById('googleStatus');
+            const facebookStatusEl = document.getElementById('facebookStatus');
+            
+            // Reset Google status
             if (googleStatusEl) {
-                if (provider.toLowerCase() === 'google') {
-                    googleStatusEl.innerHTML = `<i class="fas fa-check-circle" style="margin-right: 5px;"></i>Connected as ${email}`;
-                    googleStatusEl.style.color = '#38e77b';
-                    // Update parent container to show connected state
-                    googleStatusEl.closest('div[style*="background"]').style.background = 'rgba(56, 231, 123, 0.15)';
-                    googleStatusEl.closest('div[style*="background"]').style.borderColor = 'rgba(56, 231, 123, 0.5)';
-                } else {
-                    googleStatusEl.textContent = 'Not connected';
-                    googleStatusEl.style.color = '#94a3b8';
+                const googleContainer = googleStatusEl.closest('div[style*="background"]');
+                googleStatusEl.textContent = 'Not connected';
+                googleStatusEl.style.color = '#94a3b8';
+                if (googleContainer) {
+                    googleContainer.style.background = 'rgba(255, 255, 255, 0.05)';
+                    googleContainer.style.borderColor = 'rgba(255, 255, 255, 0.1)';
                 }
             }
-
-            // Facebook status
-            const facebookStatusEl = document.getElementById('facebookStatus');
+            
+            // Reset Facebook status
             if (facebookStatusEl) {
-                if (provider.toLowerCase() === 'facebook') {
-                    facebookStatusEl.innerHTML = `<i class="fas fa-check-circle" style="margin-right: 5px;"></i>Connected as ${email}`;
-                    facebookStatusEl.style.color = '#3b82f6';
-                    // Update parent container to show connected state
-                    facebookStatusEl.closest('div[style*="background"]').style.background = 'rgba(59, 130, 246, 0.15)';
-                    facebookStatusEl.closest('div[style*="background"]').style.borderColor = 'rgba(59, 130, 246, 0.5)';
-                } else {
-                    facebookStatusEl.textContent = 'Not connected';
-                    facebookStatusEl.style.color = '#94a3b8';
+                const facebookContainer = facebookStatusEl.closest('div[style*="background"]');
+                facebookStatusEl.textContent = 'Not connected';
+                facebookStatusEl.style.color = '#94a3b8';
+                if (facebookContainer) {
+                    facebookContainer.style.background = 'rgba(255, 255, 255, 0.05)';
+                    facebookContainer.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                }
+            }
+            
+            // Now set the connected provider
+            if (provider === 'google' && googleStatusEl) {
+                googleStatusEl.innerHTML = `<i class="fas fa-check-circle" style="margin-right: 5px;"></i>Connected as ${email}`;
+                googleStatusEl.style.color = '#38e77b';
+                const googleContainer = googleStatusEl.closest('div[style*="background"]');
+                if (googleContainer) {
+                    googleContainer.style.background = 'rgba(56, 231, 123, 0.15)';
+                    googleContainer.style.borderColor = 'rgba(56, 231, 123, 0.5)';
+                }
+            } else if (provider === 'facebook' && facebookStatusEl) {
+                facebookStatusEl.innerHTML = `<i class="fas fa-check-circle" style="margin-right: 5px;"></i>Connected as ${email}`;
+                facebookStatusEl.style.color = '#3b82f6';
+                const facebookContainer = facebookStatusEl.closest('div[style*="background"]');
+                if (facebookContainer) {
+                    facebookContainer.style.background = 'rgba(59, 130, 246, 0.15)';
+                    facebookContainer.style.borderColor = 'rgba(59, 130, 246, 0.5)';
                 }
             }
         }
