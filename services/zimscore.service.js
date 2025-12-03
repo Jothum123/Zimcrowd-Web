@@ -23,36 +23,40 @@ class ZimScoreService {
 
         // Cold Start Limits (DTNI-based)
         // Government employees: NO cold start - use full DTNI-based limit ($25-$3000)
-        // Private employees: $300 cold start cap (verified employees only)
-        // Informal employees: $100 cold start cap
+        // Private employees: $300 cold start cap, max $1000 after verification
+        // Informal employees: $100 cold start cap, max $500 after verification
         this.COLD_START_LIMITS = {
             government: {
                 min: 25,       // Minimum loan $25
-                max: 3000,     // Maximum loan $3000 based on DTNI
+                max: 3000,     // Maximum loan $3000 for verified govt employees
                 coldStartCap: null, // NO cold start cap for civil servants
                 dtniMax: 0.40, // Max 40% DTNI for civil servants
-                coldStartActive: false // Government employees skip cold start
+                coldStartActive: false, // Government employees skip cold start
+                maxTenureMonths: 24 // Max 24 months tenure
             },
             private: {
                 min: 25,       // Minimum loan $25
-                max: 3000,     // Maximum after cold start
+                max: 1000,     // Maximum $1000 for verified private employees
                 coldStartCap: 300, // $300 cold start cap for verified private employees
                 dtniMax: 0.33, // Max 33% DTNI
-                coldStartActive: true // Cold start applies
+                coldStartActive: true, // Cold start applies
+                maxTenureMonths: 12 // Max 12 months tenure
             },
             informal: {
                 min: 25,       // Minimum loan $25
-                max: 1000,     // Maximum after cold start (lower for informal)
+                max: 500,      // Maximum $500 for verified informal employees
                 coldStartCap: 100, // $100 cold start cap for informal
                 dtniMax: 0.25, // Max 25% DTNI (stricter for informal)
-                coldStartActive: true // Cold start applies
+                coldStartActive: true, // Cold start applies
+                maxTenureMonths: 6 // Max 6 months tenure
             },
             business: {
                 min: 25,       // Minimum loan $25
-                max: 2000,     // Maximum after cold start
+                max: 1000,     // Maximum $1000 for verified business owners
                 coldStartCap: 200, // $200 cold start cap for business
                 dtniMax: 0.30, // Max 30% DTNI
-                coldStartActive: true // Cold start applies
+                coldStartActive: true, // Cold start applies
+                maxTenureMonths: 12 // Max 12 months tenure
             }
         };
 

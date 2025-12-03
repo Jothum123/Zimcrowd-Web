@@ -47,28 +47,36 @@ Anyone registered can apply for Direct Lending. The system checks for **required
 
 ## Employment Types & Loan Limits
 
-| Employment Type | Cold Start | Loan Range | DTNI Max | Star Rating |
-|-----------------|------------|------------|----------|-------------|
-| **Government** | ❌ NO | $25 - $3,000 | 40% | Full rating based on score |
-| **Private** | ✅ YES ($300) | $25 - $3,000 | 33% | Cold start rating |
-| **Informal** | ✅ YES ($100) | $25 - $1,000 | 25% | Cold start rating |
-| **Business** | ✅ YES ($200) | $25 - $2,000 | 30% | Cold start rating |
+| Employment Type | Cold Start | Max Loan (Verified) | Max Tenure | DTNI Max | Interest Rate |
+|-----------------|------------|---------------------|------------|----------|---------------|
+| **Government** | ❌ NO | **$3,000** | **24 months** | 40% | 0-10% /month |
+| **Private** | ✅ $300 | **$1,000** | **12 months** | 33% | 0-10% /month |
+| **Informal** | ✅ $100 | **$500** | **6 months** | 25% | 0-10% /month |
+| **Business** | ✅ $200 | **$1,000** | **12 months** | 30% | 0-10% /month |
+
+### Interest Rate
+- **User selectable: 0% - 10% per month**
+- Borrower chooses their preferred interest rate when applying
+- Lower rates may result in faster funding from lenders
 
 ### Government Employees
 - **NO cold start** - Can access full DTNI-based limit immediately
-- Loan range: $25 - $3,000 based on net salary and DTNI
+- **Maximum loan: $3,000** (verified)
+- **Maximum tenure: 24 months**
 - Higher ZimScore bonus (+10 points)
 - Same documents as private employees
 
 ### Private Employees (Verified)
 - **Cold start: $300** - For verified private employees only
-- After first successful repayment: Unlocks full score-based limit
-- Loan range: $25 - $3,000 (after cold start)
+- **Maximum loan: $1,000** (after verification)
+- **Maximum tenure: 12 months**
+- After first successful repayment: Unlocks full limit
 - ZimScore bonus: +6 points
 
 ### Informal Employees
 - **Cold start: $100** - Lower initial limit
-- After first successful repayment: Unlocks up to $1,000
+- **Maximum loan: $500** (after verification)
+- **Maximum tenure: 6 months**
 - Different document requirements (see below)
 - ZimScore bonus: 0 points
 

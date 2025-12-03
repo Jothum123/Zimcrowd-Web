@@ -15,25 +15,51 @@ class DirectLoanService {
         this.OFFER_EXPIRY_HOURS = 24;
         this.DEFAULT_LOAN_DURATION_DAYS = 30;
         
-        // NO COLD START in Direct Lending
-        // Users get full DTNI-based limit immediately
-        this.COLD_START_ENABLED = false;
+        // NO COLD START in Direct Lending for Government
+        // Private and Informal have cold start caps
+        this.COLD_START_ENABLED = true;
         
-        // SINGLE FIXED INTEREST RATE FOR ALL USERS
-        // 8% per month = 96% per annum
-        this.MONTHLY_INTEREST_RATE = 0.08;  // 8% per month
-        this.ANNUAL_INTEREST_RATE = 0.96;   // 96% per annum (8% × 12)
+        // USER-SELECTABLE INTEREST RATE (0-10% per month)
+        this.MIN_MONTHLY_INTEREST_RATE = 0.00;  // 0% per month minimum
+        this.MAX_MONTHLY_INTEREST_RATE = 0.10;  // 10% per month maximum
+        this.DEFAULT_MONTHLY_INTEREST_RATE = 0.05; // 5% default
         
         // DTNI Configuration by employment type
+        // Max Loan: Govt $3000, Private $1000, Informal $500
+        // Max Tenure: Govt 24 months, Private 12 months, Informal 6 months
         this.DTNI_CONFIG = {
-            government: { ratio: 0.40, maxTenureMonths: 24, maxLoan: 3000, coldStartCap: null },
-            private: { ratio: 0.33, maxTenureMonths: 12, maxLoan: 3000, coldStartCap: 300 },
-            business: { ratio: 0.30, maxTenureMonths: 12, maxLoan: 2000, coldStartCap: 200 },
-            informal: { ratio: 0.25, maxTenureMonths: 12, maxLoan: 1000, coldStartCap: 100 }
+            government: { 
+                ratio: 0.40, 
+                maxTenureMonths: 24, 
+                maxLoan: 3000, 
+                coldStartCap: null,
+                coldStartActive: false
+            },
+            private: { 
+                ratio: 0.33, 
+                maxTenureMonths: 12, 
+                maxLoan: 1000, 
+                coldStartCap: 300,
+                coldStartActive: true
+            },
+            business: { 
+                ratio: 0.30, 
+                maxTenureMonths: 12, 
+                maxLoan: 1000, 
+                coldStartCap: 200,
+                coldStartActive: true
+            },
+            informal: { 
+                ratio: 0.25, 
+                maxTenureMonths: 6, 
+                maxLoan: 500, 
+                coldStartCap: 100,
+                coldStartActive: true
+            }
         };
         
-        // Maximum loan ceiling
-        this.MAX_LOAN_CEILING = 3000;
+        // Maximum loan ceiling by employment type
+        this.MAX_LOAN_CEILING = 3000; // Government max
         this.MIN_LOAN_AMOUNT = 25;
         
         // Required documents by employment type
