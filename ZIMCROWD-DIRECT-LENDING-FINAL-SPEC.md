@@ -149,6 +149,42 @@ All user activities are logged for compliance and audit purposes:
 | `document_upload` | Document uploaded |
 | `kyc_verification` | KYC verification completed |
 
+## Admin User Management API Endpoints
+
+### User Suspension/Banning
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/admin/users/:userId/suspend` | POST | Suspend a user account |
+| `/api/admin/users/:userId/unsuspend` | POST | Unsuspend/Unflag a user |
+| `/api/admin/users/:userId/ban` | POST | Ban a user permanently |
+| `/api/admin/users/:userId/unban` | POST | Unban a user |
+| `/api/admin/users/flagged` | GET | Get all flagged/suspended/banned users |
+| `/api/admin/users/:userId/status` | GET | Get user account status details |
+
+### AML Management
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/admin/aml/flags` | GET | Get all AML flagged users |
+| `/api/admin/aml/user/:userId` | GET | Get AML status for a user |
+| `/api/admin/aml/user/:userId/clear` | POST | Manually clear AML flag |
+
+### Activity Logging
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/admin/users/:userId/activities` | GET | Get user activity history |
+| `/api/admin/activities` | GET | Get all platform activities |
+
+### Unban Requests
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/admin/unban-requests` | GET | Get pending unban requests |
+| `/api/admin/unban-requests/:requestId/approve` | POST | Approve unban request |
+| `/api/admin/unban-requests/:requestId/reject` | POST | Reject unban request |
+
 ### Government Employees
 - **NO cold start** - Can access full DTNI-based limit immediately
 - **Loan range: $25 - $3,000** (based on DTNI)

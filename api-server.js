@@ -46,6 +46,7 @@ const investmentsRoutes = require('./routes/investments');
 
 // Admin Routes
 const adminDashboardRoutes = require('./routes/admin-dashboard');
+const adminUserManagementRoutes = require('./routes/admin-user-management');
 
 // KYC & OCR
 const kycOcrRoutes = require('./routes/kyc-ocr');
@@ -98,6 +99,7 @@ app.use('/api/investments', investmentsRoutes);
 
 // Admin
 app.use('/api/admin-dashboard', adminDashboardRoutes);
+app.use('/api/admin', adminUserManagementRoutes);
 
 // KYC & OCR
 app.use('/api/kyc-ocr', kycOcrRoutes);
