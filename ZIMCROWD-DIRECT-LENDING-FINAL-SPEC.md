@@ -14,36 +14,55 @@
 | **Tagline** | "Instant cash when you need it" |
 | **Funding Source** | ZimCrowd Capital (not P2P lenders) |
 | **Speed** | Instant (minutes) |
-| **Approval** | Guaranteed (based on ZimScore) |
+| **Approval** | Guaranteed (based on documents) |
 | **Target Market** | Emergency cash, payday alternative |
 
 ---
 
-## 💰 Loan Amounts (Based on ZimScore)
+## ✅ Eligibility Requirements
 
-### Updated Limits (Max $3,000)
+### NOT TIED TO ZIMSCORE
 
-| ZimScore | Star Rating | Risk Level | Max Loan |
-|----------|-------------|------------|----------|
-| **80-85** | 5.0⭐ | Very Low Risk | **$3,000** |
-| **70-79** | 4.0⭐ | Low Risk | **$2,000** |
-| **60-69** | 3.0⭐ | Medium Risk | **$1,500** |
-| **50-59** | 2.5⭐ | High Risk | **$1,000** |
-| **40-49** | 2.0⭐ | Very High Risk | **$500** |
-| **30-39** | 1.0⭐ | Building Credit | **$100** |
+Anyone registered can apply for Direct Lending. The system checks for **required documents only**:
 
-### ❌ NO COLD START in Direct Lending
+| Document | Required | Purpose |
+|----------|----------|---------|
+| **National ID** | ✅ Yes | Identity verification |
+| **Selfie Photo** | ✅ Yes | Face match verification |
+| **Payslip** | ✅ Yes | Income verification |
+| **Bank Statement** | ✅ Yes | Financial history & DTNI calculation |
+| **Proof of Residence** | ✅ Yes | Address verification |
 
-**Key Difference from P2P:** Direct Lending has **NO COLD START** restrictions. Users get their full DTNI-based limit immediately after completing KYC.
+### Key Points
 
-| Employment Type | Cold Start | DTNI Ratio | Max Tenure |
-|-----------------|------------|------------|------------|
-| **Government** | ❌ None | 40% | 24 months |
-| **Private** | ❌ None | 33% | 12 months |
-| **Business** | ❌ None | 33% | 12 months |
-| **Informal** | ❌ None | 33% | 12 months |
+- ❌ **NOT tied to ZimScore** - No credit score required
+- ✅ **Document-based** - Just upload required documents
+- ✅ **DTNI-based limit** - Max loan based on income
+- ✅ **No cold start** - Full limit immediately
 
-**Formula:** `Max Loan = min(DTNI-based limit, ZimScore limit, $3,000 ceiling)`
+---
+
+## 💰 Loan Amounts (Based on DTNI)
+
+### Maximum Loan: $3,000
+
+Loan amount is determined by **DTNI (Debt-to-Net-Income)** from payslip/bank statement:
+
+| Employment Type | DTNI Ratio | Max Tenure | Example ($500 salary) |
+|-----------------|------------|------------|----------------------|
+| **Government** | 40% | 24 months | $200/month available |
+| **Private** | 33% | 12 months | $165/month available |
+| **Business** | 33% | 12 months | $165/month available |
+| **Informal** | 33% | 12 months | $165/month available |
+
+### Formula
+
+```
+Max Installment = Net Salary × DTNI Ratio
+Available Installment = Max Installment - Existing Debt
+Max Loan = (Available × Term) / (1 + Interest Rate × Term)
+Final Max = min(Max Loan, $3,000)
+```
 
 ---
 
