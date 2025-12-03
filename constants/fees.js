@@ -113,10 +113,25 @@ const PLATFORM_FEES = {
     },
     
     REFERRAL_CREDIT: {
-        referrerAmount: 25.00, // $25
-        refereeAmount: 25.00, // $25
+        // Per qualifying activity rewards
+        rewards: {
+            // Advocate (Referrer) earns when Friend completes:
+            advocate: {
+                friend_first_loan: 5.00,      // Friend receives first loan
+                friend_loan_repaid: 5.00,     // Friend pays back first loan
+                friend_first_funding: 5.00,   // Friend funds first loan
+                friend_first_investment: 5.00 // Friend makes first investment
+            },
+            // Friend (Referee) earns when they complete:
+            friend: {
+                first_loan: 5.00,             // Receives first loan
+                first_funding: 5.00,          // Funds first loan
+                first_investment: 5.00        // Makes first investment
+            }
+        },
+        monthlyLimit: 1000.00, // $1,000 max per month for advocates
         expirationDays: 90,
-        description: 'Referral program credits',
+        description: 'Referral program credits - $5 per qualifying activity',
         type: 'credit'
     }
 };

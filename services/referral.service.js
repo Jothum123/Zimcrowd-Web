@@ -1,9 +1,15 @@
 const { supabase, isSupabaseAvailable } = require('./supabase-client');
 const crypto = require('crypto');
+const { PLATFORM_FEES } = require('../constants/fees');
 
 /**
  * Referral Service
  * Manages referral links, tracking, and conversions
+ * 
+ * REWARD STRUCTURE (per qualifying activity):
+ * - Advocate earns $5 when Friend: receives first loan, pays back first loan, funds first loan, makes first investment
+ * - Friend earns $5 when they: receive first loan, fund first loan, make first investment
+ * - Monthly limit: $1,000 for advocates
  */
 class ReferralService {
     
@@ -11,11 +17,15 @@ class ReferralService {
         this.BASE_URL = process.env.BASE_URL || 'https://zimcrowd.co.zw';
         this.REFERRAL_PATH = '/ref';
         
-        // Reward amounts
-        this.REWARDS = {
-            REFEREE_SIGNUP: 5.00,           // $5 for referee on signup
-            REFERRER_LENDING: 25.00,        // $25 for referrer when referee lends
-            CREDIT_EXPIRY_DAYS: 90          // 90 days expiration
+        // Reward amounts from centralized fee constants
+        this.REWARDS = PLATFORM_FEES.REFERRAL_CREDIT.rewards;
+        this.MONTHLY_LIMIT = PLATFORM_FEES.REFERRAL_CREDIT.monthlyLimit;
+        this.CREDIT_EXPIRY_DAYS = PLATFORM_FEES.REFERRAL_CREDIT.expirationDays;
+        
+        // Qualifying activities
+        this.QUALIFYING_ACTIVITIES = {
+            advocate: ['friend_first_loan', 'friend_loan_repaid', 'friend_first_funding', 'friend_first_investment'],
+            friend: ['first_loan', 'first_funding', 'first_investment']
         };
         
         // UTM parameters
@@ -192,7 +202,7 @@ class ReferralService {
                 };
             }
             
-            // Create conversion record
+            // Create conversion record (no credits yet - credits issued per qualifying activity)
             const { data: conversion, error } = await supabase
                 .from('referral_conversions')
                 .insert({
@@ -201,8 +211,8 @@ class ReferralService {
                     referee_user_id: refereeUserId,
                     status: 'signed_up',
                     signed_up_at: new Date().toISOString(),
-                    referee_credit_amount: this.REWARDS.REFEREE_SIGNUP,
-                    referrer_credit_amount: this.REWARDS.REFERRER_LENDING
+                    referee_credit_amount: 0,  // Credits issued per activity
+                    referrer_credit_amount: 0  // Credits issued per activity
                 })
                 .select()
                 .single();
@@ -237,46 +247,78 @@ class ReferralService {
     }
     
     /**
-     * Issue referee signup credit ($5)
-     * @param {string} conversionId - Conversion ID
+     * Issue credit for a qualifying activity
+     * $5 per qualifying activity for both Advocate and Friend
+     * 
+     * @param {string} userId - User ID receiving credit
+     * @param {string} activityType - Type of qualifying activity
+     * @param {string} role - 'advocate' or 'friend'
+     * @param {string} refereeUserId - Referee user ID (for advocate credits)
      * @returns {Promise<Object>} Credit issuance result
      */
-    async issueRefereeCredit(conversionId) {
+    async issueActivityCredit(userId, activityType, role, refereeUserId = null) {
         try {
-            // Get conversion
-            const { data: conversion } = await supabase
-                .from('referral_conversions')
-                .select('*')
-                .eq('id', conversionId)
+            // Validate activity type
+            const validActivities = this.QUALIFYING_ACTIVITIES[role];
+            if (!validActivities || !validActivities.includes(activityType)) {
+                return {
+                    success: false,
+                    error: `Invalid activity type: ${activityType} for role: ${role}`
+                };
+            }
+            
+            // Get reward amount
+            const rewardAmount = this.REWARDS[role][activityType];
+            if (!rewardAmount) {
+                return {
+                    success: false,
+                    error: `No reward configured for ${activityType}`
+                };
+            }
+            
+            // Check monthly limit for advocates
+            if (role === 'advocate') {
+                const monthlyEarned = await this.getMonthlyEarnings(userId);
+                if (monthlyEarned >= this.MONTHLY_LIMIT) {
+                    return {
+                        success: false,
+                        error: `Monthly limit of $${this.MONTHLY_LIMIT} reached`,
+                        monthlyEarned,
+                        monthlyLimit: this.MONTHLY_LIMIT
+                    };
+                }
+            }
+            
+            // Check if credit already issued for this activity
+            const activityKey = `${role}_${activityType}_${refereeUserId || userId}`;
+            const { data: existingCredit } = await supabase
+                .from('referral_credits')
+                .select('id')
+                .eq('user_id', userId)
+                .eq('activity_key', activityKey)
                 .single();
             
-            if (!conversion) {
+            if (existingCredit) {
                 return {
                     success: false,
-                    error: 'Conversion not found'
+                    error: 'Credit already issued for this activity'
                 };
             }
             
-            if (conversion.referee_credit_issued) {
-                return {
-                    success: false,
-                    error: 'Credit already issued'
-                };
-            }
-            
-            // Calculate expiry date (90 days)
+            // Calculate expiry date
             const expiryDate = new Date();
-            expiryDate.setDate(expiryDate.getDate() + this.REWARDS.CREDIT_EXPIRY_DAYS);
+            expiryDate.setDate(expiryDate.getDate() + this.CREDIT_EXPIRY_DAYS);
             
             // Create credit
             const { data: credit, error } = await supabase
                 .from('referral_credits')
                 .insert({
-                    user_id: conversion.referee_user_id,
-                    credit_amount: this.REWARDS.REFEREE_SIGNUP,
-                    credit_type: 'signup_bonus',
-                    source_conversion_id: conversionId,
-                    source_description: 'Signup bonus for joining via referral',
+                    user_id: userId,
+                    credit_amount: rewardAmount,
+                    credit_type: role === 'advocate' ? 'referral_reward' : 'friend_bonus',
+                    activity_type: activityType,
+                    activity_key: activityKey,
+                    source_description: this.getActivityDescription(activityType, role),
                     expiry_date: expiryDate.toISOString(),
                     status: 'active'
                 })
@@ -285,34 +327,28 @@ class ReferralService {
             
             if (error) throw error;
             
-            // Update conversion
-            await supabase
-                .from('referral_conversions')
-                .update({
-                    referee_credit_issued: true,
-                    status: 'verified'
-                })
-                .eq('id', conversionId);
-            
             // Log transaction
             await supabase
                 .from('credit_transactions')
                 .insert({
-                    user_id: conversion.referee_user_id,
+                    user_id: userId,
                     credit_id: credit.id,
                     transaction_type: 'earned',
-                    amount: this.REWARDS.REFEREE_SIGNUP,
-                    description: 'Signup bonus credit earned'
+                    amount: rewardAmount,
+                    description: this.getActivityDescription(activityType, role)
                 });
             
-            console.log(`💰 Referee credit issued: $${this.REWARDS.REFEREE_SIGNUP} to ${conversion.referee_user_id}`);
+            console.log(`💰 ${role} credit issued: $${rewardAmount} to ${userId} for ${activityType}`);
             
             return {
                 success: true,
-                credit
+                credit,
+                amount: rewardAmount,
+                activityType,
+                role
             };
         } catch (error) {
-            console.error('❌ Error issuing referee credit:', error);
+            console.error('❌ Error issuing activity credit:', error);
             return {
                 success: false,
                 error: error.message
@@ -321,97 +357,131 @@ class ReferralService {
     }
     
     /**
-     * Issue referrer credit ($25) when referee completes first lending
-     * @param {string} refereeUserId - Referee user ID
-     * @returns {Promise<Object>} Credit issuance result
+     * Get activity description for credit
      */
-    async issueReferrerCredit(refereeUserId) {
+    getActivityDescription(activityType, role) {
+        const descriptions = {
+            advocate: {
+                friend_first_loan: 'Reward: Your friend received their first loan',
+                friend_loan_repaid: 'Reward: Your friend paid back their first loan',
+                friend_first_funding: 'Reward: Your friend funded their first loan',
+                friend_first_investment: 'Reward: Your friend made their first investment'
+            },
+            friend: {
+                first_loan: 'Bonus: You received your first loan',
+                first_funding: 'Bonus: You funded your first loan',
+                first_investment: 'Bonus: You made your first investment'
+            }
+        };
+        return descriptions[role]?.[activityType] || `${role} ${activityType} credit`;
+    }
+    
+    /**
+     * Get user's monthly earnings (for limit checking)
+     */
+    async getMonthlyEarnings(userId) {
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        
+        const { data: credits } = await supabase
+            .from('referral_credits')
+            .select('credit_amount')
+            .eq('user_id', userId)
+            .eq('credit_type', 'referral_reward')
+            .gte('created_at', startOfMonth.toISOString());
+        
+        return credits?.reduce((sum, c) => sum + parseFloat(c.credit_amount), 0) || 0;
+    }
+    
+    /**
+     * Issue Friend credit when they complete a qualifying activity
+     * Activities: first_loan, first_funding, first_investment
+     * @param {string} friendUserId - Friend user ID
+     * @param {string} activityType - Activity type
+     */
+    async issueFriendCredit(friendUserId, activityType) {
+        return this.issueActivityCredit(friendUserId, activityType, 'friend');
+    }
+    
+    /**
+     * Issue Advocate credit when their Friend completes a qualifying activity
+     * Activities: friend_first_loan, friend_loan_repaid, friend_first_funding, friend_first_investment
+     * @param {string} friendUserId - Friend user ID (to find advocate)
+     * @param {string} activityType - Activity type
+     */
+    async issueAdvocateCredit(friendUserId, activityType) {
         try {
-            // Get conversion
+            // Get conversion to find advocate
             const { data: conversion } = await supabase
                 .from('referral_conversions')
-                .select('*')
-                .eq('referee_user_id', refereeUserId)
+                .select('referrer_user_id')
+                .eq('referee_user_id', friendUserId)
                 .single();
             
             if (!conversion) {
                 return {
                     success: false,
-                    error: 'Conversion not found'
+                    error: 'No referral found for this user'
                 };
             }
             
-            if (conversion.referrer_credit_issued) {
-                return {
-                    success: false,
-                    error: 'Credit already issued'
-                };
-            }
-            
-            // Calculate expiry date (90 days)
-            const expiryDate = new Date();
-            expiryDate.setDate(expiryDate.getDate() + this.REWARDS.CREDIT_EXPIRY_DAYS);
-            
-            // Create credit
-            const { data: credit, error } = await supabase
-                .from('referral_credits')
-                .insert({
-                    user_id: conversion.referrer_user_id,
-                    credit_amount: this.REWARDS.REFERRER_LENDING,
-                    credit_type: 'referral_reward',
-                    source_conversion_id: conversion.id,
-                    source_description: `Referral reward for ${refereeUserId} completing first lending`,
-                    expiry_date: expiryDate.toISOString(),
-                    status: 'active'
-                })
-                .select()
-                .single();
-            
-            if (error) throw error;
-            
-            // Update conversion
-            await supabase
-                .from('referral_conversions')
-                .update({
-                    referrer_credit_issued: true,
-                    status: 'completed',
-                    first_lending_at: new Date().toISOString(),
-                    completed_at: new Date().toISOString()
-                })
-                .eq('id', conversion.id);
-            
-            // Update referral link conversion count
-            await supabase
-                .from('referral_links')
-                .update({
-                    total_conversions: supabase.raw('total_conversions + 1')
-                })
-                .eq('id', conversion.referral_link_id);
-            
-            // Log transaction
-            await supabase
-                .from('credit_transactions')
-                .insert({
-                    user_id: conversion.referrer_user_id,
-                    credit_id: credit.id,
-                    transaction_type: 'earned',
-                    amount: this.REWARDS.REFERRER_LENDING,
-                    description: 'Referral reward credit earned'
-                });
-            
-            console.log(`💰 Referrer credit issued: $${this.REWARDS.REFERRER_LENDING} to ${conversion.referrer_user_id}`);
-            
-            return {
-                success: true,
-                credit
-            };
+            return this.issueActivityCredit(
+                conversion.referrer_user_id, 
+                activityType, 
+                'advocate', 
+                friendUserId
+            );
         } catch (error) {
-            console.error('❌ Error issuing referrer credit:', error);
+            console.error('❌ Error issuing advocate credit:', error);
             return {
                 success: false,
                 error: error.message
             };
         }
+    }
+    
+    /**
+     * Process qualifying activity - issues credits to both Friend and Advocate
+     * @param {string} friendUserId - Friend user ID
+     * @param {string} activityType - Activity type (first_loan, first_funding, first_investment, loan_repaid)
+     */
+    async processQualifyingActivity(friendUserId, activityType) {
+        const results = {
+            friend: null,
+            advocate: null
+        };
+        
+        // Map activity to friend and advocate activity types
+        const activityMap = {
+            first_loan: { friend: 'first_loan', advocate: 'friend_first_loan' },
+            loan_repaid: { friend: null, advocate: 'friend_loan_repaid' },
+            first_funding: { friend: 'first_funding', advocate: 'friend_first_funding' },
+            first_investment: { friend: 'first_investment', advocate: 'friend_first_investment' }
+        };
+        
+        const mapping = activityMap[activityType];
+        if (!mapping) {
+            return {
+                success: false,
+                error: `Unknown activity type: ${activityType}`
+            };
+        }
+        
+        // Issue Friend credit (if applicable)
+        if (mapping.friend) {
+            results.friend = await this.issueFriendCredit(friendUserId, mapping.friend);
+        }
+        
+        // Issue Advocate credit
+        results.advocate = await this.issueAdvocateCredit(friendUserId, mapping.advocate);
+        
+        console.log(`🎉 Processed qualifying activity: ${activityType} for ${friendUserId}`);
+        
+        return {
+            success: true,
+            results
+        };
     }
     
     /**
