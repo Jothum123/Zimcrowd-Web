@@ -58,30 +58,22 @@ const BORROWER_FEES = {
 
 const LENDER_PRIMARY_FEES = {
     // Upfront Fees (charged at investment)
-    SERVICE_FEE: {
+    PLATFORM_FEE: {
         rate: 0.10, // 10%
-        description: 'Platform service fee',
-        type: 'upfront'
+        description: 'Platform fee on lended amount',
+        type: 'upfront',
+        required: true
     },
     
     INSURANCE_FEE: {
-        rate: 0.03, // 3%
-        description: 'Investment protection',
-        type: 'upfront'
-    },
-    
-    // Ongoing Monthly Fees (deducted from returns)
-    COLLECTION_FEE: {
-        rate: 0.015, // 1.5% of monthly yield
-        description: 'Monthly collection fee',
-        type: 'monthly'
-    },
-    
-    TENURE_FEE: {
-        rate: 0.01, // 1% of investment amount
-        description: 'Monthly platform maintenance',
-        type: 'monthly'
+        rate: 0.05, // 5%
+        description: 'Investment protection (optional)',
+        type: 'upfront',
+        required: false,  // Optional - lender can opt out
+        optional: true
     }
+    
+    // No ongoing monthly fees for lenders
 };
 
 // ============================================
@@ -184,39 +176,37 @@ const FEE_HELPERS = {
     /**
      * Calculate lender primary market fees
      * @param {number} investmentAmount - Investment amount
+     * @param {boolean} includeInsurance - Whether to include optional insurance (default: false)
      * @returns {Object} Fee breakdown
      */
-    calculateLenderPrimaryUpfrontFees(investmentAmount) {
-        const serviceFee = investmentAmount * LENDER_PRIMARY_FEES.SERVICE_FEE.rate;
-        const insuranceFee = investmentAmount * LENDER_PRIMARY_FEES.INSURANCE_FEE.rate;
-        const totalUpfront = serviceFee + insuranceFee;
+    calculateLenderPrimaryUpfrontFees(investmentAmount, includeInsurance = false) {
+        const platformFee = investmentAmount * LENDER_PRIMARY_FEES.PLATFORM_FEE.rate;
+        const insuranceFee = includeInsurance 
+            ? investmentAmount * LENDER_PRIMARY_FEES.INSURANCE_FEE.rate 
+            : 0;
+        const totalUpfront = platformFee + insuranceFee;
         const totalInvestment = investmentAmount + totalUpfront;
         
         return {
-            serviceFee: Math.round(serviceFee * 100) / 100,
+            platformFee: Math.round(platformFee * 100) / 100,
             insuranceFee: Math.round(insuranceFee * 100) / 100,
+            insuranceOptedIn: includeInsurance,
             totalUpfront: Math.round(totalUpfront * 100) / 100,
             totalInvestment: Math.round(totalInvestment * 100) / 100
         };
     },
     
     /**
-     * Calculate lender monthly fees
-     * @param {number} investmentAmount - Original investment
+     * Calculate lender returns (no monthly fees)
      * @param {number} monthlyYield - Gross monthly yield
-     * @returns {Object} Monthly fee breakdown
+     * @returns {Object} Return breakdown
      */
-    calculateLenderMonthlyFees(investmentAmount, monthlyYield) {
-        const collectionFee = monthlyYield * LENDER_PRIMARY_FEES.COLLECTION_FEE.rate;
-        const tenureFee = investmentAmount * LENDER_PRIMARY_FEES.TENURE_FEE.rate;
-        const totalMonthlyFees = collectionFee + tenureFee;
-        const netMonthlyReturn = monthlyYield - totalMonthlyFees;
-        
+    calculateLenderReturns(monthlyYield) {
+        // No monthly fees for lenders - they receive full yield
         return {
-            collectionFee: Math.round(collectionFee * 100) / 100,
-            tenureFee: Math.round(tenureFee * 100) / 100,
-            totalMonthlyFees: Math.round(totalMonthlyFees * 100) / 100,
-            netMonthlyReturn: Math.round(netMonthlyReturn * 100) / 100
+            grossYield: Math.round(monthlyYield * 100) / 100,
+            totalFees: 0,
+            netReturn: Math.round(monthlyYield * 100) / 100
         };
     },
     

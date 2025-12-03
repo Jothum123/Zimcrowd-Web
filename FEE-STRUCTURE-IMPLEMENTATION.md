@@ -26,10 +26,10 @@
 
 | Fee Type | Rate | When Charged | Description |
 |----------|------|--------------|-------------|
-| **Service Fee** | 10% | Upfront (added to investment) | Platform service fee |
-| **Insurance Fee** | 3% | Upfront (added to investment) | Investment protection |
-| **Collection Fee** | 1.5% of yield | Monthly (deducted from returns) | Collection costs |
-| **Tenure Fee** | 1% of investment | Monthly (deducted from returns) | Platform maintenance |
+| **Platform Fee** | 10% | Upfront (added to investment) | Platform fee on lended amount |
+| **Insurance Fee** | 5% | Upfront (optional) | Investment protection - lender can opt out |
+
+**No ongoing monthly fees** for lenders. Lenders receive full yield from their investments.
 
 ---
 
@@ -432,13 +432,21 @@ recovery_fees
 ## 🎯 Summary
 
 **Fee Structure Implemented:**
-- ✅ 10% service fee (borrowers & lenders)
-- ✅ 3% insurance fee (borrowers & lenders)
+
+**Borrower Fees:**
+- ✅ 10% service fee (upfront)
+- ✅ 3% insurance fee (upfront)
 - ✅ 1% monthly tenure fee
-- ✅ 5% collection fee (borrowers)
-- ✅ 1.5% collection fee (lenders)
+- ✅ 5% collection fee
 - ✅ 10% late fee ($50 min)
+
+**Lender Fees:**
+- ✅ 10% platform fee (upfront)
+- ✅ 5% insurance fee (optional)
 - ✅ 5% secondary market deal fee
+- ✅ No monthly fees
+
+**Other:**
 - ✅ 30% recovery fee
 
 **Platform Revenue:**
