@@ -1208,17 +1208,19 @@ class ZimScoreService {
     /**
      * Calculate maximum loan amount based on score
      * SPEC: 30-85 range with 6-tier system
+     * Maximum loan ceiling: $3,000
      * @param {number} scoreValue - Internal score (30-85)
      * @returns {number} Max loan amount in USD
      */
     calculateMaxLoanAmount(scoreValue) {
         // SPECIFICATION-COMPLIANT TIER SYSTEM (30-85 range)
-        if (scoreValue >= 80) return 1000.00;  // Very Low Risk (80-85)
-        if (scoreValue >= 70) return 800.00;   // Low Risk (70-79)
-        if (scoreValue >= 60) return 600.00;   // Medium Risk (60-69)
-        if (scoreValue >= 50) return 400.00;   // High Risk (50-59)
-        if (scoreValue >= 40) return 300.00;   // Very High Risk (40-49)
-        return 100.00;                         // Building Credit (30-39)
+        // Maximum loan ceiling: $3,000
+        if (scoreValue >= 80) return 3000.00;  // Very Low Risk (80-85) - Max ceiling
+        if (scoreValue >= 70) return 2000.00;  // Low Risk (70-79)
+        if (scoreValue >= 60) return 1500.00;  // Medium Risk (60-69)
+        if (scoreValue >= 50) return 1000.00;  // High Risk (50-59)
+        if (scoreValue >= 40) return 500.00;   // Very High Risk (40-49)
+        return 100.00;                         // Building Credit (30-39) - Cold start
     }
 
     /**
