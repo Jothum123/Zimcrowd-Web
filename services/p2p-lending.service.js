@@ -19,11 +19,20 @@ const { supabase } = require('../utils/supabase-auth');
 class P2PLendingService {
     constructor() {
         // Cold start limits by employment type (same as Direct Lending)
+        // USD limits
         this.COLD_START_LIMITS = {
             government: { coldStartCap: null, maxLoan: 3000, maxTenureMonths: 24, coldStartActive: false },
             private: { coldStartCap: 300, maxLoan: 1000, maxTenureMonths: 12, coldStartActive: true },
             informal: { coldStartCap: 100, maxLoan: 500, maxTenureMonths: 6, coldStartActive: true },
             business: { coldStartCap: 200, maxLoan: 1000, maxTenureMonths: 12, coldStartActive: true }
+        };
+        
+        // ZWG limits by employment type
+        this.COLD_START_LIMITS_ZWG = {
+            government: { coldStartCap: null, maxLoan: 80000, maxTenureMonths: 24, coldStartActive: false },
+            private: { coldStartCap: 7500, maxLoan: 28000, maxTenureMonths: 12, coldStartActive: true },
+            informal: { coldStartCap: 2500, maxLoan: 14000, maxTenureMonths: 6, coldStartActive: true },
+            business: { coldStartCap: 5000, maxLoan: 28000, maxTenureMonths: 12, coldStartActive: true }
         };
         
         // Interest rate range (user selectable by borrower)
@@ -54,9 +63,9 @@ class P2PLendingService {
             },
             ZWG: {
                 minLoan: 500,
-                maxLoan: 250000,
+                maxLoan: 80000,  // Max for government employees
                 minInvestment: 250,
-                maxInvestment: 250000,
+                maxInvestment: 80000,
                 symbol: 'ZWG '
             }
         };
@@ -133,7 +142,11 @@ class P2PLendingService {
                 .single();
 
             const employmentType = userProfile?.employment_type || userProfile?.employment_status || 'private';
-            const employmentConfig = this.COLD_START_LIMITS[employmentType] || this.COLD_START_LIMITS.private;
+            
+            // Get employment config based on currency
+            const employmentConfig = currency === 'ZWG' 
+                ? (this.COLD_START_LIMITS_ZWG[employmentType] || this.COLD_START_LIMITS_ZWG.private)
+                : (this.COLD_START_LIMITS[employmentType] || this.COLD_START_LIMITS.private);
 
             // Check if user is first-time borrower
             const { data: isFirstTime } = await supabase
@@ -153,29 +166,26 @@ class P2PLendingService {
             }
 
             // Apply cold start cap for first-time private/informal borrowers
-            // Adjust cold start for ZWG (multiply by approximate exchange rate factor)
-            const coldStartMultiplier = currency === 'ZWG' ? 25 : 1; // ZWG cold start is ~25x USD
-            const adjustedColdStartCap = employmentConfig.coldStartCap ? employmentConfig.coldStartCap * coldStartMultiplier : null;
-            
-            if (isFirstTime && employmentConfig.coldStartActive && adjustedColdStartCap) {
-                if (amount > adjustedColdStartCap) {
+            if (isFirstTime && employmentConfig.coldStartActive && employmentConfig.coldStartCap) {
+                if (amount > employmentConfig.coldStartCap) {
                     return {
                         success: false,
-                        message: `First-time ${employmentType} borrowers are limited to ${currencySymbol}${currencyLimits.minLoan}-${currencySymbol}${adjustedColdStartCap}. Build your reputation with a smaller loan first!`,
-                        coldStartLimit: adjustedColdStartCap,
+                        message: `First-time ${employmentType} borrowers are limited to ${currencySymbol}${currencyLimits.minLoan}-${currencySymbol}${employmentConfig.coldStartCap.toLocaleString()}. Build your reputation with a smaller loan first!`,
+                        coldStartLimit: employmentConfig.coldStartCap,
                         employmentType: employmentType,
                         currency: currency
                     };
                 }
             }
 
-            // Validate max loan amount based on currency limits
-            if (amount > currencyLimits.maxLoan) {
+            // Validate max loan amount based on employment type and currency
+            if (amount > employmentConfig.maxLoan) {
                 return {
                     success: false,
-                    message: `Maximum loan amount is ${currencySymbol}${currencyLimits.maxLoan.toLocaleString()}`,
-                    maxLoan: currencyLimits.maxLoan,
-                    currency: currency
+                    message: `Maximum loan amount for ${employmentType} employees is ${currencySymbol}${employmentConfig.maxLoan.toLocaleString()}`,
+                    maxLoan: employmentConfig.maxLoan,
+                    currency: currency,
+                    employmentType: employmentType
                 };
             }
 
@@ -1405,6 +1415,7 @@ class P2PLendingService {
                     minInvestment: this.LOAN_LIMITS.USD.minInvestment,
                     maxInvestment: this.LOAN_LIMITS.USD.maxInvestment,
                     symbol: '$',
+                    byEmployment: this.COLD_START_LIMITS,
                     message: `Loans: $${this.LOAN_LIMITS.USD.minLoan} - $${this.LOAN_LIMITS.USD.maxLoan.toLocaleString()}. Investments: $${this.LOAN_LIMITS.USD.minInvestment} - $${this.LOAN_LIMITS.USD.maxInvestment.toLocaleString()}`
                 },
                 ZWG: {
@@ -1413,7 +1424,8 @@ class P2PLendingService {
                     minInvestment: this.LOAN_LIMITS.ZWG.minInvestment,
                     maxInvestment: this.LOAN_LIMITS.ZWG.maxInvestment,
                     symbol: 'ZWG ',
-                    message: `Loans: ZWG ${this.LOAN_LIMITS.ZWG.minLoan} - ZWG ${this.LOAN_LIMITS.ZWG.maxLoan.toLocaleString()}. Investments: ZWG ${this.LOAN_LIMITS.ZWG.minInvestment} - ZWG ${this.LOAN_LIMITS.ZWG.maxInvestment.toLocaleString()}`
+                    byEmployment: this.COLD_START_LIMITS_ZWG,
+                    message: `Max loans by employment: Govt ZWG 80,000 | Private ZWG 28,000 | Informal ZWG 14,000`
                 },
                 interestRate: {
                     min: this.MIN_INTEREST_RATE * 100,
