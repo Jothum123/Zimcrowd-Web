@@ -33,12 +33,85 @@ Anyone registered can apply for Direct Lending. The system checks for **required
 | **Bank Statement** | ✅ Yes | Financial history & DTNI calculation |
 | **Proof of Residence** | ✅ Yes | Address verification |
 
+### Document Status Badges
+
+Documents are fetched from the **Document Center** with status badges:
+
+| Status | Badge | Meaning | Action |
+|--------|-------|---------|--------|
+| **VERIFIED** | ✅ | Document approved | None - Ready |
+| **PENDING** | 🟡 | Under review | Wait 24-48 hours |
+| **REJECTED** | 🔴 | Document rejected | Re-upload from Document Center |
+| **MISSING** | 🔴 | Not uploaded | Upload from Document Center or KYC |
+
+### Document Check Flow
+
+```
+1. User applies for Direct Lending
+   ↓
+2. System fetches documents from Document Center (user_documents table)
+   ↓
+3. Checks status of each required document:
+   - National ID: ✅ VERIFIED
+   - Selfie: ✅ VERIFIED
+   - Payslip: 🟡 PENDING
+   - Bank Statement: 🔴 MISSING
+   - Proof of Residence: 🔴 REJECTED
+   ↓
+4. Returns actionable guidance:
+   - "Missing 1 document: Bank Statement"
+   - "1 document rejected: Proof of Residence - Please re-upload"
+   - "1 document pending: Payslip - Please wait"
+   ↓
+5. User directed to Document Center or KYC page
+```
+
+### API Response Example
+
+```json
+{
+  "success": true,
+  "eligible": false,
+  "summary": {
+    "totalRequired": 5,
+    "totalVerified": 2,
+    "totalPending": 1,
+    "totalMissing": 1,
+    "totalRejected": 1,
+    "completionPercent": 40
+  },
+  "documents": [
+    {
+      "type": "national_id",
+      "name": "National ID",
+      "status": "VERIFIED",
+      "statusBadge": "✅ VERIFIED"
+    },
+    {
+      "type": "bank_statement",
+      "name": "Bank Statement",
+      "status": "MISSING",
+      "statusBadge": "🔴 MISSING",
+      "action": "Upload your Bank Statement",
+      "actionUrl": "/document-center?upload=bank_statement"
+    }
+  ],
+  "message": "🔴 Missing 1 document(s): Bank Statement",
+  "primaryAction": {
+    "type": "UPLOAD",
+    "label": "Upload Missing Documents",
+    "url": "/document-center"
+  }
+}
+```
+
 ### Key Points
 
 - ❌ **NOT tied to ZimScore** - No credit score required
 - ✅ **Document-based** - Just upload required documents
 - ✅ **DTNI-based limit** - Max loan based on income
 - ✅ **No cold start** - Full limit immediately
+- ✅ **All documents must be VERIFIED** - Not just uploaded
 
 ---
 

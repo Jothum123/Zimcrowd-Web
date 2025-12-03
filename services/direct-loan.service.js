@@ -242,72 +242,215 @@ class DirectLoanService {
     }
 
     /**
-     * Check if user has uploaded all required KYC documents
-     * Direct Lending is NOT tied to ZimScore - just document verification
+     * Check KYC documents from Document Center
+     * Fetches document status and provides actionable guidance
+     * Status badges: VERIFIED, PENDING, REJECTED, MISSING
      * @param {string} userId - User ID
-     * @returns {Promise<Object>} Document verification status
+     * @returns {Promise<Object>} Document verification status with actions
      */
     async checkRequiredDocuments(userId) {
         try {
-            console.log(`📋 Checking required documents for Direct Lending - User ${userId}`);
+            console.log(`📋 Checking KYC documents from Document Center - User ${userId}`);
             
-            // Get user's uploaded documents
+            // Fetch documents from user_documents table (Document Center)
             const { data: documents, error } = await supabase
-                .from('verification_documents')
-                .select('document_type, status, created_at, verified_at')
+                .from('user_documents')
+                .select(`
+                    id,
+                    document_type,
+                    file_name,
+                    file_url,
+                    status,
+                    verification_notes,
+                    uploaded_at,
+                    verified_at,
+                    rejected_at,
+                    rejection_reason
+                `)
                 .eq('user_id', userId);
 
             if (error) throw error;
 
             const uploadedDocs = documents || [];
-            const documentStatus = {};
+            
+            // Document status tracking
+            const documentChecklist = [];
             const missingDocuments = [];
             const pendingDocuments = [];
+            const rejectedDocuments = [];
+            const verifiedDocuments = [];
             
             // Check each required document
             for (const reqDoc of this.REQUIRED_DOCUMENTS) {
+                // Find document by type (handle variations)
                 const uploaded = uploadedDocs.find(d => 
                     d.document_type === reqDoc.type || 
-                    d.document_type === reqDoc.type.replace('_', '-')
+                    d.document_type === reqDoc.type.replace('_', '-') ||
+                    d.document_type === reqDoc.type.replace('-', '_') ||
+                    d.document_type.toLowerCase() === reqDoc.type.toLowerCase()
                 );
                 
+                let docStatus = {
+                    type: reqDoc.type,
+                    name: reqDoc.name,
+                    required: reqDoc.required,
+                    uploaded: false,
+                    status: 'MISSING',
+                    statusBadge: '🔴 MISSING',
+                    action: null,
+                    actionUrl: null,
+                    details: null
+                };
+                
                 if (!uploaded) {
-                    missingDocuments.push(reqDoc.name);
-                    documentStatus[reqDoc.type] = { uploaded: false, status: 'missing' };
-                } else if (uploaded.status === 'pending' || uploaded.status === 'processing') {
-                    pendingDocuments.push(reqDoc.name);
-                    documentStatus[reqDoc.type] = { uploaded: true, status: uploaded.status };
+                    // Document not uploaded
+                    docStatus.status = 'MISSING';
+                    docStatus.statusBadge = '🔴 MISSING';
+                    docStatus.action = `Upload your ${reqDoc.name}`;
+                    docStatus.actionUrl = `/document-center?upload=${reqDoc.type}`;
+                    missingDocuments.push(docStatus);
                 } else {
-                    documentStatus[reqDoc.type] = { uploaded: true, status: uploaded.status };
+                    docStatus.uploaded = true;
+                    docStatus.fileUrl = uploaded.file_url;
+                    docStatus.uploadedAt = uploaded.uploaded_at;
+                    
+                    switch (uploaded.status?.toLowerCase()) {
+                        case 'verified':
+                        case 'approved':
+                            docStatus.status = 'VERIFIED';
+                            docStatus.statusBadge = '✅ VERIFIED';
+                            docStatus.verifiedAt = uploaded.verified_at;
+                            verifiedDocuments.push(docStatus);
+                            break;
+                            
+                        case 'pending':
+                        case 'processing':
+                        case 'under_review':
+                            docStatus.status = 'PENDING';
+                            docStatus.statusBadge = '🟡 PENDING';
+                            docStatus.action = 'Verification in progress. Please wait.';
+                            docStatus.details = uploaded.verification_notes;
+                            pendingDocuments.push(docStatus);
+                            break;
+                            
+                        case 'rejected':
+                        case 'failed':
+                            docStatus.status = 'REJECTED';
+                            docStatus.statusBadge = '🔴 REJECTED';
+                            docStatus.action = `Re-upload your ${reqDoc.name}`;
+                            docStatus.actionUrl = `/document-center?reupload=${reqDoc.type}`;
+                            docStatus.rejectionReason = uploaded.rejection_reason;
+                            docStatus.rejectedAt = uploaded.rejected_at;
+                            rejectedDocuments.push(docStatus);
+                            break;
+                            
+                        default:
+                            docStatus.status = 'PENDING';
+                            docStatus.statusBadge = '🟡 PENDING';
+                            docStatus.action = 'Verification in progress.';
+                            pendingDocuments.push(docStatus);
+                    }
                 }
+                
+                documentChecklist.push(docStatus);
             }
 
-            const allUploaded = missingDocuments.length === 0;
-            const allVerified = allUploaded && pendingDocuments.length === 0;
+            // Calculate overall status
+            const totalRequired = this.REQUIRED_DOCUMENTS.length;
+            const totalVerified = verifiedDocuments.length;
+            const totalPending = pendingDocuments.length;
+            const totalMissing = missingDocuments.length;
+            const totalRejected = rejectedDocuments.length;
+            
+            const allVerified = totalVerified === totalRequired;
+            const allUploaded = totalMissing === 0 && totalRejected === 0;
+            const canApply = allVerified; // Must have all documents verified
+            
+            // Build action message
+            let message = '';
+            let primaryAction = null;
+            
+            if (allVerified) {
+                message = '✅ All documents verified. You can apply for Direct Lending.';
+            } else if (totalMissing > 0) {
+                message = `🔴 Missing ${totalMissing} document(s): ${missingDocuments.map(d => d.name).join(', ')}`;
+                primaryAction = {
+                    type: 'UPLOAD',
+                    label: 'Upload Missing Documents',
+                    url: '/document-center',
+                    documents: missingDocuments.map(d => d.type)
+                };
+            } else if (totalRejected > 0) {
+                message = `🔴 ${totalRejected} document(s) rejected: ${rejectedDocuments.map(d => d.name).join(', ')}. Please re-upload.`;
+                primaryAction = {
+                    type: 'REUPLOAD',
+                    label: 'Re-upload Rejected Documents',
+                    url: '/document-center',
+                    documents: rejectedDocuments.map(d => d.type)
+                };
+            } else if (totalPending > 0) {
+                message = `🟡 ${totalPending} document(s) pending verification: ${pendingDocuments.map(d => d.name).join(', ')}. Please wait.`;
+                primaryAction = {
+                    type: 'WAIT',
+                    label: 'Verification in Progress',
+                    estimatedTime: '24-48 hours'
+                };
+            }
 
             console.log(`📋 Document Check Result:`);
-            console.log(`   All Uploaded: ${allUploaded}`);
-            console.log(`   Missing: ${missingDocuments.join(', ') || 'None'}`);
-            console.log(`   Pending: ${pendingDocuments.join(', ') || 'None'}`);
+            console.log(`   Total Required: ${totalRequired}`);
+            console.log(`   Verified: ${totalVerified}`);
+            console.log(`   Pending: ${totalPending}`);
+            console.log(`   Missing: ${totalMissing}`);
+            console.log(`   Rejected: ${totalRejected}`);
+            console.log(`   Can Apply: ${canApply}`);
 
             return {
                 success: true,
-                eligible: allUploaded, // Can apply if all documents uploaded
-                allUploaded: allUploaded,
-                allVerified: allVerified,
-                missingDocuments: missingDocuments,
-                pendingDocuments: pendingDocuments,
-                documentStatus: documentStatus,
-                message: allUploaded 
-                    ? 'All required documents uploaded. You can apply for Direct Lending.'
-                    : `Please upload: ${missingDocuments.join(', ')}`
+                eligible: canApply,
+                
+                // Summary
+                summary: {
+                    totalRequired,
+                    totalVerified,
+                    totalPending,
+                    totalMissing,
+                    totalRejected,
+                    completionPercent: Math.round((totalVerified / totalRequired) * 100)
+                },
+                
+                // Document checklist with status badges
+                documents: documentChecklist,
+                
+                // Categorized lists
+                verifiedDocuments,
+                pendingDocuments,
+                missingDocuments,
+                rejectedDocuments,
+                
+                // Status flags
+                allVerified,
+                allUploaded,
+                canApply,
+                
+                // Action guidance
+                message,
+                primaryAction,
+                
+                // Quick actions for frontend
+                actions: {
+                    uploadUrl: '/document-center',
+                    kycUrl: '/post-registration',
+                    supportUrl: '/support'
+                }
             };
         } catch (error) {
             console.error('Error checking documents:', error);
             return {
                 success: false,
                 eligible: false,
-                error: error.message
+                error: error.message,
+                message: 'Failed to check document status. Please try again.'
             };
         }
     }
