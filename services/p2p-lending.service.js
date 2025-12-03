@@ -748,6 +748,221 @@ class P2PLendingService {
     }
 
     /**
+     * Internal wallet transfer between users
+     * @param {string} senderId - Sender user ID
+     * @param {string} recipientId - Recipient user ID (can be email, phone, or user ID)
+     * @param {number} amount - Transfer amount
+     * @param {string} note - Optional transfer note
+     * @returns {Promise<Object>} Transfer result
+     */
+    async internalTransfer(senderId, recipientId, amount, note = '') {
+        try {
+            const transferAmount = parseFloat(amount);
+
+            // Validate amount
+            if (isNaN(transferAmount) || transferAmount <= 0) {
+                return { success: false, message: 'Invalid transfer amount' };
+            }
+
+            // Minimum transfer amount
+            const MIN_TRANSFER = 5;
+            if (transferAmount < MIN_TRANSFER) {
+                return { 
+                    success: false, 
+                    message: `Minimum transfer amount is $${MIN_TRANSFER}` 
+                };
+            }
+
+            // Cannot transfer to self
+            if (senderId === recipientId) {
+                return { success: false, message: 'Cannot transfer to yourself' };
+            }
+
+            // Find recipient by ID, email, or phone
+            let recipientQuery = supabase.from('user_profiles').select('user_id, full_name, email, phone');
+            
+            // Check if recipientId is UUID, email, or phone
+            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(recipientId);
+            const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientId);
+            const isPhone = /^\+?[0-9]{10,15}$/.test(recipientId.replace(/\s/g, ''));
+
+            if (isUUID) {
+                recipientQuery = recipientQuery.eq('user_id', recipientId);
+            } else if (isEmail) {
+                recipientQuery = recipientQuery.eq('email', recipientId.toLowerCase());
+            } else if (isPhone) {
+                recipientQuery = recipientQuery.eq('phone', recipientId.replace(/\s/g, ''));
+            } else {
+                return { success: false, message: 'Invalid recipient. Use email, phone, or user ID.' };
+            }
+
+            const { data: recipient, error: recipientError } = await recipientQuery.single();
+
+            if (recipientError || !recipient) {
+                return { success: false, message: 'Recipient not found' };
+            }
+
+            // Check sender's balance
+            const { data: senderWallet, error: walletError } = await supabase
+                .from('wallets')
+                .select('balance')
+                .eq('user_id', senderId)
+                .single();
+
+            if (walletError || !senderWallet) {
+                return { success: false, message: 'Sender wallet not found' };
+            }
+
+            if (senderWallet.balance < transferAmount) {
+                return { 
+                    success: false, 
+                    message: `Insufficient balance. Available: $${senderWallet.balance.toFixed(2)}` 
+                };
+            }
+
+            // Generate transfer reference
+            const transferRef = `TRF-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+            // Perform transfer using transaction
+            // Debit sender
+            const { error: debitError } = await supabase
+                .from('wallets')
+                .update({ 
+                    balance: senderWallet.balance - transferAmount,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('user_id', senderId);
+
+            if (debitError) {
+                throw new Error('Failed to debit sender wallet');
+            }
+
+            // Credit recipient
+            const { data: recipientWallet } = await supabase
+                .from('wallets')
+                .select('balance')
+                .eq('user_id', recipient.user_id)
+                .single();
+
+            const { error: creditError } = await supabase
+                .from('wallets')
+                .update({ 
+                    balance: (recipientWallet?.balance || 0) + transferAmount,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('user_id', recipient.user_id);
+
+            if (creditError) {
+                // Rollback sender debit
+                await supabase
+                    .from('wallets')
+                    .update({ balance: senderWallet.balance })
+                    .eq('user_id', senderId);
+                throw new Error('Failed to credit recipient wallet');
+            }
+
+            // Log sender activity (debit)
+            await this.logActivity(senderId, this.ACTIVITY_TYPES.TRANSFER, {
+                type: 'sent',
+                amount: transferAmount,
+                recipientId: recipient.user_id,
+                recipientName: recipient.full_name,
+                reference: transferRef,
+                note: note
+            });
+
+            // Log recipient activity (credit)
+            await this.logActivity(recipient.user_id, this.ACTIVITY_TYPES.TRANSFER, {
+                type: 'received',
+                amount: transferAmount,
+                senderId: senderId,
+                reference: transferRef,
+                note: note
+            });
+
+            // Create transaction records
+            await supabase.from('transactions').insert([
+                {
+                    user_id: senderId,
+                    type: 'transfer_out',
+                    amount: -transferAmount,
+                    reference: transferRef,
+                    description: `Transfer to ${recipient.full_name || recipient.email}`,
+                    metadata: { recipientId: recipient.user_id, note }
+                },
+                {
+                    user_id: recipient.user_id,
+                    type: 'transfer_in',
+                    amount: transferAmount,
+                    reference: transferRef,
+                    description: `Transfer received`,
+                    metadata: { senderId, note }
+                }
+            ]);
+
+            console.log(`💸 Transfer: $${transferAmount} from ${senderId} to ${recipient.user_id} [${transferRef}]`);
+
+            return {
+                success: true,
+                message: `Successfully transferred $${transferAmount.toFixed(2)} to ${recipient.full_name || recipient.email}`,
+                data: {
+                    reference: transferRef,
+                    amount: transferAmount,
+                    recipient: {
+                        id: recipient.user_id,
+                        name: recipient.full_name,
+                        email: recipient.email
+                    },
+                    senderNewBalance: senderWallet.balance - transferAmount,
+                    timestamp: new Date().toISOString()
+                }
+            };
+        } catch (error) {
+            console.error('Internal transfer error:', error);
+            return { success: false, message: error.message || 'Transfer failed' };
+        }
+    }
+
+    /**
+     * Get transfer history for a user
+     * @param {string} userId - User ID
+     * @param {Object} options - Filter options
+     * @returns {Promise<Object>} Transfer history
+     */
+    async getTransferHistory(userId, options = {}) {
+        try {
+            const { type, limit = 50, offset = 0 } = options;
+
+            let query = supabase
+                .from('user_activities')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('activity_type', this.ACTIVITY_TYPES.TRANSFER)
+                .order('created_at', { ascending: false })
+                .range(offset, offset + limit - 1);
+
+            if (type === 'sent') {
+                query = query.eq('metadata->>type', 'sent');
+            } else if (type === 'received') {
+                query = query.eq('metadata->>type', 'received');
+            }
+
+            const { data, error } = await query;
+
+            if (error) throw error;
+
+            return {
+                success: true,
+                transfers: data || [],
+                count: data?.length || 0
+            };
+        } catch (error) {
+            console.error('Get transfer history error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
      * Log user activity (deposits, withdrawals, loans, etc.)
      * @param {string} userId - User ID
      * @param {string} activityType - Type of activity

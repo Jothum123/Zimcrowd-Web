@@ -696,7 +696,95 @@ router.post('/credit', authenticateUser, [
     }
 });
 
-// @route   GET /api/exchange-rate/:pair
+// ============================================
+// INTERNAL TRANSFERS
+// ============================================
+
+const P2PLendingService = require('../services/p2p-lending.service');
+const p2pService = new P2PLendingService();
+
+// @route   POST /api/wallet/transfer
+// @desc    Transfer funds to another user (by email, phone, or user ID)
+// @access  Private
+router.post('/transfer',
+    authenticateUser,
+    body('recipient').trim().notEmpty().withMessage('Recipient is required (email, phone, or user ID)'),
+    body('amount').isFloat({ min: 5 }).withMessage('Minimum transfer amount is $5'),
+    body('note').optional().trim().isLength({ max: 200 }),
+    handleValidationErrors,
+    async (req, res) => {
+        try {
+            const { recipient, amount, note } = req.body;
+            const result = await p2pService.internalTransfer(req.user.id, recipient, amount, note);
+            if (!result.success) {
+                return res.status(400).json(result);
+            }
+            res.json(result);
+        } catch (error) {
+            console.error('Transfer error:', error);
+            res.status(500).json({ success: false, message: 'Transfer failed' });
+        }
+    }
+);
+
+// @route   GET /api/wallet/transfers
+// @desc    Get user's transfer history
+// @access  Private
+router.get('/transfers', authenticateUser, async (req, res) => {
+    try {
+        const { type, limit, offset } = req.query;
+        const result = await p2pService.getTransferHistory(req.user.id, {
+            type,
+            limit: parseInt(limit) || 50,
+            offset: parseInt(offset) || 0
+        });
+        res.json(result);
+    } catch (error) {
+        console.error('Get transfers error:', error);
+        res.status(500).json({ success: false, message: 'Failed to get transfer history' });
+    }
+});
+
+// @route   POST /api/wallet/transfer/validate
+// @desc    Validate recipient before transfer
+// @access  Private
+router.post('/transfer/validate',
+    authenticateUser,
+    body('recipient').trim().notEmpty().withMessage('Recipient is required'),
+    handleValidationErrors,
+    async (req, res) => {
+        try {
+            const { recipient } = req.body;
+            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(recipient);
+            const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient);
+            const isPhone = /^\+?[0-9]{10,15}$/.test(recipient.replace(/\s/g, ''));
+
+            let query = supabase.from('user_profiles').select('user_id, full_name, email');
+            if (isUUID) query = query.eq('user_id', recipient);
+            else if (isEmail) query = query.eq('email', recipient.toLowerCase());
+            else if (isPhone) query = query.eq('phone', recipient.replace(/\s/g, ''));
+            else return res.status(400).json({ success: false, message: 'Invalid recipient format' });
+
+            const { data: recipientUser, error } = await query.single();
+            if (error || !recipientUser) {
+                return res.status(404).json({ success: false, message: 'Recipient not found' });
+            }
+            if (recipientUser.user_id === req.user.id) {
+                return res.status(400).json({ success: false, message: 'Cannot transfer to yourself' });
+            }
+            const maskedEmail = recipientUser.email?.replace(/(.{2})(.*)(@.*)/, '$1***$3');
+            res.json({
+                success: true,
+                recipient: { id: recipientUser.user_id, name: recipientUser.full_name, email: maskedEmail }
+            });
+        } catch (error) {
+            console.error('Validate recipient error:', error);
+            res.status(500).json({ success: false, message: 'Validation failed' });
+        }
+    }
+);
+
+// @route   GET /api/wallet/exchange-rate/:pair
 // @desc    Get exchange rate between currencies
 // @access  Public
 router.get('/exchange-rate/:pair', async (req, res) => {
