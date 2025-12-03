@@ -37,6 +37,25 @@ class P2PLendingService {
         this.MAX_INVESTMENT_AMOUNT = 10000; // Maximum $10,000 per investment
         this.MIN_DEPOSIT_AMOUNT = 10;       // Minimum deposit to lender wallet
         this.MAX_DEPOSIT_AMOUNT = 10000;    // Maximum deposit to lender wallet
+        
+        // AML (Anti-Money Laundering) Thresholds
+        // Deposits $5,000+ require additional proof of income
+        this.AML_THRESHOLD = 5000;          // Trigger AML check at $5,000
+        this.AML_CUMULATIVE_THRESHOLD = 10000; // Cumulative deposits in 30 days
+        
+        // Activity Types for logging
+        this.ACTIVITY_TYPES = {
+            DEPOSIT: 'deposit',
+            WITHDRAWAL: 'withdrawal',
+            LOAN_FUNDING: 'loan_funding',
+            LOAN_REQUEST: 'loan_request',
+            LOAN_REPAYMENT: 'loan_repayment',
+            LOAN_DISBURSEMENT: 'loan_disbursement',
+            TRANSFER: 'transfer',
+            AML_FLAG: 'aml_flag',
+            DOCUMENT_UPLOAD: 'document_upload',
+            KYC_VERIFICATION: 'kyc_verification'
+        };
     }
 
     /**
@@ -587,17 +606,16 @@ class P2PLendingService {
     /**
      * Validate deposit amount for lender wallet
      * Must be within insurable range: $10 - $10,000
+     * Deposits $5,000+ trigger AML check requiring additional proof of income
      * @param {number} amount - Deposit amount
-     * @returns {Object} Validation result
+     * @param {string} userId - User ID for AML check
+     * @returns {Object} Validation result with AML flag if applicable
      */
-    validateDepositAmount(amount) {
+    async validateDepositAmount(amount, userId = null) {
         const depositAmount = parseFloat(amount);
 
         if (isNaN(depositAmount) || depositAmount <= 0) {
-            return {
-                valid: false,
-                message: 'Invalid deposit amount'
-            };
+            return { valid: false, message: 'Invalid deposit amount' };
         }
 
         if (depositAmount < this.MIN_DEPOSIT_AMOUNT) {
@@ -616,11 +634,164 @@ class P2PLendingService {
             };
         }
 
+        // AML Check: Deposits $5,000+ require additional proof of income
+        let amlFlag = null;
+        if (depositAmount >= this.AML_THRESHOLD) {
+            amlFlag = {
+                triggered: true,
+                reason: 'HIGH_VALUE_DEPOSIT',
+                threshold: this.AML_THRESHOLD,
+                amount: depositAmount,
+                requiresDocuments: true,
+                requiredDocuments: ['proof_of_income', 'source_of_funds'],
+                message: `⚠️ AML Alert: Deposits of $${this.AML_THRESHOLD.toLocaleString()} or more require additional proof of income for compliance.`
+            };
+
+            // Log AML flag
+            if (userId) {
+                await this.logActivity(userId, this.ACTIVITY_TYPES.AML_FLAG, {
+                    amount: depositAmount,
+                    reason: 'HIGH_VALUE_DEPOSIT',
+                    threshold: this.AML_THRESHOLD,
+                    action: 'ADDITIONAL_DOCUMENTS_REQUIRED'
+                });
+            }
+        }
+
         return {
             valid: true,
             amount: depositAmount,
-            message: 'Deposit amount is valid'
+            message: amlFlag ? amlFlag.message : 'Deposit amount is valid',
+            amlFlag: amlFlag,
+            requiresAdditionalDocuments: amlFlag?.requiresDocuments || false
         };
+    }
+
+    /**
+     * Log user activity (deposits, withdrawals, loans, etc.)
+     * @param {string} userId - User ID
+     * @param {string} activityType - Type of activity
+     * @param {Object} metadata - Additional activity data
+     * @returns {Promise<Object>} Activity log result
+     */
+    async logActivity(userId, activityType, metadata = {}) {
+        try {
+            const { data, error } = await supabase
+                .from('user_activities')
+                .insert({
+                    user_id: userId,
+                    activity_type: activityType,
+                    metadata: {
+                        ...metadata,
+                        timestamp: new Date().toISOString(),
+                        ip_address: metadata.ipAddress || null
+                    },
+                    created_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Error logging activity:', error);
+                return { success: false, error: error.message };
+            }
+
+            console.log(`📝 Activity logged: ${activityType} for user ${userId}`);
+            return { success: true, activity: data };
+        } catch (error) {
+            console.error('Log activity error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Get user activity history
+     * @param {string} userId - User ID
+     * @param {Object} filters - Activity filters
+     * @returns {Promise<Object>} Activity history
+     */
+    async getActivityHistory(userId, filters = {}) {
+        try {
+            let query = supabase
+                .from('user_activities')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+
+            if (filters.activityType) {
+                query = query.eq('activity_type', filters.activityType);
+            }
+            if (filters.startDate) {
+                query = query.gte('created_at', filters.startDate);
+            }
+            if (filters.endDate) {
+                query = query.lte('created_at', filters.endDate);
+            }
+
+            const limit = filters.limit || 50;
+            query = query.limit(limit);
+
+            const { data, error } = await query;
+
+            if (error) throw error;
+
+            return {
+                success: true,
+                activities: data || [],
+                total: data?.length || 0
+            };
+        } catch (error) {
+            console.error('Get activity history error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Check if user has pending AML documents
+     * @param {string} userId - User ID
+     * @returns {Promise<Object>} AML status
+     */
+    async checkAMLStatus(userId) {
+        try {
+            // Check for recent AML flags
+            const { data: amlFlags, error } = await supabase
+                .from('user_activities')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('activity_type', this.ACTIVITY_TYPES.AML_FLAG)
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            if (error) throw error;
+
+            // Check if user has submitted required AML documents
+            const { data: amlDocs } = await supabase
+                .from('user_documents')
+                .select('document_type, status')
+                .eq('user_id', userId)
+                .in('document_type', ['proof_of_income', 'source_of_funds']);
+
+            const hasProofOfIncome = amlDocs?.some(d => d.document_type === 'proof_of_income' && d.status === 'verified');
+            const hasSourceOfFunds = amlDocs?.some(d => d.document_type === 'source_of_funds' && d.status === 'verified');
+
+            const pendingAMLFlags = amlFlags?.filter(f => !hasProofOfIncome || !hasSourceOfFunds) || [];
+
+            return {
+                success: true,
+                hasPendingAML: pendingAMLFlags.length > 0 && (!hasProofOfIncome || !hasSourceOfFunds),
+                amlFlags: amlFlags || [],
+                documentsStatus: {
+                    proofOfIncome: hasProofOfIncome ? 'verified' : 'required',
+                    sourceOfFunds: hasSourceOfFunds ? 'verified' : 'required'
+                },
+                message: pendingAMLFlags.length > 0 && (!hasProofOfIncome || !hasSourceOfFunds)
+                    ? '⚠️ You have pending AML verification. Please upload proof of income and source of funds.'
+                    : 'AML verification complete.'
+            };
+        } catch (error) {
+            console.error('Check AML status error:', error);
+            return { success: false, error: error.message };
+        }
     }
 
     /**
@@ -633,11 +804,13 @@ class P2PLendingService {
             maxInvestment: this.MAX_INVESTMENT_AMOUNT,
             minDeposit: this.MIN_DEPOSIT_AMOUNT,
             maxDeposit: this.MAX_DEPOSIT_AMOUNT,
+            amlThreshold: this.AML_THRESHOLD,
             insurableRange: {
                 min: this.MIN_INVESTMENT_AMOUNT,
                 max: this.MAX_INVESTMENT_AMOUNT
             },
-            message: `Investment amounts must be between $${this.MIN_INVESTMENT_AMOUNT} and $${this.MAX_INVESTMENT_AMOUNT} (insurable range)`
+            message: `Investment amounts must be between $${this.MIN_INVESTMENT_AMOUNT} and $${this.MAX_INVESTMENT_AMOUNT} (insurable range)`,
+            amlMessage: `Deposits of $${this.AML_THRESHOLD.toLocaleString()} or more require additional proof of income for AML compliance.`
         };
     }
 

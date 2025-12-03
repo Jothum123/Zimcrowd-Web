@@ -114,6 +114,41 @@ If any check fails, the user cannot apply for a Direct Loan until resolved.
 - Provides protection for lenders through insurance coverage
 - Ensures diversification and risk management
 
+## AML (Anti-Money Laundering) Compliance
+
+### AML Threshold
+| Trigger | Amount | Action Required |
+|---------|--------|-----------------|
+| **High Value Deposit** | **$5,000+** | Additional proof of income required |
+
+### Required AML Documents (for deposits $5,000+)
+1. **Proof of Income** - Payslip, tax return, or business income statement
+2. **Source of Funds** - Bank statement or documentation showing origin of funds
+
+### AML Process
+1. User initiates deposit of $5,000 or more
+2. System triggers **AML flag** and warning
+3. User must upload additional documents before deposit is processed
+4. Documents are verified by compliance team
+5. Once verified, deposit is approved
+
+## Activity Logging
+
+All user activities are logged for compliance and audit purposes:
+
+| Activity Type | Description |
+|---------------|-------------|
+| `deposit` | Funds deposited to wallet |
+| `withdrawal` | Funds withdrawn from wallet |
+| `loan_funding` | Lender funds a loan |
+| `loan_request` | Borrower requests a loan |
+| `loan_repayment` | Loan repayment made |
+| `loan_disbursement` | Loan funds disbursed |
+| `transfer` | Internal transfer |
+| `aml_flag` | AML compliance flag triggered |
+| `document_upload` | Document uploaded |
+| `kyc_verification` | KYC verification completed |
+
 ### Government Employees
 - **NO cold start** - Can access full DTNI-based limit immediately
 - **Loan range: $25 - $3,000** (based on DTNI)
