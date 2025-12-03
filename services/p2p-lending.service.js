@@ -31,9 +31,35 @@ class P2PLendingService {
         this.MAX_INTEREST_RATE = 0.10;  // 10% per month
         this.MIN_LOAN_AMOUNT = 25;
         
-        // Investment/Lending limits (insurable range)
+        // Investment/Lending limits (insurable range) - USD
         this.MIN_INVESTMENT_AMOUNT = 10;    // Minimum $10 per investment
         this.MAX_INVESTMENT_AMOUNT = 10000; // Maximum $10,000 per investment
+        
+        // Investment/Lending limits - ZWG (Zimbabwe Gold)
+        this.MIN_INVESTMENT_AMOUNT_ZWG = 250;    // Minimum ZWG 250 per investment
+        this.MAX_INVESTMENT_AMOUNT_ZWG = 250000; // Maximum ZWG 250,000 per investment
+        
+        // Supported currencies for lending
+        this.SUPPORTED_CURRENCIES = ['USD', 'ZWG'];
+        this.DEFAULT_CURRENCY = 'USD';
+        
+        // Currency-specific loan limits
+        this.LOAN_LIMITS = {
+            USD: {
+                minLoan: 25,
+                maxLoan: 10000,
+                minInvestment: 10,
+                maxInvestment: 10000,
+                symbol: '$'
+            },
+            ZWG: {
+                minLoan: 500,
+                maxLoan: 250000,
+                minInvestment: 250,
+                maxInvestment: 250000,
+                symbol: 'ZWG '
+            }
+        };
         
         // Deposit limits - NO MAXIMUM, but $5,000+ requires source verification
         this.MIN_DEPOSIT_AMOUNT = 10;       // Minimum deposit to lender wallet
@@ -83,9 +109,22 @@ class P2PLendingService {
 
     /**
      * Create a loan marketplace listing
+     * Supports multi-currency lending (USD and ZWG)
      */
     async createLoanListing(userId, loanData) {
         try {
+            // Validate and set currency
+            const currency = (loanData.currency || this.DEFAULT_CURRENCY).toUpperCase();
+            if (!this.SUPPORTED_CURRENCIES.includes(currency)) {
+                return {
+                    success: false,
+                    message: `Unsupported currency. Supported currencies: ${this.SUPPORTED_CURRENCIES.join(', ')}`
+                };
+            }
+
+            const currencyLimits = this.LOAN_LIMITS[currency];
+            const currencySymbol = currencyLimits.symbol;
+
             // Get user profile to check employment type
             const { data: userProfile } = await supabase
                 .from('user_profiles')
@@ -104,32 +143,39 @@ class P2PLendingService {
             let amount = parseFloat(loanData.amount);
             const termMonths = parseInt(loanData.termMonths);
 
-            // Validate minimum loan amount
-            if (amount < this.MIN_LOAN_AMOUNT) {
+            // Validate minimum loan amount based on currency
+            if (amount < currencyLimits.minLoan) {
                 return {
                     success: false,
-                    message: `Minimum loan amount is $${this.MIN_LOAN_AMOUNT}`
+                    message: `Minimum loan amount is ${currencySymbol}${currencyLimits.minLoan}`,
+                    currency: currency
                 };
             }
 
             // Apply cold start cap for first-time private/informal borrowers
-            if (isFirstTime && employmentConfig.coldStartActive && employmentConfig.coldStartCap) {
-                if (amount > employmentConfig.coldStartCap) {
+            // Adjust cold start for ZWG (multiply by approximate exchange rate factor)
+            const coldStartMultiplier = currency === 'ZWG' ? 25 : 1; // ZWG cold start is ~25x USD
+            const adjustedColdStartCap = employmentConfig.coldStartCap ? employmentConfig.coldStartCap * coldStartMultiplier : null;
+            
+            if (isFirstTime && employmentConfig.coldStartActive && adjustedColdStartCap) {
+                if (amount > adjustedColdStartCap) {
                     return {
                         success: false,
-                        message: `First-time ${employmentType} borrowers are limited to $${this.MIN_LOAN_AMOUNT}-$${employmentConfig.coldStartCap}. Build your reputation with a smaller loan first!`,
-                        coldStartLimit: employmentConfig.coldStartCap,
-                        employmentType: employmentType
+                        message: `First-time ${employmentType} borrowers are limited to ${currencySymbol}${currencyLimits.minLoan}-${currencySymbol}${adjustedColdStartCap}. Build your reputation with a smaller loan first!`,
+                        coldStartLimit: adjustedColdStartCap,
+                        employmentType: employmentType,
+                        currency: currency
                     };
                 }
             }
 
-            // Validate max loan amount based on employment type
-            if (amount > employmentConfig.maxLoan) {
+            // Validate max loan amount based on currency limits
+            if (amount > currencyLimits.maxLoan) {
                 return {
                     success: false,
-                    message: `Maximum loan amount for ${employmentType} employees is $${employmentConfig.maxLoan}`,
-                    maxLoan: employmentConfig.maxLoan
+                    message: `Maximum loan amount is ${currencySymbol}${currencyLimits.maxLoan.toLocaleString()}`,
+                    maxLoan: currencyLimits.maxLoan,
+                    currency: currency
                 };
             }
 
@@ -162,13 +208,14 @@ class P2PLendingService {
                 is_first_time: true
             };
 
-            // Create loan record first
+            // Create loan record first with currency
             const { data: loan, error: loanError } = await supabase
                 .from('loans')
                 .insert({
                     user_id: userId,
                     loan_type: loanData.loanType || 'personal',
                     amount: amount,
+                    currency: currency,
                     interest_rate: interestRate,
                     term_months: parseInt(loanData.termMonths),
                     monthly_payment: this.calculateMonthlyPayment(amount, interestRate, parseInt(loanData.termMonths)),
@@ -180,13 +227,14 @@ class P2PLendingService {
 
             if (loanError) throw loanError;
 
-            // Create marketplace listing
+            // Create marketplace listing with currency
             const { data: listing, error: listingError } = await supabase
                 .from('loan_marketplace_listings')
                 .insert({
                     loan_id: loan.id,
                     borrower_user_id: userId,
                     amount_requested: amount,
+                    currency: currency,
                     purpose: loanData.purpose,
                     loan_term_months: parseInt(loanData.termMonths),
                     requested_interest_rate: interestRate,
@@ -207,8 +255,9 @@ class P2PLendingService {
                 success: true,
                 listing,
                 loan,
+                currency: currency,
                 isFirstTimeBorrower: borrowerData.is_first_time,
-                coldStartAmount: borrowerData.is_first_time ? 100 : null
+                coldStartAmount: borrowerData.is_first_time ? adjustedColdStartCap : null
             };
 
         } catch (error) {
@@ -222,12 +271,21 @@ class P2PLendingService {
 
     /**
      * Browse active loan marketplace listings
+     * Supports filtering by currency (USD or ZWG)
      */
     async browseLoanMarketplace(filters = {}) {
         try {
             let query = supabase
                 .from('active_loan_marketplace')
                 .select('*');
+
+            // Filter by currency (default: show all)
+            if (filters.currency) {
+                const currency = filters.currency.toUpperCase();
+                if (this.SUPPORTED_CURRENCIES.includes(currency)) {
+                    query = query.eq('currency', currency);
+                }
+            }
 
             // Apply filters
             if (filters.minAmount) {
@@ -258,6 +316,7 @@ class P2PLendingService {
             return {
                 success: true,
                 listings: data || [],
+                supportedCurrencies: this.SUPPORTED_CURRENCIES,
                 pagination: {
                     page,
                     limit,
@@ -277,39 +336,14 @@ class P2PLendingService {
 
     /**
      * Make a funding offer as a lender
-     * Investment amount must be within insurable range: $10 - $10,000
+     * Investment amount must be within insurable range based on currency
+     * USD: $10 - $10,000 | ZWG: ZWG 250 - ZWG 250,000
      */
     async makeFundingOffer(lenderId, offerData) {
         try {
             const offerAmount = parseFloat(offerData.offerAmount);
 
-            // Validate investment amount (insurable range: $10 - $10,000)
-            if (offerAmount < this.MIN_INVESTMENT_AMOUNT) {
-                return {
-                    success: false,
-                    message: `Minimum investment amount is $${this.MIN_INVESTMENT_AMOUNT}`,
-                    minAmount: this.MIN_INVESTMENT_AMOUNT
-                };
-            }
-
-            if (offerAmount > this.MAX_INVESTMENT_AMOUNT) {
-                return {
-                    success: false,
-                    message: `Maximum investment amount is $${this.MAX_INVESTMENT_AMOUNT} (insurable limit)`,
-                    maxAmount: this.MAX_INVESTMENT_AMOUNT
-                };
-            }
-
-            // Validate interest rate (0-10%)
-            const offeredRate = parseFloat(offerData.offeredInterestRate);
-            if (offeredRate < 0 || offeredRate > 0.10) {
-                return {
-                    success: false,
-                    message: 'Interest rate must be between 0% and 10%'
-                };
-            }
-
-            // Check if listing exists and is active
+            // Check if listing exists and is active first to get currency
             const { data: listing } = await supabase
                 .from('loan_marketplace_listings')
                 .select('*')
@@ -323,9 +357,57 @@ class P2PLendingService {
                 };
             }
 
-            // Check if lender has sufficient balance (implement wallet check)
+            // Get currency from listing (default to USD for backward compatibility)
+            const currency = (listing.currency || 'USD').toUpperCase();
+            const currencyLimits = this.LOAN_LIMITS[currency] || this.LOAN_LIMITS.USD;
+            const currencySymbol = currencyLimits.symbol;
 
-            // Create funding offer
+            // Validate investment amount based on currency
+            if (offerAmount < currencyLimits.minInvestment) {
+                return {
+                    success: false,
+                    message: `Minimum investment amount is ${currencySymbol}${currencyLimits.minInvestment}`,
+                    minAmount: currencyLimits.minInvestment,
+                    currency: currency
+                };
+            }
+
+            if (offerAmount > currencyLimits.maxInvestment) {
+                return {
+                    success: false,
+                    message: `Maximum investment amount is ${currencySymbol}${currencyLimits.maxInvestment.toLocaleString()} (insurable limit)`,
+                    maxAmount: currencyLimits.maxInvestment,
+                    currency: currency
+                };
+            }
+
+            // Validate interest rate (0-10%)
+            const offeredRate = parseFloat(offerData.offeredInterestRate);
+            if (offeredRate < 0 || offeredRate > 0.10) {
+                return {
+                    success: false,
+                    message: 'Interest rate must be between 0% and 10%'
+                };
+            }
+
+            // Check if lender has sufficient balance in the correct currency wallet
+            const { data: wallet } = await supabase
+                .from('wallets')
+                .select('balance, currency')
+                .eq('user_id', lenderId)
+                .eq('currency', currency)
+                .single();
+
+            if (!wallet || wallet.balance < offerAmount) {
+                return {
+                    success: false,
+                    message: `Insufficient ${currency} balance. Available: ${currencySymbol}${(wallet?.balance || 0).toFixed(2)}`,
+                    availableBalance: wallet?.balance || 0,
+                    currency: currency
+                };
+            }
+
+            // Create funding offer with currency
             const { data: offer, error } = await supabase
                 .from('lender_funding_offers')
                 .insert({
@@ -333,6 +415,7 @@ class P2PLendingService {
                     lender_user_id: lenderId,
                     loan_id: listing.loan_id,
                     offer_amount: offerAmount,
+                    currency: currency,
                     offered_interest_rate: offeredRate,
                     funding_percentage: (offerAmount / listing.funding_goal) * 100,
                     offer_type: offerData.offerType || 'partial',
@@ -348,7 +431,8 @@ class P2PLendingService {
             return {
                 success: true,
                 offer,
-                message: 'Funding offer submitted successfully'
+                currency: currency,
+                message: `Funding offer of ${currencySymbol}${offerAmount.toLocaleString()} submitted successfully`
             };
 
         } catch (error) {
@@ -1309,12 +1393,42 @@ class P2PLendingService {
      */
     getTransactionLimits() {
         return {
-            // Investment limits (insurable range)
+            // Supported currencies
+            supportedCurrencies: this.SUPPORTED_CURRENCIES,
+            defaultCurrency: this.DEFAULT_CURRENCY,
+            
+            // Lending/Investment limits by currency
+            lending: {
+                USD: {
+                    minLoan: this.LOAN_LIMITS.USD.minLoan,
+                    maxLoan: this.LOAN_LIMITS.USD.maxLoan,
+                    minInvestment: this.LOAN_LIMITS.USD.minInvestment,
+                    maxInvestment: this.LOAN_LIMITS.USD.maxInvestment,
+                    symbol: '$',
+                    message: `Loans: $${this.LOAN_LIMITS.USD.minLoan} - $${this.LOAN_LIMITS.USD.maxLoan.toLocaleString()}. Investments: $${this.LOAN_LIMITS.USD.minInvestment} - $${this.LOAN_LIMITS.USD.maxInvestment.toLocaleString()}`
+                },
+                ZWG: {
+                    minLoan: this.LOAN_LIMITS.ZWG.minLoan,
+                    maxLoan: this.LOAN_LIMITS.ZWG.maxLoan,
+                    minInvestment: this.LOAN_LIMITS.ZWG.minInvestment,
+                    maxInvestment: this.LOAN_LIMITS.ZWG.maxInvestment,
+                    symbol: 'ZWG ',
+                    message: `Loans: ZWG ${this.LOAN_LIMITS.ZWG.minLoan} - ZWG ${this.LOAN_LIMITS.ZWG.maxLoan.toLocaleString()}. Investments: ZWG ${this.LOAN_LIMITS.ZWG.minInvestment} - ZWG ${this.LOAN_LIMITS.ZWG.maxInvestment.toLocaleString()}`
+                },
+                interestRate: {
+                    min: this.MIN_INTEREST_RATE * 100,
+                    max: this.MAX_INTEREST_RATE * 100,
+                    message: `Interest rate: ${this.MIN_INTEREST_RATE * 100}% - ${this.MAX_INTEREST_RATE * 100}% per month`
+                }
+            },
+            
+            // Investment limits (insurable range) - Legacy USD support
             investment: {
                 min: this.MIN_INVESTMENT_AMOUNT,
                 max: this.MAX_INVESTMENT_AMOUNT,
                 message: `Investment amounts must be between $${this.MIN_INVESTMENT_AMOUNT} and $${this.MAX_INVESTMENT_AMOUNT} (insurable range)`
             },
+            
             // Deposit limits - NO maximum
             deposit: {
                 min: this.MIN_DEPOSIT_AMOUNT,
@@ -1323,7 +1437,8 @@ class P2PLendingService {
                 message: `Minimum deposit: $${this.MIN_DEPOSIT_AMOUNT}. No maximum limit.`,
                 amlMessage: `Deposits of $${this.AML_THRESHOLD.toLocaleString()} or more are flagged until source of funds is verified.`
             },
-            // Withdrawal limits - USD
+            
+            // Withdrawal limits by currency
             withdrawal: {
                 USD: {
                     min: this.MIN_WITHDRAWAL_AMOUNT,
@@ -1338,6 +1453,7 @@ class P2PLendingService {
                 processingTime: this.WITHDRAWAL_PROCESSING_DAYS,
                 note: 'Withdrawals are processed instantly. Funds arrive in your bank account or mobile wallet within 2-3 business days.'
             },
+            
             // AML thresholds
             aml: {
                 singleDepositThreshold: this.AML_THRESHOLD,
