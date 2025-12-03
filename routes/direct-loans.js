@@ -243,4 +243,84 @@ router.get('/stats', authenticateUser, async (req, res) => {
     }
 });
 
+// @route   GET /api/direct-loans/eligibility
+// @desc    Check user's eligibility for Direct Lending
+// @access  Private
+router.get('/eligibility', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        console.log(`🔍 Checking eligibility for user ${userId}`);
+
+        const eligibility = await directLoanService.checkUserEligibility(userId);
+
+        res.json({
+            success: true,
+            data: eligibility
+        });
+    } catch (error) {
+        console.error('Eligibility check error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to check eligibility'
+        });
+    }
+});
+
+// @route   GET /api/direct-loans/documents
+// @desc    Check user's document status for Direct Lending
+// @access  Private
+router.get('/documents', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        console.log(`📋 Checking documents for user ${userId}`);
+
+        const documents = await directLoanService.checkRequiredDocuments(userId);
+
+        res.json({
+            success: true,
+            data: documents
+        });
+    } catch (error) {
+        console.error('Document check error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to check documents'
+        });
+    }
+});
+
+// @route   POST /api/direct-loans/request-unban
+// @desc    Request to lift suspension or ban
+// @access  Private
+router.post('/request-unban',
+    authenticateUser,
+    body('reason').trim().notEmpty().withMessage('Reason is required'),
+    async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            success: false,
+            errors: errors.array()
+        });
+    }
+    try {
+        const userId = req.user.id;
+        const { reason } = req.body;
+
+        console.log(`📝 User ${userId} requesting unban`);
+
+        const result = await directLoanService.requestUnban(userId, reason);
+
+        res.json(result);
+    } catch (error) {
+        console.error('Unban request error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to submit unban request'
+        });
+    }
+});
+
 module.exports = router;

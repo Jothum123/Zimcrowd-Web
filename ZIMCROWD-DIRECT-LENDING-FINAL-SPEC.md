@@ -42,7 +42,63 @@ Anyone registered can apply for Direct Lending. The system checks for **required
 
 ---
 
-## 💰 Loan Amounts (Based on DTNI)
+## � Eligibility Rules
+
+### BLOCKING RULES
+
+Users will be **BLOCKED** from Direct Lending if:
+
+| Rule | Condition | Action Required |
+|------|-----------|-----------------|
+| **NO_ARREARS** | Has loan in arrears from P2P marketplace | Clear arrears first |
+| **NO_DIRECT_ARREARS** | Has Direct Loan in arrears | Clear arrears first |
+| **NOT_SUSPENDED** | Account is suspended | Request to lift ban |
+| **NOT_BANNED** | Account is banned | Contact support |
+
+### Rule Details
+
+#### 1. No Loans in Arrears
+```
+❌ BLOCKED if user has ANY loan with status:
+   - 'late'
+   - 'defaulted'
+   - 'in_arrears'
+   - 'overdue'
+
+✅ Must clear ALL arrears before applying
+```
+
+#### 2. Account Not Suspended
+```
+❌ BLOCKED if account status = 'suspended'
+
+✅ User must:
+   1. Submit unban request with reason
+   2. Wait for admin review (24-48 hours)
+   3. Get suspension lifted
+```
+
+#### 3. Account Not Banned
+```
+❌ BLOCKED if account status = 'banned'
+
+✅ User must:
+   1. Contact support
+   2. Resolve the issue that caused the ban
+   3. Get ban lifted by admin
+```
+
+### API Endpoints for Rules
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/direct-loans/eligibility` | GET | Check if user is eligible |
+| `/api/direct-loans/documents` | GET | Check document status |
+| `/api/direct-loans/request-unban` | POST | Request to lift suspension |
+
+---
+
+## �💰 Loan Amounts (Based on DTNI)
 
 ### Maximum Loan: $3,000
 

@@ -43,6 +43,202 @@ class DirectLoanService {
             { type: 'bank_statement', name: 'Bank Statement', required: true },
             { type: 'proof_of_residence', name: 'Proof of Residence', required: true }
         ];
+        
+        // ELIGIBILITY RULES
+        this.ELIGIBILITY_RULES = {
+            // Rule 1: No loans in arrears from P2P marketplace
+            NO_ARREARS: {
+                code: 'NO_ARREARS',
+                message: 'You have a loan in arrears from the P2P marketplace. Please clear your arrears before applying for Direct Lending.',
+                action: 'CLEAR_ARREARS'
+            },
+            // Rule 2: Account must not be suspended
+            NOT_SUSPENDED: {
+                code: 'NOT_SUSPENDED',
+                message: 'Your account is suspended. Please request to lift the ban before using the platform.',
+                action: 'REQUEST_UNBAN'
+            },
+            // Rule 3: Account must not be banned
+            NOT_BANNED: {
+                code: 'NOT_BANNED',
+                message: 'Your account has been banned. Please contact support to resolve this issue.',
+                action: 'CONTACT_SUPPORT'
+            }
+        };
+    }
+
+    /**
+     * Check if user is eligible for Direct Lending
+     * RULES:
+     * 1. No loans in arrears from P2P marketplace
+     * 2. Account must not be suspended
+     * 3. Account must not be banned
+     * @param {string} userId - User ID
+     * @returns {Promise<Object>} Eligibility status
+     */
+    async checkUserEligibility(userId) {
+        try {
+            console.log(`🔍 Checking Direct Lending eligibility for user ${userId}`);
+            
+            const violations = [];
+            
+            // Check 1: Is user suspended or banned?
+            const { data: userProfile, error: profileError } = await supabase
+                .from('user_profiles')
+                .select('status, suspension_reason, suspension_date, ban_reason, ban_date')
+                .eq('user_id', userId)
+                .single();
+
+            if (profileError && profileError.code !== 'PGRST116') {
+                console.error('Error checking user profile:', profileError);
+            }
+
+            if (userProfile) {
+                // Check for suspension
+                if (userProfile.status === 'suspended') {
+                    violations.push({
+                        rule: this.ELIGIBILITY_RULES.NOT_SUSPENDED,
+                        details: {
+                            reason: userProfile.suspension_reason,
+                            date: userProfile.suspension_date
+                        }
+                    });
+                }
+                
+                // Check for ban
+                if (userProfile.status === 'banned') {
+                    violations.push({
+                        rule: this.ELIGIBILITY_RULES.NOT_BANNED,
+                        details: {
+                            reason: userProfile.ban_reason,
+                            date: userProfile.ban_date
+                        }
+                    });
+                }
+            }
+
+            // Check 2: Does user have loans in arrears from P2P marketplace?
+            const { data: arrearsLoans, error: loansError } = await supabase
+                .from('loans')
+                .select('loan_id, amount, status, due_date, days_overdue')
+                .eq('borrower_id', userId)
+                .in('status', ['late', 'defaulted', 'in_arrears', 'overdue']);
+
+            if (loansError && loansError.code !== 'PGRST116') {
+                console.error('Error checking loans:', loansError);
+            }
+
+            if (arrearsLoans && arrearsLoans.length > 0) {
+                const totalArrears = arrearsLoans.reduce((sum, loan) => sum + parseFloat(loan.amount || 0), 0);
+                violations.push({
+                    rule: this.ELIGIBILITY_RULES.NO_ARREARS,
+                    details: {
+                        loansInArrears: arrearsLoans.length,
+                        totalAmount: totalArrears,
+                        loans: arrearsLoans.map(l => ({
+                            loanId: l.loan_id,
+                            amount: l.amount,
+                            status: l.status,
+                            daysOverdue: l.days_overdue
+                        }))
+                    }
+                });
+            }
+
+            // Also check direct loans in arrears
+            const { data: directArrearsLoans, error: directLoansError } = await supabase
+                .from('direct_loans')
+                .select('direct_loan_id, principal_amount, status, due_date, days_late')
+                .eq('borrower_user_id', userId)
+                .in('status', ['late', 'defaulted']);
+
+            if (directLoansError && directLoansError.code !== 'PGRST116') {
+                console.error('Error checking direct loans:', directLoansError);
+            }
+
+            if (directArrearsLoans && directArrearsLoans.length > 0) {
+                const totalDirectArrears = directArrearsLoans.reduce((sum, loan) => sum + parseFloat(loan.principal_amount || 0), 0);
+                violations.push({
+                    rule: {
+                        code: 'NO_DIRECT_ARREARS',
+                        message: 'You have a Direct Loan in arrears. Please clear your arrears before applying for a new loan.',
+                        action: 'CLEAR_DIRECT_ARREARS'
+                    },
+                    details: {
+                        loansInArrears: directArrearsLoans.length,
+                        totalAmount: totalDirectArrears,
+                        loans: directArrearsLoans.map(l => ({
+                            loanId: l.direct_loan_id,
+                            amount: l.principal_amount,
+                            status: l.status,
+                            daysLate: l.days_late
+                        }))
+                    }
+                });
+            }
+
+            const isEligible = violations.length === 0;
+
+            console.log(`🔍 Eligibility Check Result:`);
+            console.log(`   Eligible: ${isEligible}`);
+            if (!isEligible) {
+                console.log(`   Violations: ${violations.map(v => v.rule.code).join(', ')}`);
+            }
+
+            return {
+                success: true,
+                eligible: isEligible,
+                violations: violations,
+                message: isEligible 
+                    ? 'You are eligible for Direct Lending.'
+                    : violations[0].rule.message
+            };
+        } catch (error) {
+            console.error('Error checking eligibility:', error);
+            return {
+                success: false,
+                eligible: false,
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * Request to lift suspension/ban
+     * @param {string} userId - User ID
+     * @param {string} reason - Reason for request
+     * @returns {Promise<Object>} Request result
+     */
+    async requestUnban(userId, reason) {
+        try {
+            console.log(`📝 User ${userId} requesting to lift ban/suspension`);
+            
+            // Create unban request
+            const { data, error } = await supabase
+                .from('unban_requests')
+                .insert({
+                    user_id: userId,
+                    reason: reason,
+                    status: 'pending',
+                    created_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            return {
+                success: true,
+                requestId: data.id,
+                message: 'Your request has been submitted. Our team will review it within 24-48 hours.'
+            };
+        } catch (error) {
+            console.error('Error submitting unban request:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
     }
 
     /**
@@ -175,6 +371,17 @@ class DirectLoanService {
      */
     async calculateMaxLoanAmount(userId, termDays = 90) {
         try {
+            // RULE CHECK: Is user eligible? (no arrears, not suspended/banned)
+            const eligibilityCheck = await this.checkUserEligibility(userId);
+            if (!eligibilityCheck.eligible) {
+                return {
+                    success: false,
+                    error: eligibilityCheck.message,
+                    violations: eligibilityCheck.violations,
+                    action: eligibilityCheck.violations[0]?.rule?.action
+                };
+            }
+
             // First check if user has all required documents
             const docCheck = await this.checkRequiredDocuments(userId);
             if (!docCheck.eligible) {
