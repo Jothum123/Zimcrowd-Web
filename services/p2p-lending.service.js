@@ -779,26 +779,58 @@ class P2PLendingService {
             }
 
             // Find recipient by ID, email, or phone
-            let recipientQuery = supabase.from('user_profiles').select('user_id, full_name, email, phone');
-            
             // Check if recipientId is UUID, email, or phone
             const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(recipientId);
             const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientId);
             const isPhone = /^\+?[0-9]{10,15}$/.test(recipientId.replace(/\s/g, ''));
 
+            let recipient = null;
+
             if (isUUID) {
-                recipientQuery = recipientQuery.eq('user_id', recipientId);
+                // Look up by user_id in user_profiles
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .select('user_id, first_name, last_name, phone_number')
+                    .eq('user_id', recipientId)
+                    .single();
+                if (!error && data) {
+                    recipient = { 
+                        user_id: data.user_id, 
+                        name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'User',
+                        phone: data.phone_number
+                    };
+                }
             } else if (isEmail) {
-                recipientQuery = recipientQuery.eq('email', recipientId.toLowerCase());
+                // Look up by email in auth.users via admin API
+                const { data: users } = await supabase.auth.admin.listUsers();
+                const authUser = users?.users?.find(u => u.email?.toLowerCase() === recipientId.toLowerCase());
+                if (authUser) {
+                    recipient = { 
+                        user_id: authUser.id, 
+                        email: authUser.email,
+                        name: authUser.user_metadata?.full_name || authUser.email.split('@')[0]
+                    };
+                }
             } else if (isPhone) {
-                recipientQuery = recipientQuery.eq('phone', recipientId.replace(/\s/g, ''));
+                // Look up by phone in user_profiles
+                const cleanPhone = recipientId.replace(/\s/g, '');
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .select('user_id, first_name, last_name, phone_number')
+                    .eq('phone_number', cleanPhone)
+                    .single();
+                if (!error && data) {
+                    recipient = { 
+                        user_id: data.user_id, 
+                        name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'User',
+                        phone: data.phone_number
+                    };
+                }
             } else {
                 return { success: false, message: 'Invalid recipient. Use email, phone, or user ID.' };
             }
 
-            const { data: recipient, error: recipientError } = await recipientQuery.single();
-
-            if (recipientError || !recipient) {
+            if (!recipient) {
                 return { success: false, message: 'Recipient not found' };
             }
 
@@ -866,7 +898,7 @@ class P2PLendingService {
                 type: 'sent',
                 amount: transferAmount,
                 recipientId: recipient.user_id,
-                recipientName: recipient.full_name,
+                recipientName: recipient.name || recipient.email,
                 reference: transferRef,
                 note: note
             });
@@ -887,7 +919,7 @@ class P2PLendingService {
                     type: 'transfer_out',
                     amount: -transferAmount,
                     reference: transferRef,
-                    description: `Transfer to ${recipient.full_name || recipient.email}`,
+                    description: `Transfer to ${recipient.name || recipient.email}`,
                     metadata: { recipientId: recipient.user_id, note }
                 },
                 {
@@ -895,25 +927,29 @@ class P2PLendingService {
                     type: 'transfer_in',
                     amount: transferAmount,
                     reference: transferRef,
-                    description: `Transfer received`,
+                    description: `Transfer from ${senderId.substring(0, 8)}...`,
                     metadata: { senderId, note }
                 }
             ]);
 
             console.log(`💸 Transfer: $${transferAmount} from ${senderId} to ${recipient.user_id} [${transferRef}]`);
 
+            const newBalance = senderWallet.balance - transferAmount;
+
             return {
                 success: true,
-                message: `Successfully transferred $${transferAmount.toFixed(2)} to ${recipient.full_name || recipient.email}`,
+                message: `Successfully transferred $${transferAmount.toFixed(2)} to ${recipient.name || recipient.email}`,
+                transactionId: transferRef,
+                newBalance: newBalance,
                 data: {
                     reference: transferRef,
                     amount: transferAmount,
                     recipient: {
                         id: recipient.user_id,
-                        name: recipient.full_name,
+                        name: recipient.name,
                         email: recipient.email
                     },
-                    senderNewBalance: senderWallet.balance - transferAmount,
+                    senderNewBalance: newBalance,
                     timestamp: new Date().toISOString()
                 }
             };

@@ -1,13 +1,7 @@
 const express = require('express');
-const { createClient } = require('@supabase/supabase-js');
+const { supabase } = require('../utils/supabase-auth');
 
 const router = express.Router();
-
-// Initialize Supabase client
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_KEY
-);
 
 // Update profile completion status
 router.post('/update-completion', async (req, res) => {
