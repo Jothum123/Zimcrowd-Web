@@ -3227,66 +3227,6 @@
 .transaction-item:hover, .loan-item:hover {
     background-color: rgba(255, 255, 255, 0.05);
 }
-
-        .toast-notification {
-            pointer-events: auto;
-            border-radius: 8px;
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            min-width: 320px;
-            max-width: 400px;
-            animation: toastSlideIn 0.3s ease-out;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            position: relative;
-            border-left: 4px solid;
-        }
-
-        /* Success - Green */
-        .toast-notification.success {
-            background: #d4edda;
-            border-left-color: #28a745;
-        }
-        .toast-notification.success .toast-icon { color: #28a745; }
-        .toast-notification.success .toast-content h4 { color: #155724; }
-        .toast-notification.success .toast-content p { color: #155724; }
-
-        /* Error - Red */
-        .toast-notification.error {
-            background: #f8d7da;
-            border-left-color: #dc3545;
-        }
-        .toast-notification.error .toast-icon { color: #dc3545; }
-        .toast-notification.error .toast-content h4 { color: #721c24; }
-        .toast-notification.error .toast-content p { color: #721c24; }
-
-        /* Warning - Yellow */
-        .toast-notification.warning {
-            background: #fff3cd;
-            border-left-color: #ffc107;
-        }
-        .toast-notification.warning .toast-icon { color: #856404; }
-        .toast-notification.warning .toast-content h4 { color: #856404; }
-        .toast-notification.warning .toast-content p { color: #856404; }
-
-        /* Info - Blue */
-        .toast-notification.info {
-            background: #d1ecf1;
-            border-left-color: #17a2b8;
-        }
-        .toast-notification.info .toast-icon { color: #0c5460; }
-        .toast-notification.info .toast-content h4 { color: #0c5460; }
-        .toast-notification.info .toast-content p { color: #0c5460; }
-
-        .toast-notification.removing {
-            animation: toastSlideOut 0.3s ease-in forwards;
-        }
-
-        @keyframes toastSlideIn {
-            from {
-                opacity: 0;
-                transform: translateX(100%);
             }
             to {
                 opacity: 1;
@@ -15716,67 +15656,35 @@ How it works:
             updateNotificationCount();
             renderNotifications();
             
-            // Show toast notification
-            showToastNotification(notification);
-        }
-
-        function showToastNotification(notification) {
-            // Create or get toast container
-            let container = document.querySelector('.toast-container');
-            if (!container) {
-                container = document.createElement('div');
-                container.className = 'toast-container';
-                document.body.appendChild(container);
+            // Show toast notification (replaced with TestNotifications)
+            if (window.TestNotifications) {
+                window.TestNotifications.info(notification.title, notification.message || '');
             }
-
-            const toast = document.createElement('div');
-            toast.className = `toast-notification ${notification.type}`;
-            toast.innerHTML = `
-                <div class="toast-icon">
-                    <i class="fas ${notification.icon}"></i>
-                </div>
-                <div class="toast-content">
-                    <h4>${notification.title}</h4>
-                    ${notification.message ? `<p>${notification.message}</p>` : ''}
-                </div>
-                <button class="toast-close" onclick="dismissToast(this.parentElement)">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            
-            container.appendChild(toast);
-            
-            // Auto remove after 4 seconds with animation
-            setTimeout(() => {
-                dismissToast(toast);
-            }, 4000);
         }
 
-        function dismissToast(toast) {
-            if (!toast || !toast.parentElement) return;
-            toast.classList.add('removing');
-            setTimeout(() => {
-                if (toast.parentElement) {
-                    toast.remove();
-                }
-            }, 300);
-        }
+        // Old showToastNotification function removed - replaced by TestNotifications
 
-        // Wrapper function for showToast (used throughout the app)
+        // Wrapper function for showToast (replaced with TestNotifications)
         function showToast(type, title, message) {
-            const iconMap = {
-                'success': 'fa-check-circle',
-                'error': 'fa-times-circle',
-                'warning': 'fa-exclamation-triangle',
-                'info': 'fa-info-circle'
-            };
-            
-            showToastNotification({
-                type: type,
-                icon: iconMap[type] || 'fa-info-circle',
-                title: title,
-                message: message
-            });
+            // Use the new test notification system instead
+            if (window.TestNotifications) {
+                switch(type) {
+                    case 'success':
+                        window.TestNotifications.success(title, message);
+                        break;
+                    case 'error':
+                        window.TestNotifications.error(title, message);
+                        break;
+                    case 'warning':
+                        window.TestNotifications.warning(title, message);
+                        break;
+                    case 'info':
+                        window.TestNotifications.info(title, message);
+                        break;
+                    default:
+                        window.TestNotifications.info(title, message);
+                }
+            }
         }
 
         function renderNotifications() {
