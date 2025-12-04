@@ -16670,33 +16670,37 @@ How it works:
 
         function addTestNotificationDemoButton() {
             const demoButton = document.createElement('button');
-            demoButton.innerHTML = '<i class="fas fa-bell"></i> Test Notifications';
+            demoButton.innerHTML = 'Test Notifications';
             demoButton.className = 'btn-test-notifications';
             demoButton.style.cssText = `
                 position: fixed;
                 bottom: 20px;
                 left: 20px;
-                background: linear-gradient(135deg, #38e07b, #2ea05a);
+                background: #1a1a1a;
                 color: white;
-                border: none;
+                border: 1px solid #333;
                 padding: 12px 20px;
-                border-radius: 8px;
+                border-radius: 12px;
                 cursor: pointer;
                 font-size: 14px;
-                font-weight: 600;
-                box-shadow: 0 4px 12px rgba(56, 224, 123, 0.3);
+                font-weight: 500;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
                 z-index: 1000;
-                transition: all 0.2s ease;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                letter-spacing: -0.025em;
             `;
             
             demoButton.onmouseover = () => {
                 demoButton.style.transform = 'translateY(-2px)';
-                demoButton.style.boxShadow = '0 6px 20px rgba(56, 224, 123, 0.4)';
+                demoButton.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.4)';
+                demoButton.style.borderColor = '#555';
             };
             
             demoButton.onmouseout = () => {
                 demoButton.style.transform = 'translateY(0)';
-                demoButton.style.boxShadow = '0 4px 12px rgba(56, 224, 123, 0.3)';
+                demoButton.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
+                demoButton.style.borderColor = '#333';
             };
             
             demoButton.onclick = showTestNotificationDemo;

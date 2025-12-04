@@ -45,41 +45,38 @@ class TestNotificationSystem {
                 z-index: 10000;
                 display: flex;
                 flex-direction: column;
-                gap: 10px;
+                gap: 12px;
             }
 
             .test-notification {
-                background: #1f2937;
-                border: 2px solid #38e07b;
-                border-radius: 8px;
-                padding: 16px;
-                min-width: 300px;
-                max-width: 400px;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                background: #1a1a1a;
+                border: 1px solid #333;
+                border-radius: 12px;
+                padding: 20px;
+                min-width: 320px;
+                max-width: 420px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
                 color: white;
-                font-family: 'Space Grotesk', sans-serif;
-                animation: slideIn 0.3s ease-out;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 position: relative;
+                backdrop-filter: blur(10px);
             }
 
             .test-notification.success {
-                border-color: #10b981;
-                background: linear-gradient(135deg, #065f46, #064e3b);
+                border-left: 4px solid #10b981;
             }
 
             .test-notification.error {
-                border-color: #ef4444;
-                background: linear-gradient(135deg, #7f1d1d, #991b1b);
+                border-left: 4px solid #ef4444;
             }
 
             .test-notification.warning {
-                border-color: #f59e0b;
-                background: linear-gradient(135deg, #78350f, #92400e);
+                border-left: 4px solid #f59e0b;
             }
 
             .test-notification.info {
-                border-color: #3b82f6;
-                background: linear-gradient(135deg, #1e3a8a, #1e40af);
+                border-left: 4px solid #3b82f6;
             }
 
             .test-notification-header {
@@ -93,22 +90,24 @@ class TestNotificationSystem {
                 font-weight: 600;
                 font-size: 16px;
                 color: white;
+                letter-spacing: -0.025em;
             }
 
             .test-notification-close {
                 background: none;
                 border: none;
-                color: rgba(255, 255, 255, 0.7);
+                color: rgba(255, 255, 255, 0.6);
                 cursor: pointer;
-                font-size: 18px;
+                font-size: 20px;
                 padding: 0;
-                width: 24px;
-                height: 24px;
+                width: 28px;
+                height: 28px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                border-radius: 4px;
+                border-radius: 6px;
                 transition: all 0.2s ease;
+                font-weight: 300;
             }
 
             .test-notification-close:hover {
@@ -117,9 +116,10 @@ class TestNotificationSystem {
             }
 
             .test-notification-message {
-                color: rgba(255, 255, 255, 0.9);
-                font-size: 14px;
-                line-height: 1.4;
+                color: rgba(255, 255, 255, 0.8);
+                font-size: 15px;
+                line-height: 1.5;
+                font-weight: 400;
             }
 
             @keyframes slideIn {
@@ -145,7 +145,7 @@ class TestNotificationSystem {
             }
 
             .test-notification.hiding {
-                animation: slideOut 0.3s ease-out forwards;
+                animation: slideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             }
         `;
 
