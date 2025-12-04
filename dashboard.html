@@ -563,15 +563,21 @@
             right: 20px;
             width: 400px;
             max-height: 600px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow-heavy);
+            background: #1a1a1a;
+            backdrop-filter: blur(10px);
+            border: 1px solid #333;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             display: none;
             flex-direction: column;
             z-index: 1000;
             overflow: hidden;
+        }
+
+        body.light-mode .notification-panel {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
         .notification-panel.active {
@@ -580,10 +586,16 @@
 
         .notification-header {
             padding: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid #333;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: #1a1a1a;
+        }
+
+        body.light-mode .notification-header {
+            border-bottom-color: #e5e7eb;
+            background: #ffffff;
         }
 
         body:not(.light-mode) .notification-header {
@@ -597,8 +609,13 @@
         .notification-header h3 {
             margin: 0;
             font-size: 18px;
-            font-weight: 700;
-            color: var(--text-primary);
+            font-weight: 600;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body.light-mode .notification-header h3 {
+            color: #1a1a1a;
         }
 
         .notification-header .mark-all-read {
@@ -619,25 +636,61 @@
         }
 
         .notification-item {
-            padding: 16px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 12px;
             cursor: pointer;
             transition: var(--transition-normal);
             display: flex;
             gap: 12px;
             align-items: flex-start;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            position: relative;
         }
 
         body.light-mode .notification-item {
-            border-bottom-color: rgba(0, 0, 0, 0.05);
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
         .notification-item:hover {
-            background: rgba(56, 231, 123, 0.05);
+            background: #252525;
+            transform: translateY(-1px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        body.light-mode .notification-item:hover {
+            background: #f9fafb;
         }
 
         .notification-item.unread {
-            background: rgba(56, 231, 123, 0.08);
+            border-left: 4px solid #10b981;
+            background: #1f1f1f;
+        }
+
+        body.light-mode .notification-item.unread {
+            background: #f0fdf4;
+            border-left-color: #10b981;
+        }
+
+        .notification-item.success {
+            border-left: 4px solid #10b981;
+        }
+
+        .notification-item.error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .notification-item.warning {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .notification-item.info {
+            border-left: 4px solid #3b82f6;
         }
 
         .notification-icon {
@@ -675,21 +728,39 @@
         }
 
         .notification-title {
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 4px;
+            color: white;
+            margin-bottom: 8px;
+            letter-spacing: -0.025em;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body.light-mode .notification-title {
+            color: #1a1a1a;
         }
 
         .notification-message {
-            font-size: 13px;
-            color: #94a3b8;
-            margin-bottom: 4px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 15px;
+            line-height: 1.5;
+            font-weight: 400;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body.light-mode .notification-message {
+            color: rgba(0, 0, 0, 0.7);
         }
 
         .notification-time {
             font-size: 12px;
-            color: #64748b;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 8px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body.light-mode .notification-time {
+            color: rgba(0, 0, 0, 0.5);
         }
 
         .notification-footer {
