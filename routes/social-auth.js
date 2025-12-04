@@ -40,13 +40,10 @@ socialRouter.get('/google', async (req, res) => {
             ? `https://${process.env.VERCEL_URL}` 
             : process.env.BACKEND_URL || 'https://zimcrowd-backend.vercel.app';
         
-        // Pass mode in the redirect URL - Supabase preserves this in the callback
+        // Simple redirect URL without mode parameter
         const redirectTo = `${baseUrl}/api/social-auth/callback`;
 
         console.log('🔄 Initiating Google OAuth:', { mode, redirectTo });
-
-        // Encode mode in state parameter (base64) so it survives the OAuth flow
-        const stateData = Buffer.from(JSON.stringify({ mode })).toString('base64');
 
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
@@ -54,8 +51,7 @@ socialRouter.get('/google', async (req, res) => {
                 redirectTo: redirectTo,
                 queryParams: {
                     access_type: 'offline',
-                    prompt: 'select_account', // Always show account picker
-                    state: stateData // Pass mode in state
+                    prompt: 'select_account' // Always show account picker
                 },
                 scopes: 'email profile' // Request email and profile info
             }
@@ -193,22 +189,10 @@ socialRouter.get('/callback', async (req, res) => {
             // User is authenticated, check if we need to create/update profile
             const user = data.session.user;
             
-            // Extract mode from state parameter (base64 encoded)
+            // No mode parameter - we'll determine behavior based on profile existence
             console.log('🔍 Callback query params:', req.query);
             console.log('🔍 Full callback URL:', req.url);
-            
-            let mode = 'login'; // default to login
-            try {
-                if (req.query.state) {
-                    const stateData = JSON.parse(Buffer.from(req.query.state, 'base64').toString());
-                    mode = stateData.mode || 'login';
-                    console.log('🔍 Decoded state:', stateData);
-                }
-            } catch (e) {
-                console.log('⚠️ Could not decode state, defaulting to login mode');
-            }
-            
-            console.log('🔍 Social auth mode:', mode, 'for user:', user.email);
+            console.log('🔍 Social auth for user:', user.email);
 
             // Check if profile exists
             const { data: existingProfile, error: profileError } = await supabase
