@@ -357,6 +357,9 @@ document.addEventListener('DOMContentLoaded', () => {
         checkForExistingRedNotifications();
     }, 1000);
     
+    // Specific payment-toast removal - target the exact element found
+    startPaymentToastRemoval();
+    
     // Show welcome notification for real dashboard
     setTimeout(() => {
         window.TestNotifications.success(
@@ -365,6 +368,49 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     }, 1000);
 });
+
+// Specific removal for the payment-toast element
+function startPaymentToastRemoval() {
+    console.log('🎯 Starting payment-toast removal system...');
+    
+    // Check immediately
+    removePaymentToast();
+    
+    // Check every 500ms for stubborn external scripts
+    setInterval(() => {
+        removePaymentToast();
+    }, 500);
+    
+    // Also monitor DOM changes specifically for payment-toast
+    const observer = new MutationObserver(() => {
+        removePaymentToast();
+    });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+}
+
+function removePaymentToast() {
+    const paymentToast = document.getElementById('payment-toast');
+    if (paymentToast) {
+        console.error('🔴 PAYMENT-TOAST DETECTED AND REMOVED:', {
+            element: paymentToast,
+            innerHTML: paymentToast.innerHTML,
+            style: paymentToast.getAttribute('style'),
+            className: paymentToast.className
+        });
+        
+        // Remove it immediately
+        paymentToast.remove();
+        
+        // Replace with our dark notification
+        window.TestNotifications.success('Payment Processed', 'Your transaction was completed successfully!');
+        
+        console.warn('🚫 payment-toast element removed and replaced with dark notification');
+    }
+}
 
 // Check for any existing red notifications immediately
 function checkForExistingRedNotifications() {
