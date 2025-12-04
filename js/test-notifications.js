@@ -155,37 +155,55 @@ class TestNotificationSystem {
     }
 
     /**
-     * Show a test notification
+     * Show a notification
      */
-    show(title, message, type = 'info', duration = 4000) {
-        if (!this.isInitialized) {
-            this.initialize();
-        }
-
+    show(title, message, type = 'info', options = {}) {
+        console.log('🔔 TestNotification showing:', { title, message, type, options });
+        
         const notification = document.createElement('div');
         notification.className = `test-notification ${type}`;
         
+        const icon = this.config.icons[type] || this.config.icons.info;
+        const color = this.config.colors[type] || this.config.colors.info;
+        
         notification.innerHTML = `
-            <div class="test-notification-header">
-                <div class="test-notification-title">${title}</div>
-                <button class="test-notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+            <div class="test-notification-icon" style="color: ${color}">
+                <i class="fas ${icon}"></i>
             </div>
-            <div class="test-notification-message">${message}</div>
+            <div class="test-notification-content">
+                <div class="test-notification-title">${title}</div>
+                ${message ? `<div class="test-notification-message">${message}</div>` : ''}
+            </div>
+            <button class="test-notification-close" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
         `;
-
-        this.container.appendChild(notification);
-
-        // Auto-hide after duration
+        
+        // Add to container
+        const container = this.getOrCreateContainer();
+        container.appendChild(notification);
+        
+        // Auto remove
+        const duration = options.duration || this.config.defaultDuration;
         setTimeout(() => {
-            notification.classList.add('hiding');
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.remove();
-                }
-            }, 300);
+            if (notification.parentElement) {
+                notification.remove();
+            }
         }, duration);
+        
+        return notification;
+    }
 
-        console.log(`🔔 Test notification: ${title} - ${message}`);
+    /**
+     * Get or create the notification container
+     */
+    getOrCreateContainer() {
+        if (this.container) {
+            return this.container;
+        }
+
+        this.createContainer();
+        return this.container;
     }
 
     /**
@@ -222,6 +240,9 @@ window.TestNotifications = new TestNotificationSystem();
 document.addEventListener('DOMContentLoaded', () => {
     window.TestNotifications.initialize();
     
+    // Monitor for any red notifications from external sources
+    monitorForRedNotifications();
+    
     // Show welcome notification
     setTimeout(() => {
         window.TestNotifications.success(
@@ -230,3 +251,47 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     }, 1000);
 });
+
+// Monitor for red notifications from external sources like OneSignal
+function monitorForRedNotifications() {
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    // Check if this is a notification element
+                    const style = window.getComputedStyle(node);
+                    const backgroundColor = style.backgroundColor;
+                    const position = style.position;
+                    
+                    // Check for red background and fixed positioning (typical notification)
+                    if (position === 'fixed' && 
+                        (backgroundColor.includes('255, 0, 0') || 
+                         backgroundColor.includes('220, 53, 69') ||
+                         backgroundColor.includes('239, 68, 68') ||
+                         node.style?.background?.includes('red'))) {
+                        
+                        console.warn('🚨 RED NOTIFICATION DETECTED:', {
+                            element: node,
+                            backgroundColor: backgroundColor,
+                            innerHTML: node.innerHTML,
+                            className: node.className
+                        });
+                        
+                        // Log the source if possible
+                        if (node.classList.contains('onesignal')) {
+                            console.error('🔴 Red notification from OneSignal detected!');
+                        }
+                    }
+                }
+            });
+        });
+    });
+    
+    // Start observing the entire document
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+    
+    console.log('🔍 Red notification monitor activated');
+}
