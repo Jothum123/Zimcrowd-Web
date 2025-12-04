@@ -361,3 +361,65 @@ CREATE TRIGGER update_user_documents_updated_at
     BEFORE UPDATE ON user_documents
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
+
+-- Create verification_documents table for legacy post-registration compatibility
+CREATE TABLE IF NOT EXISTS verification_documents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    document_type VARCHAR(50) NOT NULL,
+    file_path TEXT NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_size BIGINT NOT NULL,
+    file_type VARCHAR(100) NOT NULL,
+    ocr_data JSONB,
+    verification_status VARCHAR(20) DEFAULT 'pending',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create indexes for verification_documents
+CREATE INDEX IF NOT EXISTS idx_verification_documents_user_id ON verification_documents(user_id);
+CREATE INDEX IF NOT EXISTS idx_verification_documents_document_type ON verification_documents(document_type);
+
+-- Enable RLS for verification_documents
+ALTER TABLE verification_documents ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for verification_documents
+CREATE POLICY "Users can view own verification documents" ON verification_documents 
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own verification documents" ON verification_documents 
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Admins can view all verification documents" ON verification_documents 
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM admin_users au 
+            WHERE au.user_id = auth.uid() AND au.is_active = true
+        )
+    );
+
+-- Function to create verification document (for legacy compatibility)
+CREATE OR REPLACE FUNCTION create_verification_document(
+    p_user_id UUID,
+    p_document_type VARCHAR(50),
+    p_file_path TEXT,
+    p_file_name VARCHAR(255),
+    p_file_size BIGINT,
+    p_file_type VARCHAR(100),
+    p_ocr_data JSONB DEFAULT '{}'
+) RETURNS UUID AS $$
+DECLARE
+    document_id UUID;
+BEGIN
+    INSERT INTO verification_documents (
+        user_id, document_type, file_path, file_name, 
+        file_size, file_type, ocr_data
+    ) VALUES (
+        p_user_id, p_document_type, p_file_path, p_file_name,
+        p_file_size, p_file_type, p_ocr_data
+    ) RETURNING id INTO document_id;
+    
+    RETURN document_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
