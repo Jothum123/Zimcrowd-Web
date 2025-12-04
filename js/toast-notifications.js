@@ -625,7 +625,7 @@ class ToastNotificationSystem {
                 message: 'Your password has been changed successfully.',
                 type: 'security'
             },
-            2fa_enabled: {
+            '2fa_enabled': {
                 title: '2FA Enabled',
                 message: 'Two-factor authentication has been enabled for your account.',
                 type: 'security'
