@@ -17,7 +17,7 @@ This guide covers the complete implementation of:
 
 ✅ **Approved:**
 - New users (no credit history)
-- Users with low ZimScore (300-500)
+- Users with low ZimScore (30-50)
 - Users with good payment history
 - Users with no active loans
 

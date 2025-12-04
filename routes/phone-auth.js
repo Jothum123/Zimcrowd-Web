@@ -248,7 +248,7 @@ router.post('/smart-login', [
         // Find user by phone
         const { data: profiles, error: profileError } = await supabase
             .from('profiles')
-            .select('id, phone, first_name, last_name, totp_secret, totp_enabled')
+            .select('id, phone, first_name, last_name, totp_secret, totp_enabled, auth_provider')
             .eq('phone', formattedPhone)
             .order('created_at', { ascending: false })
             .limit(1);
@@ -261,6 +261,20 @@ router.post('/smart-login', [
         }
 
         const user = profiles[0];
+        
+        // IMPORTANT: Check if user signed up with a different auth provider
+        // Users who signed up with Google/Facebook/email cannot use phone login
+        const storedProvider = user.auth_provider;
+        if (storedProvider && storedProvider !== 'phone' && storedProvider !== 'unknown') {
+            console.log(`⚠️ Auth provider mismatch: User signed up with '${storedProvider}' but trying smart-login with phone`);
+            const providerName = storedProvider === 'email' ? 'email and password' : storedProvider.charAt(0).toUpperCase() + storedProvider.slice(1);
+            return res.status(401).json({
+                success: false,
+                message: `This account was created using ${providerName}. Please use ${providerName} to sign in.`,
+                wrongProvider: true,
+                correctProvider: storedProvider
+            });
+        }
 
         // Try authentication methods in order of preference
 
@@ -324,6 +338,19 @@ router.post('/smart-login', [
 async function generateLoginResponse(user, method, res) {
     const jwt = require('jsonwebtoken');
 
+    // Update last login time and method for badge display
+    try {
+        await supabase
+            .from('profiles')
+            .update({
+                last_login_at: new Date().toISOString(),
+                last_login_method: 'phone' // Phone-based login
+            })
+            .eq('id', user.id);
+    } catch (updateError) {
+        console.error('Failed to update last login:', updateError);
+    }
+
     // Generate JWT token
     const token = jwt.sign(
         {
@@ -351,6 +378,7 @@ async function generateLoginResponse(user, method, res) {
             lastName: user.last_name || 'User',
             verified: true,
             authMethod: method,
+            lastLoginMethod: 'phone', // Include for frontend badge
             totpEnabled: user.totp_enabled || false
         },
         session: {
@@ -637,6 +665,7 @@ router.post('/verify-phone-signup', [
                 first_name: firstName,
                 last_name: lastName,
                 phone: phone,
+                auth_provider: 'phone', // Mark as phone/password signup - user must use phone to login
                 onboarding_completed: false,
                 profile_completed: false,
                 role: 'user',
@@ -781,6 +810,7 @@ router.post('/dev-verify-signup-no-limit', [
                 first_name: firstName,
                 last_name: lastName,
                 phone: phone,
+                auth_provider: 'phone', // Mark as phone/password signup
                 onboarding_completed: false,
                 profile_completed: false,
                 created_at: new Date().toISOString(),
@@ -863,10 +893,28 @@ router.post('/login-phone', [
         // Find user by phone number (since we use dummy auth for phone users)
         const { data: profiles, error: profileError } = await supabase
             .from('profiles')
-            .select('id, phone, first_name, last_name')
+            .select('id, phone, first_name, last_name, auth_provider')
             .eq('phone', formattedPhone)
             .order('created_at', { ascending: false })
             .limit(1);
+        
+        // IMPORTANT: Check if user signed up with a different auth provider
+        // Users who signed up with Google/Facebook/email cannot use phone login
+        if (profiles && profiles.length > 0) {
+            const userProfile = profiles[0];
+            const storedProvider = userProfile.auth_provider;
+            
+            if (storedProvider && storedProvider !== 'phone' && storedProvider !== 'unknown') {
+                console.log(`⚠️ Auth provider mismatch: User signed up with '${storedProvider}' but trying to login with phone/password`);
+                const providerName = storedProvider === 'email' ? 'email and password' : storedProvider.charAt(0).toUpperCase() + storedProvider.slice(1);
+                return res.status(401).json({
+                    success: false,
+                    message: `This account was created using ${providerName}. Please use ${providerName} to sign in.`,
+                    wrongProvider: true,
+                    correctProvider: storedProvider
+                });
+            }
+        }
             
         if (profileError || !profiles || profiles.length === 0) {
             // FOR TESTING: Create a test user if none exists
@@ -961,6 +1009,19 @@ router.post('/login-phone', [
         }
         console.log('[Phone Login] Found user profile:', profile.id);
         
+        // Update last login time and method for badge display
+        try {
+            await supabase
+                .from('profiles')
+                .update({
+                    last_login_at: new Date().toISOString(),
+                    last_login_method: 'phone'
+                })
+                .eq('id', profile.id);
+        } catch (updateError) {
+            console.error('Failed to update last login:', updateError);
+        }
+        
         // Generate JWT token
         const token = jwt.sign(
             { 
@@ -980,7 +1041,8 @@ router.post('/login-phone', [
                 phone: formattedPhone,
                 firstName: profile.first_name || 'Test',
                 lastName: profile.last_name || 'User',
-                verified: true
+                verified: true,
+                lastLoginMethod: 'phone' // Include for frontend badge
             },
             session: {
                 access_token: token,

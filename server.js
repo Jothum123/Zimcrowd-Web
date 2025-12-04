@@ -4,7 +4,15 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 const querystring = require('querystring');
-const nodemailer = require('nodemailer');
+let nodemailer;
+try {
+    nodemailer = require('nodemailer');
+    if (!nodemailer.createTransport) {
+        nodemailer = { createTransport: () => ({ sendMail: async () => {} }) };
+    }
+} catch (e) {
+    nodemailer = { createTransport: () => ({ sendMail: async () => {} }) };
+}
 
 // Newsletter subscribers storage
 const SUBSCRIBERS_FILE = path.join(__dirname, 'subscribers.json');
@@ -24,7 +32,7 @@ const emailConfig = {
 };
 
 // Create email transporter
-const transporter = nodemailer.createTransporter(emailConfig);
+const transporter = nodemailer.createTransport(emailConfig);
 
 // Function to send notification email
 async function sendSubscriptionNotification(subscriberEmail, subscriberData) {

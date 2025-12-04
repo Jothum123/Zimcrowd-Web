@@ -95,6 +95,7 @@ const registerUser = async (userData) => {
                     last_name: lastName,
                     email: email,
                     phone: phone,
+                    auth_provider: 'email', // Mark as email/password signup - user must use password to login
                     onboarding_completed: false,
                     profile_completed: false,
                     role: 'user'
@@ -118,6 +119,62 @@ const signInUser = async (emailOrPhone, password, rememberMe = false) => {
     try {
         // Determine if input is email or phone
         const isPhone = isValidPhone(emailOrPhone);
+        
+        // IMPORTANT: Check if user signed up with a social provider before allowing password login
+        // Users who signed up with Google/Facebook cannot use email/phone password login
+        // Users who signed up with email cannot use phone login and vice versa
+        const emailToCheck = isPhone ? null : emailOrPhone.toLowerCase();
+        const phoneToCheck = isPhone ? emailOrPhone : null;
+        
+        // Check by email
+        if (emailToCheck) {
+            const { data: existingProfile, error: profileCheckError } = await supabase
+                .from('profiles')
+                .select('id, auth_provider, email')
+                .eq('email', emailToCheck)
+                .single();
+            
+            if (existingProfile && existingProfile.auth_provider) {
+                const storedProvider = existingProfile.auth_provider;
+                
+                // If user signed up with social auth or phone, reject email/password login
+                if (storedProvider !== 'email' && storedProvider !== 'unknown') {
+                    console.log(`⚠️ Auth provider mismatch: User signed up with '${storedProvider}' but trying to login with email/password`);
+                    const providerName = storedProvider === 'phone' ? 'phone number and password' : storedProvider.charAt(0).toUpperCase() + storedProvider.slice(1);
+                    return { 
+                        success: false, 
+                        message: `This account was created using ${providerName}. Please use ${providerName} to sign in.`,
+                        wrongProvider: true,
+                        correctProvider: storedProvider
+                    };
+                }
+            }
+        }
+        
+        // Check by phone
+        if (phoneToCheck) {
+            const { data: existingProfile, error: profileCheckError } = await supabase
+                .from('profiles')
+                .select('id, auth_provider, phone')
+                .eq('phone', phoneToCheck)
+                .single();
+            
+            if (existingProfile && existingProfile.auth_provider) {
+                const storedProvider = existingProfile.auth_provider;
+                
+                // If user signed up with social auth or email, reject phone/password login
+                if (storedProvider !== 'phone' && storedProvider !== 'unknown') {
+                    console.log(`⚠️ Auth provider mismatch: User signed up with '${storedProvider}' but trying to login with phone/password`);
+                    const providerName = storedProvider === 'email' ? 'email and password' : storedProvider.charAt(0).toUpperCase() + storedProvider.slice(1);
+                    return { 
+                        success: false, 
+                        message: `This account was created using ${providerName}. Please use ${providerName} to sign in.`,
+                        wrongProvider: true,
+                        correctProvider: storedProvider
+                    };
+                }
+            }
+        }
         
         let authOptions;
         if (isPhone) {
@@ -148,6 +205,20 @@ const signInUser = async (emailOrPhone, password, rememberMe = false) => {
         if (profileError) {
             console.error('Profile fetch error:', profileError);
         }
+        
+        // Update last login time and method for badge display
+        const loginMethod = isPhone ? 'phone' : 'email';
+        const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+                last_login_at: new Date().toISOString(),
+                last_login_method: loginMethod
+            })
+            .eq('id', data.user.id);
+        
+        if (updateError) {
+            console.error('Failed to update last login:', updateError);
+        }
 
         return {
             success: true,
@@ -161,7 +232,8 @@ const signInUser = async (emailOrPhone, password, rememberMe = false) => {
                 phoneVerified: profile?.phone_verified || false,
                 onboardingCompleted: profile?.onboarding_completed || false,
                 profileCompleted: profile?.profile_completed || false,
-                role: profile?.role || 'user'
+                role: profile?.role || 'user',
+                lastLoginMethod: loginMethod // Include in response for frontend badge
             },
             token: data.session?.access_token,
             message: 'Login successful'

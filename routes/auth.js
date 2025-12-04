@@ -354,4 +354,97 @@ router.post('/logout', async (req, res) => {
     }
 });
 
+// @route   POST /api/auth/check-login-method
+// @desc    Get the last-used sign-in method for a user (for displaying badge on login page)
+// @access  Public
+router.post('/check-login-method', [
+    body('identifier')
+        .notEmpty()
+        .withMessage('Email or phone is required'),
+    handleValidationErrors
+], async (req, res) => {
+    try {
+        const { identifier } = req.body;
+        const { createClient } = require('@supabase/supabase-js');
+        const supabase = createClient(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_ANON_KEY
+        );
+        
+        // Determine if identifier is email or phone
+        const isEmail = identifier.includes('@');
+        
+        // Query profile by email or phone
+        let query = supabase
+            .from('profiles')
+            .select('auth_provider, last_login_method, last_login_at');
+        
+        if (isEmail) {
+            query = query.eq('email', identifier.toLowerCase());
+        } else {
+            // Try to match phone number (with or without formatting)
+            query = query.or(`phone.eq.${identifier},phone.eq.+${identifier.replace(/^\+/, '')}`);
+        }
+        
+        const { data: profile, error } = await query.single();
+        
+        if (error || !profile) {
+            // Don't reveal if user exists - return null badge
+            return res.json({
+                success: true,
+                badge: null,
+                message: 'No login history found'
+            });
+        }
+        
+        // Return the badge info
+        const badgeInfo = {
+            authProvider: profile.auth_provider,
+            lastLoginMethod: profile.last_login_method || profile.auth_provider,
+            lastLoginAt: profile.last_login_at,
+            // Human-readable badge text
+            badgeText: getBadgeText(profile.last_login_method || profile.auth_provider),
+            badgeIcon: getBadgeIcon(profile.last_login_method || profile.auth_provider)
+        };
+        
+        res.json({
+            success: true,
+            badge: badgeInfo
+        });
+        
+    } catch (error) {
+        console.error('Check login method error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to check login method'
+        });
+    }
+});
+
+// Helper function to get badge text
+function getBadgeText(method) {
+    const badges = {
+        'google': 'Last signed in with Google',
+        'facebook': 'Last signed in with Facebook',
+        'email': 'Last signed in with Email',
+        'phone': 'Last signed in with Phone',
+        'apple': 'Last signed in with Apple',
+        'twitter': 'Last signed in with Twitter'
+    };
+    return badges[method] || 'Last signed in with ' + (method ? method.charAt(0).toUpperCase() + method.slice(1) : 'Unknown');
+}
+
+// Helper function to get badge icon
+function getBadgeIcon(method) {
+    const icons = {
+        'google': '🔵',
+        'facebook': '🔷',
+        'email': '✉️',
+        'phone': '📱',
+        'apple': '🍎',
+        'twitter': '🐦'
+    };
+    return icons[method] || '🔐';
+}
+
 module.exports = router;

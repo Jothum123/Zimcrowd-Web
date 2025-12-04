@@ -201,6 +201,42 @@ socialRouter.get('/callback', async (req, res) => {
                 console.error('Profile check error:', profileError);
             }
 
+            // IMPORTANT: Check if user exists with a DIFFERENT auth provider
+            // If user signed up with email/password, they cannot login with social auth
+            // If user signed up with Google, they cannot login with Facebook, etc.
+            const currentProvider = user.app_metadata?.provider || 'unknown';
+            
+            if (existingProfile && existingProfile.auth_provider) {
+                const storedProvider = existingProfile.auth_provider;
+                
+                // Check if the stored provider matches the current login attempt
+                if (storedProvider !== currentProvider && storedProvider !== 'unknown') {
+                    console.log(`⚠️ Auth provider mismatch: User signed up with '${storedProvider}' but trying to login with '${currentProvider}'`);
+                    const frontendUrl = process.env.FRONTEND_URL || 'https://zimcrowd.com';
+                    const providerName = storedProvider === 'email' ? 'email and password' : storedProvider.charAt(0).toUpperCase() + storedProvider.slice(1);
+                    return res.redirect(`${frontendUrl}/login.html?error=wrong_provider&provider=${storedProvider}&message=This account was created using ${providerName}. Please use ${providerName} to sign in.`);
+                }
+            }
+            
+            // Also check by email if profile doesn't exist yet (user might exist in profiles with different ID)
+            if (!existingProfile) {
+                const { data: profileByEmail, error: emailCheckError } = await supabase
+                    .from('profiles')
+                    .select('id, auth_provider, email')
+                    .eq('email', user.email)
+                    .single();
+                
+                if (profileByEmail && profileByEmail.auth_provider) {
+                    const storedProvider = profileByEmail.auth_provider;
+                    if (storedProvider !== currentProvider && storedProvider !== 'unknown') {
+                        console.log(`⚠️ Auth provider mismatch (by email): User signed up with '${storedProvider}' but trying to login with '${currentProvider}'`);
+                        const frontendUrl = process.env.FRONTEND_URL || 'https://zimcrowd.com';
+                        const providerName = storedProvider === 'email' ? 'email and password' : storedProvider.charAt(0).toUpperCase() + storedProvider.slice(1);
+                        return res.redirect(`${frontendUrl}/login.html?error=wrong_provider&provider=${storedProvider}&message=This account was created using ${providerName}. Please use ${providerName} to sign in.`);
+                    }
+                }
+            }
+
             // Log raw metadata for debugging
             console.log('📦 Raw user metadata from provider:', JSON.stringify(user.user_metadata, null, 2));
             console.log('📦 Raw app metadata:', JSON.stringify(user.app_metadata, null, 2));
@@ -249,6 +285,9 @@ socialRouter.get('/callback', async (req, res) => {
                           user.user_metadata?.mobile || null,
                     avatar_url: avatarUrl, // Save social profile picture
                     role: 'user',
+                    auth_provider: authProvider, // Store the auth provider (google, facebook, etc.)
+                    last_login_at: new Date().toISOString(), // Track last login time
+                    last_login_method: authProvider, // Track last login method for badge display
                     onboarding_completed: existingProfile?.onboarding_completed || false,
                     profile_completed: existingProfile?.profile_completed || false,
                     created_at: existingProfile?.created_at || new Date().toISOString(),

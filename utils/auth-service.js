@@ -182,7 +182,31 @@ async function loginUser(email, password) {
             };
         }
 
-        // 2. Find user in database
+        // 2. IMPORTANT: Check if user signed up with a social provider before allowing password login
+        // Users who signed up with Google/Facebook cannot use password login
+        const { data: existingProfile, error: profileCheckError } = await supabase
+            .from('profiles')
+            .select('id, auth_provider, email')
+            .eq('email', email.toLowerCase())
+            .single();
+        
+        if (existingProfile && existingProfile.auth_provider) {
+            const storedProvider = existingProfile.auth_provider;
+            
+            // If user signed up with social auth, reject password login
+            if (storedProvider !== 'email' && storedProvider !== 'unknown') {
+                console.log(`⚠️ Auth provider mismatch: User signed up with '${storedProvider}' but trying to login with password`);
+                const providerName = storedProvider.charAt(0).toUpperCase() + storedProvider.slice(1);
+                return { 
+                    success: false, 
+                    message: `This account was created using ${providerName}. Please use the "${providerName}" button to sign in.`,
+                    wrongProvider: true,
+                    correctProvider: storedProvider
+                };
+            }
+        }
+
+        // 3. Find user in database
         const { data: user, error: userError } = await supabase
             .from('users')
             .select('*')
@@ -196,7 +220,7 @@ async function loginUser(email, password) {
             };
         }
 
-        // 3. Verify password
+        // 4. Verify password
         const isValidPassword = await bcrypt.compare(password, user.password_hash);
 
         if (!isValidPassword) {
@@ -206,7 +230,7 @@ async function loginUser(email, password) {
             };
         }
 
-        // 4. Sign in with Supabase Auth
+        // 5. Sign in with Supabase Auth
         const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
             email: email.toLowerCase(),
             password: password
@@ -217,7 +241,7 @@ async function loginUser(email, password) {
             // Continue even if Supabase auth fails, use our own JWT
         }
 
-        // 5. Update last login
+        // 6. Update last login
         await supabase
             .from('users')
             .update({ 
@@ -226,19 +250,32 @@ async function loginUser(email, password) {
             })
             .eq('id', user.id);
 
-        // 6. Generate JWT token
+        // 7. Generate JWT token
         const token = jwt.sign(
             { userId: user.id, email: user.email },
             process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
 
-        // 7. Get user wallet
+        // 8. Get user wallet
         const { data: wallet } = await supabase
             .from('wallets')
             .select('balance')
             .eq('user_id', user.id)
             .single();
+        
+        // 9. Update last login time and method for badge display
+        try {
+            await supabase
+                .from('profiles')
+                .update({
+                    last_login_at: new Date().toISOString(),
+                    last_login_method: 'email'
+                })
+                .eq('id', user.id);
+        } catch (updateError) {
+            console.error('Failed to update last login:', updateError);
+        }
 
         return {
             success: true,
@@ -251,7 +288,8 @@ async function loginUser(email, password) {
                 emailVerified: user.email_verified || false,
                 phoneVerified: user.phone_verified || false,
                 zimscore: user.zimscore || 0,
-                walletBalance: wallet?.balance || 0
+                walletBalance: wallet?.balance || 0,
+                lastLoginMethod: 'email' // Include for frontend badge
             },
             token,
             supabaseToken: authData?.session?.access_token || null
