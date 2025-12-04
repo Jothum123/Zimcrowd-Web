@@ -3058,33 +3058,6 @@
 
             container.innerHTML = tableHTML;
         }
-                type: 'line',
-                data: {
-                    labels: monthlyData.map(item => item.month),
-                    datasets: [{
-                        label: 'Monthly Investments',
-                        data: monthlyData.map(item => item.amount),
-                        borderColor: '#38e07b',
-                        backgroundColor: '#38e07b20',
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return formatCurrency(value);
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
 
         async function loadAdminUsers() {
             const container = document.getElementById('adminUsersContent');
