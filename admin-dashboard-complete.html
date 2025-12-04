@@ -1390,16 +1390,20 @@
         }
 
         function initializeDashboard() {
-            loadAdminProfile();
-            loadDashboardOverview();
-            loadAccountStatistics();
-            loadKYCQueue();
-            startRealTimeNotifications();
-            
-            // Auto-refresh every 30 seconds
-            setInterval(() => {
-                refreshCurrentSection();
-            }, 30000);
+            // Load admin profile first, and only proceed if successful
+            loadAdminProfile().then(success => {
+                if (success) {
+                    loadDashboardOverview();
+                    loadAccountStatistics();
+                    loadKYCQueue();
+                    startRealTimeNotifications();
+                    
+                    // Auto-refresh every 30 seconds
+                    setInterval(() => {
+                        refreshCurrentSection();
+                    }, 30000);
+                }
+            });
         }
 
         // Real-time Notifications System
@@ -1476,11 +1480,22 @@
 
         // Load Admin Profile and Permissions
         async function loadAdminProfile() {
-            const data = await makeAPIRequest('/api/admin-role-management/profile');
-            if (data && data.success) {
-                adminProfile = data.data.admin;
-                adminPermissions = data.data.admin.permissions || [];
-                updateUIForAdminRole();
+            try {
+                const data = await makeAPIRequest('/api/admin-role-management/profile');
+                if (data && data.success) {
+                    adminProfile = data.data.admin;
+                    adminPermissions = data.data.admin.permissions || [];
+                    updateUIForAdminRole();
+                    return true;
+                } else if (data === null) {
+                    // Authentication failed, don't proceed with other loads
+                    console.log('Admin profile authentication failed');
+                    return false;
+                }
+                return false;
+            } catch (error) {
+                console.error('Failed to load admin profile:', error);
+                return false;
             }
         }
 
@@ -1628,8 +1643,10 @@
                 });
 
                 if (response.status === 401) {
+                    // Clear invalid token and show authentication prompt instead of reload
                     localStorage.removeItem('adminAuthToken');
-                    location.reload();
+                    authToken = null;
+                    showAuthenticationError();
                     return null;
                 }
 
@@ -1642,6 +1659,42 @@
                 console.error(`API Error for ${endpoint}:`, error);
                 return null;
             }
+        }
+
+        function showAuthenticationError() {
+            // Show error message and prompt for new API key
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: #ef4444;
+                color: white;
+                padding: 20px;
+                text-align: center;
+                z-index: 10000;
+                font-family: 'Space Grotesk', sans-serif;
+            `;
+            errorDiv.innerHTML = `
+                <h3 style="margin: 0 0 10px 0;">Authentication Failed</h3>
+                <p style="margin: 0 0 15px 0;">Your admin API key is invalid or has expired.</p>
+                <button onclick="retryAuthentication()" style="background: white; color: #ef4444; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600;">
+                    Retry Authentication
+                </button>
+            `;
+            document.body.appendChild(errorDiv);
+        }
+
+        function retryAuthentication() {
+            // Remove error message
+            const errorDiv = document.querySelector('div[style*="position: fixed"]');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+            
+            // Restart authentication flow
+            checkAuthentication();
         }
 
         // Dashboard Overview

@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: '.env.production' });
 require('express-async-errors');
 
 console.log('🚀 Starting ZimCrowd server...');
@@ -47,6 +47,12 @@ try {
     console.log('✅ Admin routes loaded');
     var adminDashboardRoutes = require('./routes/admin-dashboard');
     console.log('✅ Admin dashboard routes loaded');
+    var adminManualTransactionsRoutes = require('./routes/admin-manual-transactions');
+    console.log('✅ Admin manual transactions routes loaded');
+    var adminRoleManagementRoutes = require('./routes/admin-role-management');
+    console.log('✅ Admin role management routes loaded');
+    var adminWalletMonitoringRoutes = require('./routes/admin-wallet-monitoring');
+    console.log('✅ Admin wallet monitoring routes loaded');
     var paymentRoutes = require('./routes/payments');
     console.log('✅ Payment routes loaded');
     var testRoutes = require('./routes/test');
@@ -194,6 +200,12 @@ app.use('/api/admin', adminRoutes);
 console.log('✅ Admin routes registered');
 app.use('/api/admin-dashboard', adminDashboardRoutes);
 console.log('✅ Admin dashboard routes registered');
+app.use('/api/admin-manual-transactions', adminManualTransactionsRoutes);
+console.log('✅ Admin manual transactions routes registered');
+app.use('/api/admin-role-management', adminRoleManagementRoutes);
+console.log('✅ Admin role management routes registered');
+app.use('/api/admin-wallet-monitoring', adminWalletMonitoringRoutes);
+console.log('✅ Admin wallet monitoring routes registered');
 app.use('/api/payments', paymentRoutes);
 console.log('✅ Payment routes registered');
 app.use('/api/test', testRoutes);
