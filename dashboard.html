@@ -16561,19 +16561,28 @@ How it works:
 
         // Test Notification Demo System
         function initializeTestNotificationDemo() {
-            // Add demo button to dashboard (for testing)
-            setTimeout(() => {
-                addTestNotificationDemoButton();
-            }, 2000);
+            // Wait for TestNotifications to be available before adding demo button
+            const checkAndAddButton = () => {
+                if (window.TestNotifications) {
+                    addTestNotificationDemoButton();
+                    // Show welcome notification
+                    setTimeout(() => {
+                        if (window.TestNotifications) {
+                            window.TestNotifications.success(
+                                'Test Notifications Active', 
+                                'Simple notification system is working!',
+                                { duration: 5000 }
+                            );
+                        }
+                    }, 1000);
+                } else {
+                    // Check again in 500ms
+                    setTimeout(checkAndAddButton, 500);
+                }
+            };
             
-            // Show welcome notification
-            setTimeout(() => {
-                window.TestNotifications.success(
-                    'Test Notifications Active', 
-                    'Simple notification system is working!',
-                    { duration: 5000 }
-                );
-            }, 1000);
+            // Start checking after 2 seconds
+            setTimeout(checkAndAddButton, 2000);
         }
 
         function addTestNotificationDemoButton() {
@@ -16616,6 +16625,13 @@ How it works:
         }
 
         function showTestNotificationDemo() {
+            // Check if TestNotifications is available
+            if (!window.TestNotifications) {
+                console.error('TestNotifications not available yet');
+                alert('Test notifications are still loading. Please wait a moment and try again.');
+                return;
+            }
+
             const notifications = [
                 () => window.TestNotifications.success('Success!', 'This is a success notification.'),
                 () => window.TestNotifications.error('Error!', 'This is an error notification.'),
@@ -16631,9 +16647,15 @@ How it works:
             let index = 0;
             const showNext = () => {
                 if (index < notifications.length) {
-                    notifications[index]();
-                    index++;
-                    setTimeout(showNext, 1500);
+                    try {
+                        notifications[index]();
+                        index++;
+                        setTimeout(showNext, 1500);
+                    } catch (error) {
+                        console.error('Error showing notification:', error);
+                        index++;
+                        setTimeout(showNext, 1500);
+                    }
                 }
             };
 
