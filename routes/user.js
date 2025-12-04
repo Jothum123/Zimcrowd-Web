@@ -1265,4 +1265,26 @@ router.put('/notification-settings', authenticateUser, async (req, res) => {
     }
 });
 
+// @route   POST /api/user/profile-picture
+// @desc    Upload or update profile picture (redirect to storage API)
+// @access  Private
+router.post('/profile-picture', authenticateUser, async (req, res) => {
+    try {
+        // This endpoint redirects to the storage API
+        // Frontend should use /api/storage/avatar instead
+        res.status(301).json({
+            success: false,
+            message: 'Please use /api/storage/avatar endpoint for profile picture uploads',
+            redirect: '/api/storage/avatar'
+        });
+    } catch (error) {
+        console.error('❌ Profile picture upload error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to upload profile picture',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

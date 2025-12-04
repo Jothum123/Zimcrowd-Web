@@ -135,20 +135,23 @@ router.get('/', authenticateUser, async (req, res) => {
         const documentsWithUrls = await Promise.all(
             userDocuments.map(async (doc) => {
                 let signedUrl = null;
-                try {
-                    const { data: urlData } = await supabase.storage
-                        .from('user-documents')
-                        .createSignedUrl(doc.file_path, 3600); // 1 hour expiry
-                    signedUrl = urlData?.signedUrl;
-                } catch (e) {
-                    console.error('Error generating signed URL:', e);
+                // Only generate signed URL if file_path exists
+                if (doc.file_path) {
+                    try {
+                        const { data: urlData } = await supabase.storage
+                            .from('user-documents')
+                            .createSignedUrl(doc.file_path, 3600); // 1 hour expiry
+                        signedUrl = urlData?.signedUrl;
+                    } catch (e) {
+                        console.error('Error generating signed URL for doc:', doc.id, e);
+                    }
                 }
                 
                 return {
                     id: doc.id,
                     type: doc.document_type || doc.doc_type,
                     filename: doc.file_name || doc.original_filename,
-                    status: doc.status,
+                    status: doc.status || 'pending',
                     uploaded_at: doc.created_at,
                     verified_at: doc.verified_at,
                     rejection_reason: doc.rejection_reason,
