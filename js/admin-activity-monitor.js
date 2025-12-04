@@ -48,6 +48,9 @@ class AdminActivityMonitor {
             // Load initial data
             await this.loadInitialData();
 
+            // Initialize advanced features
+            this.initializeAdvancedFeatures();
+
             console.log('✅ Admin Activity Monitor initialized successfully');
         } catch (error) {
             console.error('❌ Failed to initialize Admin Activity Monitor:', error);
@@ -247,7 +250,7 @@ class AdminActivityMonitor {
         }
 
         const activitiesHTML = activities.map(activity => `
-            <div class="activity-item ${activity.activity_type}" data-activity-id="${activity.id}">
+            <div class="activity-item ${this.getActivityCategory(activity.activity_type)}" data-activity-id="${activity.id}">
                 <div class="activity-icon">
                     <i class="fas fa-${this.getActivityIcon(activity.activity_type)}"></i>
                 </div>
@@ -454,16 +457,59 @@ class AdminActivityMonitor {
     }
 
     // Utility methods
+    // Get activity icon
     getActivityIcon(activityType) {
         const icons = {
-            'login': 'sign-in-alt',
-            'loan_application': 'hand-holding-usd',
+            // Navigation activities
+            'tab_navigation': 'exchange-alt',
+            'tab_interaction': 'mouse-pointer',
+            
+            // Loan activities
+            'loan_application_started': 'file-plus',
+            'loan_application': 'file-invoice-dollar',
+            'loan_details_view': 'search',
+            
+            // Wallet activities
+            'wallet_section_access': 'wallet',
+            'wallet_withdrawal_attempt': 'money-bill-wave',
+            'wallet_deposit_attempt': 'money-bill',
+            'wallet_balance_check': 'balance-scale',
+            
+            // Investment activities
+            'investment_section_access': 'chart-line',
+            'investment_opportunity_view': 'search-dollar',
             'investment': 'chart-line',
+            'large_investment': 'coins',
+            
+            // Transaction activities
+            'transaction_section_access': 'exchange-alt',
+            'transaction_details_view': 'search',
             'transaction_completed': 'exchange-alt',
+            
+            // Referral activities
+            'referral_section_access': 'gift',
+            'referral_code_generated': 'ticket-alt',
+            'referral_shared': 'share-alt',
+            
+            // Settings activities
+            'settings_section_access': 'cog',
             'profile_update': 'user-edit',
-            'kyc_submitted': 'user-check',
-            'page_view': 'eye',
+            'account_change': 'user-cog',
+            
+            // Security activities
+            'password_change': 'key',
+            '2fa_enabled': 'shield-alt',
+            'security_alert': 'exclamation-triangle',
+            'suspicious_activity': 'user-shield',
+            
+            // Form activities
+            'form_submission': 'paper-plane',
+            'form_interaction': 'edit',
+            
+            // General activities
             'button_click': 'mouse-pointer',
+            'login': 'sign-in-alt',
+            'page_view': 'eye',
             'session_start': 'play',
             'session_end': 'stop',
             'default': 'circle'
@@ -498,18 +544,64 @@ class AdminActivityMonitor {
 
     formatActivityTitle(activity) {
         const titles = {
+            // Navigation activities
+            'tab_navigation': `Navigated to ${activity.activity_data?.section_name || activity.activity_data?.to_section || 'section'}`,
+            'tab_interaction': `Interacted with ${activity.activity_data?.tab_name || 'tab'}`,
+            
+            // Loan activities
+            'loan_application_started': 'Started loan application',
+            'loan_application': `Loan application for $${activity.activity_data?.amount || '0'}`,
+            'loan_details_view': 'Viewed loan details',
+            
+            // Wallet activities
+            'wallet_section_access': 'Accessed wallet',
+            'wallet_withdrawal_attempt': `Withdrawal attempt: $${activity.activity_data?.amount || '0'}`,
+            'wallet_deposit_attempt': `Deposit attempt: $${activity.activity_data?.amount || '0'}`,
+            'wallet_balance_check': 'Checked wallet balance',
+            
+            // Investment activities
+            'investment_section_access': 'Accessed investments',
+            'investment_opportunity_view': 'Viewed investment opportunity',
+            'investment': `Investment: $${activity.activity_data?.amount || '0'}`,
+            'large_investment': `Large investment: $${activity.activity_data?.amount || '0'}`,
+            
+            // Transaction activities
+            'transaction_section_access': 'Accessed transactions',
+            'transaction_details_view': 'Viewed transaction details',
+            'transaction_completed': `Transaction: $${activity.activity_data?.amount || '0'}`,
+            
+            // Referral activities
+            'referral_section_access': 'Accessed referral program',
+            'referral_code_generated': 'Generated referral code',
+            'referral_shared': `Shared referral via ${activity.activity_data?.share_method || 'unknown'}`,
+            
+            // Settings activities
+            'settings_section_access': 'Accessed settings',
+            'profile_update': `Updated profile: ${activity.activity_data?.updated_fields?.join(', ') || 'multiple fields'}`,
+            'account_change': 'Account settings changed',
+            
+            // Security activities
+            'password_change': 'Password changed',
+            '2fa_enabled': `2FA enabled: ${activity.activity_data?.method || 'unknown'}`,
+            'security_alert': `Security alert: ${activity.activity_data?.alert_type || 'unknown'}`,
+            'suspicious_activity': 'Suspicious activity detected',
+            
+            // Form activities
+            'form_submission': `Form submitted: ${activity.activity_data?.form_id || 'unknown form'}`,
+            'form_interaction': `Form interaction: ${activity.activity_data?.field_type || 'unknown field'}`,
+            
+            // Button activities
+            'button_click': `Clicked: ${activity.activity_data?.button_text || 'button'}`,
+            
+            // General activities
             'login': 'User logged in',
-            'loan_application': 'Loan application submitted',
-            'investment': 'Investment made',
-            'transaction_completed': 'Transaction completed',
-            'profile_update': 'Profile updated',
-            'kyc_submitted': 'KYC documents submitted',
             'page_view': 'Page viewed',
-            'button_click': 'Button clicked',
             'session_start': 'Session started',
-            'session_end': 'Session ended'
+            'session_end': 'Session ended',
+            'kyc_submitted': 'KYC documents submitted'
         };
-        return titles[activity.activity_type] || activity.activity_type.replace(/_/g, ' ');
+        
+        return titles[activity.activity_type] || activity.activity_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
 
     formatEventTitle(event) {
@@ -532,10 +624,259 @@ class AdminActivityMonitor {
         return date.toLocaleDateString();
     }
 
-    updateActivityChart(activityByType) {
-        // This would update a chart showing activities by type
-        // Implementation depends on the charting library used
-        console.log('Activity by type:', activityByType);
+    // Advanced filtering and search functionality
+    addAdvancedFilters() {
+        const filterPanel = document.createElement('div');
+        filterPanel.className = 'filter-panel';
+        filterPanel.innerHTML = `
+            <div class="filter-group">
+                <label>Activity Type:</label>
+                <select id="activityTypeFilter" onchange="window.AdminActivityMonitor.applyFilters()">
+                    <option value="all">All Activities</option>
+                    <option value="financial">Financial</option>
+                    <option value="security">Security</option>
+                    <option value="navigation">Navigation</option>
+                    <option value="engagement">Engagement</option>
+                    <option value="loan">Loan Related</option>
+                    <option value="wallet">Wallet Related</option>
+                    <option value="investment">Investment Related</option>
+                    <option value="transaction">Transaction Related</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Priority:</label>
+                <select id="priorityFilter" onchange="window.AdminActivityMonitor.applyFilters()">
+                    <option value="all">All Priorities</option>
+                    <option value="critical">Critical</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Time Period:</label>
+                <select id="timeFilter" onchange="window.AdminActivityMonitor.applyFilters()">
+                    <option value="1h">Last Hour</option>
+                    <option value="6h">Last 6 Hours</option>
+                    <option value="24h" selected>Last 24 Hours</option>
+                    <option value="7d">Last 7 Days</option>
+                    <option value="30d">Last 30 Days</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Search User:</label>
+                <input type="text" id="userSearchFilter" placeholder="Search by name or email" onkeyup="window.AdminActivityMonitor.applyFilters()">
+            </div>
+            <div class="filter-actions">
+                <button class="btn-primary" onclick="window.AdminActivityMonitor.applyFilters()">
+                    <i class="fas fa-search"></i> Apply Filters
+                </button>
+                <button class="btn-secondary" onclick="window.AdminActivityMonitor.clearFilters()">
+                    <i class="fas fa-times"></i> Clear
+                </button>
+            </div>
+        `;
+        
+        // Insert filter panel at the top of activity monitoring section
+        const activitySection = document.getElementById('activity-monitoring');
+        const sectionHeader = activitySection.querySelector('.section-header');
+        sectionHeader.insertAdjacentElement('afterend', filterPanel);
+    }
+
+    // Apply filters to activity display
+    async applyFilters() {
+        const activityType = document.getElementById('activityTypeFilter').value;
+        const priority = document.getElementById('priorityFilter').value;
+        const timePeriod = document.getElementById('timeFilter').value;
+        const userSearch = document.getElementById('userSearchFilter').value.toLowerCase();
+        
+        try {
+            let url = `${this.apiBaseUrl}/api/activity/recent?limit=50`;
+            
+            // Add time filter
+            if (timePeriod !== 'all') {
+                const hours = timePeriod.replace('h', '').replace('d', '');
+                const since = new Date(Date.now() - (parseInt(hours) * 60 * 60 * 1000 * (timePeriod.includes('d') ? 24 : 1)));
+                url += `&since=${since.toISOString()}`;
+            }
+            
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${this.adminToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                let filteredActivities = data.data.activities;
+                
+                // Apply activity type filter
+                if (activityType !== 'all') {
+                    filteredActivities = filteredActivities.filter(activity => {
+                        return this.getActivityCategory(activity.activity_type) === activityType;
+                    });
+                }
+                
+                // Apply user search filter
+                if (userSearch) {
+                    filteredActivities = filteredActivities.filter(activity => {
+                        const userName = activity.profiles?.full_name || '';
+                        const userEmail = activity.profiles?.email || '';
+                        return userName.toLowerCase().includes(userSearch) || userEmail.toLowerCase().includes(userSearch);
+                    });
+                }
+                
+                // Update UI with filtered results
+                this.updateRecentActivitiesUI(filteredActivities);
+                
+                // Show filter results count
+                this.showFilterResults(filteredActivities.length, data.data.activities.length);
+            }
+        } catch (error) {
+            console.error('Error applying filters:', error);
+        }
+    }
+
+    // Get activity category for filtering
+    getActivityCategory(activityType) {
+        const categories = {
+            // Financial
+            'loan_application': 'financial',
+            'loan_application_started': 'financial',
+            'investment': 'financial',
+            'large_investment': 'financial',
+            'transaction_completed': 'financial',
+            'wallet_withdrawal_attempt': 'financial',
+            'wallet_deposit_attempt': 'financial',
+            
+            // Security
+            'password_change': 'security',
+            '2fa_enabled': 'security',
+            'security_alert': 'security',
+            'suspicious_activity': 'security',
+            
+            // Navigation
+            'tab_navigation': 'navigation',
+            'tab_interaction': 'navigation',
+            
+            // Loan specific
+            'loan_details_view': 'loan',
+            
+            // Wallet specific
+            'wallet_section_access': 'wallet',
+            'wallet_balance_check': 'wallet',
+            
+            // Investment specific
+            'investment_section_access': 'investment',
+            'investment_opportunity_view': 'investment',
+            
+            // Transaction specific
+            'transaction_section_access': 'transaction',
+            'transaction_details_view': 'transaction',
+            
+            // Default to engagement
+            'default': 'engagement'
+        };
+        
+        return categories[activityType] || categories.default;
+    }
+
+    // Clear all filters
+    clearFilters() {
+        document.getElementById('activityTypeFilter').value = 'all';
+        document.getElementById('priorityFilter').value = 'all';
+        document.getElementById('timeFilter').value = '24h';
+        document.getElementById('userSearchFilter').value = '';
+        
+        // Reload original data
+        this.loadRecentActivities();
+    }
+
+    // Show filter results notification
+    showFilterResults(filteredCount, totalCount) {
+        let resultsAlert = document.getElementById('filter-results-alert');
+        if (!resultsAlert) {
+            resultsAlert = document.createElement('div');
+            resultsAlert.id = 'filter-results-alert';
+            resultsAlert.className = 'filter-results-alert';
+            document.getElementById('activity-monitoring').insertBefore(resultsAlert, document.querySelector('.monitoring-grid'));
+        }
+        
+        resultsAlert.innerHTML = `
+            <i class="fas fa-filter"></i>
+            Showing ${filteredCount} of ${totalCount} activities
+        `;
+        
+        resultsAlert.style.display = 'block';
+        
+        // Hide after 3 seconds
+        setTimeout(() => {
+            resultsAlert.style.display = 'none';
+        }, 3000);
+    }
+
+    // Export activity data
+    async exportActivityData() {
+        try {
+            const response = await fetch(`${this.apiBaseUrl}/api/activity/recent?limit=1000&format=csv`, {
+                headers: {
+                    'Authorization': `Bearer ${this.adminToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `activity-export-${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                this.showExportSuccess();
+            }
+        } catch (error) {
+            console.error('Error exporting data:', error);
+        }
+    }
+
+    // Show export success notification
+    showExportSuccess() {
+        const successAlert = document.createElement('div');
+        successAlert.className = 'export-success-alert';
+        successAlert.innerHTML = `
+            <i class="fas fa-check-circle"></i>
+            Activity data exported successfully!
+        `;
+        
+        document.body.appendChild(successAlert);
+        successAlert.style.display = 'block';
+        
+        setTimeout(() => {
+            successAlert.style.display = 'none';
+            document.body.removeChild(successAlert);
+        }, 3000);
+    }
+
+    // Initialize advanced features
+    initializeAdvancedFeatures() {
+        // Add filters to activity monitoring
+        this.addAdvancedFilters();
+        
+        // Add export button
+        const exportButton = document.createElement('button');
+        exportButton.className = 'btn-export';
+        exportButton.innerHTML = '<i class="fas fa-download"></i> Export Data';
+        exportButton.onclick = () => this.exportActivityData();
+        
+        const headerActions = document.querySelector('#activity-monitoring .header-actions');
+        if (headerActions) {
+            headerActions.appendChild(exportButton);
+        }
     }
 }
 

@@ -16641,8 +16641,425 @@ How it works:
         // Initialize dashboard when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Dashboard initialized with live data integration');
+            
+            // Initialize comprehensive activity logging
+            initializeComprehensiveActivityLogging();
+            
             // Dashboard initialization will be handled by existing scripts
         });
+
+        // Comprehensive Activity Logging System
+        async function initializeComprehensiveActivityLogging() {
+            if (!window.ActivityLogger || !window.ActivityLogger.isInitialized) {
+                console.warn('⚠️ Activity Logger not available');
+                return;
+            }
+
+            console.log('🔄 Initializing comprehensive activity logging...');
+
+            // Track tab navigation
+            document.querySelectorAll('.nav-link[data-section]').forEach(link => {
+                link.addEventListener('click', async function(e) {
+                    const section = this.dataset.section;
+                    const currentSection = document.querySelector('.nav-link.active')?.dataset.section || 'unknown';
+                    
+                    await window.ActivityLogger.logActivity('tab_navigation', {
+                        from_section: currentSection,
+                        to_section: section,
+                        navigation_method: 'sidebar_click',
+                        section_name: this.querySelector('span')?.textContent || section
+                    });
+                });
+            });
+
+            // Track tab interactions within sections
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', async function(e) {
+                    const tab = this.textContent.trim();
+                    const section = getCurrentSection();
+                    
+                    await window.ActivityLogger.logActivity('tab_interaction', {
+                        section: section,
+                        tab_name: tab,
+                        interaction_type: 'tab_click',
+                        tab_count: this.querySelector('span')?.textContent || '0'
+                    });
+                });
+            });
+
+            // Track loan-related activities
+            enhanceLoanActivityLogging();
+
+            // Track wallet activities
+            enhanceWalletActivityLogging();
+
+            // Track investment activities
+            enhanceInvestmentActivityLogging();
+
+            // Track transaction activities
+            enhanceTransactionActivityLogging();
+
+            // Track referral activities
+            enhanceReferralActivityLogging();
+
+            // Track settings activities
+            enhanceSettingsActivityLogging();
+
+            // Track form submissions
+            enhanceFormActivityLogging();
+
+            // Track button clicks with better context
+            enhanceButtonClickLogging();
+
+            console.log('✅ Comprehensive activity logging initialized');
+        }
+
+        function getCurrentSection() {
+            const activeSection = document.querySelector('.dashboard-section.active');
+            return activeSection ? activeSection.id.replace('-section', '') : 'unknown';
+        }
+
+        // Enhanced Loan Activity Logging
+        function enhanceLoanActivityLogging() {
+            // Track loan application modal opens
+            const originalOpenLoanRequestModal = window.openLoanRequestModal;
+            window.openLoanRequestModal = async function(...args) {
+                await window.ActivityLogger.logActivity('loan_application_started', {
+                    action: 'open_modal',
+                    source: 'dashboard_button',
+                    timestamp: Date.now()
+                });
+                return originalOpenLoanRequestModal.apply(this, args);
+            };
+
+            // Track loan form submissions
+            const originalSubmitLoanApplication = window.submitLoanApplication;
+            window.submitLoanApplication = async function(...args) {
+                const loanData = args[0] || {};
+                await window.ActivityLogger.logLoanApplication({
+                    amount: loanData.amount,
+                    purpose: loanData.purpose,
+                    term: loanData.term,
+                    risk_level: loanData.riskLevel,
+                    application_type: loanData.type || 'standard'
+                });
+                return originalSubmitLoanApplication.apply(this, args);
+            };
+
+            // Track loan detail views
+            document.addEventListener('click', async function(e) {
+                if (e.target.closest('.loan-card') || e.target.closest('[data-loan-id]')) {
+                    const loanElement = e.target.closest('.loan-card') || e.target.closest('[data-loan-id]');
+                    const loanId = loanElement.dataset?.loanId || loanElement.querySelector('[data-loan-id]')?.dataset?.loanId;
+                    
+                    if (loanId) {
+                        await window.ActivityLogger.logActivity('loan_details_view', {
+                            loan_id: loanId,
+                            view_source: 'loan_card_click',
+                            click_element: e.target.tagName.toLowerCase(),
+                            timestamp: Date.now()
+                        });
+                    }
+                }
+            });
+        }
+
+        // Enhanced Wallet Activity Logging
+        function enhanceWalletActivityLogging() {
+            // Track wallet section access
+            document.addEventListener('click', async function(e) {
+                if (e.target.closest('[data-section="wallet"]') || getCurrentSection() === 'wallet') {
+                    await window.ActivityLogger.logActivity('wallet_section_access', {
+                        action: 'wallet_tab_opened',
+                        source: 'navigation',
+                        timestamp: Date.now()
+                    });
+                }
+            });
+
+            // Track withdrawal attempts
+            const originalMakeWithdrawal = window.makeWithdrawal;
+            window.makeWithdrawal = async function(...args) {
+                const withdrawalData = args[0] || {};
+                await window.ActivityLogger.logActivity('wallet_withdrawal_attempt', {
+                    amount: withdrawalData.amount,
+                    method: withdrawalData.method,
+                    status: 'initiated',
+                    timestamp: Date.now()
+                });
+                return originalMakeWithdrawal.apply(this, args);
+            };
+
+            // Track deposit attempts
+            const originalMakeDeposit = window.makeDeposit;
+            window.makeDeposit = async function(...args) {
+                const depositData = args[0] || {};
+                await window.ActivityLogger.logActivity('wallet_deposit_attempt', {
+                    amount: depositData.amount,
+                    method: depositData.method,
+                    status: 'initiated',
+                    timestamp: Date.now()
+                });
+                return originalMakeDeposit.apply(this, args);
+            };
+
+            // Track balance checks
+            const originalLoadWalletBalance = window.loadWalletBalance;
+            window.loadWalletBalance = async function(...args) {
+                await window.ActivityLogger.logActivity('wallet_balance_check', {
+                    action: 'balance_inquiry',
+                    source: 'wallet_section',
+                    timestamp: Date.now()
+                });
+                return originalLoadWalletBalance.apply(this, args);
+            };
+        }
+
+        // Enhanced Investment Activity Logging
+        function enhanceInvestmentActivityLogging() {
+            // Track investment section access
+            document.addEventListener('click', async function(e) {
+                if (e.target.closest('[data-section="investments"]') || getCurrentSection() === 'investments') {
+                    await window.ActivityLogger.logActivity('investment_section_access', {
+                        action: 'investment_tab_opened',
+                        source: 'navigation',
+                        timestamp: Date.now()
+                    });
+                }
+            });
+
+            // Track investment attempts
+            const originalMakeInvestment = window.makeInvestment;
+            window.makeInvestment = async function(...args) {
+                const investmentData = args[0] || {};
+                await window.ActivityLogger.logInvestment({
+                    amount: investmentData.amount,
+                    loan_id: investmentData.loanId,
+                    risk_level: investmentData.riskLevel,
+                    expected_return: investmentData.expectedReturn,
+                    investment_type: investmentData.type || 'manual'
+                });
+                return originalMakeInvestment.apply(this, args);
+            };
+
+            // Track investment opportunity views
+            document.addEventListener('click', async function(e) {
+                if (e.target.closest('.investment-card') || e.target.closest('[data-investment-id]')) {
+                    const investmentElement = e.target.closest('.investment-card') || e.target.closest('[data-investment-id]');
+                    const investmentId = investmentElement.dataset?.investmentId;
+                    
+                    if (investmentId) {
+                        await window.ActivityLogger.logActivity('investment_opportunity_view', {
+                            investment_id: investmentId,
+                            view_source: 'investment_card_click',
+                            click_element: e.target.tagName.toLowerCase(),
+                            timestamp: Date.now()
+                        });
+                    }
+                }
+            });
+        }
+
+        // Enhanced Transaction Activity Logging
+        function enhanceTransactionActivityLogging() {
+            // Track transaction section access
+            document.addEventListener('click', async function(e) {
+                if (e.target.closest('[data-section="transactions"]') || getCurrentSection() === 'transactions') {
+                    await window.ActivityLogger.logActivity('transaction_section_access', {
+                        action: 'transaction_tab_opened',
+                        source: 'navigation',
+                        timestamp: Date.now()
+                    });
+                }
+            });
+
+            // Track transaction attempts
+            const originalProcessTransaction = window.processTransaction;
+            window.processTransaction = async function(...args) {
+                const transactionData = args[0] || {};
+                await window.ActivityLogger.logTransaction({
+                    amount: transactionData.amount,
+                    type: transactionData.type,
+                    recipient: transactionData.recipient,
+                    status: transactionData.status || 'pending',
+                    transaction_method: transactionData.method
+                });
+                return originalProcessTransaction.apply(this, args);
+            };
+
+            // Track transaction detail views
+            document.addEventListener('click', async function(e) {
+                if (e.target.closest('.transaction-item') || e.target.closest('[data-transaction-id]')) {
+                    const transactionElement = e.target.closest('.transaction-item') || e.target.closest('[data-transaction-id]');
+                    const transactionId = transactionElement.dataset?.transactionId;
+                    
+                    if (transactionId) {
+                        await window.ActivityLogger.logActivity('transaction_details_view', {
+                            transaction_id: transactionId,
+                            view_source: 'transaction_item_click',
+                            click_element: e.target.tagName.toLowerCase(),
+                            timestamp: Date.now()
+                        });
+                    }
+                }
+            });
+        }
+
+        // Enhanced Referral Activity Logging
+        function enhanceReferralActivityLogging() {
+            // Track referral section access
+            document.addEventListener('click', async function(e) {
+                if (e.target.closest('[data-section="referrals"]') || getCurrentSection() === 'referrals') {
+                    await window.ActivityLogger.logActivity('referral_section_access', {
+                        action: 'referral_tab_opened',
+                        source: 'navigation',
+                        timestamp: Date.now()
+                    });
+                }
+            });
+
+            // Track referral code generation
+            const originalGenerateReferralCode = window.generateReferralCode;
+            window.generateReferralCode = async function(...args) {
+                await window.ActivityLogger.logActivity('referral_code_generated', {
+                    action: 'generate_code',
+                    source: 'referral_section',
+                    timestamp: Date.now()
+                });
+                return originalGenerateReferralCode.apply(this, args);
+            };
+
+            // Track referral sharing
+            const originalShareReferral = window.shareReferral;
+            window.shareReferral = async function(...args) {
+                const shareMethod = args[0] || 'unknown';
+                await window.ActivityLogger.logActivity('referral_shared', {
+                    share_method: shareMethod,
+                    source: 'referral_section',
+                    timestamp: Date.now()
+                });
+                return originalShareReferral.apply(this, args);
+            };
+        }
+
+        // Enhanced Settings Activity Logging
+        function enhanceSettingsActivityLogging() {
+            // Track settings section access
+            document.addEventListener('click', async function(e) {
+                if (e.target.closest('[data-section="settings"]') || getCurrentSection() === 'settings') {
+                    await window.ActivityLogger.logActivity('settings_section_access', {
+                        action: 'settings_tab_opened',
+                        source: 'navigation',
+                        timestamp: Date.now()
+                    });
+                }
+            });
+
+            // Track profile updates
+            const originalUpdateProfile = window.updateProfile;
+            window.updateProfile = async function(...args) {
+                const profileData = args[0] || {};
+                await window.ActivityLogger.logProfileUpdate({
+                    updated_fields: Object.keys(profileData),
+                    update_source: 'settings_form',
+                    timestamp: Date.now()
+                });
+                return originalUpdateProfile.apply(this, args);
+            };
+
+            // Track password changes
+            const originalChangePassword = window.changePassword;
+            window.changePassword = async function(...args) {
+                await window.ActivityLogger.logSecurityAlert({
+                    alert_type: 'password_change',
+                    severity: 'medium',
+                    source: 'settings_section',
+                    timestamp: Date.now()
+                });
+                return originalChangePassword.apply(this, args);
+            };
+
+            // Track 2FA changes
+            const originalEnable2FA = window.enable2FA;
+            window.enable2FA = async function(...args) {
+                await window.ActivityLogger.logSecurityAlert({
+                    alert_type: '2fa_enabled',
+                    severity: 'low',
+                    method: args[0] || 'unknown',
+                    source: 'settings_section',
+                    timestamp: Date.now()
+                });
+                return originalEnable2FA.apply(this, args);
+            };
+        }
+
+        // Enhanced Form Activity Logging
+        function enhanceFormActivityLogging() {
+            document.addEventListener('submit', async function(e) {
+                const form = e.target;
+                const formId = form.id || 'unknown_form';
+                const formClass = form.className || '';
+                
+                await window.ActivityLogger.logActivity('form_submission', {
+                    form_id: formId,
+                    form_class: formClass,
+                    form_action: form.action || 'no_action',
+                    form_method: form.method || 'GET',
+                    submission_source: 'user_interaction',
+                    timestamp: Date.now()
+                });
+            });
+
+            // Track form interactions
+            document.addEventListener('input', async function(e) {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                    const fieldType = e.target.type || e.target.tagName.toLowerCase();
+                    const fieldId = e.target.id || 'unknown_field';
+                    
+                    // Debounce rapid inputs
+                    clearTimeout(window.inputLogTimeout);
+                    window.inputLogTimeout = setTimeout(async () => {
+                        await window.ActivityLogger.logActivity('form_interaction', {
+                            field_type: fieldType,
+                            field_id: field_id,
+                            interaction_type: 'input_change',
+                            timestamp: Date.now()
+                        });
+                    }, 2000);
+                }
+            });
+        }
+
+        // Enhanced Button Click Logging
+        function enhanceButtonClickLogging() {
+            document.addEventListener('click', async function(e) {
+                const target = e.target.closest('button') || e.target;
+                
+                if (target.tagName === 'BUTTON' || target.classList.contains('btn')) {
+                    const buttonText = target.textContent?.trim() || 'unknown_button';
+                    const buttonId = target.id || '';
+                    const buttonClass = target.className || '';
+                    
+                    // Determine button category
+                    let category = 'general';
+                    if (buttonText.toLowerCase().includes('loan')) category = 'loan';
+                    if (buttonText.toLowerCase().includes('invest')) category = 'investment';
+                    if (buttonText.toLowerCase().includes('wallet') || buttonText.toLowerCase().includes('deposit') || buttonText.toLowerCase().includes('withdraw')) category = 'wallet';
+                    if (buttonText.toLowerCase().includes('transaction')) category = 'transaction';
+                    if (buttonText.toLowerCase().includes('profile') || buttonText.toLowerCase().includes('setting')) category = 'profile';
+                    if (buttonText.toLowerCase().includes('refer')) category = 'referral';
+                    
+                    await window.ActivityLogger.logActivity('button_click', {
+                        button_text: buttonText,
+                        button_id: buttonId,
+                        button_class: buttonClass,
+                        button_category: category,
+                        click_position: { x: e.clientX, y: e.clientY },
+                        timestamp: Date.now()
+                    });
+                }
+            });
+        }
     </script>
 
     <!-- External JavaScript Files -->
