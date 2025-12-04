@@ -111,54 +111,65 @@ const DOCUMENT_TYPES = {
 };
 
 // @route   GET /api/documents
-// @desc    Get user's uploaded documents
+// @desc    Get user's uploaded documents from Supabase Storage
 // @access  Private
 router.get('/', authenticateUser, async (req, res) => {
     try {
-        // For now, return mock data since we don't have a documents table
-        // In production, this would query a documents table
-        const mockDocuments = [
-            {
-                id: 1,
-                type: 'national_id',
-                filename: 'national_id_front.jpg',
-                status: 'verified',
-                uploaded_at: '2025-01-15T10:30:00Z',
-                verified_at: '2025-01-15T14:20:00Z',
-                url: 'https://example.com/documents/national_id_front.jpg'
-            },
-            {
-                id: 2,
-                type: 'bank_statement',
-                filename: 'bank_statement_jan.pdf',
-                status: 'verified',
-                uploaded_at: '2025-01-16T09:15:00Z',
-                verified_at: '2025-01-16T11:45:00Z',
-                url: 'https://example.com/documents/bank_statement_jan.pdf'
-            },
-            {
-                id: 3,
-                type: 'proof_of_address',
-                filename: 'utility_bill.jpg',
-                status: 'verified',
-                uploaded_at: '2025-01-16T16:20:00Z',
-                verified_at: '2025-01-17T10:10:00Z',
-                url: 'https://example.com/documents/utility_bill.jpg'
-            }
-        ];
+        const userId = req.user.id;
+        
+        // Query documents from kyc_documents table
+        const { data: documents, error } = await supabase
+            .from('kyc_documents')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+        
+        if (error && error.code !== 'PGRST116') {
+            console.error('Error fetching documents:', error);
+            throw error;
+        }
+        
+        const userDocuments = documents || [];
+        
+        // Generate signed URLs for each document
+        const documentsWithUrls = await Promise.all(
+            userDocuments.map(async (doc) => {
+                let signedUrl = null;
+                try {
+                    const { data: urlData } = await supabase.storage
+                        .from('kyc-documents')
+                        .createSignedUrl(doc.file_path, 3600); // 1 hour expiry
+                    signedUrl = urlData?.signedUrl;
+                } catch (e) {
+                    console.error('Error generating signed URL:', e);
+                }
+                
+                return {
+                    id: doc.id,
+                    type: doc.document_type,
+                    filename: doc.file_name,
+                    status: doc.status,
+                    uploaded_at: doc.created_at,
+                    verified_at: doc.verified_at,
+                    rejection_reason: doc.rejection_reason,
+                    url: signedUrl
+                };
+            })
+        );
 
         // Group by type and add status info
         const documentsByType = {};
         Object.keys(DOCUMENT_TYPES).forEach(type => {
-            const docs = mockDocuments.filter(doc => doc.type === type);
+            const docs = documentsWithUrls.filter(doc => doc.type === type);
             documentsByType[type] = {
                 name: DOCUMENT_TYPES[type].name,
                 required: DOCUMENT_TYPES[type].required,
                 max_files: DOCUMENT_TYPES[type].max_files,
                 uploaded_count: docs.length,
                 documents: docs,
-                status: docs.length > 0 ? (docs.every(doc => doc.status === 'verified') ? 'verified' :
-                         docs.some(doc => doc.status === 'pending') ? 'pending' : 'rejected') : 'not_uploaded'
+                status: docs.length > 0 ? (docs.every(doc => doc.status === 'approved') ? 'verified' :
+                         docs.some(doc => doc.status === 'pending') ? 'pending' : 
+                         docs.some(doc => doc.status === 'rejected') ? 'rejected' : 'pending') : 'not_uploaded'
             };
         });
 
@@ -167,10 +178,10 @@ router.get('/', authenticateUser, async (req, res) => {
             data: {
                 documents: documentsByType,
                 summary: {
-                    total_uploaded: mockDocuments.length,
-                    verified: mockDocuments.filter(doc => doc.status === 'verified').length,
-                    pending: mockDocuments.filter(doc => doc.status === 'pending').length,
-                    rejected: mockDocuments.filter(doc => doc.status === 'rejected').length
+                    total_uploaded: documentsWithUrls.length,
+                    verified: documentsWithUrls.filter(doc => doc.status === 'approved').length,
+                    pending: documentsWithUrls.filter(doc => doc.status === 'pending').length,
+                    rejected: documentsWithUrls.filter(doc => doc.status === 'rejected').length
                 }
             }
         });
@@ -178,7 +189,8 @@ router.get('/', authenticateUser, async (req, res) => {
         console.error('Get documents error:', error);
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: 'Failed to fetch documents',
+            error: error.message
         });
     }
 });
@@ -218,14 +230,24 @@ router.post('/upload', authenticateUser, upload.single('document'), [
         }
 
         // Check if user has reached the maximum number of files for this type
-        // In production, this would query the database
         const maxFiles = DOCUMENT_TYPES[document_type].max_files;
-        // For now, assume they can upload (mock check)
+        const { data: existingDocs, error: countError } = await supabase
+            .from('kyc_documents')
+            .select('id')
+            .eq('user_id', req.user.id)
+            .eq('document_type', document_type);
+        
+        if (!countError && existingDocs && existingDocs.length >= maxFiles) {
+            return res.status(400).json({
+                success: false,
+                message: `Maximum ${maxFiles} files allowed for ${DOCUMENT_TYPES[document_type].name}`
+            });
+        }
 
-        // Upload file to Supabase Storage
+        // Upload file to Supabase Storage (kyc-documents bucket)
         const fileName = `${req.user.id}/${document_type}/${Date.now()}_${file.originalname}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('documents')
+            .from('kyc-documents')
             .upload(fileName, file.buffer, {
                 contentType: file.mimetype,
                 upsert: false
@@ -235,33 +257,52 @@ router.post('/upload', authenticateUser, upload.single('document'), [
             console.error('File upload error:', uploadError);
             return res.status(500).json({
                 success: false,
-                message: 'Failed to upload file'
+                message: 'Failed to upload file to storage'
             });
         }
 
-        // Get public URL
-        const { data: urlData } = supabase.storage
-            .from('documents')
-            .getPublicUrl(fileName);
+        // Save document metadata to kyc_documents table
+        const { data: documentRecord, error: dbError } = await supabase
+            .from('kyc_documents')
+            .insert({
+                user_id: req.user.id,
+                document_type: document_type,
+                file_path: fileName,
+                file_name: file.originalname,
+                mime_type: file.mimetype,
+                file_size: file.size,
+                status: 'pending',
+                created_at: new Date().toISOString()
+            })
+            .select()
+            .single();
 
-        // In production, save document metadata to database
-        // For now, return mock response
-        const documentRecord = {
-            id: Date.now(), // Mock ID
-            user_id: req.user.id,
-            type: document_type,
-            filename: file.originalname,
-            storage_path: fileName,
-            url: urlData.publicUrl,
-            status: 'pending',
-            uploaded_at: new Date().toISOString(),
-            description: description || null
-        };
+        if (dbError) {
+            console.error('Database insert error:', dbError);
+            // Try to delete the uploaded file if DB insert fails
+            await supabase.storage.from('kyc-documents').remove([fileName]);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to save document record'
+            });
+        }
+
+        // Generate signed URL for the uploaded document
+        const { data: signedUrlData } = await supabase.storage
+            .from('kyc-documents')
+            .createSignedUrl(fileName, 3600);
 
         res.status(201).json({
             success: true,
             message: 'Document uploaded successfully',
-            data: documentRecord
+            data: {
+                id: documentRecord.id,
+                type: document_type,
+                filename: file.originalname,
+                status: 'pending',
+                uploaded_at: documentRecord.created_at,
+                url: signedUrlData?.signedUrl
+            }
         });
     } catch (error) {
         console.error('Upload document error:', error);
@@ -279,19 +320,25 @@ router.get('/:id/download', authenticateUser, async (req, res) => {
     try {
         const { id } = req.params;
 
-        // In production, this would fetch document metadata from database
-        // For now, return mock response
-        const mockDocument = {
-            id: parseInt(id),
-            user_id: req.user.id,
-            storage_path: `user_${req.user.id}/document_${id}.pdf`,
-            filename: `document_${id}.pdf`
-        };
+        // Fetch document metadata from database
+        const { data: document, error: fetchError } = await supabase
+            .from('kyc_documents')
+            .select('*')
+            .eq('id', id)
+            .eq('user_id', req.user.id)
+            .single();
+
+        if (fetchError || !document) {
+            return res.status(404).json({
+                success: false,
+                message: 'Document not found'
+            });
+        }
 
         // Get signed URL from Supabase Storage
         const { data: urlData, error } = await supabase.storage
-            .from('documents')
-            .createSignedUrl(mockDocument.storage_path, 60); // 60 seconds expiry
+            .from('kyc-documents')
+            .createSignedUrl(document.file_path, 300); // 5 minutes expiry
 
         if (error) {
             console.error('Download URL error:', error);
@@ -305,8 +352,8 @@ router.get('/:id/download', authenticateUser, async (req, res) => {
             success: true,
             data: {
                 download_url: urlData.signedUrl,
-                filename: mockDocument.filename,
-                expires_in: 60
+                filename: document.file_name,
+                expires_in: 300
             }
         });
     } catch (error) {
@@ -325,13 +372,52 @@ router.delete('/:id', authenticateUser, async (req, res) => {
     try {
         const { id } = req.params;
 
-        // In production, this would:
-        // 1. Check if document belongs to user
-        // 2. Check if document can be deleted (not verified)
-        // 3. Delete from storage
-        // 4. Delete from database
+        // Fetch document to verify ownership and get file path
+        const { data: document, error: fetchError } = await supabase
+            .from('kyc_documents')
+            .select('*')
+            .eq('id', id)
+            .eq('user_id', req.user.id)
+            .single();
 
-        // For now, return mock response
+        if (fetchError || !document) {
+            return res.status(404).json({
+                success: false,
+                message: 'Document not found'
+            });
+        }
+
+        // Only allow deletion of pending documents
+        if (document.status === 'approved') {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot delete approved documents'
+            });
+        }
+
+        // Delete from storage
+        const { error: storageError } = await supabase.storage
+            .from('kyc-documents')
+            .remove([document.file_path]);
+
+        if (storageError) {
+            console.error('Storage delete error:', storageError);
+        }
+
+        // Delete from database
+        const { error: dbError } = await supabase
+            .from('kyc_documents')
+            .delete()
+            .eq('id', id);
+
+        if (dbError) {
+            console.error('Database delete error:', dbError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to delete document record'
+            });
+        }
+
         res.json({
             success: true,
             message: 'Document deleted successfully'

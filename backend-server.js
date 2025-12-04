@@ -75,6 +75,8 @@ try {
     console.log('✅ Face verification routes loaded');
     var profileSetupRoutes = require('./routes/profile-setup');
     console.log('✅ Profile setup routes loaded');
+    var storageRoutes = require('./routes/storage');
+    console.log('✅ Storage routes loaded');
     console.log('✅ All routes loaded successfully');
 } catch (error) {
     console.error('❌ Error loading routes:', error.message);
@@ -220,6 +222,8 @@ app.use('/api/face', faceVerificationRoutes);
 console.log('✅ Face verification routes registered');
 app.use('/api/profile-setup', profileSetupRoutes);
 console.log('✅ Profile setup routes registered');
+app.use('/api/storage', storageRoutes);
+console.log('✅ Storage routes registered');
 app.use('/api/kyc', kycOcrRoutes); // Alias for /api/kyc-ocr
 console.log('✅ KYC routes registered (alias for kyc-ocr)');
 

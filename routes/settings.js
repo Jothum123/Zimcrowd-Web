@@ -170,7 +170,16 @@ router.get('/profile', authenticateUser, async (req, res) => {
                 profilePicture: profile?.avatar_url || null,
                 completionPercentage,
                 kycStatus: profile?.kyc_status || 'pending',
-                zimScore: profile?.zim_score || null
+                zimScore: profile?.zim_score || null,
+                // Auth provider info (for showing login method badge)
+                authProvider: profile?.auth_provider || 'email',
+                lastLoginAt: profile?.last_login_at || null,
+                lastLoginMethod: profile?.last_login_method || profile?.auth_provider || 'email',
+                // Onboarding status
+                onboardingCompleted: profile?.onboarding_completed || false,
+                profileCompleted: profile?.profile_completed || false,
+                // Account creation date
+                createdAt: profile?.created_at || null
             }
         });
     } catch (error) {
