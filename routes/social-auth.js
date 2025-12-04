@@ -294,28 +294,42 @@ socialRouter.get('/callback', async (req, res) => {
                     updated_at: new Date().toISOString()
             };
 
-            // Upsert profile (create or update with fresh social data)
-            console.log(`${existingProfile ? 'Updating' : 'Creating'} profile for social auth user: ${user.id} (mode: ${mode})`);
-            console.log('User metadata:', user.user_metadata);
-            console.log('App metadata:', user.app_metadata);
+            // Determine if this is a NEW user (no existing profile)
+            const isNewUser = !existingProfile;
             
-            const { data: upsertData, error: upsertError } = await supabase
-                .from('profiles')
-                .upsert(userDetails, { onConflict: 'id' })
-                .select();
+            // IMPORTANT: Only create/update profile based on mode
+            // - LOGIN mode with NO existing user = REJECT (don't create profile)
+            // - LOGIN mode with existing user = UPDATE profile
+            // - SIGNUP mode with existing user = REJECT (don't update)
+            // - SIGNUP mode with NO existing user = CREATE profile
+            
+            const shouldUpsertProfile = (mode === 'signup' && isNewUser) || (mode === 'login' && !isNewUser);
+            
+            if (shouldUpsertProfile) {
+                console.log(`${existingProfile ? 'Updating' : 'Creating'} profile for social auth user: ${user.id} (mode: ${mode})`);
+                console.log('User metadata:', user.user_metadata);
+                console.log('App metadata:', user.app_metadata);
+                
+                const { data: upsertData, error: upsertError } = await supabase
+                    .from('profiles')
+                    .upsert(userDetails, { onConflict: 'id' })
+                    .select();
 
-            if (upsertError) {
-                console.error('❌ Profile upsert error:', upsertError);
-                console.error('❌ User details that failed:', JSON.stringify(userDetails, null, 2));
-                // Continue anyway - profile can be created later
+                if (upsertError) {
+                    console.error('❌ Profile upsert error:', upsertError);
+                    console.error('❌ User details that failed:', JSON.stringify(userDetails, null, 2));
+                    // Continue anyway - profile can be created later
+                } else {
+                    console.log(`✅ Profile ${existingProfile ? 'updated' : 'created'} successfully for user: ${user.id}`);
+                    console.log('📋 Profile details:', {
+                        name: `${userDetails.first_name} ${userDetails.last_name}`,
+                        email: userDetails.email,
+                        provider: user.app_metadata?.provider
+                    });
+                    console.log('📋 Upserted profile data:', upsertData);
+                }
             } else {
-                console.log(`✅ Profile ${existingProfile ? 'updated' : 'created'} successfully for user: ${user.id}`);
-                console.log('📋 Profile details:', {
-                    name: `${userDetails.first_name} ${userDetails.last_name}`,
-                    email: userDetails.email,
-                    provider: user.app_metadata?.provider
-                });
-                console.log('📋 Upserted profile data:', upsertData);
+                console.log(`⏭️ Skipping profile upsert - mode: ${mode}, isNewUser: ${isNewUser}`);
             }
 
             // Store social auth data for dashboard profile
@@ -339,22 +353,36 @@ socialRouter.get('/callback', async (req, res) => {
             const frontendUrl = process.env.FRONTEND_URL || 'https://zimcrowd.com';
             let redirectUrl;
             
+            // isNewUser already defined above
             if (mode === 'signup') {
-                // Signup page - check if user already exists (check BEFORE upsert)
+                // SIGNUP MODE
                 if (existingProfile) {
-                    // User already exists - redirect to login page
-                    console.log('⚠️ User already exists, redirecting to login page');
-                    redirectUrl = `${frontendUrl}/login.html?error=user_exists&message=Account already exists. Please use social auth on the login page to sign in.`;
+                    // User already exists - redirect to login page with message
+                    console.log('⚠️ Signup attempted but user already exists, redirecting to login');
+                    redirectUrl = `${frontendUrl}/login.html?error=user_exists&message=Account already exists. Please sign in instead.`;
                 } else {
                     // New user - go to onboarding
-                    console.log('✅ New user, proceeding to onboarding');
+                    console.log('✅ New user signup, proceeding to onboarding');
                     redirectUrl = `${frontendUrl}/onboarding.html?source=social&newUser=true`;
                 }
             } else {
-                // Login mode - always go directly to dashboard
-                // Profile is created/updated by upsert above, so no need to check
-                console.log('✅ Login mode - redirecting to dashboard');
-                redirectUrl = `${frontendUrl}/dashboard.html`;
+                // LOGIN MODE
+                if (isNewUser) {
+                    // User doesn't exist - they need to sign up first
+                    console.log('⚠️ Login attempted but user does not exist, redirecting to signup');
+                    redirectUrl = `${frontendUrl}/signup.html?error=no_account&message=No account found. Please sign up first.`;
+                } else {
+                    // Existing user - check if onboarding is completed
+                    if (existingProfile.onboarding_completed) {
+                        // Onboarding done - go to dashboard
+                        console.log('✅ Existing user login, onboarding complete - redirecting to dashboard');
+                        redirectUrl = `${frontendUrl}/dashboard.html`;
+                    } else {
+                        // Onboarding not done - resume onboarding
+                        console.log('✅ Existing user login, onboarding incomplete - redirecting to onboarding');
+                        redirectUrl = `${frontendUrl}/onboarding.html?source=social&resuming=true`;
+                    }
+                }
             }
             
             console.log('🔄 Redirecting to:', redirectUrl, 'Mode:', mode, 'Existing profile before upsert:', !!existingProfile);
