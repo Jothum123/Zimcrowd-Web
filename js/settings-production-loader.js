@@ -593,16 +593,26 @@ class SettingsProductionLoader {
         if (Array.isArray(documents)) {
             docs = documents;
         } else if (documents && typeof documents === 'object') {
-            docs = documents.documents || documents.data || [];
+            // Try various possible array properties
+            docs = documents.documents || documents.data || documents.items || documents.list || [];
+            // If still not an array, wrap in array or default to empty
+            if (!Array.isArray(docs)) {
+                docs = [];
+            }
         }
-        const verified = docs.filter(d => d.status === 'verified' || d.is_verified).length;
-        const pending = docs.filter(d => d.status === 'pending' || d.status === 'processing').length;
-        const rejected = docs.filter(d => d.status === 'rejected').length;
+        // Final safety check
+        if (!Array.isArray(docs)) {
+            console.warn('populateDocuments: Could not extract array from documents:', documents);
+            docs = [];
+        }
+        const verified = docs.filter(d => d && (d.status === 'verified' || d.is_verified)).length;
+        const pending = docs.filter(d => d && (d.status === 'pending' || d.status === 'processing')).length;
+        const rejected = docs.filter(d => d && d.status === 'rejected').length;
         const total = docs.length;
         
         // Required documents that might be missing
         const requiredDocs = ['ZIM_ID', 'SELFIE', 'BANK_STATEMENT'];
-        const uploadedTypes = docs.map(d => d.doc_type || d.document_type);
+        const uploadedTypes = docs.filter(d => d).map(d => d.doc_type || d.document_type);
         const missing = requiredDocs.filter(type => !uploadedTypes.includes(type)).length;
         
         // Update counts in UI
