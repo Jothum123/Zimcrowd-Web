@@ -117,9 +117,9 @@ router.get('/', authenticateUser, async (req, res) => {
     try {
         const userId = req.user.id;
         
-        // Query documents from kyc_documents table
+        // Query documents from user_documents table
         const { data: documents, error } = await supabase
-            .from('kyc_documents')
+            .from('user_documents')
             .select('*')
             .eq('user_id', userId)
             .order('created_at', { ascending: false });
@@ -137,7 +137,7 @@ router.get('/', authenticateUser, async (req, res) => {
                 let signedUrl = null;
                 try {
                     const { data: urlData } = await supabase.storage
-                        .from('kyc-documents')
+                        .from('user-documents')
                         .createSignedUrl(doc.file_path, 3600); // 1 hour expiry
                     signedUrl = urlData?.signedUrl;
                 } catch (e) {
@@ -146,8 +146,8 @@ router.get('/', authenticateUser, async (req, res) => {
                 
                 return {
                     id: doc.id,
-                    type: doc.document_type,
-                    filename: doc.file_name,
+                    type: doc.document_type || doc.doc_type,
+                    filename: doc.file_name || doc.original_filename,
                     status: doc.status,
                     uploaded_at: doc.created_at,
                     verified_at: doc.verified_at,
@@ -232,7 +232,7 @@ router.post('/upload', authenticateUser, upload.single('document'), [
         // Check if user has reached the maximum number of files for this type
         const maxFiles = DOCUMENT_TYPES[document_type].max_files;
         const { data: existingDocs, error: countError } = await supabase
-            .from('kyc_documents')
+            .from('user_documents')
             .select('id')
             .eq('user_id', req.user.id)
             .eq('document_type', document_type);
@@ -244,10 +244,10 @@ router.post('/upload', authenticateUser, upload.single('document'), [
             });
         }
 
-        // Upload file to Supabase Storage (kyc-documents bucket)
+        // Upload file to Supabase Storage (user-documents bucket)
         const fileName = `${req.user.id}/${document_type}/${Date.now()}_${file.originalname}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('kyc-documents')
+            .from('user-documents')
             .upload(fileName, file.buffer, {
                 contentType: file.mimetype,
                 upsert: false
@@ -261,9 +261,9 @@ router.post('/upload', authenticateUser, upload.single('document'), [
             });
         }
 
-        // Save document metadata to kyc_documents table
+        // Save document metadata to user_documents table
         const { data: documentRecord, error: dbError } = await supabase
-            .from('kyc_documents')
+            .from('user_documents')
             .insert({
                 user_id: req.user.id,
                 document_type: document_type,
@@ -280,7 +280,7 @@ router.post('/upload', authenticateUser, upload.single('document'), [
         if (dbError) {
             console.error('Database insert error:', dbError);
             // Try to delete the uploaded file if DB insert fails
-            await supabase.storage.from('kyc-documents').remove([fileName]);
+            await supabase.storage.from('user-documents').remove([fileName]);
             return res.status(500).json({
                 success: false,
                 message: 'Failed to save document record'
@@ -289,7 +289,7 @@ router.post('/upload', authenticateUser, upload.single('document'), [
 
         // Generate signed URL for the uploaded document
         const { data: signedUrlData } = await supabase.storage
-            .from('kyc-documents')
+            .from('user-documents')
             .createSignedUrl(fileName, 3600);
 
         res.status(201).json({
@@ -322,7 +322,7 @@ router.get('/:id/download', authenticateUser, async (req, res) => {
 
         // Fetch document metadata from database
         const { data: document, error: fetchError } = await supabase
-            .from('kyc_documents')
+            .from('user_documents')
             .select('*')
             .eq('id', id)
             .eq('user_id', req.user.id)
@@ -337,7 +337,7 @@ router.get('/:id/download', authenticateUser, async (req, res) => {
 
         // Get signed URL from Supabase Storage
         const { data: urlData, error } = await supabase.storage
-            .from('kyc-documents')
+            .from('user-documents')
             .createSignedUrl(document.file_path, 300); // 5 minutes expiry
 
         if (error) {
@@ -374,7 +374,7 @@ router.delete('/:id', authenticateUser, async (req, res) => {
 
         // Fetch document to verify ownership and get file path
         const { data: document, error: fetchError } = await supabase
-            .from('kyc_documents')
+            .from('user_documents')
             .select('*')
             .eq('id', id)
             .eq('user_id', req.user.id)
@@ -397,7 +397,7 @@ router.delete('/:id', authenticateUser, async (req, res) => {
 
         // Delete from storage
         const { error: storageError } = await supabase.storage
-            .from('kyc-documents')
+            .from('user-documents')
             .remove([document.file_path]);
 
         if (storageError) {
@@ -406,7 +406,7 @@ router.delete('/:id', authenticateUser, async (req, res) => {
 
         // Delete from database
         const { error: dbError } = await supabase
-            .from('kyc_documents')
+            .from('user_documents')
             .delete()
             .eq('id', id);
 

@@ -2,46 +2,38 @@
 -- Run this in Supabase SQL Editor
 
 -- ============================================
--- KYC DOCUMENTS TABLE (for tracking uploaded documents)
+-- ADD MISSING COLUMNS TO USER_DOCUMENTS TABLE (if needed)
 -- ============================================
-CREATE TABLE IF NOT EXISTS public.kyc_documents (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    document_type TEXT NOT NULL, -- 'id_front', 'id_back', 'selfie', 'proof_of_address', 'bank_statement'
-    file_path TEXT NOT NULL,
-    file_name TEXT,
-    mime_type TEXT,
-    file_size INTEGER,
-    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'expired')),
-    rejection_reason TEXT,
-    verified_at TIMESTAMP WITH TIME ZONE,
-    verified_by UUID,
-    expires_at TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+ALTER TABLE public.user_documents ADD COLUMN IF NOT EXISTS file_path TEXT;
+ALTER TABLE public.user_documents ADD COLUMN IF NOT EXISTS file_name TEXT;
+ALTER TABLE public.user_documents ADD COLUMN IF NOT EXISTS mime_type TEXT;
+ALTER TABLE public.user_documents ADD COLUMN IF NOT EXISTS file_size INTEGER;
+ALTER TABLE public.user_documents ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
+ALTER TABLE public.user_documents ADD COLUMN IF NOT EXISTS verified_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE public.user_documents ADD COLUMN IF NOT EXISTS verified_by UUID;
+ALTER TABLE public.user_documents ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP WITH TIME ZONE;
 
 -- Index for faster lookups
-CREATE INDEX IF NOT EXISTS idx_kyc_documents_user_id ON public.kyc_documents(user_id);
-CREATE INDEX IF NOT EXISTS idx_kyc_documents_status ON public.kyc_documents(status);
+CREATE INDEX IF NOT EXISTS idx_user_documents_user_id ON public.user_documents(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_documents_status ON public.user_documents(status);
 
--- RLS for KYC documents
-ALTER TABLE public.kyc_documents ENABLE ROW LEVEL SECURITY;
+-- RLS for user_documents
+ALTER TABLE public.user_documents ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Users can view own KYC documents" ON public.kyc_documents;
-CREATE POLICY "Users can view own KYC documents" ON public.kyc_documents
+DROP POLICY IF EXISTS "Users can view own documents" ON public.user_documents;
+CREATE POLICY "Users can view own documents" ON public.user_documents
     FOR SELECT USING (auth.uid() = user_id);
 
-DROP POLICY IF EXISTS "Users can insert own KYC documents" ON public.kyc_documents;
-CREATE POLICY "Users can insert own KYC documents" ON public.kyc_documents
+DROP POLICY IF EXISTS "Users can insert own documents" ON public.user_documents;
+CREATE POLICY "Users can insert own documents" ON public.user_documents
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-DROP POLICY IF EXISTS "Users can delete own pending KYC documents" ON public.kyc_documents;
-CREATE POLICY "Users can delete own pending KYC documents" ON public.kyc_documents
+DROP POLICY IF EXISTS "Users can delete own pending documents" ON public.user_documents;
+CREATE POLICY "Users can delete own pending documents" ON public.user_documents
     FOR DELETE USING (auth.uid() = user_id AND status = 'pending');
 
-DROP POLICY IF EXISTS "Service role full access to KYC documents" ON public.kyc_documents;
-CREATE POLICY "Service role full access to KYC documents" ON public.kyc_documents
+DROP POLICY IF EXISTS "Service role full access to documents" ON public.user_documents;
+CREATE POLICY "Service role full access to documents" ON public.user_documents
     FOR ALL USING (auth.role() = 'service_role');
 
 -- ============================================

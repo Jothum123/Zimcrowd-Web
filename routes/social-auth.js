@@ -40,10 +40,13 @@ socialRouter.get('/google', async (req, res) => {
             ? `https://${process.env.VERCEL_URL}` 
             : process.env.BACKEND_URL || 'https://zimcrowd-backend.vercel.app';
         
-        // Pass mode as query parameter in redirect URL
-        const redirectTo = `${baseUrl}/api/social-auth/callback?mode=${mode}`;
+        // Pass mode in the redirect URL - Supabase preserves this in the callback
+        const redirectTo = `${baseUrl}/api/social-auth/callback`;
 
         console.log('🔄 Initiating Google OAuth:', { mode, redirectTo });
+
+        // Encode mode in state parameter (base64) so it survives the OAuth flow
+        const stateData = Buffer.from(JSON.stringify({ mode })).toString('base64');
 
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
@@ -51,7 +54,8 @@ socialRouter.get('/google', async (req, res) => {
                 redirectTo: redirectTo,
                 queryParams: {
                     access_type: 'offline',
-                    prompt: 'consent'
+                    prompt: 'select_account', // Always show account picker
+                    state: stateData // Pass mode in state
                 },
                 scopes: 'email profile' // Request email and profile info
             }
@@ -107,15 +111,21 @@ socialRouter.get('/facebook', async (req, res) => {
             ? `https://${process.env.VERCEL_URL}` 
             : process.env.BACKEND_URL || 'https://zimcrowd-backend.vercel.app';
         
-        // Pass mode as query parameter in redirect URL
-        const redirectTo = `${baseUrl}/api/social-auth/callback?mode=${mode}`;
+        // Pass mode in the redirect URL
+        const redirectTo = `${baseUrl}/api/social-auth/callback`;
 
         console.log('🔄 Initiating Facebook OAuth:', { mode, redirectTo });
+
+        // Encode mode in state parameter (base64) so it survives the OAuth flow
+        const stateData = Buffer.from(JSON.stringify({ mode })).toString('base64');
 
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'facebook',
             options: {
                 redirectTo: redirectTo,
+                queryParams: {
+                    state: stateData // Pass mode in state
+                },
                 scopes: 'email public_profile' // Request email and public profile info
             }
         });
@@ -183,10 +193,20 @@ socialRouter.get('/callback', async (req, res) => {
             // User is authenticated, check if we need to create/update profile
             const user = data.session.user;
             
-            // Extract mode from query params (passed in redirectTo URL)
+            // Extract mode from state parameter (base64 encoded)
             console.log('🔍 Callback query params:', req.query);
             console.log('🔍 Full callback URL:', req.url);
-            const mode = req.query.mode || 'login'; // default to login
+            
+            let mode = 'login'; // default to login
+            try {
+                if (req.query.state) {
+                    const stateData = JSON.parse(Buffer.from(req.query.state, 'base64').toString());
+                    mode = stateData.mode || 'login';
+                    console.log('🔍 Decoded state:', stateData);
+                }
+            } catch (e) {
+                console.log('⚠️ Could not decode state, defaulting to login mode');
+            }
             
             console.log('🔍 Social auth mode:', mode, 'for user:', user.email);
 
@@ -355,7 +375,7 @@ socialRouter.get('/callback', async (req, res) => {
             
             // isNewUser already defined above
             if (mode === 'signup') {
-                // SIGNUP MODE
+                // SIGNUP MODE - User clicked "Sign Up with Google/Facebook"
                 if (existingProfile) {
                     // User already exists - redirect to login page with message
                     console.log('⚠️ Signup attempted but user already exists, redirecting to login');
@@ -366,22 +386,16 @@ socialRouter.get('/callback', async (req, res) => {
                     redirectUrl = `${frontendUrl}/onboarding.html?source=social&newUser=true`;
                 }
             } else {
-                // LOGIN MODE
+                // LOGIN MODE - User clicked "Login with Google/Facebook"
                 if (isNewUser) {
                     // User doesn't exist - they need to sign up first
                     console.log('⚠️ Login attempted but user does not exist, redirecting to signup');
                     redirectUrl = `${frontendUrl}/signup.html?error=no_account&message=No account found. Please sign up first.`;
                 } else {
-                    // Existing user - check if onboarding is completed
-                    if (existingProfile.onboarding_completed) {
-                        // Onboarding done - go to dashboard
-                        console.log('✅ Existing user login, onboarding complete - redirecting to dashboard');
-                        redirectUrl = `${frontendUrl}/dashboard.html`;
-                    } else {
-                        // Onboarding not done - resume onboarding
-                        console.log('✅ Existing user login, onboarding incomplete - redirecting to onboarding');
-                        redirectUrl = `${frontendUrl}/onboarding.html?source=social&resuming=true`;
-                    }
+                    // Existing user - LOGIN always goes to dashboard
+                    // (onboarding status doesn't matter for login - they can complete it later from dashboard)
+                    console.log('✅ Existing user login - redirecting to dashboard');
+                    redirectUrl = `${frontendUrl}/dashboard.html`;
                 }
             }
             

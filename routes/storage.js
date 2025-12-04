@@ -238,7 +238,7 @@ router.post('/kyc-document', verifyToken, upload.single('document'), async (req,
 
         // Save document reference in database
         const { error: dbError } = await supabase
-            .from('kyc_documents')
+            .from('user_documents')
             .insert({
                 user_id: userId,
                 document_type: docType,
@@ -280,7 +280,7 @@ router.get('/kyc-documents', verifyToken, async (req, res) => {
 
         // Get documents from database
         const { data: documents, error } = await supabase
-            .from('kyc_documents')
+            .from('user_documents')
             .select('*')
             .eq('user_id', userId)
             .order('created_at', { ascending: false });
@@ -325,7 +325,7 @@ router.delete('/kyc-document/:documentId', verifyToken, async (req, res) => {
 
         // Get document info
         const { data: doc, error: fetchError } = await supabase
-            .from('kyc_documents')
+            .from('user_documents')
             .select('*')
             .eq('id', documentId)
             .eq('user_id', userId)
@@ -346,7 +346,7 @@ router.delete('/kyc-document/:documentId', verifyToken, async (req, res) => {
 
         // Delete from database
         const { error: dbError } = await supabase
-            .from('kyc_documents')
+            .from('user_documents')
             .delete()
             .eq('id', documentId);
 
