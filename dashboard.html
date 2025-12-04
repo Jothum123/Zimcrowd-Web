@@ -16645,8 +16645,98 @@ How it works:
             // Initialize comprehensive activity logging
             initializeComprehensiveActivityLogging();
             
+            // Initialize toast notification demo
+            initializeToastNotificationDemo();
+            
             // Dashboard initialization will be handled by existing scripts
         });
+
+        // Toast Notification Demo System
+        function initializeToastNotificationDemo() {
+            // Add demo button to dashboard (for testing)
+            setTimeout(() => {
+                addNotificationDemoButton();
+            }, 2000);
+            
+            // Show welcome notification
+            setTimeout(() => {
+                window.ToastNotifications.success(
+                    'Welcome Back!', 
+                    'Your dashboard is ready with real-time notifications.',
+                    { duration: 5000 }
+                );
+            }, 1000);
+        }
+
+        function addNotificationDemoButton() {
+            const demoButton = document.createElement('button');
+            demoButton.innerHTML = '<i class="fas fa-bell"></i> Test Notifications';
+            demoButton.className = 'btn-demo-notifications';
+            demoButton.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 20px;
+                background: linear-gradient(135deg, #3b82f6, #2563eb);
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 600;
+                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+                z-index: 1000;
+                transition: all 0.2s ease;
+            `;
+            
+            demoButton.onmouseover = () => {
+                demoButton.style.transform = 'translateY(-2px)';
+                demoButton.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.4)';
+            };
+            
+            demoButton.onmouseout = () => {
+                demoButton.style.transform = 'translateY(0)';
+                demoButton.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
+            };
+            
+            demoButton.onclick = showNotificationDemo;
+            document.body.appendChild(demoButton);
+        }
+
+        function showNotificationDemo() {
+            const notifications = [
+                () => window.ToastNotifications.success('Success!', 'This is a success notification.'),
+                () => window.ToastNotifications.error('Error!', 'This is an error notification.'),
+                () => window.ToastNotifications.warning('Warning!', 'This is a warning notification.'),
+                () => window.ToastNotifications.info('Info!', 'This is an info notification.'),
+                () => window.ToastNotifications.loan('Loan Update', 'Your loan application has been approved!'),
+                () => window.ToastNotifications.investment('Investment Opportunity', 'New high-yield investment available!'),
+                () => window.ToastNotifications.transaction('Transaction', 'Your transaction was successful.'),
+                () => window.ToastNotifications.security('Security Alert', 'New login detected from your account.'),
+                () => window.ToastNotifications.referral('Referral Bonus', 'You earned $50 from a referral!'),
+                () => window.ToastNotifications.show({
+                    type: 'success',
+                    title: 'Custom Notification',
+                    message: 'This is a custom notification with actions.',
+                    actions: [
+                        { text: 'View Details', onclick: 'alert("Details clicked!")' },
+                        { text: 'Dismiss', onclick: 'window.ToastNotifications.clearAll()' }
+                    ],
+                    duration: 8000
+                })
+            ];
+
+            let index = 0;
+            const showNext = () => {
+                if (index < notifications.length) {
+                    notifications[index]();
+                    index++;
+                    setTimeout(showNext, 1500);
+                }
+            };
+
+            showNext();
+        }
 
         // Comprehensive Activity Logging System
         async function initializeComprehensiveActivityLogging() {
@@ -16729,6 +16819,10 @@ How it works:
                     source: 'dashboard_button',
                     timestamp: Date.now()
                 });
+                
+                // Show toast notification
+                window.ToastNotifications.loan('Loan Application', 'Opening loan application form...');
+                
                 return originalOpenLoanRequestModal.apply(this, args);
             };
 
@@ -16736,13 +16830,26 @@ How it works:
             const originalSubmitLoanApplication = window.submitLoanApplication;
             window.submitLoanApplication = async function(...args) {
                 const loanData = args[0] || {};
-                await window.ActivityLogger.logLoanApplication({
-                    amount: loanData.amount,
-                    purpose: loanData.purpose,
-                    term: loanData.term,
-                    risk_level: loanData.riskLevel,
-                    application_type: loanData.type || 'standard'
-                });
+                
+                try {
+                    await window.ActivityLogger.logLoanApplication({
+                        amount: loanData.amount,
+                        purpose: loanData.purpose,
+                        term: loanData.term,
+                        risk_level: loanData.riskLevel,
+                        application_type: loanData.type || 'standard'
+                    });
+                    
+                    // Show success toast
+                    window.ToastNotifications.activityCompleted('loan_application', {
+                        amount: loanData.amount
+                    });
+                    
+                } catch (error) {
+                    // Show error toast
+                    window.ToastNotifications.activityFailed('loan_application', error.message);
+                }
+                
                 return originalSubmitLoanApplication.apply(this, args);
             };
 
@@ -16759,6 +16866,9 @@ How it works:
                             click_element: e.target.tagName.toLowerCase(),
                             timestamp: Date.now()
                         });
+                        
+                        // Show subtle info toast
+                        window.ToastNotifications.info('Loan Details', 'Loading loan information...');
                     }
                 }
             });
@@ -16774,6 +16884,8 @@ How it works:
                         source: 'navigation',
                         timestamp: Date.now()
                     });
+                    
+                    window.ToastNotifications.info('Wallet', 'Loading wallet information...');
                 }
             });
 
@@ -16781,12 +16893,21 @@ How it works:
             const originalMakeWithdrawal = window.makeWithdrawal;
             window.makeWithdrawal = async function(...args) {
                 const withdrawalData = args[0] || {};
-                await window.ActivityLogger.logActivity('wallet_withdrawal_attempt', {
-                    amount: withdrawalData.amount,
-                    method: withdrawalData.method,
-                    status: 'initiated',
-                    timestamp: Date.now()
-                });
+                
+                try {
+                    await window.ActivityLogger.logActivity('wallet_withdrawal_attempt', {
+                        amount: withdrawalData.amount,
+                        method: withdrawalData.method,
+                        status: 'initiated',
+                        timestamp: Date.now()
+                    });
+                    
+                    window.ToastNotifications.transaction('Withdrawal', `Processing withdrawal of $${withdrawalData.amount}...`);
+                    
+                } catch (error) {
+                    window.ToastNotifications.error('Withdrawal Failed', 'There was an error processing your withdrawal.');
+                }
+                
                 return originalMakeWithdrawal.apply(this, args);
             };
 
@@ -16794,12 +16915,21 @@ How it works:
             const originalMakeDeposit = window.makeDeposit;
             window.makeDeposit = async function(...args) {
                 const depositData = args[0] || {};
-                await window.ActivityLogger.logActivity('wallet_deposit_attempt', {
-                    amount: depositData.amount,
-                    method: depositData.method,
-                    status: 'initiated',
-                    timestamp: Date.now()
-                });
+                
+                try {
+                    await window.ActivityLogger.logActivity('wallet_deposit_attempt', {
+                        amount: depositData.amount,
+                        method: depositData.method,
+                        status: 'initiated',
+                        timestamp: Date.now()
+                    });
+                    
+                    window.ToastNotifications.transaction('Deposit', `Processing deposit of $${depositData.amount}...`);
+                    
+                } catch (error) {
+                    window.ToastNotifications.error('Deposit Failed', 'There was an error processing your deposit.');
+                }
+                
                 return originalMakeDeposit.apply(this, args);
             };
 
@@ -16811,6 +16941,7 @@ How it works:
                     source: 'wallet_section',
                     timestamp: Date.now()
                 });
+                
                 return originalLoadWalletBalance.apply(this, args);
             };
         }
@@ -16825,6 +16956,8 @@ How it works:
                         source: 'navigation',
                         timestamp: Date.now()
                     });
+                    
+                    window.ToastNotifications.info('Investments', 'Loading investment opportunities...');
                 }
             });
 
@@ -16832,13 +16965,24 @@ How it works:
             const originalMakeInvestment = window.makeInvestment;
             window.makeInvestment = async function(...args) {
                 const investmentData = args[0] || {};
-                await window.ActivityLogger.logInvestment({
-                    amount: investmentData.amount,
-                    loan_id: investmentData.loanId,
-                    risk_level: investmentData.riskLevel,
-                    expected_return: investmentData.expectedReturn,
-                    investment_type: investmentData.type || 'manual'
-                });
+                
+                try {
+                    await window.ActivityLogger.logInvestment({
+                        amount: investmentData.amount,
+                        loan_id: investmentData.loanId,
+                        risk_level: investmentData.riskLevel,
+                        expected_return: investmentData.expectedReturn,
+                        investment_type: investmentData.type || 'manual'
+                    });
+                    
+                    window.ToastNotifications.activityCompleted('investment_made', {
+                        amount: investmentData.amount
+                    });
+                    
+                } catch (error) {
+                    window.ToastNotifications.activityFailed('investment_made', error.message);
+                }
+                
                 return originalMakeInvestment.apply(this, args);
             };
 
@@ -16855,6 +16999,8 @@ How it works:
                             click_element: e.target.tagName.toLowerCase(),
                             timestamp: Date.now()
                         });
+                        
+                        window.ToastNotifications.info('Investment Opportunity', 'Loading investment details...');
                     }
                 }
             });
@@ -16952,6 +17098,8 @@ How it works:
                         source: 'navigation',
                         timestamp: Date.now()
                     });
+                    
+                    window.ToastNotifications.info('Settings', 'Loading account settings...');
                 }
             });
 
@@ -16959,36 +17107,61 @@ How it works:
             const originalUpdateProfile = window.updateProfile;
             window.updateProfile = async function(...args) {
                 const profileData = args[0] || {};
-                await window.ActivityLogger.logProfileUpdate({
-                    updated_fields: Object.keys(profileData),
-                    update_source: 'settings_form',
-                    timestamp: Date.now()
-                });
+                
+                try {
+                    await window.ActivityLogger.logProfileUpdate({
+                        updated_fields: Object.keys(profileData),
+                        update_source: 'settings_form',
+                        timestamp: Date.now()
+                    });
+                    
+                    window.ToastNotifications.activityCompleted('profile_updated');
+                    
+                } catch (error) {
+                    window.ToastNotifications.activityFailed('profile_updated', error.message);
+                }
+                
                 return originalUpdateProfile.apply(this, args);
             };
 
             // Track password changes
             const originalChangePassword = window.changePassword;
             window.changePassword = async function(...args) {
-                await window.ActivityLogger.logSecurityAlert({
-                    alert_type: 'password_change',
-                    severity: 'medium',
-                    source: 'settings_section',
-                    timestamp: Date.now()
-                });
+                try {
+                    await window.ActivityLogger.logSecurityAlert({
+                        alert_type: 'password_change',
+                        severity: 'medium',
+                        source: 'settings_section',
+                        timestamp: Date.now()
+                    });
+                    
+                    window.ToastNotifications.activityCompleted('password_changed');
+                    
+                } catch (error) {
+                    window.ToastNotifications.error('Password Change Failed', 'There was an error changing your password.');
+                }
+                
                 return originalChangePassword.apply(this, args);
             };
 
             // Track 2FA changes
             const originalEnable2FA = window.enable2FA;
             window.enable2FA = async function(...args) {
-                await window.ActivityLogger.logSecurityAlert({
-                    alert_type: '2fa_enabled',
-                    severity: 'low',
-                    method: args[0] || 'unknown',
-                    source: 'settings_section',
-                    timestamp: Date.now()
-                });
+                try {
+                    await window.ActivityLogger.logSecurityAlert({
+                        alert_type: '2fa_enabled',
+                        severity: 'low',
+                        method: args[0] || 'unknown',
+                        source: 'settings_section',
+                        timestamp: Date.now()
+                    });
+                    
+                    window.ToastNotifications.activityCompleted('2fa_enabled');
+                    
+                } catch (error) {
+                    window.ToastNotifications.error('2FA Setup Failed', 'There was an error setting up two-factor authentication.');
+                }
+                
                 return originalEnable2FA.apply(this, args);
             };
         }
@@ -17064,6 +17237,7 @@ How it works:
 
     <!-- External JavaScript Files -->
     <script src="js/activity-logger.js"></script>
+    <script src="js/toast-notifications.js"></script>
     <script src="js/dashboard-loader.js"></script>
     <script src="js/dashboard-charts.js"></script>
     <script src="js/dashboard-filters.js"></script>
