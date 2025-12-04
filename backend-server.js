@@ -43,6 +43,8 @@ try {
     console.log('✅ Documents routes loaded');
     var referralsRoutes = require('./routes/referrals');
     console.log('✅ Referrals routes loaded');
+    var activityTrackingRoutes = require('./routes/activity-tracking');
+    console.log('✅ Activity tracking routes loaded');
     var adminRoutes = require('./routes/admin');
     console.log('✅ Admin routes loaded');
     var adminDashboardRoutes = require('./routes/admin-dashboard');
@@ -155,6 +157,8 @@ app.use('/api/profile', profileRoutes);
 console.log('✅ Profile routes registered');
 app.use('/api/dashboard', dashboardRoutes);
 console.log('✅ Dashboard routes registered');
+app.use('/api/activity', activityTrackingRoutes);
+console.log('✅ Activity tracking routes registered');
 app.use('/api/zimscore', zimscoreRoutes);
 console.log('✅ ZimScore routes registered');
 app.use('/api/kyc-ocr', kycOcrRoutes);

@@ -10992,6 +10992,14 @@ How it works:
             try {
                 console.log('🔄 Loading dashboard data...');
                 
+                // Log dashboard access
+                if (window.ActivityLogger && window.ActivityLogger.isInitialized) {
+                    await window.ActivityLogger.logPageView({
+                        section: 'dashboard_overview',
+                        load_time: Date.now()
+                    });
+                }
+                
                 // Load complete dashboard overview
                 const dashboardResponse = await window.ZimCrowdAPI.getDashboardOverview();
                 console.log('📊 Dashboard response:', dashboardResponse);
@@ -11037,6 +11045,16 @@ How it works:
 
             } catch (error) {
                 console.error('❌ Failed to load dashboard data:', error);
+                
+                // Log error for admin monitoring
+                if (window.ActivityLogger && window.ActivityLogger.isInitialized) {
+                    await window.ActivityLogger.logError({
+                        message: error.message,
+                        context: 'dashboard_data_loading',
+                        stack: error.stack
+                    });
+                }
+                
                 // Keep existing mock data if API fails
             }
         }
@@ -16628,6 +16646,7 @@ How it works:
     </script>
 
     <!-- External JavaScript Files -->
+    <script src="js/activity-logger.js"></script>
     <script src="js/dashboard-loader.js"></script>
     <script src="js/dashboard-charts.js"></script>
     <script src="js/dashboard-filters.js"></script>
