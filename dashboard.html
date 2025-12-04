@@ -16640,43 +16640,43 @@ How it works:
 
         // Initialize dashboard when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Dashboard initialized with live data integration');
+            console.log('🚀 Dashboard initialized with test notifications');
             
             // Initialize comprehensive activity logging
             initializeComprehensiveActivityLogging();
             
-            // Initialize toast notification demo
-            initializeToastNotificationDemo();
+            // Initialize test notification demo
+            initializeTestNotificationDemo();
             
             // Dashboard initialization will be handled by existing scripts
         });
 
-        // Toast Notification Demo System
-        function initializeToastNotificationDemo() {
+        // Test Notification Demo System
+        function initializeTestNotificationDemo() {
             // Add demo button to dashboard (for testing)
             setTimeout(() => {
-                addNotificationDemoButton();
+                addTestNotificationDemoButton();
             }, 2000);
             
             // Show welcome notification
             setTimeout(() => {
-                window.ToastNotifications.success(
-                    'Welcome Back!', 
-                    'Your dashboard is ready with real-time notifications.',
+                window.TestNotifications.success(
+                    'Test Notifications Active', 
+                    'Simple notification system is working!',
                     { duration: 5000 }
                 );
             }, 1000);
         }
 
-        function addNotificationDemoButton() {
+        function addTestNotificationDemoButton() {
             const demoButton = document.createElement('button');
             demoButton.innerHTML = '<i class="fas fa-bell"></i> Test Notifications';
-            demoButton.className = 'btn-demo-notifications';
+            demoButton.className = 'btn-test-notifications';
             demoButton.style.cssText = `
                 position: fixed;
                 bottom: 20px;
                 left: 20px;
-                background: linear-gradient(135deg, #3b82f6, #2563eb);
+                background: linear-gradient(135deg, #38e07b, #2ea05a);
                 color: white;
                 border: none;
                 padding: 12px 20px;
@@ -16684,46 +16684,36 @@ How it works:
                 cursor: pointer;
                 font-size: 14px;
                 font-weight: 600;
-                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+                box-shadow: 0 4px 12px rgba(56, 224, 123, 0.3);
                 z-index: 1000;
                 transition: all 0.2s ease;
             `;
             
             demoButton.onmouseover = () => {
                 demoButton.style.transform = 'translateY(-2px)';
-                demoButton.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.4)';
+                demoButton.style.boxShadow = '0 6px 20px rgba(56, 224, 123, 0.4)';
             };
             
             demoButton.onmouseout = () => {
                 demoButton.style.transform = 'translateY(0)';
-                demoButton.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
+                demoButton.style.boxShadow = '0 4px 12px rgba(56, 224, 123, 0.3)';
             };
             
-            demoButton.onclick = showNotificationDemo;
+            demoButton.onclick = showTestNotificationDemo;
             document.body.appendChild(demoButton);
         }
 
-        function showNotificationDemo() {
+        function showTestNotificationDemo() {
             const notifications = [
-                () => window.ToastNotifications.success('Success!', 'This is a success notification.'),
-                () => window.ToastNotifications.error('Error!', 'This is an error notification.'),
-                () => window.ToastNotifications.warning('Warning!', 'This is a warning notification.'),
-                () => window.ToastNotifications.info('Info!', 'This is an info notification.'),
-                () => window.ToastNotifications.loan('Loan Update', 'Your loan application has been approved!'),
-                () => window.ToastNotifications.investment('Investment Opportunity', 'New high-yield investment available!'),
-                () => window.ToastNotifications.transaction('Transaction', 'Your transaction was successful.'),
-                () => window.ToastNotifications.security('Security Alert', 'New login detected from your account.'),
-                () => window.ToastNotifications.referral('Referral Bonus', 'You earned $50 from a referral!'),
-                () => window.ToastNotifications.show({
-                    type: 'success',
-                    title: 'Custom Notification',
-                    message: 'This is a custom notification with actions.',
-                    actions: [
-                        { text: 'View Details', onclick: 'alert("Details clicked!")' },
-                        { text: 'Dismiss', onclick: 'window.ToastNotifications.clearAll()' }
-                    ],
-                    duration: 8000
-                })
+                () => window.TestNotifications.success('Success!', 'This is a success notification.'),
+                () => window.TestNotifications.error('Error!', 'This is an error notification.'),
+                () => window.TestNotifications.warning('Warning!', 'This is a warning notification.'),
+                () => window.TestNotifications.info('Info!', 'This is an info notification.'),
+                () => window.TestNotifications.success('Loan Update', 'Your loan application has been approved!'),
+                () => window.TestNotifications.info('Investment', 'New investment opportunity available!'),
+                () => window.TestNotifications.info('Transaction', 'Your transaction was successful.'),
+                () => window.TestNotifications.warning('Security', 'New login detected from your account.'),
+                () => window.TestNotifications.success('Referral', 'You earned $50 from a referral!'),
             ];
 
             let index = 0;
@@ -16820,8 +16810,8 @@ How it works:
                     timestamp: Date.now()
                 });
                 
-                // Show toast notification
-                window.ToastNotifications.loan('Loan Application', 'Opening loan application form...');
+                // Show test notification
+                window.TestNotifications.info('Loan Application', 'Opening loan application form...');
                 
                 return originalOpenLoanRequestModal.apply(this, args);
             };
@@ -16840,14 +16830,12 @@ How it works:
                         application_type: loanData.type || 'standard'
                     });
                     
-                    // Show success toast
-                    window.ToastNotifications.activityCompleted('loan_application', {
-                        amount: loanData.amount
-                    });
+                    // Show success test notification
+                    window.TestNotifications.success('Loan Submitted', `Application for $${loanData.amount} submitted successfully!`);
                     
                 } catch (error) {
-                    // Show error toast
-                    window.ToastNotifications.activityFailed('loan_application', error.message);
+                    // Show error test notification
+                    window.TestNotifications.error('Loan Failed', 'There was an error submitting your loan application.');
                 }
                 
                 return originalSubmitLoanApplication.apply(this, args);
@@ -16867,8 +16855,8 @@ How it works:
                             timestamp: Date.now()
                         });
                         
-                        // Show subtle info toast
-                        window.ToastNotifications.info('Loan Details', 'Loading loan information...');
+                        // Show info test notification
+                        window.TestNotifications.info('Loan Details', 'Loading loan information...');
                     }
                 }
             });
@@ -16885,7 +16873,7 @@ How it works:
                         timestamp: Date.now()
                     });
                     
-                    window.ToastNotifications.info('Wallet', 'Loading wallet information...');
+                    window.TestNotifications.info('Wallet', 'Loading wallet information...');
                 }
             });
 
@@ -16902,10 +16890,10 @@ How it works:
                         timestamp: Date.now()
                     });
                     
-                    window.ToastNotifications.transaction('Withdrawal', `Processing withdrawal of $${withdrawalData.amount}...`);
+                    window.TestNotifications.info('Withdrawal', `Processing withdrawal of $${withdrawalData.amount}...`);
                     
                 } catch (error) {
-                    window.ToastNotifications.error('Withdrawal Failed', 'There was an error processing your withdrawal.');
+                    window.TestNotifications.error('Withdrawal Failed', 'There was an error processing your withdrawal.');
                 }
                 
                 return originalMakeWithdrawal.apply(this, args);
@@ -16924,10 +16912,10 @@ How it works:
                         timestamp: Date.now()
                     });
                     
-                    window.ToastNotifications.transaction('Deposit', `Processing deposit of $${depositData.amount}...`);
+                    window.TestNotifications.info('Deposit', `Processing deposit of $${depositData.amount}...`);
                     
                 } catch (error) {
-                    window.ToastNotifications.error('Deposit Failed', 'There was an error processing your deposit.');
+                    window.TestNotifications.error('Deposit Failed', 'There was an error processing your deposit.');
                 }
                 
                 return originalMakeDeposit.apply(this, args);
@@ -16957,7 +16945,7 @@ How it works:
                         timestamp: Date.now()
                     });
                     
-                    window.ToastNotifications.info('Investments', 'Loading investment opportunities...');
+                    window.TestNotifications.info('Investments', 'Loading investment opportunities...');
                 }
             });
 
@@ -16975,12 +16963,10 @@ How it works:
                         investment_type: investmentData.type || 'manual'
                     });
                     
-                    window.ToastNotifications.activityCompleted('investment_made', {
-                        amount: investmentData.amount
-                    });
+                    window.TestNotifications.success('Investment', `Investment of $${investmentData.amount} processed successfully!`);
                     
                 } catch (error) {
-                    window.ToastNotifications.activityFailed('investment_made', error.message);
+                    window.TestNotifications.error('Investment Failed', 'There was an error processing your investment.');
                 }
                 
                 return originalMakeInvestment.apply(this, args);
@@ -17000,7 +16986,7 @@ How it works:
                             timestamp: Date.now()
                         });
                         
-                        window.ToastNotifications.info('Investment Opportunity', 'Loading investment details...');
+                        window.TestNotifications.info('Investment Opportunity', 'Loading investment details...');
                     }
                 }
             });
@@ -17099,7 +17085,7 @@ How it works:
                         timestamp: Date.now()
                     });
                     
-                    window.ToastNotifications.info('Settings', 'Loading account settings...');
+                    window.TestNotifications.info('Settings', 'Loading account settings...');
                 }
             });
 
@@ -17115,10 +17101,10 @@ How it works:
                         timestamp: Date.now()
                     });
                     
-                    window.ToastNotifications.activityCompleted('profile_updated');
+                    window.TestNotifications.success('Profile Updated', 'Your profile has been updated successfully!');
                     
                 } catch (error) {
-                    window.ToastNotifications.activityFailed('profile_updated', error.message);
+                    window.TestNotifications.error('Profile Update Failed', 'There was an error updating your profile.');
                 }
                 
                 return originalUpdateProfile.apply(this, args);
@@ -17135,10 +17121,10 @@ How it works:
                         timestamp: Date.now()
                     });
                     
-                    window.ToastNotifications.activityCompleted('password_changed');
+                    window.TestNotifications.success('Password Changed', 'Your password has been changed successfully!');
                     
                 } catch (error) {
-                    window.ToastNotifications.error('Password Change Failed', 'There was an error changing your password.');
+                    window.TestNotifications.error('Password Change Failed', 'There was an error changing your password.');
                 }
                 
                 return originalChangePassword.apply(this, args);
@@ -17156,10 +17142,10 @@ How it works:
                         timestamp: Date.now()
                     });
                     
-                    window.ToastNotifications.activityCompleted('2fa_enabled');
+                    window.TestNotifications.success('2FA Enabled', 'Two-factor authentication has been enabled!');
                     
                 } catch (error) {
-                    window.ToastNotifications.error('2FA Setup Failed', 'There was an error setting up two-factor authentication.');
+                    window.TestNotifications.error('2FA Setup Failed', 'There was an error setting up two-factor authentication.');
                 }
                 
                 return originalEnable2FA.apply(this, args);
