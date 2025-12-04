@@ -352,6 +352,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Monitor for any red notifications from external sources (lightweight safety net)
     monitorForRedNotifications();
     
+    // Immediate detection - check for any existing red notifications
+    setTimeout(() => {
+        checkForExistingRedNotifications();
+    }, 1000);
+    
     // Show welcome notification for real dashboard
     setTimeout(() => {
         window.TestNotifications.success(
@@ -360,6 +365,80 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     }, 1000);
 });
+
+// Check for any existing red notifications immediately
+function checkForExistingRedNotifications() {
+    console.log('🔍 SCANNING FOR EXISTING RED NOTIFICATIONS...');
+    const allElements = document.querySelectorAll('*');
+    let redNotificationsFound = 0;
+    
+    allElements.forEach((element, index) => {
+        const style = window.getComputedStyle(element);
+        const className = element.className.toLowerCase();
+        
+        // Check for any red styling
+        const hasRedBackground = style.backgroundColor.includes('255, 0, 0') || 
+                                style.backgroundColor.includes('220, 53, 69') ||
+                                style.backgroundColor.includes('239, 68, 68') ||
+                                style.backgroundColor.includes('red');
+        
+        const hasRedBorder = style.borderColor.includes('255, 0, 0') || 
+                           style.borderColor.includes('220, 53, 69') ||
+                           style.borderColor.includes('239, 68, 68') ||
+                           style.borderColor.includes('red');
+        
+        const hasRedText = style.color.includes('255, 0, 0') || 
+                         style.color.includes('220, 53, 69') ||
+                         style.color.includes('239, 68, 68') ||
+                         style.color.includes('red');
+        
+        // Check if it looks like a notification
+        const looksLikeNotification = 
+            className.includes('notification') ||
+            className.includes('toast') ||
+            className.includes('alert') ||
+            className.includes('message') ||
+            style.position === 'fixed' ||
+            style.position === 'absolute' ||
+            element.style.zIndex > 100;
+        
+        if ((hasRedBackground || hasRedBorder || hasRedText) && looksLikeNotification) {
+            redNotificationsFound++;
+            console.error(`🚨 RED NOTIFICATION #${redNotificationsFound} FOUND:`, {
+                element: element,
+                tagName: element.tagName,
+                className: element.className,
+                id: element.id,
+                innerHTML: element.innerHTML.substring(0, 200) + '...',
+                position: style.position,
+                zIndex: style.zIndex,
+                backgroundColor: style.backgroundColor,
+                borderColor: style.borderColor,
+                color: style.color,
+                computedStyles: {
+                    display: style.display,
+                    visibility: style.visibility,
+                    opacity: style.opacity,
+                    transform: style.transform
+                },
+                parentElement: element.parentElement?.tagName,
+                nextElementSibling: element.nextElementSibling?.tagName
+            });
+            
+            // Try to hide it immediately
+            element.style.display = 'none';
+            element.style.visibility = 'hidden';
+            element.style.opacity = '0';
+            console.warn(`🚫 ATTEMPTED TO HIDE RED NOTIFICATION #${redNotificationsFound}`);
+        }
+    });
+    
+    if (redNotificationsFound === 0) {
+        console.log('✅ No red notifications found in initial scan');
+    } else {
+        console.error(`❌ Found ${redNotificationsFound} red notifications in initial scan`);
+    }
+}
 
 // Monitor for red notifications from external sources like OneSignal
 function monitorForRedNotifications() {
