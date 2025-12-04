@@ -7791,9 +7791,15 @@ How it works:
                     localStorage.setItem('isAuthenticated', 'true');
                     localStorage.setItem('userData', JSON.stringify(userData));
                     
-                    // Store Supabase session token
+                    // Store Supabase session tokens
                     if (session.access_token) {
                         localStorage.setItem('authToken', session.access_token);
+                        localStorage.setItem('token', session.access_token);
+                        localStorage.setItem('access_token', session.access_token);
+                    }
+                    if (session.refresh_token) {
+                        localStorage.setItem('refreshToken', session.refresh_token);
+                        localStorage.setItem('refresh_token', session.refresh_token);
                     }
 
                     console.log('📋 Stored social auth data:', {

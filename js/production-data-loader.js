@@ -103,9 +103,54 @@ const ProductionDataLoader = {
     },
 
     /**
-     * Make authenticated API request
+     * Refresh authentication token
      */
-    async apiRequest(endpoint, options = {}) {
+    async refreshAuthToken() {
+        const refreshToken = localStorage.getItem('refreshToken') || localStorage.getItem('refresh_token');
+        
+        if (!refreshToken) {
+            console.warn('⚠️ No refresh token available');
+            return false;
+        }
+
+        try {
+            console.log('🔄 Refreshing authentication token...');
+            const response = await fetch(`${this.apiBase}/auth/refresh`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh_token: refreshToken })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.access_token) {
+                    // Update all token storage locations
+                    localStorage.setItem('authToken', data.access_token);
+                    localStorage.setItem('token', data.access_token);
+                    localStorage.setItem('access_token', data.access_token);
+                    
+                    if (data.refresh_token) {
+                        localStorage.setItem('refreshToken', data.refresh_token);
+                        localStorage.setItem('refresh_token', data.refresh_token);
+                    }
+                    
+                    console.log('✅ Token refreshed successfully');
+                    return true;
+                }
+            }
+            
+            console.warn('⚠️ Token refresh failed');
+            return false;
+        } catch (error) {
+            console.error('❌ Token refresh error:', error);
+            return false;
+        }
+    },
+
+    /**
+     * Make authenticated API request with automatic token refresh
+     */
+    async apiRequest(endpoint, options = {}, retryCount = 0) {
         const token = this.getAuthToken();
         
         try {
@@ -119,6 +164,23 @@ const ProductionDataLoader = {
             });
 
             const data = await response.json();
+            
+            // Handle 401 Unauthorized - token expired
+            if (response.status === 401 && retryCount === 0) {
+                console.log('🔐 Token expired, attempting refresh...');
+                const refreshed = await this.refreshAuthToken();
+                
+                if (refreshed) {
+                    // Retry the request with new token
+                    return await this.apiRequest(endpoint, options, retryCount + 1);
+                } else {
+                    // Refresh failed - redirect to login
+                    console.error('❌ Token refresh failed, redirecting to login...');
+                    localStorage.clear();
+                    window.location.href = '/login.html?session_expired=true';
+                    throw new Error('Session expired');
+                }
+            }
             
             if (!response.ok) {
                 throw new Error(data.message || `API Error: ${response.status}`);
