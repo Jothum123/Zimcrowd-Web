@@ -3437,15 +3437,6 @@
             }
         }
 
-        @media (max-width: 768px) {
-            .toast-notification {
-                top: 10px;
-                right: 10px;
-                left: 10px;
-                max-width: none;
-            }
-        }
-
         /* Toggle Switch Styles */
         .toggle-switch {
             position: relative;
@@ -8332,28 +8323,10 @@ How it works:
         }
 
         function showSuccess(message) {
-            // Create and show success notification
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: rgba(56, 231, 123, 0.9);
-                color: white;
-                padding: 15px 20px;
-                border-radius: 8px;
-                font-weight: 600;
-                z-index: 10000;
-                animation: slideInRight 0.3s ease;
-            `;
-            notification.textContent = message;
-
-            document.body.appendChild(notification);
-
-            setTimeout(() => {
-                notification.style.animation = 'slideOutRight 0.3s ease';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
+            // Use the new test notification system
+            if (window.TestNotifications) {
+                window.TestNotifications.success('Success', message);
+            }
         }
 
         // Add message to chat
@@ -10334,15 +10307,24 @@ How it works:
         }
         
         function showErrorNotice(title, message, options = {}) {
-            return showNotice('error', title, message, { ...options, duration: options.duration || 0 });
+            // Use the new test notification system
+            if (window.TestNotifications) {
+                window.TestNotifications.error(title, message);
+            }
         }
         
         function showWarningNotice(title, message, options = {}) {
-            return showNotice('warning', title, message, options);
+            // Use the new test notification system
+            if (window.TestNotifications) {
+                window.TestNotifications.warning(title, message);
+            }
         }
         
         function showInfoNotice(title, message, options = {}) {
-            return showNotice('info', title, message, options);
+            // Use the new test notification system
+            if (window.TestNotifications) {
+                window.TestNotifications.info(title, message);
+            }
         }
 
         // ============================================
