@@ -107,21 +107,15 @@ socialRouter.get('/facebook', async (req, res) => {
             ? `https://${process.env.VERCEL_URL}` 
             : process.env.BACKEND_URL || 'https://zimcrowd-backend.vercel.app';
         
-        // Pass mode in the redirect URL
+        // Simple redirect URL
         const redirectTo = `${baseUrl}/api/social-auth/callback`;
 
         console.log('🔄 Initiating Facebook OAuth:', { mode, redirectTo });
-
-        // Encode mode in state parameter (base64) so it survives the OAuth flow
-        const stateData = Buffer.from(JSON.stringify({ mode })).toString('base64');
 
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'facebook',
             options: {
                 redirectTo: redirectTo,
-                queryParams: {
-                    state: stateData // Pass mode in state
-                },
                 scopes: 'email public_profile' // Request email and public profile info
             }
         });
@@ -357,33 +351,18 @@ socialRouter.get('/callback', async (req, res) => {
             const frontendUrl = process.env.FRONTEND_URL || 'https://zimcrowd.com';
             let redirectUrl;
             
-            // isNewUser already defined above
-            if (mode === 'signup') {
-                // SIGNUP MODE - User clicked "Sign Up with Google/Facebook"
-                if (existingProfile) {
-                    // User already exists - redirect to login page with message
-                    console.log('⚠️ Signup attempted but user already exists, redirecting to login');
-                    redirectUrl = `${frontendUrl}/login.html?error=user_exists&message=Account already exists. Please sign in instead.`;
-                } else {
-                    // New user - go to onboarding
-                    console.log('✅ New user signup, proceeding to onboarding');
-                    redirectUrl = `${frontendUrl}/onboarding.html?source=social&newUser=true`;
-                }
+            // Simple logic: Existing users → Dashboard, New users → Onboarding
+            if (isNewUser) {
+                // New user - go to onboarding
+                console.log('✅ New user detected, proceeding to onboarding');
+                redirectUrl = `${frontendUrl}/onboarding.html?source=social&newUser=true`;
             } else {
-                // LOGIN MODE - User clicked "Login with Google/Facebook"
-                if (isNewUser) {
-                    // User doesn't exist - they need to sign up first
-                    console.log('⚠️ Login attempted but user does not exist, redirecting to signup');
-                    redirectUrl = `${frontendUrl}/signup.html?error=no_account&message=No account found. Please sign up first.`;
-                } else {
-                    // Existing user - LOGIN always goes to dashboard
-                    // (onboarding status doesn't matter for login - they can complete it later from dashboard)
-                    console.log('✅ Existing user login - redirecting to dashboard');
-                    redirectUrl = `${frontendUrl}/dashboard.html`;
-                }
+                // Existing user - go to dashboard
+                console.log('✅ Existing user detected, redirecting to dashboard');
+                redirectUrl = `${frontendUrl}/dashboard.html`;
             }
             
-            console.log('🔄 Redirecting to:', redirectUrl, 'Mode:', mode, 'Existing profile before upsert:', !!existingProfile);
+            console.log('🔄 Redirecting to:', redirectUrl, 'isNewUser:', isNewUser);
 
             // Encode social auth data and token in URL for frontend to process
             const authData = encodeURIComponent(JSON.stringify(socialAuthData));
