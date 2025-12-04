@@ -352,6 +352,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Monitor for any red notifications from external sources
     monitorForRedNotifications();
     
+    // Aggressive red notification removal
+    aggressiveRedNotificationRemoval();
+    
     // Show welcome notification for real dashboard
     setTimeout(() => {
         window.TestNotifications.success(
@@ -360,6 +363,51 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     }, 1000);
 });
+
+// Aggressive removal of any red notifications
+function aggressiveRedNotificationRemoval() {
+    // Check every 2 seconds for any red notifications
+    setInterval(() => {
+        const allElements = document.querySelectorAll('*');
+        allElements.forEach(element => {
+            const style = window.getComputedStyle(element);
+            const className = element.className.toLowerCase();
+            
+            // Check for red backgrounds
+            if (style.backgroundColor.includes('255, 0, 0') || 
+                style.backgroundColor.includes('220, 53, 69') ||
+                style.backgroundColor.includes('239, 68, 68') ||
+                style.backgroundColor.includes('red')) {
+                
+                // Check if it's positioned like a notification
+                if (style.position === 'fixed' || style.position === 'absolute') {
+                    console.error('🔥 FOUND RED NOTIFICATION:', {
+                        element: element,
+                        className: element.className,
+                        backgroundColor: style.backgroundColor,
+                        position: style.position,
+                        zIndex: style.zIndex
+                    });
+                    
+                    // Hide it immediately
+                    element.style.display = 'none';
+                    element.remove();
+                    console.warn('🚫 REMOVED RED NOTIFICATION');
+                }
+            }
+            
+            // Check for any elements with notification-like classes and red styling
+            if ((className.includes('toast') || className.includes('notification') || className.includes('alert')) &&
+                (style.backgroundColor.includes('red') || style.borderColor.includes('red'))) {
+                console.error('🔥 FOUND RED-STYLED NOTIFICATION:', element);
+                element.style.display = 'none';
+                element.remove();
+            }
+        });
+    }, 2000);
+    
+    console.log('🔥 Aggressive red notification removal activated');
+}
 
 // Monitor for red notifications from external sources like OneSignal
 function monitorForRedNotifications() {
@@ -370,26 +418,62 @@ function monitorForRedNotifications() {
                     // Check if this is a notification element
                     const style = window.getComputedStyle(node);
                     const backgroundColor = style.backgroundColor;
+                    const borderColor = style.borderColor;
+                    const boxShadow = style.boxShadow;
                     const position = style.position;
+                    const className = node.className.toLowerCase();
                     
-                    // Check for red background and fixed positioning (typical notification)
-                    if (position === 'fixed' && 
-                        (backgroundColor.includes('255, 0, 0') || 
-                         backgroundColor.includes('220, 53, 69') ||
-                         backgroundColor.includes('239, 68, 68') ||
-                         node.style?.background?.includes('red'))) {
-                        
-                        console.warn('🚨 RED NOTIFICATION DETECTED:', {
+                    // Check for any red-like colors in background, border, or shadow
+                    const hasRedBackground = backgroundColor.includes('255, 0, 0') || 
+                                            backgroundColor.includes('220, 53, 69') ||
+                                            backgroundColor.includes('239, 68, 68') ||
+                                            backgroundColor.includes('red');
+                    
+                    const hasRedBorder = borderColor.includes('255, 0, 0') || 
+                                       borderColor.includes('220, 53, 69') ||
+                                       borderColor.includes('239, 68, 68') ||
+                                       borderColor.includes('red');
+                    
+                    const hasRedShadow = boxShadow.includes('255, 0, 0') || 
+                                       boxShadow.includes('220, 53, 69') ||
+                                       boxShadow.includes('239, 68, 68') ||
+                                       boxShadow.includes('red');
+                    
+                    // Check for notification-like classes or positioning
+                    const isNotificationLike = position === 'fixed' || 
+                                              position === 'absolute' ||
+                                              className.includes('notification') ||
+                                              className.includes('toast') ||
+                                              className.includes('alert') ||
+                                              className.includes('message');
+                    
+                    // If any red styling AND notification-like characteristics
+                    if ((hasRedBackground || hasRedBorder || hasRedShadow) && isNotificationLike) {
+                        console.error('🚨 RED NOTIFICATION DETECTED:', {
                             element: node,
+                            className: node.className,
                             backgroundColor: backgroundColor,
-                            innerHTML: node.innerHTML,
-                            className: node.className
+                            borderColor: borderColor,
+                            boxShadow: boxShadow,
+                            position: position,
+                            innerHTML: node.innerHTML.substring(0, 200) + '...',
+                            computedStyles: {
+                                color: style.color,
+                                background: style.background,
+                                border: style.border,
+                                display: style.display,
+                                zIndex: style.zIndex
+                            }
                         });
                         
                         // Log the source if possible
-                        if (node.classList.contains('onesignal')) {
+                        if (className.includes('onesignal') || node.id.includes('onesignal')) {
                             console.error('🔴 Red notification from OneSignal detected!');
                         }
+                        
+                        // Try to hide the red notification
+                        node.style.display = 'none';
+                        console.warn('🚫 Attempted to hide red notification');
                     }
                 }
             });
@@ -399,8 +483,10 @@ function monitorForRedNotifications() {
     // Start observing the entire document
     observer.observe(document.body, {
         childList: true,
-        subtree: true
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class', 'style']
     });
     
-    console.log('🔍 Red notification monitor activated');
+    console.log('🔍 Enhanced red notification monitor activated');
 }

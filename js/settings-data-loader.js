@@ -949,9 +949,25 @@ const SettingsDataLoader = {
     },
 
     showNotification(message, type = 'info') {
-        // Use existing notification system or create a simple one
-        console.log(`[${type.toUpperCase()}] ${message}`);
-        alert(message); // Replace with better notification UI
+        // Use the new TestNotifications system instead of alert
+        if (window.TestNotifications) {
+            switch(type) {
+                case 'success':
+                    window.TestNotifications.success('Success', message);
+                    break;
+                case 'error':
+                    window.TestNotifications.error('Error', message);
+                    break;
+                case 'warning':
+                    window.TestNotifications.warning('Warning', message);
+                    break;
+                default:
+                    window.TestNotifications.info('Info', message);
+            }
+        } else {
+            // Fallback to console if TestNotifications not available
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
     },
 
     /**
