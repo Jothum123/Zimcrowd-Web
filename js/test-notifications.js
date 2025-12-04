@@ -349,11 +349,8 @@ window.TestNotifications = new TestNotificationSystem();
 document.addEventListener('DOMContentLoaded', () => {
     window.TestNotifications.initialize();
     
-    // Monitor for any red notifications from external sources
+    // Monitor for any red notifications from external sources (lightweight safety net)
     monitorForRedNotifications();
-    
-    // Aggressive red notification removal
-    aggressiveRedNotificationRemoval();
     
     // Show welcome notification for real dashboard
     setTimeout(() => {
@@ -363,51 +360,6 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     }, 1000);
 });
-
-// Aggressive removal of any red notifications
-function aggressiveRedNotificationRemoval() {
-    // Check every 2 seconds for any red notifications
-    setInterval(() => {
-        const allElements = document.querySelectorAll('*');
-        allElements.forEach(element => {
-            const style = window.getComputedStyle(element);
-            const className = element.className.toLowerCase();
-            
-            // Check for red backgrounds
-            if (style.backgroundColor.includes('255, 0, 0') || 
-                style.backgroundColor.includes('220, 53, 69') ||
-                style.backgroundColor.includes('239, 68, 68') ||
-                style.backgroundColor.includes('red')) {
-                
-                // Check if it's positioned like a notification
-                if (style.position === 'fixed' || style.position === 'absolute') {
-                    console.error('🔥 FOUND RED NOTIFICATION:', {
-                        element: element,
-                        className: element.className,
-                        backgroundColor: style.backgroundColor,
-                        position: style.position,
-                        zIndex: style.zIndex
-                    });
-                    
-                    // Hide it immediately
-                    element.style.display = 'none';
-                    element.remove();
-                    console.warn('🚫 REMOVED RED NOTIFICATION');
-                }
-            }
-            
-            // Check for any elements with notification-like classes and red styling
-            if ((className.includes('toast') || className.includes('notification') || className.includes('alert')) &&
-                (style.backgroundColor.includes('red') || style.borderColor.includes('red'))) {
-                console.error('🔥 FOUND RED-STYLED NOTIFICATION:', element);
-                element.style.display = 'none';
-                element.remove();
-            }
-        });
-    }, 2000);
-    
-    console.log('🔥 Aggressive red notification removal activated');
-}
 
 // Monitor for red notifications from external sources like OneSignal
 function monitorForRedNotifications() {
