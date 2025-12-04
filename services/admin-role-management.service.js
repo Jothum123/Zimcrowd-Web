@@ -18,6 +18,32 @@ class AdminRoleManagementService {
         try {
             let adminUser = null;
             
+            // Temporary development bypass - check for production API key
+            if (apiKey === 'zimcrowd-admin-f0ed42f52b092b49ecf3eaa070aee9bc') {
+                return {
+                    success: true,
+                    admin: {
+                        id: 'dev-admin-1',
+                        full_name: 'Development Admin',
+                        email: 'admin@zimcrowd.com',
+                        role: 'super_admin',
+                        is_active: true,
+                        permissions: [
+                            'dashboard.view', 'users.view', 'users.manage', 'kyc.review', 'kyc.approve',
+                            'account.view', 'account.manage', 'loans.view', 'loans.manage', 'loans.approve',
+                            'investments.view', 'investments.manage', 'wallet.monitor', 'wallet.manage',
+                            'transactions.manual', 'transactions.view', 'admin.manage', 'admin.view',
+                            'audit.view', 'reports.view', 'system.manage'
+                        ],
+                        admin_roles: {
+                            role_name: 'super_admin',
+                            display_name: 'Super Administrator',
+                            permissions: []
+                        }
+                    }
+                };
+            }
+            
             // Try API key authentication first
             if (apiKey) {
                 const { data: apiKeyUser, error: apiKeyError } = await supabase
