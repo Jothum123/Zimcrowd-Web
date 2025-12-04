@@ -226,6 +226,115 @@ class TestNotificationSystem {
     }
 
     /**
+     * Real Dashboard Data Notifications
+     */
+    
+    // Profile notifications
+    profileUpdated() {
+        this.success('Profile Updated', 'Your profile information has been saved successfully!');
+    }
+
+    profileUpdateFailed(error) {
+        this.error('Profile Update Failed', error || 'Failed to update profile. Please try again.');
+    }
+
+    // Security notifications
+    passwordChanged() {
+        this.success('Password Changed', 'Your password has been updated successfully!');
+    }
+
+    twoFactorEnabled() {
+        this.success('2FA Enabled', 'Two-factor authentication is now active on your account!');
+    }
+
+    twoFactorDisabled() {
+        this.warning('2FA Disabled', 'Two-factor authentication has been turned off');
+    }
+
+    securitySettingsSaved() {
+        this.success('Security Settings', 'Your security preferences have been saved!');
+    }
+
+    // Wallet notifications
+    transactionCompleted(type, amount, description) {
+        this.success('Transaction Complete', `${type}: $${amount} - ${description}`);
+    }
+
+    withdrawalProcessed(amount) {
+        this.success('Withdrawal Processed', `$${amount} has been sent to your account`);
+    }
+
+    depositReceived(amount) {
+        this.success('Deposit Received', `$${amount} has been added to your wallet`);
+    }
+
+    // Loan notifications
+    loanApproved(amount) {
+        this.success('Loan Approved', `Your loan application for $${amount} has been approved!`);
+    }
+
+    loanRejected(reason) {
+        this.error('Loan Rejected', reason || 'Your loan application could not be approved at this time');
+    }
+
+    paymentDue(amount, dueDate) {
+        this.warning('Payment Due', `Payment of $${amount} is due on ${dueDate}`);
+    }
+
+    paymentCompleted(amount) {
+        this.success('Payment Complete', `Your payment of $${amount} has been processed`);
+    }
+
+    // Investment notifications
+    investmentOpportunity(title, expectedReturn) {
+        this.info('New Investment', `${title} - Expected return: ${expectedReturn}`);
+    }
+
+    investmentPurchased(title, amount) {
+        this.success('Investment Made', `You've invested $${amount} in ${title}`);
+    }
+
+    investmentReturn(amount, type) {
+        this.success('Return Received', `${type}: $${amount} has been added to your wallet`);
+    }
+
+    // Referral notifications
+    referralEarnings(amount, referralName) {
+        this.success('Referral Bonus', `You earned $${amount} from ${referralName}'s signup!`);
+    }
+
+    newReferral(name) {
+        this.info('New Referral', `${name} joined using your referral link!`);
+    }
+
+    // System notifications
+    dataSynced() {
+        this.info('Data Synced', 'Your dashboard data has been updated');
+    }
+
+    settingsSaved(category) {
+        this.success('Settings Saved', `${category} preferences have been updated`);
+    }
+
+    notificationPreferenceUpdated(type, status) {
+        this.success('Notifications Updated', `${type} notifications ${status}`);
+    }
+
+    // Error notifications
+    networkError(action) {
+        this.error('Connection Error', `Failed to ${action}. Please check your internet connection.`);
+    }
+
+    serverError(action) {
+        this.error('Server Error', `Failed to ${action}. Please try again in a few moments.`);
+    }
+
+    // Real-time updates
+    realTimeUpdate(type, message) {
+        this.info(type, message);
+    }
+
+    /**
      * Clear all notifications
      */
     clearAll() {
@@ -243,11 +352,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Monitor for any red notifications from external sources
     monitorForRedNotifications();
     
-    // Show welcome notification
+    // Show welcome notification for real dashboard
     setTimeout(() => {
         window.TestNotifications.success(
-            'Test Notifications Active', 
-            'Simple notification system is working!'
+            'Welcome to ZimCrowd', 
+            'Your financial dashboard is ready! All notifications are now using the modern dark theme.'
         );
     }, 1000);
 });

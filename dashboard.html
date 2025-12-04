@@ -9921,7 +9921,11 @@ How it works:
             if (currentProfileImage) {
                 // In a real application, you would send this to your server
                 console.log('Saving profile picture...');
-                alert('Profile picture saved successfully!');
+                if (window.TestNotifications) {
+                    window.TestNotifications.settingsSaved('Profile Picture');
+                } else {
+                    alert('Profile picture saved successfully!');
+                }
                 // Store in localStorage for demo purposes
                 localStorage.setItem('profilePicture', currentProfileImage);
             } else {
@@ -10748,7 +10752,11 @@ How it works:
                 const data = await response.json();
 
                 if (data.success) {
-                    alert('Profile updated successfully!');
+                    if (window.TestNotifications) {
+                        window.TestNotifications.profileUpdated();
+                    } else {
+                        alert('Profile updated successfully!');
+                    }
                     // Reload profile data to reflect changes
                     loadUserProfile();
                 } else {
@@ -12324,7 +12332,11 @@ How it works:
             try {
                 const response = await window.ZimCrowdAPI.updateProfile(profileData);
                 if (response.success) {
-                    alert('Profile updated successfully!');
+                    if (window.TestNotifications) {
+                        window.TestNotifications.profileUpdated();
+                    } else {
+                        alert('Profile updated successfully!');
+                    }
                     updateProfileCompletion(profileData);
                 } else {
                     alert('Failed to update profile: ' + (response.message || 'Unknown error'));
@@ -12421,7 +12433,11 @@ How it works:
                 });
                 const data = await response.json();
                 if (data.success) {
-                    showToast('success', 'Saved', 'Notification preferences saved successfully!');
+                    if (window.TestNotifications) {
+                        window.TestNotifications.settingsSaved('Notification Preferences');
+                    } else {
+                        showToast('success', 'Saved', 'Notification preferences saved successfully!');
+                    }
                 } else {
                     showToast('error', 'Error', 'Failed to save notification preferences');
                 }
@@ -12456,7 +12472,11 @@ How it works:
                 });
                 const data = await response.json();
                 if (data.success) {
-                    showToast('success', 'Saved', 'Display settings saved successfully!');
+                    if (window.TestNotifications) {
+                        window.TestNotifications.settingsSaved('Display Settings');
+                    } else {
+                        showToast('success', 'Saved', 'Display settings saved successfully!');
+                    }
                 } else {
                     showToast('error', 'Error', 'Failed to save display settings');
                 }
@@ -12492,7 +12512,11 @@ How it works:
                 });
                 const data = await response.json();
                 if (data.success) {
-                    showToast('success', 'Saved', 'Privacy settings saved successfully!');
+                    if (window.TestNotifications) {
+                        window.TestNotifications.settingsSaved('Privacy Settings');
+                    } else {
+                        showToast('success', 'Saved', 'Privacy settings saved successfully!');
+                    }
                     // Recalculate privacy score
                     if (window.settingsLoader) {
                         window.settingsLoader.populatePrivacyForm(settings);
@@ -12531,7 +12555,11 @@ How it works:
                 });
                 const data = await response.json();
                 if (data.success) {
-                    showToast('success', 'Saved', 'Investment preferences saved successfully!');
+                    if (window.TestNotifications) {
+                        window.TestNotifications.settingsSaved('Investment Preferences');
+                    } else {
+                        showToast('success', 'Saved', 'Investment preferences saved successfully!');
+                    }
                 } else {
                     showToast('error', 'Error', 'Failed to save investment preferences');
                 }
@@ -12558,7 +12586,11 @@ How it works:
                 const data = await response.json();
                 if (data.success) {
                     const status = value ? 'enabled' : 'disabled';
-                    showToast('success', 'Preference saved', `Notification ${status} successfully`);
+                    if (window.TestNotifications) {
+                        window.TestNotifications.notificationPreferenceUpdated('Email', status);
+                    } else {
+                        showToast('success', 'Preference saved', `Notification ${status} successfully`);
+                    }
                 } else {
                     showToast('warning', 'Action pending', 'Your preference is being processed');
                 }
@@ -12640,7 +12672,11 @@ How it works:
                 });
                 const data = await response.json();
                 if (data.success) {
-                    showToast('success', 'Saved', 'Security settings saved successfully!');
+                    if (window.TestNotifications) {
+                        window.TestNotifications.settingsSaved('Security');
+                    } else {
+                        showToast('success', 'Saved', 'Security settings saved successfully!');
+                    }
                 } else {
                     showToast('error', 'Error', 'Failed to save security settings');
                 }
@@ -16535,113 +16571,25 @@ How it works:
             // Initialize comprehensive activity logging
             initializeComprehensiveActivityLogging();
             
-            // Initialize test notification demo
-            initializeTestNotificationDemo();
+            // Initialize real notifications system
+            initializeRealNotifications();
             
             // Dashboard initialization will be handled by existing scripts
         });
 
-        // Test Notification Demo System
-        function initializeTestNotificationDemo() {
-            // Wait for TestNotifications to be available before adding demo button
-            const checkAndAddButton = () => {
+        // Real Data Notification System
+        function initializeRealNotifications() {
+            // Wait for TestNotifications to be available
+            const checkAndInitialize = () => {
                 if (window.TestNotifications) {
-                    addTestNotificationDemoButton();
-                    // Show welcome notification
-                    setTimeout(() => {
-                        if (window.TestNotifications) {
-                            window.TestNotifications.success(
-                                'Test Notifications Active', 
-                                'Simple notification system is working!',
-                                { duration: 5000 }
-                            );
-                        }
-                    }, 1000);
+                    console.log('✅ Real notifications system ready');
+                    // No demo button - real notifications will be triggered by actual dashboard events
                 } else {
-                    // Check again in 500ms
-                    setTimeout(checkAndAddButton, 500);
+                    setTimeout(checkAndInitialize, 500);
                 }
             };
             
-            // Start checking after 2 seconds
-            setTimeout(checkAndAddButton, 2000);
-        }
-
-        function addTestNotificationDemoButton() {
-            const demoButton = document.createElement('button');
-            demoButton.innerHTML = 'Test Notifications';
-            demoButton.className = 'btn-test-notifications';
-            demoButton.style.cssText = `
-                position: fixed;
-                bottom: 20px;
-                left: 20px;
-                background: #1a1a1a;
-                color: white;
-                border: 1px solid #333;
-                padding: 12px 20px;
-                border-radius: 12px;
-                cursor: pointer;
-                font-size: 14px;
-                font-weight: 500;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-                z-index: 1000;
-                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-                letter-spacing: -0.025em;
-            `;
-            
-            demoButton.onmouseover = () => {
-                demoButton.style.transform = 'translateY(-2px)';
-                demoButton.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.4)';
-                demoButton.style.borderColor = '#555';
-            };
-            
-            demoButton.onmouseout = () => {
-                demoButton.style.transform = 'translateY(0)';
-                demoButton.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
-                demoButton.style.borderColor = '#333';
-            };
-            
-            demoButton.onclick = showTestNotificationDemo;
-            document.body.appendChild(demoButton);
-        }
-
-        function showTestNotificationDemo() {
-            // Check if TestNotifications is available
-            if (!window.TestNotifications) {
-                console.error('TestNotifications not available yet');
-                alert('Test notifications are still loading. Please wait a moment and try again.');
-                return;
-            }
-
-            const notifications = [
-                () => window.TestNotifications.success('Success!', 'This is a success notification.'),
-                () => window.TestNotifications.error('Error!', 'This is an error notification.'),
-                () => window.TestNotifications.warning('Warning!', 'This is a warning notification.'),
-                () => window.TestNotifications.info('Info!', 'This is an info notification.'),
-                () => window.TestNotifications.success('Loan Update', 'Your loan application has been approved!'),
-                () => window.TestNotifications.info('Investment', 'New investment opportunity available!'),
-                () => window.TestNotifications.info('Transaction', 'Your transaction was successful.'),
-                () => window.TestNotifications.warning('Security', 'New login detected from your account.'),
-                () => window.TestNotifications.success('Referral', 'You earned $50 from a referral!'),
-            ];
-
-            let index = 0;
-            const showNext = () => {
-                if (index < notifications.length) {
-                    try {
-                        notifications[index]();
-                        index++;
-                        setTimeout(showNext, 1500);
-                    } catch (error) {
-                        console.error('Error showing notification:', error);
-                        index++;
-                        setTimeout(showNext, 1500);
-                    }
-                }
-            };
-
-            showNext();
+            setTimeout(checkAndInitialize, 2000);
         }
 
         // Comprehensive Activity Logging System
