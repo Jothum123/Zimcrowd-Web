@@ -336,7 +336,7 @@ RETURNS TABLE(
 BEGIN
     RETURN QUERY
     SELECT 
-        dt.type_key,
+        dt.type_key as document_type,
         dt.display_name,
         COALESCE(d.verification_status, 'not_uploaded') as status,
         d.upload_date,
