@@ -11042,7 +11042,7 @@ How it works:
                 
                 const badge = document.createElement('div');
                 badge.className = 'avatar-star-badge';
-                badge.innerHTML = `<span style="color: #fbbf24; font-size: 10px;">${'★'.repeat(Math.min(fullStars, 5))}</span>`;
+                badge.innerHTML = `<span style="color: #fbbf24; font-size: 10px;">${'★'.repeat(Math.min(Math.floor(starRating), 5))}</span>`;
                 badge.style.cssText = `
                     position: absolute;
                     bottom: -3px;
