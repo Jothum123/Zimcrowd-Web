@@ -11934,7 +11934,7 @@ How it works:
             for (let i = 0; i < emptyStars; i++) {
                 html += '☆';
             }
-            html += `<span class="rating-text">${score.toFixed(1)}/5</span>`;
+            // Remove rating text span for sidebar compatibility
             return html;
         }
 
