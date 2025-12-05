@@ -9,7 +9,7 @@ class DashboardAuth {
     }
 
     async init() {
-        await this.checkAuthStatus();
+        await this.checkAuthentication();
         this.setupAuthCheck();
         this.setupEventListeners();
     }

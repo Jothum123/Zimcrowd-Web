@@ -16232,28 +16232,6 @@ How it works:
             showToast('info', 'Data Correction', 'Data correction request feature will be implemented with backend integration');
         }
 
-let strength = 0;
-let strengthLabel = 'Very Weak';
-let color = '#ef4444';
-
-if (password.length >= 8) strength++;
-if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
-if (/\d/.test(password)) strength++;
-if (/[^a-zA-Z0-9]/.test(password)) strength++;
-            'investment-disclosure': {
-                file: 'investment-disclosure.md',
-                title: 'Investment Disclosure',
-                icon: 'fa-chart-line',
-                color: '#a855f7'
-            },
-            'compliance': {
-                file: 'regulatory-compliance.md',
-                title: 'Regulatory Compliance',
-                icon: 'fa-balance-scale',
-                color: '#ef4444'
-            }
-        };
-
         // View Document in Modal
         async function viewDocument(docType) {
             const doc = documentMap[docType];
