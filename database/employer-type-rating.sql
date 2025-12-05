@@ -13,6 +13,12 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_dtni_calculation TIMESTAMP WI
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS required_documents_submitted TEXT[];
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS documentation_verified BOOLEAN DEFAULT false;
 
+-- Add salary verification columns for consistency checking
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS verified_net_salary DECIMAL(10,2);
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS salary_verified_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ocr_bank_salary DECIMAL(10,2);
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ocr_payslip_salary DECIMAL(10,2);
+
 -- Employer type configuration with documentation requirements
 CREATE TABLE IF NOT EXISTS employer_type_config (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -29,7 +35,7 @@ CREATE TABLE IF NOT EXISTS employer_type_config (
 -- Insert employer type configurations
 INSERT INTO employer_type_config (employer_type, display_name, description, required_documents, verification_method) VALUES
 ('government', 'Government Sector', 'Government employees and civil servants', 
- ARRAY['ec_number', 'employment_letter'], 'ec_number'),
+ ARRAY['ec_number', 'id', 'payslip', 'selfie'], 'ec_number'),
 ('private', 'Private Sector', 'Private company employees', 
  ARRAY['employment_letter', 'payslip'], 'employment_letter'),
 ('informal', 'Informal Sector', 'Self-employed, informal business owners', 
@@ -127,10 +133,12 @@ CREATE INDEX IF NOT EXISTS idx_rating_matrix_composite ON employment_employer_ra
 ALTER TABLE employer_type_config ENABLE ROW LEVEL SECURITY;
 ALTER TABLE employment_employer_rating_matrix ENABLE ROW LEVEL SECURITY;
 
--- RLS policies
+-- RLS policies (drop if exists to prevent errors on re-run)
+DROP POLICY IF EXISTS "Authenticated users can view employer type config" ON employer_type_config;
 CREATE POLICY "Authenticated users can view employer type config" ON employer_type_config 
     FOR SELECT USING (auth.role() = 'authenticated');
 
+DROP POLICY IF EXISTS "Authenticated users can view rating matrix" ON employment_employer_rating_matrix;
 CREATE POLICY "Authenticated users can view rating matrix" ON employment_employer_rating_matrix 
     FOR SELECT USING (auth.role() = 'authenticated');
 
@@ -226,9 +234,21 @@ BEGIN
             v_monthly_rate DECIMAL(8,6);
             v_term_months INTEGER := 3; -- Default 3 months for calculation
         BEGIN
-            v_dtni_percent := CASE WHEN p_employment_type = 'government' THEN 0.40 ELSE 0.33 END;
-            v_max_installment := p_monthly_income * v_dtni_percent;
-            v_available_installment := v_max_installment - p_existing_debt;
+            IF p_employer_type = 'government' THEN
+                -- Government employees: minimum $120 salary required ($70 buffer + $50 minimum loan)
+                IF p_monthly_income < 120 THEN
+                    RAISE EXCEPTION 'Minimum net monthly salary of $120 required for government employees to cover $70 mandatory buffer and minimum loan requirements.';
+                END IF;
+                
+                -- Government employees: net salary - $70 mandatory buffer
+                v_max_installment := p_monthly_income - 70;
+                v_available_installment := v_max_installment - p_existing_debt;
+            ELSE
+                -- Other employees: percentage-based DTNI (33% for non-government)
+                v_dtni_percent := 0.33;
+                v_max_installment := p_monthly_income * v_dtni_percent;
+                v_available_installment := v_max_installment - p_existing_debt;
+            END IF;
             
             IF v_available_installment > 0 THEN
                 v_monthly_rate := v_annual_rate / 12;

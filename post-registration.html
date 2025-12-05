@@ -211,6 +211,30 @@
             color: #64748b;
         }
 
+        /* Input with icon styling */
+        .input-with-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            color: #38e77b;
+            font-weight: 600;
+            font-size: 16px;
+            z-index: 1;
+        }
+
+        .input-with-icon .form-input {
+            padding-left: 35px;
+        }
+
+        .input-with-icon .form-input:focus {
+            border-color: #38e77b;
+        }
+
         .form-select option {
             background: #1e293b;
             color: white;
@@ -840,6 +864,21 @@
                                     Government employees: Format like 6134510V | Required for government sector verification
                                 </small>
                             </div>
+                            
+                            <div class="info-box" style="background: rgba(56, 231, 123, 0.1); border-color: rgba(56, 231, 123, 0.3); margin-bottom: 20px;">
+                                <i class="fas fa-info-circle info-icon" style="color: #38e77b;"></i>
+                                <div class="info-text">
+                                    <strong>Government Employee Requirements:</strong><br>
+                                    • EC Number / Employee Number<br>
+                                    • ID Document (Front & Back)<br>
+                                    • Recent Payslip (last 3 months)<br>
+                                    • Selfie Photo<br>
+                                    • Net Monthly Salary (from payslip)<br>
+                                    <small style="color: #64748b; margin-top: 8px; display: block;">
+                                        🏛️ Special DTNI: Net Salary - $70 buffer = Maximum installment
+                                    </small>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Private Sector Fields -->
@@ -1024,9 +1063,46 @@
                                 <div class="file-name" id="bankStatementFileName"></div>
                                 <div class="file-size" id="bankStatementFileSize"></div>
                             </div>
-                            <button type="button" class="remove-file" onclick="removeFile('bankStatement')" title="Remove file">
-                                <i class="fas fa-trash-alt"></i>
+                            <button type="button" class="remove-file-btn" onclick="removeFile('bankStatement')">
+                                <i class="fas fa-times"></i>
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- Net Monthly Salary Input Field -->
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label class="form-label">
+                            <i class="fas fa-money-bill-wave" style="color: #38e77b; margin-right: 8px;"></i>
+                            Net Monthly Salary (from payslip/bank statement) <span class="required">*</span>
+                        </label>
+                        <div class="input-with-icon">
+                            <span class="input-icon">$</span>
+                            <input type="number" 
+                                   id="netMonthlySalary" 
+                                   class="form-input" 
+                                   placeholder="Enter your exact net monthly salary"
+                                   min="50" 
+                                   max="50000"
+                                   step="0.01"
+                                   required>
+                        </div>
+                        <div class="input-hint" style="margin-top: 8px; font-size: 12px; color: #94a3b8;">
+                            <i class="fas fa-info-circle"></i>
+                            Enter the exact net amount you receive after deductions (as shown on your payslip or bank statement)
+                        </div>
+                        <div id="ocrSalarySuggestion" style="margin-top: 10px; padding: 10px; background: rgba(56, 231, 123, 0.1); border: 1px solid rgba(56, 231, 123, 0.3); border-radius: 6px; display: none;">
+                            <small style="color: #38e77b;">
+                                <i class="fas fa-robot"></i>
+                                <strong>OCR Suggestion:</strong> We detected an approximate monthly income of $<span id="ocrSuggestedAmount">0</span>. 
+                                Please enter your exact net salary above.
+                            </small>
+                        </div>
+                        <div id="salaryValidationWarning" style="margin-top: 10px; padding: 10px; background: rgba(251, 146, 60, 0.1); border: 1px solid rgba(251, 146, 60, 0.3); border-radius: 6px; display: none;">
+                            <small style="color: #fb923c;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>Verification Note:</strong> Your entered amount differs significantly from the detected amount. 
+                                Please ensure this matches your actual net monthly salary.
+                            </small>
                         </div>
                     </div>
 
@@ -1461,6 +1537,11 @@
             handleBankStatementUpload(e);
         });
 
+        // Net salary input event listener for validation
+        document.getElementById('netMonthlySalary').addEventListener('input', function(e) {
+            validateNetSalaryInput(e.target.value);
+        });
+
         document.getElementById('selfiePhoto').addEventListener('change', function(e) {
             handleSelfieUpload(e);
         });
@@ -1575,6 +1656,136 @@
                 document.getElementById('bankStatementUploadArea').classList.add('hidden');
                 document.getElementById('bankStatementFilePreview').classList.add('show');
             }
+        }
+
+        // OCR suggestion and validation functions
+        function showOCRSuggestion(detectedIncome) {
+            const suggestionDiv = document.getElementById('ocrSalarySuggestion');
+            const suggestedAmountSpan = document.getElementById('ocrSuggestedAmount');
+            
+            if (detectedIncome && detectedIncome > 0) {
+                suggestedAmountSpan.textContent = detectedIncome.toFixed(2);
+                suggestionDiv.style.display = 'block';
+                console.log(`💡 OCR Suggestion shown: $${detectedIncome.toFixed(2)}`);
+            }
+        }
+
+        function hideOCRSuggestion() {
+            document.getElementById('ocrSalarySuggestion').style.display = 'none';
+        }
+
+        function showSalaryValidationWarning() {
+            document.getElementById('salaryValidationWarning').style.display = 'block';
+        }
+
+        function hideSalaryValidationWarning() {
+            document.getElementById('salaryValidationWarning').style.display = 'none';
+        }
+
+        function validateNetSalaryInput(userInput) {
+            const userSalary = parseFloat(userInput);
+            const ocrSuggestion = document.getElementById('ocrSuggestedAmount').textContent;
+            const ocrSalary = parseFloat(ocrSuggestion);
+            
+            if (!userSalary || userSalary <= 0) {
+                hideSalaryValidationWarning();
+                return;
+            }
+            
+            if (ocrSalary > 0) {
+                const difference = Math.abs(userSalary - ocrSalary);
+                const percentageDifference = (difference / ocrSalary) * 100;
+                
+                if (percentageDifference > 20) {
+                    showSalaryValidationWarning();
+                    console.log(`⚠️ Salary validation warning: User input $${userSalary.toFixed(2)} differs from OCR $${ocrSalary.toFixed(2)} by ${percentageDifference.toFixed(1)}%`);
+                } else {
+                    hideSalaryValidationWarning();
+                }
+            }
+        }
+
+        // Function to get net salary from manual input (prioritized over OCR)
+        function getNetMonthlySalary() {
+            const manualInput = document.getElementById('netMonthlySalary').value;
+            if (manualInput && parseFloat(manualInput) > 0) {
+                return parseFloat(manualInput);
+            }
+            return 0; // Default to 0 if no valid input
+        }
+
+        // Payslip salary cross-validation function
+        function validatePayslipSalaryConsistency(payslipSalary) {
+            const userSalary = getNetMonthlySalary();
+            
+            if (userSalary <= 0) {
+                console.log('ℹ️ Payslip salary detected but user hasn\'t entered net salary yet');
+                return;
+            }
+            
+            const difference = Math.abs(userSalary - payslipSalary);
+            const percentageDifference = (difference / payslipSalary) * 100;
+            
+            console.log(`🔍 Salary Cross-Validation: User input $${userSalary.toFixed(2)} vs Payslip $${payslipSalary.toFixed(2)} = ${percentageDifference.toFixed(1)}% difference`);
+            
+            // Stricter validation for payslip (10% tolerance vs 20% for bank statement)
+            if (percentageDifference > 10) {
+                showPayslipValidationWarning(userSalary, payslipSalary, percentageDifference);
+            } else {
+                hidePayslipValidationWarning();
+                console.log('✅ Payslip salary matches user input within tolerance');
+            }
+        }
+
+        function showPayslipValidationWarning(userSalary, payslipSalary, percentageDifference) {
+            // Create or update payslip validation warning
+            let warningDiv = document.getElementById('payslipValidationWarning');
+            if (!warningDiv) {
+                warningDiv = document.createElement('div');
+                warningDiv.id = 'payslipValidationWarning';
+                warningDiv.style.cssText = 'margin-top: 10px; padding: 10px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; display: none;';
+                
+                const netSalarySection = document.getElementById('netMonthlySalary').closest('.form-group');
+                netSalarySection.appendChild(warningDiv);
+            }
+            
+            warningDiv.innerHTML = `
+                <small style="color: #ef4444;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong>Salary Mismatch Detected:</strong> Your entered amount ($${userSalary.toFixed(2)}) differs from payslip ($${payslipSalary.toFixed(2)}) by ${percentageDifference.toFixed(1)}%. 
+                    Please ensure this matches your actual net monthly salary from the payslip.
+                </small>
+            `;
+            warningDiv.style.display = 'block';
+        }
+
+        function hidePayslipValidationWarning() {
+            const warningDiv = document.getElementById('payslipValidationWarning');
+            if (warningDiv) {
+                warningDiv.style.display = 'none';
+            }
+        }
+
+        function showPayslipOCRReminder() {
+            // Create or update payslip OCR reminder
+            let reminderDiv = document.getElementById('payslipOCRReminder');
+            if (!reminderDiv) {
+                reminderDiv = document.createElement('div');
+                reminderDiv.id = 'payslipOCRReminder';
+                reminderDiv.style.cssText = 'margin-top: 10px; padding: 10px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; display: none;';
+                
+                const payslipSection = document.getElementById('payslip').closest('.form-group');
+                payslipSection.appendChild(reminderDiv);
+            }
+            
+            reminderDiv.innerHTML = `
+                <small style="color: #3b82f6;">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>OCR Processing:</strong> We couldn't automatically extract the net salary from your payslip. 
+                    Please ensure your manual net salary entry matches the amount shown on your payslip document.
+                </small>
+            `;
+            reminderDiv.style.display = 'block';
         }
         
         // Store documents in Document Center with status badges
@@ -2187,47 +2398,42 @@
                 : 'https://zimcrowd-api.onrender.com';
 
             // Collect all profile data from the form
+            const userNetSalary = getNetMonthlySalary();
             const profileData = {
                 // Personal information (from KYC step)
                 first_name: document.getElementById('idFirstName')?.value,
                 last_name: document.getElementById('idLastName')?.value,
+                date_of_birth: document.getElementById('idDateOfBirth')?.value,
                 national_id: document.getElementById('idNumber')?.value,
+                email: document.getElementById('idEmail')?.value,
+                phone: document.getElementById('idPhone')?.value,
                 
-                // Profile details (from step 2)
-                date_of_birth: document.getElementById('dob')?.value,
-                gender: document.getElementById('gender')?.value,
-                street_address: document.getElementById('address')?.value,
+                // Address information (from KYC step)
+                address_line1: document.getElementById('addressLine1')?.value,
+                city: document.getElementById('city')?.value,
+                province: document.getElementById('province')?.value,
+                postal_code: document.getElementById('postalCode')?.value,
                 
-                // Employment details
+                // Employment information (from Employment step)
                 employment_status: document.getElementById('employmentType')?.value,
+                employer_name: document.getElementById('employerName')?.value,
                 employer_type: document.getElementById('employerType')?.value,
-                monthly_income: document.getElementById('income')?.value,
-                employer_name: document.getElementById('employer')?.value,
-                job_title: document.getElementById('occupation')?.value,
+                job_title: document.getElementById('jobTitle')?.value,
                 ec_number: document.getElementById('ecNumber')?.value,
-                work_address: document.getElementById('workAddress')?.value,
-                work_phone: document.getElementById('workPhone')?.value,
-                work_email: document.getElementById('workEmail')?.value,
-                years_employed: document.getElementById('yearsEmployed')?.value,
-                department: document.getElementById('department')?.value,
-                supervisor_name: document.getElementById('supervisorName')?.value,
-                supervisor_phone: document.getElementById('supervisorPhone')?.value,
+                monthly_income: userNetSalary,
                 
-                // Next of kin
-                next_of_kin: {
-                    primary: {
-                        name: document.getElementById('kin1Name')?.value,
-                        relationship: document.getElementById('kin1Relationship')?.value,
-                        phone: document.getElementById('kin1Phone')?.value
-                    },
-                    secondary: {
-                        name: document.getElementById('kin2Name')?.value,
-                        relationship: document.getElementById('kin2Relationship')?.value,
-                        phone: document.getElementById('kin2Phone')?.value
-                    }
-                },
+                // Salary verification data for consistency checking
+                verified_net_salary: userNetSalary,
+                salary_verified_at: new Date().toISOString(),
+                ocr_bank_salary: ocrResults.bankStatement?.data?.ocrData?.extractedFields?.estimatedMonthlyIncome || null,
+                ocr_payslip_salary: ocrResults.payslip?.data?.ocrData?.extractedFields?.netSalary || null,
                 
-                // Payment method
+                // Next of kin information (from Next of Kin step)
+                next_of_kin_name: document.getElementById('kinName')?.value,
+                next_of_kin_relationship: document.getElementById('kinRelationship')?.value,
+                next_of_kin_phone: document.getElementById('kinPhone')?.value,
+                next_of_kin_email: document.getElementById('kinEmail')?.value,
+                next_of_kin_address: document.getElementById('kinAddress')?.value,
                 payment_method: {
                     type: selectedPaymentMethod,
                     mobile_number: document.getElementById('mobileNumber')?.value,
@@ -2549,8 +2755,16 @@
                                 openingBalance: bankData.openingBalance,
                                 closingBalance: bankData.closingBalance,
                                 totalCredits: bankData.totalCredits,
-                                totalDebits: bankData.totalDebits
+                                totalDebits: bankData.totalDebits,
+                                estimatedMonthlyIncome: bankData.estimatedMonthlyIncome
                             });
+                            
+                            // Show OCR suggestion for net salary
+                            if (bankData.estimatedMonthlyIncome && bankData.estimatedMonthlyIncome > 0) {
+                                showOCRSuggestion(bankData.estimatedMonthlyIncome);
+                            } else {
+                                console.log('ℹ️ No estimated monthly income detected in OCR - user will need to enter manually');
+                            }
                         }
                         updateVerificationStep('bank', 'done', 'Bank Statement Analyzed ✓');
                     } else {
@@ -2558,6 +2772,40 @@
                     }
                 } else {
                     updateVerificationStep('bank', 'done', 'No bank statement (optional)');
+                }
+                
+                // Upload Payslip with OCR for salary cross-validation
+                updateVerificationStep('payslip', 'active', 'Analyzing payslip...');
+                const payslipFile = document.getElementById('payslip').files[0];
+                if (payslipFile) {
+                    console.log('📤 Uploading Payslip with OCR for salary validation...');
+                    ocrResults.payslip = await uploadDocumentWithOCR(payslipFile, 'payslip');
+                    
+                    if (ocrResults.payslip.success) {
+                        const payslipData = ocrResults.payslip.data?.ocrData?.extractedFields;
+                        if (payslipData) {
+                            console.log('💰 Payslip Data:', {
+                                employeeName: payslipData.employeeName,
+                                netSalary: payslipData.netSalary,
+                                grossSalary: payslipData.grossSalary,
+                                employerName: payslipData.employerName
+                            });
+                            
+                            // Cross-validate payslip salary with manual input
+                            if (payslipData?.netSalary && payslipData.netSalary > 0) {
+                                validatePayslipSalaryConsistency(payslipData.netSalary);
+                            } else {
+                                console.log('ℹ️ No net salary detected in payslip OCR - using manual input only');
+                                // Show gentle reminder that payslip OCR couldn't extract salary
+                                showPayslipOCRReminder();
+                            }
+                        }
+                        updateVerificationStep('payslip', 'done', 'Payslip Verified ✓');
+                    } else {
+                        updateVerificationStep('payslip', 'warning', 'Payslip uploaded (verification pending)');
+                    }
+                } else {
+                    updateVerificationStep('payslip', 'warning', 'Payslip required for salary verification');
                 }
                 
                 updateVerificationStep('score', 'active', 'Calculating ZimScore...');
@@ -2597,6 +2845,7 @@
                     updateVerificationStep('id-back', 'done', 'ID Back Verified ✓');
                     updateVerificationStep('selfie', 'done', 'Face Verified ✓');
                     updateVerificationStep('bank', 'done', 'Bank Statement Processed ✓');
+                    updateVerificationStep('payslip', 'done', 'Payslip Verified ✓');
                     updateVerificationStep('score', 'done', 'ZimScore Calculated ✓');
                     
                     // Store documents in Document Center with status badges
@@ -2674,16 +2923,38 @@
                         const employerRules = await getEmployerColdStartRules(employmentType, employerType);
                         
                         // Calculate DTNI-based limit (simplified for display - actual calculation happens in backend)
-                        const monthlyIncome = profileData.monthly_income || 0;
-                        const incomeVerified = monthlyIncome > 0;
+                        const userNetSalary = getNetMonthlySalary();
+                        const incomeVerified = userNetSalary > 0;
                         
+                        // Validate that net salary is provided before proceeding
                         if (!incomeVerified) {
-                            console.warn('⚠️ Monthly income not verified - showing estimated limits only');
+                            alert('Please enter your net monthly salary from your payslip or bank statement. This is required for DTNI affordability calculation.');
+                            document.getElementById('netMonthlySalary').focus();
+                            return;
                         }
                         
-                        const dtniPercent = employerType === 'government' ? 0.40 : 0.33;
-                        const maxInstallment = monthlyIncome * dtniPercent;
-                        const availableInstallment = maxInstallment - 0; // No existing debt for new users
+                        // Additional validation for government employees - minimum $120 required
+                        if (employerType === 'government' && userNetSalary < 120) {
+                            alert('Government employees must have a minimum net monthly salary of $120 to cover the $70 mandatory buffer and minimum loan requirements.');
+                            document.getElementById('netMonthlySalary').focus();
+                            return;
+                        }
+                        
+                        // Note: dtniPercent variable kept for other employment types, but government uses $70 buffer
+                        const dtniPercent = employerType === 'government' ? 0.40 : 0.33; // Only used for non-government
+                        let maxInstallment, availableInstallment;
+                        
+                        if (employerType === 'government') {
+                            // Government employees: net salary - $70 mandatory buffer
+                            maxInstallment = userNetSalary - 70;
+                            availableInstallment = maxInstallment; // No existing debt for new users
+                            console.log(`🏛️ Government DTNI: $${userNetSalary} - $70 buffer = $${maxInstallment} available`);
+                        } else {
+                            // Other employees: percentage-based DTNI
+                            maxInstallment = userNetSalary * dtniPercent;
+                            availableInstallment = maxInstallment - 0; // No existing debt for new users
+                            console.log(`💼 Other DTNI: $${userNetSalary} × ${dtniPercent * 100}% = $${maxInstallment} available`);
+                        }
                         
                         // Simplified DTNI calculation for display (backend will do actual calculation)
                         let dtniBasedLimit = 0;
@@ -2693,6 +2964,13 @@
                             const termMonths = 3; // Default 3 months for display
                             const powerTerm = Math.pow(1 + monthlyRate, termMonths);
                             dtniBasedLimit = (availableInstallment * (powerTerm - 1)) / (monthlyRate * powerTerm);
+                            
+                            // Final debug logging for DTNI calculation
+                            if (employerType === 'government') {
+                                console.log(`🏛️ Government DTNI Final: Net Salary $${userNetSalary} - $70 buffer = $${maxInstallment} available → Loan limit $${dtniBasedLimit.toFixed(2)}`);
+                            } else {
+                                console.log(`💼 Other DTNI Final: Net Salary $${userNetSalary} × ${(dtniPercent * 100)}% = $${maxInstallment} available → Loan limit $${dtniBasedLimit.toFixed(2)}`);
+                            }
                         } else {
                             // Use conservative estimate for unverified income
                             dtniBasedLimit = employerRules.cold_start_limit * 0.8; // 80% of cold start limit as conservative estimate
@@ -2728,7 +3006,7 @@
                                 p_employment_type: employmentType,
                                 p_employer_type: employerType,
                                 p_submitted_documents: submittedDocuments,
-                                p_monthly_income: profileData.monthly_income || null,
+                                p_monthly_income: getNetMonthlySalary() || null,
                                 p_existing_debt: 0 // New users have no existing debt
                             });
                             
@@ -2856,6 +3134,9 @@
                                 </div>
                                 <div class="step" id="step-bank">
                                     <i class="fas fa-clock"></i> Bank Statement Processing
+                                </div>
+                                <div class="step" id="step-payslip">
+                                    <i class="fas fa-clock"></i> Payslip Verification
                                 </div>
                                 <div class="step" id="step-score">
                                     <i class="fas fa-clock"></i> ZimScore Calculation
@@ -3899,10 +4180,221 @@
     
     <!-- Production Data Managers -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-config.js"></script>
+    <script src="frontend/services/salary-verification-service.js"></script>
+    <script src="supabase/supabaseClient.js"></script>
     <script src="js/test-notifications.js"></script>
     <script src="js/production-data-manager.js"></script>
     <script src="js/post-registration-loader.js"></script>
     <script src="js/post-registration-fallback.js"></script>
+    
+    <!-- Live Salary Verification Integration -->
+    <script>
+        // Live salary verification integration
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize salary verification service
+            if (window.salaryVerificationService) {
+                try {
+                    console.log('🔄 Initializing live salary verification...');
+                    
+                    // Check API health
+                    await window.salaryVerificationService.checkHealth();
+                    
+                    // Load current salary status
+                    await loadSalaryVerificationStatus();
+                    
+                    console.log('✅ Live salary verification initialized');
+                } catch (error) {
+                    console.warn('⚠️ Live salary verification initialization failed:', error);
+                }
+            }
+        });
+
+        // Load salary verification status from live API
+        async function loadSalaryVerificationStatus() {
+            try {
+                const status = await window.salaryVerificationService.getSalaryStatus();
+                
+                // Update UI with current status
+                updateSalaryStatusUI(status);
+                
+                return status;
+            } catch (error) {
+                console.error('Failed to load salary status:', error);
+                return null;
+            }
+        }
+
+        // Update UI with salary verification status
+        function updateSalaryStatusUI(status) {
+            if (!status) return;
+            
+            const freshness = window.salaryVerificationService.getSalaryFreshnessStatus(status.salary_verified_at);
+            
+            // Update salary status display
+            const statusElement = document.getElementById('salaryVerificationStatus');
+            if (statusElement) {
+                statusElement.innerHTML = `
+                    <div class="salary-status-item">
+                        <span class="status-icon">${freshness.icon}</span>
+                        <span class="status-text">${freshness.message}</span>
+                        <span class="status-indicator" style="color: ${freshness.color}"></span>
+                    </div>
+                    <div class="salary-status-details">
+                        <small>Verified Salary: ${window.salaryVerificationService.formatSalary(status.verified_net_salary)}</small>
+                        ${status.has_ec_number ? '<small><i class="fas fa-check text-success"></i> EC Number on file</small>' : ''}
+                    </div>
+                `;
+            }
+            
+            // Show re-verification button if needed
+            if (freshness.needsReverification) {
+                showReverificationButton();
+            }
+        }
+
+        // Show re-verification button
+        function showReverificationButton() {
+            const container = document.getElementById('salaryVerificationActions');
+            if (container) {
+                container.innerHTML = `
+                    <button class="btn btn-warning" onclick="initiateSalaryReverification()">
+                        <i class="fas fa-sync"></i> Re-verify Salary
+                    </button>
+                `;
+            }
+        }
+
+        // Initiate salary re-verification
+        async function initiateSalaryReverification() {
+            try {
+                const currentSalary = prompt('Enter your current net monthly salary:');
+                if (!currentSalary) return;
+                
+                const salary = parseFloat(currentSalary);
+                if (isNaN(salary) || salary <= 0) {
+                    alert('Please enter a valid salary amount.');
+                    return;
+                }
+                
+                const result = await window.salaryVerificationService.reverifySalary(salary);
+                
+                if (result.success) {
+                    alert('Salary re-verification completed successfully!');
+                    await loadSalaryVerificationStatus(); // Refresh status
+                }
+            } catch (error) {
+                alert(`Salary re-verification failed: ${window.salaryVerificationService.displayValidationError(error.message)}`);
+            }
+        }
+
+        // Override DTNI calculation to use live API
+        async function calculateLiveDTNI(userNetSalary, employerType, existingDebt = 0) {
+            try {
+                console.log('🔄 Calculating DTNI using live API...');
+                
+                // Validate salary first
+                const validation = await window.salaryVerificationService.validateSalary();
+                if (!validation.is_valid) {
+                    throw new Error(window.salaryVerificationService.displayValidationError(validation.error_code));
+                }
+                
+                // Calculate DTNI using verified salary
+                const dtniResult = await window.salaryVerificationService.calculateDTNI(existingDebt);
+                
+                console.log('💰 Live DTNI calculation result:', dtniResult);
+                return dtniResult.data;
+                
+            } catch (error) {
+                console.error('Live DTNI calculation failed:', error);
+                throw error;
+            }
+        }
+
+        // Update the existing calculateDTNI function to use live API
+        const originalCalculateDTNI = window.calculateDTNI;
+        window.calculateDTNI = async function(userNetSalary, employerType, existingDebt = 0) {
+            try {
+                // Try live API first
+                return await calculateLiveDTNI(userNetSalary, employerType, existingDebt);
+            } catch (error) {
+                console.warn('⚠️ Live DTNI calculation failed, falling back to client-side:', error);
+                
+                // Fallback to original client-side calculation
+                if (originalCalculateDTNI) {
+                    return originalCalculateDTNI(userNetSalary, employerType, existingDebt);
+                }
+                
+                throw error;
+            }
+        };
+
+        // Update profile submission to use live API
+        const originalSubmitProfile = window.submitProfile;
+        window.submitProfile = async function(profileData) {
+            try {
+                console.log('🔄 Submitting profile with live salary verification...');
+                
+                // Submit to live API
+                const result = await window.salaryVerificationService.updateProfileWithSalaryVerification(profileData);
+                
+                if (result.success) {
+                    console.log('✅ Profile submitted successfully to live API');
+                    
+                    // Refresh salary status
+                    await loadSalaryVerificationStatus();
+                    
+                    return result;
+                } else {
+                    throw new Error(result.message || 'Profile submission failed');
+                }
+                
+            } catch (error) {
+                console.error('Live profile submission failed:', error);
+                
+                // Fallback to original submission
+                if (originalSubmitProfile) {
+                    console.log('🔄 Falling back to original profile submission...');
+                    return originalSubmitProfile(profileData);
+                }
+                
+                throw error;
+            }
+        };
+
+        // Update loan application to use live API
+        const originalSubmitLoanApplication = window.submitLoanApplication;
+        window.submitLoanApplication = async function(loanData) {
+            try {
+                console.log('🔄 Submitting loan application with live validation...');
+                
+                // Submit to live API (includes salary validation)
+                const result = await window.salaryVerificationService.applyForLoan(
+                    loanData.loan_amount,
+                    loanData.loan_term,
+                    loanData.purpose
+                );
+                
+                if (result.success) {
+                    console.log('✅ Loan application submitted successfully to live API');
+                    return result;
+                } else {
+                    throw new Error(result.message || 'Loan application failed');
+                }
+                
+            } catch (error) {
+                console.error('Live loan application failed:', error);
+                
+                // Fallback to original submission
+                if (originalSubmitLoanApplication) {
+                    console.log('🔄 Falling back to original loan submission...');
+                    return originalSubmitLoanApplication(loanData);
+                }
+                
+                throw error;
+            }
+        };
+
+        console.log('💰 Live salary verification integration loaded');
+    </script>
 </body>
 </html>
