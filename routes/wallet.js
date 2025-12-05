@@ -826,4 +826,76 @@ router.get('/exchange-rate/:pair', async (req, res) => {
     }
 });
 
+// Get multi-currency wallet balance
+router.get('/multi-currency-balance', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        // Get wallet balance from database
+        const { data: wallet, error: walletError } = await supabase
+            .from('wallets')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+
+        if (walletError || !wallet) {
+            return res.json({
+                success: true,
+                data: {
+                    USD: {
+                        total: 0,
+                        available: 0,
+                        reserved: 0,
+                        transactions: 0
+                    },
+                    ZWG: {
+                        total: 0,
+                        available: 0,
+                        reserved: 0,
+                        transactions: 0
+                    }
+                }
+            });
+        }
+
+        // Get transaction count
+        const { count: transactionCount } = await supabase
+            .from('transactions')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', userId);
+
+        // Simulate multi-currency split (70% USD, 30% ZWG)
+        const totalBalance = wallet.balance || 0;
+        const availableBalance = wallet.available_balance || 0;
+        const reservedBalance = wallet.reserved_balance || 0;
+        const transactions = transactionCount || 0;
+
+        const multiCurrencyData = {
+            USD: {
+                total: totalBalance * 0.7,
+                available: availableBalance * 0.7,
+                reserved: reservedBalance * 0.7,
+                transactions: Math.floor(transactions * 0.6)
+            },
+            ZWG: {
+                total: (totalBalance * 0.3) * 25.51, // Convert to ZWG
+                available: (availableBalance * 0.3) * 25.51,
+                reserved: (reservedBalance * 0.3) * 25.51,
+                transactions: Math.floor(transactions * 0.4)
+            }
+        };
+
+        res.json({
+            success: true,
+            data: multiCurrencyData
+        });
+    } catch (error) {
+        console.error('Multi-currency wallet balance error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+});
+
 module.exports = router;

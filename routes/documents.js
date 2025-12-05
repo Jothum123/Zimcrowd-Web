@@ -152,7 +152,7 @@ router.get('/', authenticateUser, async (req, res) => {
                     type: doc.document_type || doc.doc_type,
                     filename: doc.file_name || doc.original_filename,
                     status: doc.status || 'pending',
-                    uploaded_at: doc.created_at,
+                    uploaded_at: doc.upload_date,
                     verified_at: doc.verified_at,
                     rejection_reason: doc.rejection_reason,
                     url: signedUrl
@@ -303,7 +303,7 @@ router.post('/upload', authenticateUser, upload.single('document'), [
                 type: document_type,
                 filename: file.originalname,
                 status: 'pending',
-                uploaded_at: documentRecord.created_at,
+                uploaded_at: documentRecord.upload_date,
                 url: signedUrlData?.signedUrl
             }
         });
