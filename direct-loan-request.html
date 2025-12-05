@@ -573,6 +573,8 @@
             const termMonths = offer.termMonths || 1;
             const monthlyPayment = offer.monthlyPayment || (total / termMonths);
             
+            console.log('🎯 Displaying offer:', offer);
+            
             content.innerHTML = `
                 <div style="text-align: center; margin-bottom: 15px;">
                     <span class="currency-btn active" style="display: inline-flex; cursor: default;">
@@ -645,7 +647,27 @@
                 <button onclick="showCurrencySelector()" style="width: 100%; margin-top: 15px; padding: 12px; background: transparent; border: 2px solid #e2e8f0; border-radius: 12px; color: #64748b; font-weight: 600; cursor: pointer;">
                     <i class="fas fa-exchange-alt"></i> Change Currency
                 </button>
+                
+                <!-- DEBUG: Always visible accept button -->
+                <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border: 2px solid #0ea5e9; border-radius: 12px;">
+                    <div style="color: #0369a1; font-weight: 600; margin-bottom: 10px;">🔧 Debug: Accept Loan Offer</div>
+                    <button onclick="acceptOffer()" style="width: 100%; padding: 15px; background: #0ea5e9; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        <i class="fas fa-check-circle"></i> Accept Offer & Continue to Agreement
+                    </button>
+                </div>
             `;
+            
+            // Store offer data
+            offerData = offer;
+            
+            // Start countdown timer
+            if (offer.expiresAt) {
+                startCountdown(offer.expiresAt);
+            } else {
+                // Default 24-hour expiry if not specified
+                const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+                startCountdown(expiresAt);
+            }
         }
 
         function startCountdown(expiresAt) {
