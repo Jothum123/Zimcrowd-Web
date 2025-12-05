@@ -5,7 +5,7 @@ SELECT
 -- Update valid government employee (66666666) with proper EC number
 UPDATE profiles 
 SET 
-    verified_net_salary = 2500.00,
+    verified_net_salary = 2500.00,  -- Above $120 minimum
     salary_verified_at = CURRENT_TIMESTAMP,
     employer_type = 'government',
     ec_number = '0123258J'  -- Valid EC number format (numbers + letter)

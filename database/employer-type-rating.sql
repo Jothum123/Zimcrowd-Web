@@ -164,6 +164,9 @@ DECLARE
     v_final_cold_start_limit DECIMAL(10,2);
     v_final_max_loan_limit DECIMAL(10,2);
     v_income_verified BOOLEAN;
+    v_doc_bonus INTEGER := 0;
+    v_doc_count INTEGER := 0;
+    v_required_count INTEGER;
 BEGIN
     -- Get rating from matrix with employer-specific rules
     SELECT base_score, risk_level, documentation_bonus, cold_start_limit, max_loan_amount, has_cold_start
@@ -199,21 +202,17 @@ BEGIN
     WHERE employer_type = p_employer_type AND is_active = true;
     
     -- Calculate documentation bonus
-    DECLARE
-        v_doc_bonus INTEGER := 0;
-        v_doc_count INTEGER := 0;
-        v_required_count INTEGER := COALESCE(array_length(v_required_docs, 1), 0);
-    BEGIN
-        IF v_required_count > 0 THEN
-            -- Count how many required documents were submitted
-            SELECT COUNT(*) INTO v_doc_count
-            FROM unnest(p_submitted_documents) AS doc
-            WHERE doc = ANY(v_required_docs);
-            
-            -- Calculate bonus based on percentage of required documents
-            v_doc_bonus := (v_documentation_bonus * v_doc_count / v_required_count)::INTEGER;
-        END IF;
-    END;
+    v_required_count := COALESCE(array_length(v_required_docs, 1), 0);
+    
+    IF v_required_count > 0 THEN
+        -- Count how many required documents were submitted
+        SELECT COUNT(*) INTO v_doc_count
+        FROM unnest(p_submitted_documents) AS doc
+        WHERE doc = ANY(v_required_docs);
+        
+        -- Calculate bonus based on percentage of required documents
+        v_doc_bonus := (v_documentation_bonus * v_doc_count / v_required_count)::INTEGER;
+    END IF;
     
     -- Calculate final score (aligned with ZimScore 30-85 range)
     v_final_score := v_base_score + v_doc_bonus;
