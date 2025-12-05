@@ -95,7 +95,16 @@ class DashboardAuth {
         }
 
         try {
-            // Verify token with backend (with timeout for social auth)
+            // For social auth users, prioritize social data over backend validation
+            if (socialAuthData.provider && (socialAuthData.email || socialAuthData.first_name)) {
+                console.log('🔄 Using social auth data, skipping backend validation');
+                this.user = socialAuthData;
+                this.isAuthenticated = true;
+                localStorage.setItem('userData', JSON.stringify(this.user));
+                return true;
+            }
+            
+            // Verify token with backend (with timeout for regular auth)
             const timeoutPromise = new Promise((_, reject) => 
                 setTimeout(() => reject(new Error('Timeout')), 5000)
             );
@@ -105,7 +114,7 @@ class DashboardAuth {
                 timeoutPromise
             ]);
             
-            if (response.success) {
+            if (response && response.success) {
                 this.user = response.data;
                 this.isAuthenticated = true;
                 localStorage.setItem('userData', JSON.stringify(this.user));
@@ -117,8 +126,8 @@ class DashboardAuth {
         } catch (error) {
             console.error('❌ Backend authentication failed:', error);
             
-            // For social auth users, don't redirect immediately - try to use social data
-            if (socialAuthData.provider) {
+            // Final fallback - try to use any available social data
+            if (socialAuthData.provider && (socialAuthData.email || socialAuthData.first_name)) {
                 console.log('🔄 Backend failed but social auth available, using social data');
                 this.user = socialAuthData;
                 this.isAuthenticated = true;
