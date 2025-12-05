@@ -1859,6 +1859,75 @@
             overflow: hidden;
         }
 
+        /* Currency Toggle Switch */
+        .currency-toggle-container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .currency-toggle {
+            display: flex;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 4px;
+            gap: 4px;
+            backdrop-filter: blur(10px);
+        }
+
+        body.light-mode .currency-toggle {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #d1d5db;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .currency-toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 80px;
+            justify-content: center;
+        }
+
+        body.light-mode .currency-toggle-btn {
+            color: #6b7280;
+        }
+
+        .currency-toggle-btn:hover {
+            color: #f1f5f9;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        body.light-mode .currency-toggle-btn:hover {
+            color: #1f2937;
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .currency-toggle-btn.active {
+            background: linear-gradient(135deg, #38e77b 0%, #34d399 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(56, 231, 123, 0.3);
+        }
+
+        .currency-toggle-btn.active span:first-child {
+            filter: brightness(0) invert(1);
+        }
+
+        /* Smooth transitions for wallet data */
+        .wallet-transition {
+            transition: all 0.3s ease;
+        }
+
         .featured-balance-card::before {
             content: '';
             position: absolute;
@@ -4582,33 +4651,63 @@
 
         <!-- Wallet Section -->
         <section id="wallet-section" class="dashboard-section">
-            <h2 style="margin-bottom: 30px;">Wallet & Funds</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2>Wallet & Funds</h2>
+                
+                <!-- Currency Toggle Switch -->
+                <div class="currency-toggle-container">
+                    <div class="currency-toggle">
+                        <button class="currency-toggle-btn active" 
+                                onclick="switchWalletCurrency('USD')" 
+                                id="usd-toggle-btn">
+                            <span>🇺🇸</span>
+                            <span>USD</span>
+                        </button>
+                        <button class="currency-toggle-btn" 
+                                onclick="switchWalletCurrency('ZWG')" 
+                                id="zwg-toggle-btn">
+                            <span>🇿🇼</span>
+                            <span>ZWG</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
             
             <div class="stats-grid">
+                <!-- Total Balance Card -->
                 <div class="stat-card featured-balance-card">
                     <div class="stat-icon" style="background: rgba(255, 255, 255, 0.2);">
                         <i class="fas fa-wallet" style="color: white;"></i>
                     </div>
-                    <h3 id="walletAccountValue">$0.00</h3>
-                    <p>Total Account Value</p>
+                    <h3 id="walletTotalBalance">$0.00</h3>
+                    <p>Total Balance (<span id="wallet-currency-label">USD</span>)</p>
                 </div>
                 
-                <!-- USD Balance Card -->
-                <div class="stat-card" style="border: 2px solid #38e77b;">
+                <!-- Available Balance Card -->
+                <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(56, 231, 123, 0.1);">
-                        <span style="font-size: 18px; color: #38e77b; font-weight: bold;">USD</span>
+                        <i class="fas fa-money-bill-wave" style="color: #38e77b;"></i>
                     </div>
-                    <h3 id="walletUSDBalance" style="color: #38e77b;">$0.00</h3>
-                    <p style="color: #38e77b;">USD Balance</p>
+                    <h3 id="walletAvailableBalance">$0.00</h3>
+                    <p>Available Balance (<span id="available-currency-label">USD</span>)</p>
                 </div>
                 
-                <!-- ZWG Balance Card -->
-                <div class="stat-card" style="border: 2px solid #f59e0b;">
+                <!-- Reserved Balance Card -->
+                <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1);">
-                        <span style="font-size: 18px; color: #f59e0b; font-weight: bold;">ZWG</span>
+                        <i class="fas fa-lock" style="color: #f59e0b;"></i>
                     </div>
-                    <h3 id="walletZWGBalance" style="color: #f59e0b;">ZWG 0.00</h3>
-                    <p style="color: #f59e0b;">ZWG Balance</p>
+                    <h3 id="walletReservedBalance">$0.00</h3>
+                    <p>Reserved Balance (<span id="reserved-currency-label">USD</span>)</p>
+                </div>
+                
+                <!-- Total Transactions Card -->
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(59, 130, 246, 0.1);">
+                        <i class="fas fa-exchange-alt" style="color: #3b82f6;"></i>
+                    </div>
+                    <h3 id="walletTotalTransactions">$0.00</h3>
+                    <p>Total Transactions (<span id="transactions-currency-label">USD</span>)</p>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(59, 130, 246, 0.1);">
@@ -8036,35 +8135,65 @@ How it works:
             async loadMultiCurrencyWalletBalance() {
                 try {
                     // Try to get multi-currency balance first
-                    let response = await window.ZimCrowdAPI.getMultiCurrencyWalletBalance();
-                    
-                    if (!response.success) {
-                        // Fallback to regular wallet balance and simulate multi-currency
-                        response = await window.ZimCrowdAPI.getWalletBalance();
-                        if (response.success) {
-                            const totalBalance = response.data.balance || 0;
-                            // Simulate USD/ZWG split (70% USD, 30% ZWG for demo)
-                            const usdBalance = totalBalance * 0.7;
-                            const zwgBalance = (totalBalance * 0.3) * 27; // Approximate conversion
-                            
-                            this.updateMultiCurrencyWalletDisplay({
-                                USD: usdBalance,
-                                ZWG: zwgBalance,
-                                total: totalBalance
-                            });
-                        }
+                    const response = await this.getMultiCurrencyWalletBalance();
+                    if (response.success && response.data) {
+                        // Update walletData structure
+                        walletData = {
+                            USD: {
+                                total: response.data.USD || 0,
+                                available: response.data.USD * 0.8 || 0, // 80% available
+                                reserved: response.data.USD * 0.2 || 0, // 20% reserved
+                                transactions: response.data.USD * 0.5 || 0 // Simulated transaction volume
+                            },
+                            ZWG: {
+                                total: response.data.ZWG || 0,
+                                available: response.data.ZWG * 0.8 || 0,
+                                reserved: response.data.ZWG * 0.2 || 0,
+                                transactions: response.data.ZWG * 0.5 || 0
+                            }
+                        };
+                        
+                        // Initialize display with current currency
+                        updateWalletDisplay();
+                        console.log('✅ Multi-currency wallet loaded:', walletData);
                     } else {
-                        // Use actual multi-currency data
-                        this.updateMultiCurrencyWalletDisplay(response.data);
+                        // Fallback to regular wallet balance and simulate split
+                        const regularResponse = await this.getWalletBalance();
+                        if (regularResponse.success && regularResponse.data) {
+                            const totalBalance = regularResponse.data.balance || 0;
+                            const usdAmount = totalBalance * 0.7; // 70% in USD
+                            const zwgAmount = totalBalance * 0.3 * 27; // 30% converted to ZWG
+                            
+                            walletData = {
+                                USD: {
+                                    total: usdAmount,
+                                    available: usdAmount * 0.8,
+                                    reserved: usdAmount * 0.2,
+                                    transactions: usdAmount * 0.5
+                                },
+                                ZWG: {
+                                    total: zwgAmount,
+                                    available: zwgAmount * 0.8,
+                                    reserved: zwgAmount * 0.2,
+                                    transactions: zwgAmount * 0.5
+                                }
+                            };
+                            
+                            // Initialize display with current currency
+                            updateWalletDisplay();
+                            console.log('✅ Wallet loaded with fallback data:', walletData);
+                        }
                     }
                 } catch (error) {
-                    console.error('Error loading multi-currency wallet balance:', error);
+                    console.error('❌ Error loading multi-currency wallet balance:', error);
                     // Set default values
-                    this.updateMultiCurrencyWalletDisplay({
-                        USD: 0,
-                        ZWG: 0,
-                        total: 0
-                    });
+                    walletData = {
+                        USD: { total: 0, available: 0, reserved: 0, transactions: 0 },
+                        ZWG: { total: 0, available: 0, reserved: 0, transactions: 0 }
+                    };
+                    
+                    // Initialize display with current currency
+                    updateWalletDisplay();
                 }
             }
 
@@ -8100,6 +8229,111 @@ How it works:
                 }
 
                 console.log('✅ Multi-currency wallet updated successfully');
+            }
+
+            // Wallet currency toggle functionality
+            let selectedWalletCurrency = 'USD';
+            let walletData = {
+                USD: { total: 0, available: 0, reserved: 0, transactions: 0 },
+                ZWG: { total: 0, available: 0, reserved: 0, transactions: 0 }
+            };
+
+            // Switch wallet currency display
+            function switchWalletCurrency(currency) {
+                selectedWalletCurrency = currency;
+                
+                // Update toggle button states
+                const usdBtn = document.getElementById('usd-toggle-btn');
+                const zwgBtn = document.getElementById('zwg-toggle-btn');
+                
+                if (currency === 'USD') {
+                    usdBtn.classList.add('active');
+                    zwgBtn.classList.remove('active');
+                } else {
+                    zwgBtn.classList.add('active');
+                    usdBtn.classList.remove('active');
+                }
+                
+                // Update wallet display
+                updateWalletDisplay();
+                
+                console.log(`🔄 Switched to ${currency} wallet view`);
+            }
+
+            // Update wallet display based on selected currency
+            function updateWalletDisplay() {
+                const currency = selectedWalletCurrency;
+                const data = walletData[currency];
+                const config = CURRENCY_CONFIG[currency];
+                
+                if (!data || !config) {
+                    console.error('❌ Invalid currency or missing data');
+                    return;
+                }
+                
+                // Add transition effect
+                const cards = document.querySelectorAll('#wallet-section .stat-card');
+                cards.forEach(card => {
+                    card.style.opacity = '0.7';
+                    card.style.transform = 'scale(0.98)';
+                });
+                
+                setTimeout(() => {
+                    // Update total balance
+                    const totalBalanceEl = document.getElementById('walletTotalBalance');
+                    if (totalBalanceEl) {
+                        totalBalanceEl.textContent = `${config.symbol}${data.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    }
+                    
+                    // Update available balance
+                    const availableBalanceEl = document.getElementById('walletAvailableBalance');
+                    if (availableBalanceEl) {
+                        availableBalanceEl.textContent = `${config.symbol}${data.available.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    }
+                    
+                    // Update reserved balance
+                    const reservedBalanceEl = document.getElementById('walletReservedBalance');
+                    if (reservedBalanceEl) {
+                        reservedBalanceEl.textContent = `${config.symbol}${data.reserved.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    }
+                    
+                    // Update total transactions
+                    const transactionsEl = document.getElementById('walletTotalTransactions');
+                    if (transactionsEl) {
+                        transactionsEl.textContent = `${config.symbol}${data.transactions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    }
+                    
+                    // Update currency labels
+                    const labels = [
+                        'wallet-currency-label',
+                        'available-currency-label',
+                        'reserved-currency-label',
+                        'transactions-currency-label'
+                    ];
+                    
+                    labels.forEach(labelId => {
+                        const labelEl = document.getElementById(labelId);
+                        if (labelEl) {
+                            labelEl.textContent = currency;
+                            labelEl.style.color = config.color;
+                        }
+                    });
+                    
+                    // Update featured card color
+                    const featuredCard = document.querySelector('.featured-balance-card');
+                    if (featuredCard) {
+                        featuredCard.style.background = `linear-gradient(135deg, ${config.color} 0%, ${config.color}dd 100%)`;
+                        featuredCard.style.boxShadow = `0 8px 32px ${config.color}33`;
+                    }
+                    
+                    // Remove transition effect
+                    cards.forEach(card => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'scale(1)';
+                    });
+                    
+                    console.log(`✅ Wallet display updated for ${currency}:`, data);
+                }, 150);
             }
 
             clearAuth() {
@@ -16513,30 +16747,14 @@ How it works:
             showToast('info', 'Data Correction', 'Data correction request feature will be implemented with backend integration');
         }
 
-        function requestDataDeletion() {
-            showToast('info', 'Data Deletion', 'Data deletion request feature will be implemented with backend integration');
-        }
+let strength = 0;
+let strengthLabel = 'Very Weak';
+let color = '#ef4444';
 
-        // Document mapping
-        const documentMap = {
-            'terms': {
-                file: 'terms-of-service.md',
-                title: 'Terms of Service',
-                icon: 'fa-gavel',
-                color: '#3b82f6'
-            },
-            'privacy': {
-                file: 'privacy-policy.md',
-                title: 'Privacy Policy',
-                icon: 'fa-user-shield',
-                color: '#10b981'
-            },
-            'loan-agreement': {
-                file: 'loan-agreement-template.md',
-                title: 'Loan Agreement Template',
-                icon: 'fa-handshake',
-                color: '#f59e0b'
-            },
+if (password.length >= 8) strength++;
+if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+if (/\d/.test(password)) strength++;
+if (/[^a-zA-Z0-9]/.test(password)) strength++;
             'investment-disclosure': {
                 file: 'investment-disclosure.md',
                 title: 'Investment Disclosure',
