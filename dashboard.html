@@ -11926,13 +11926,13 @@ How it works:
             
             let html = '';
             for (let i = 0; i < fullStars; i++) {
-                html += '<i class="fas fa-star"></i>';
+                html += '★';
             }
             if (hasHalfStar) {
-                html += '<i class="fas fa-star-half-alt"></i>';
+                html += '⭐';
             }
             for (let i = 0; i < emptyStars; i++) {
-                html += '<i class="far fa-star"></i>';
+                html += '☆';
             }
             html += `<span class="rating-text">${score.toFixed(1)}/5</span>`;
             return html;
