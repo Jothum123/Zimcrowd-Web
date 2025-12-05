@@ -258,7 +258,8 @@ class DirectLoanService {
                 }
             }
 
-            // Check 3: Verify all required documents are VERIFIED in Document Center
+            // Check 3: Document verification - NON-BLOCKING for Direct Lending
+            // Documents can be uploaded manually during application process
             const requiredDocs = this.getRequiredDocuments(employmentType);
             const requiredDocTypes = requiredDocs.filter(d => d.required).map(d => d.type);
             
@@ -280,7 +281,7 @@ class DirectLoanService {
                 };
             });
 
-            // Check each required document
+            // Check each required document (NON-BLOCKING)
             const missingDocs = [];
             const pendingDocs = [];
             const rejectedDocs = [];
@@ -306,35 +307,16 @@ class DirectLoanService {
                 rejected: rejectedDocs.length,
                 missing: missingDocs.length,
                 allVerified: verifiedDocs.length === requiredDocTypes.length,
+                requiresDocumentUpload: missingDocs.length > 0 || pendingDocs.length > 0,
                 missingDocs,
                 pendingDocs,
                 rejectedDocs,
                 verifiedDocs
             };
 
-            // Add violation if documents not all verified
-            if (!documentStatus.allVerified) {
-                let docMessage = 'Your documents are not fully verified. ';
-                if (missingDocs.length > 0) {
-                    docMessage += `Missing: ${missingDocs.join(', ')}. `;
-                }
-                if (pendingDocs.length > 0) {
-                    docMessage += `Pending verification: ${pendingDocs.join(', ')}. `;
-                }
-                if (rejectedDocs.length > 0) {
-                    docMessage += `Rejected: ${rejectedDocs.map(d => d.type).join(', ')}. `;
-                }
-                
-                violations.push({
-                    rule: {
-                        code: 'DOCUMENTS_NOT_VERIFIED',
-                        message: docMessage.trim(),
-                        action: 'UPLOAD_DOCUMENTS'
-                    },
-                    details: documentStatus
-                });
-            }
-
+            // DIRECT LENDING: Documents are NON-BLOCKING
+            // Users can proceed with loan offer and upload documents later
+            // No violation added for missing documents
             // Check 4: Does user have loans in arrears from P2P marketplace?
             const { data: arrearsLoans, error: loansError } = await supabase
                 .from('loans')
@@ -412,7 +394,7 @@ class DirectLoanService {
                 documentStatus: documentStatus,
                 violations: violations,
                 message: isEligible 
-                    ? 'You are eligible for Direct Lending. All documents verified.'
+                    ? 'You are eligible for Direct Lending. Documents can be uploaded during the application process.'
                     : violations[0].rule.message,
                 loanLimits: this.getLoanLimits(employmentType, false) // No cold start for Direct
             };

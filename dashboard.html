@@ -10985,22 +10985,8 @@ How it works:
                 else starRating = 1;
             }
 
-            // Generate star display
-            const fullStars = Math.floor(starRating);
-            const hasHalfStar = starRating % 1 >= 0.5;
-            
-            let starsHtml = '';
-            for (let i = 0; i < fullStars; i++) {
-                starsHtml += '★';
-            }
-            if (hasHalfStar && fullStars < 5) {
-                starsHtml += '☆';
-            }
-            // Fill remaining with empty stars
-            const remaining = 5 - fullStars - (hasHalfStar ? 1 : 0);
-            for (let i = 0; i < remaining; i++) {
-                starsHtml += '☆';
-            }
+            // Generate star display using existing function
+            let starsHtml = generateStarRating(starRating);
 
             if (zimscoreStars) zimscoreStars.innerHTML = starsHtml;
             if (zimscoreValue) zimscoreValue.textContent = `${scoreValue}/85`;
