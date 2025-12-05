@@ -8069,16 +8069,24 @@ How it works:
             }
 
             updateMultiCurrencyWalletDisplay(data) {
+                console.log('🔄 Updating multi-currency wallet with data:', data);
+                
                 // Update USD balance
                 const usdBalanceEl = document.getElementById('walletUSDBalance');
                 if (usdBalanceEl) {
                     usdBalanceEl.textContent = `$${(data.USD || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    console.log('✅ USD balance updated:', data.USD);
+                } else {
+                    console.error('❌ USD balance element not found');
                 }
 
                 // Update ZWG balance
                 const zwgBalanceEl = document.getElementById('walletZWGBalance');
                 if (zwgBalanceEl) {
                     zwgBalanceEl.textContent = `ZWG ${(data.ZWG || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    console.log('✅ ZWG balance updated:', data.ZWG);
+                } else {
+                    console.error('❌ ZWG balance element not found');
                 }
 
                 // Update total account value
@@ -8086,9 +8094,12 @@ How it works:
                 if (totalValueEl) {
                     const total = data.total || (data.USD || 0) + ((data.ZWG || 0) / 27); // Convert ZWG to USD for total
                     totalValueEl.textContent = `$${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    console.log('✅ Total account value updated:', total);
+                } else {
+                    console.error('❌ Total account value element not found');
                 }
 
-                console.log('✅ Multi-currency wallet updated:', data);
+                console.log('✅ Multi-currency wallet updated successfully');
             }
 
             clearAuth() {
