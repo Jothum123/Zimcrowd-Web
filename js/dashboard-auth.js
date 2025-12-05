@@ -350,7 +350,7 @@ class DashboardAuth {
                 }
                 
                 // Update total account value (convert ZWG to USD for display)
-                const totalValueEl = document.getElementById('walletAccountValue');
+                const totalValueEl = document.getElementById('walletTotalBalance') || document.getElementById('walletBalance');
                 if (totalValueEl && response.data) {
                     const data = response.data;
                     const total = data.total || (data.USD || 0) + ((data.ZWG || 0) / 27); // Convert ZWG to USD for total

@@ -577,7 +577,14 @@ class DocumentManager {
     }
 }
 
-// Initialize document manager when DOM is ready
+// Initialize document manager when DOM and dashboard auth are ready
 document.addEventListener('DOMContentLoaded', () => {
-    window.documentManager = new DocumentManager();
+    // Wait a bit for dashboardAuth to initialize
+    setTimeout(() => {
+        if (window.dashboardAuth && typeof window.dashboardAuth.getUser === 'function') {
+            window.documentManager = new DocumentManager();
+        } else {
+            console.log('⚠️ Dashboard auth not available - document management disabled');
+        }
+    }, 1000);
 });
