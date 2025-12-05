@@ -798,18 +798,128 @@
                         </div>
 
                         <div class="form-group">
+                            <label class="form-label">Employment Type <span class="required">*</span></label>
+                            <select class="form-select" id="employmentType" required>
+                                <option value="">Select Employment Type</option>
+                                <option value="full_time_salaried">Full-time Salaried</option>
+                                <option value="part_time_salaried">Part-time Salaried</option>
+                                <option value="self_employed">Self-employed/Business Owner</option>
+                                <option value="contract_worker">Contract/Freelance Worker</option>
+                                <option value="student">Student</option>
+                                <option value="unemployed">Unemployed</option>
+                                <option value="retired">Retired</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                                This helps determine your initial credit rating and loan eligibility
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Employer Type <span class="required">*</span></label>
+                            <select class="form-select" id="employerType" required onchange="updateEmployerTypeFields()">
+                                <option value="">Select Employer Type</option>
+                                <option value="government">Government Sector</option>
+                                <option value="private">Private Sector</option>
+                                <option value="informal">Informal Sector</option>
+                                <option value="ngo">NGO/Non-Profit</option>
+                                <option value="student">Student Institution</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                                Determines required documentation and affects your credit rating
+                            </small>
+                        </div>
+
+                        <!-- Government Sector Fields -->
+                        <div id="governmentFields" style="display: none;">
+                            <div class="form-group">
+                                <label class="form-label">EC Number / Employee Number <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="ecNumber" placeholder="e.g., 6134510V (Govt) or 12345 (Private)" required>
+                                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                                    Government employees: Format like 6134510V | Required for government sector verification
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Private Sector Fields -->
+                        <div id="privateFields" style="display: none;">
+                            <div class="form-group">
+                                <label class="form-label">Employment Letter <span class="required">*</span></label>
+                                <input type="file" class="form-input" id="employmentLetter" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                                    Upload official employment letter from your employer (PDF, JPG, PNG)
+                                </small>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Recent Payslip <span class="required">*</span></label>
+                                <input type="file" class="form-input" id="payslip" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                                    Upload recent payslip (last 3 months) for income verification
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Informal Sector Fields -->
+                        <div id="informalFields" style="display: none;">
+                            <div class="form-group">
+                                <label class="form-label">Business Registration <span class="required">*</span></label>
+                                <input type="file" class="form-input" id="businessRegistration" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                                    Upload business registration certificate or trading license
+                                </small>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Reference Letter <span class="required">*</span></label>
+                                <input type="file" class="form-input" id="referenceLetter" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                                    Upload reference letter from client or business associate
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- NGO Fields -->
+                        <div id="ngoFields" style="display: none;">
+                            <div class="form-group">
+                                <label class="form-label">Employment Letter <span class="required">*</span></label>
+                                <input type="file" class="form-input" id="ngoEmploymentLetter" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                                    Upload official employment letter from NGO
+                                </small>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">NGO Certificate <span class="required">*</span></label>
+                                <input type="file" class="form-input" id="ngoCertificate" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                                    Upload NGO registration certificate
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Student Fields -->
+                        <div id="studentFields" style="display: none;">
+                            <div class="form-group">
+                                <label class="form-label">Student ID <span class="required">*</span></label>
+                                <input type="file" class="form-input" id="studentId" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                                    Upload valid student identification card
+                                </small>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Enrollment Letter <span class="required">*</span></label>
+                                <input type="file" class="form-input" id="enrollmentLetter" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                                    Upload current enrollment verification letter
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
                             <label class="form-label">Occupation/Job Title <span class="required">*</span></label>
                             <input type="text" class="form-input" id="occupation" placeholder="Your job title or profession" required>
                         </div>
 
-                        <div class="form-group">
-                            <label class="form-label">EC Number / Employee Number <span class="required">*</span></label>
-                            <input type="text" class="form-input" id="ecNumber" placeholder="e.g., 6134510V (Govt) or 12345 (Private)" required>
-                            <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
-                                Government employees: Format like 6134510V | Private sector: Your employee ID number
-                            </small>
-                        </div>
-
+                        
                         <div class="form-group">
                             <label class="form-label">Work Address <span class="required">*</span></label>
                             <input type="text" class="form-input" id="workAddress" placeholder="123 Business Street, Harare" required>
@@ -2089,7 +2199,8 @@
                 street_address: document.getElementById('address')?.value,
                 
                 // Employment details
-                employment_status: document.getElementById('employment')?.value,
+                employment_status: document.getElementById('employmentType')?.value,
+                employer_type: document.getElementById('employerType')?.value,
                 monthly_income: document.getElementById('income')?.value,
                 employer_name: document.getElementById('employer')?.value,
                 job_title: document.getElementById('occupation')?.value,
@@ -2518,13 +2629,127 @@
 
                     // Store ZimScore data if available
                     if (result.data && result.data.zimScore) {
+                        // Calculate enhanced cold start rating based on employment type AND employer type
+                        let coldStartRating = 50; // Default rating
+                        let riskLevel = 'medium';
+                        
+                        const employmentType = profileData.employment_status || 'other';
+                        const employerType = profileData.employer_type || 'other';
+                        
+                        // Collect submitted employer-specific documents
+                        const submittedDocuments = collectEmployerDocuments(employerType);
+                        
+                        // Calculate enhanced rating with employer type consideration
+                        try {
+                            coldStartRating = await calculateEnhancedColdStartRating(employmentType, employerType, submittedDocuments);
+                            
+                            // Update risk level based on enhanced rating
+                            riskLevel = coldStartRating >= 90 ? 'very_low' :
+                                       coldStartRating >= 80 ? 'low' :
+                                       coldStartRating >= 70 ? 'low_medium' :
+                                       coldStartRating >= 60 ? 'medium' :
+                                       coldStartRating >= 50 ? 'medium_high' :
+                                       coldStartRating >= 40 ? 'high' : 'very_high';
+                                       
+                        } catch (ratingError) {
+                            console.warn('⚠️ Enhanced rating calculation failed, using fallback:', ratingError.message);
+                            // Fallback to simple rating
+                            const employmentRatings = {
+                                'full_time_salaried': { score: 85, risk: 'low' },
+                                'part_time_salaried': { score: 70, risk: 'low_medium' },
+                                'self_employed': { score: 60, risk: 'medium' },
+                                'contract_worker': { score: 55, risk: 'medium_high' },
+                                'student': { score: 40, risk: 'high' },
+                                'unemployed': { score: 20, risk: 'very_high' },
+                                'retired': { score: 65, risk: 'medium' },
+                                'other': { score: 50, risk: 'medium' }
+                            };
+                            
+                            const rating = employmentRatings[employmentType] || { score: 50, risk: 'medium' };
+                            coldStartRating = rating.score;
+                            riskLevel = rating.risk;
+                        }
+                        
+                        // Store cold start rating data with employer-specific rules and DTNI calculation
+                        const employerRules = await getEmployerColdStartRules(employmentType, employerType);
+                        
+                        // Calculate DTNI-based limit (simplified for display - actual calculation happens in backend)
+                        const monthlyIncome = profileData.monthly_income || 0;
+                        const incomeVerified = monthlyIncome > 0;
+                        
+                        if (!incomeVerified) {
+                            console.warn('⚠️ Monthly income not verified - showing estimated limits only');
+                        }
+                        
+                        const dtniPercent = employerType === 'government' ? 0.40 : 0.33;
+                        const maxInstallment = monthlyIncome * dtniPercent;
+                        const availableInstallment = maxInstallment - 0; // No existing debt for new users
+                        
+                        // Simplified DTNI calculation for display (backend will do actual calculation)
+                        let dtniBasedLimit = 0;
+                        if (incomeVerified && availableInstallment > 0) {
+                            const annualRate = 0.05;
+                            const monthlyRate = annualRate / 12;
+                            const termMonths = 3; // Default 3 months for display
+                            const powerTerm = Math.pow(1 + monthlyRate, termMonths);
+                            dtniBasedLimit = (availableInstallment * (powerTerm - 1)) / (monthlyRate * powerTerm);
+                        } else {
+                            // Use conservative estimate for unverified income
+                            dtniBasedLimit = employerRules.cold_start_limit * 0.8; // 80% of cold start limit as conservative estimate
+                        }
+                        
+                        // Final limit is the minimum of cold start limit and DTNI limit
+                        const finalColdStartLimit = Math.min(employerRules.cold_start_limit, dtniBasedLimit);
+                        const finalMaxLoanLimit = Math.min(employerRules.max_loan_amount, dtniBasedLimit);
+                        
+                        localStorage.setItem('coldStartRating', JSON.stringify({
+                            rating: coldStartRating,
+                            employment_type: employmentType,
+                            employer_type: employerType,
+                            risk_level: riskLevel,
+                            submitted_documents: submittedDocuments,
+                            star_rating: calculateZimScoreStarRating(coldStartRating),
+                            has_cold_start: employerRules.has_cold_start,
+                            cold_start_limit: employerRules.cold_start_limit,
+                            max_loan_amount: employerRules.max_loan_amount,
+                            dtni_based_limit: Math.round(dtniBasedLimit),
+                            final_cold_start_limit: Math.round(finalColdStartLimit),
+                            final_max_loan_limit: Math.round(finalMaxLoanLimit),
+                            income_verified: incomeVerified,
+                            min_tenure_days: employerRules.min_tenure_days,
+                            max_tenure_days: employerRules.max_tenure_days,
+                            calculated_at: new Date().toISOString()
+                        }));
+                        
+                        // Store rating in database for persistence
+                        try {
+                            const { data: ratingData, error: ratingError } = await supabase.rpc('calculate_enhanced_cold_start_rating', {
+                                p_user_id: (await supabase.auth.getUser()).data.user?.id,
+                                p_employment_type: employmentType,
+                                p_employer_type: employerType,
+                                p_submitted_documents: submittedDocuments,
+                                p_monthly_income: profileData.monthly_income || null,
+                                p_existing_debt: 0 // New users have no existing debt
+                            });
+                            
+                            if (ratingError) {
+                                console.warn('⚠️ Could not store enhanced cold start rating in database:', ratingError.message);
+                            } else {
+                                console.log('✅ Enhanced cold start rating stored in database:', ratingData);
+                            }
+                        } catch (dbError) {
+                            console.warn('⚠️ Database rating storage failed:', dbError.message);
+                        }
+                        
                         localStorage.setItem('zimscoreData', JSON.stringify({
                             score_value: result.data.zimScore.score,
                             star_rating: result.data.zimScore.starRating,
                             max_loan_amount: result.data.zimScore.maxLoanAmount,
                             risk_level: result.data.zimScore.riskLevel,
                             is_cold_start: result.data.zimScore.isColdStart !== false,
-                            employment_type: result.data.zimScore.employmentType || profileData.employment_status || 'private'
+                            employment_type: employmentType,
+                            cold_start_rating: coldStartRating,
+                            cold_start_risk_level: riskLevel
                         }));
                         
                         // Also store user data for loan calculations
@@ -2698,40 +2923,9 @@
                     .warning-icon {
                         font-size: 60px;
                         color: #f59e0b;
-                        margin-bottom: 20px;
                     }
                     @keyframes spin {
                         to { transform: rotate(360deg); }
-                    }
-                    .processing-content h3 {
-                        color: white;
-                        margin-bottom: 10px;
-                    }
-                    .processing-content h3.error {
-                        color: #ef4444;
-                    }
-                    .processing-content p {
-                        color: #94a3b8;
-                        margin-bottom: 20px;
-                    }
-                    .processing-content p.error-message {
-                        color: #fca5a5;
-                        font-size: 14px;
-                        background: rgba(239, 68, 68, 0.1);
-                        padding: 12px;
-                        border-radius: 8px;
-                        border: 1px solid rgba(239, 68, 68, 0.3);
-                    }
-                    .processing-steps {
-                        text-align: left;
-                    }
-                    .processing-steps .step {
-                        padding: 10px;
-                        color: #64748b;
-                        border-bottom: 1px solid rgba(255,255,255,0.1);
-                    }
-                    .processing-steps .step.active {
-                        color: #38e77b;
                     }
                     .processing-steps .step.done {
                         color: #22c55e;
@@ -3023,9 +3217,26 @@
             if (hasHalfStar && fullStars < 5) stars += '☆';
             stars += '☆'.repeat(5 - fullStars - (hasHalfStar ? 1 : 0));
 
-            // Determine if cold start
-            const isColdStart = true; // First time users are always cold start
+            // Get employer-specific cold start data from localStorage
+            const coldStartData = JSON.parse(localStorage.getItem('coldStartRating') || '{}');
+            const hasColdStart = coldStartData.has_cold_start !== false; // Default to true
+            const coldStartLimit = coldStartData.cold_start_limit || 300;
+            const maxLoanAmount = coldStartData.max_loan_amount || 1000;
+            const dtniBasedLimit = coldStartData.dtni_based_limit || 500;
+            const finalColdStartLimit = coldStartData.final_cold_start_limit || 300;
+            const finalMaxLoanLimit = coldStartData.final_max_loan_limit || 1000;
+            const employerType = coldStartData.employer_type || 'other';
+            const employmentType = coldStartData.employment_type || 'other';
+            const incomeVerified = coldStartData.income_verified || false;
+
+            // Determine if cold start and display appropriate message
             const scoreBasedLimit = zimScore ? getScoreBasedLimit(zimScore.score) : 0;
+            const displayLimit = hasColdStart ? finalColdStartLimit : finalMaxLoanLimit;
+            
+            // DTNI-aware messaging with income verification warning
+            const coldStartMessage = hasColdStart ? 
+                `Your first loan is limited to <strong>$${finalColdStartLimit}</strong> (minimum of $${coldStartLimit} cold start cap and $${dtniBasedLimit} DTNI affordability).` :
+                `As a ${employerType.replace('_', ' ')} employee, you can borrow up to <strong>$${displayLimit}</strong> based on DTNI affordability (minimum of $${maxLoanAmount} max and $${dtniBasedLimit} DTNI).`;
 
             const modal = document.createElement('div');
             modal.id = 'successModal';
@@ -3043,21 +3254,52 @@
                                 </div>
                                 <p class="risk-level">${zimScore.riskLevel || getRiskLevel(zimScore.score)}</p>
                                 
+                                ${coldStartData.rating ? `
+                                <div class="cold-start-rating">
+                                    <h4>🚀 Cold Start Rating</h4>
+                                    <div class="rating-display">
+                                        <span class="rating-score">${coldStartData.rating}/85 ${generateStarDisplay(coldStartData.star_rating || calculateZimScoreStarRating(coldStartData.rating))}</span>
+                                        <span class="rating-risk">${coldStartData.risk_level?.replace('_', ' ').toUpperCase() || 'MEDIUM'} RISK</span>
+                                    </div>
+                                    <p class="rating-note">
+                                        Based on employment: <strong>${employmentType.replace('_', ' ')?.replace(/\b\w/g, l => l.toUpperCase()) || 'Other'}</strong>
+                                        | Employer: <strong>${employerType.replace('_', ' ')?.replace(/\b\w/g, l => l.toUpperCase()) || 'Other'}</strong>
+                                    </p>
+                                    ${hasColdStart ? 
+                                        `<div class="cold-start-notice">
+                                            <i class="fas fa-info-circle"></i>
+                                            <strong>Cold Start Active:</strong> Final limit = min($${coldStartLimit} cap, $${dtniBasedLimit} DTNI) = <strong>$${finalColdStartLimit}</strong>
+                                        </div>` :
+                                        `<div class="no-cold-start-notice">
+                                            <i class="fas fa-check-circle"></i>
+                                            <strong>No Cold Start:</strong> Final limit = min($${maxLoanAmount} max, $${dtniBasedLimit} DTNI) = <strong>$${finalMaxLoanLimit}</strong>
+                                        </div>`
+                                    }
+                                </div>
+                                ` : ''}
+                                
                                 <div class="loan-offering">
                                     <div class="cold-start-info">
-                                        <span class="label">🚀 Cold Start Limit</span>
-                                        <span class="amount">$${zimScore.maxLoanAmount}</span>
+                                        <span class="label">${hasColdStart ? '🚀 Cold Start Limit' : '💰 Available Limit'}</span>
+                                        <span class="amount">$${displayLimit}</span>
+                                        <small style="color: #94a3b8; font-size: 11px;">DTNI-constrained</small>
                                     </div>
-                                    <div class="unlock-info">
+                                    ${hasColdStart ? `<div class="unlock-info">
                                         <span class="label">🔓 After First Repayment</span>
-                                        <span class="amount unlock">$${scoreBasedLimit}</span>
-                                    </div>
+                                        <span class="amount unlock">$${Math.min(scoreBasedLimit, finalMaxLoanLimit)}</span>
+                                        <small style="color: #94a3b8; font-size: 11px;">DTNI still applies</small>
+                                    </div>` : ''}
                                 </div>
                                 
                                 <p class="cold-start-note">
-                                    <i class="fas fa-info-circle"></i>
-                                    Your first loan is limited to <strong>$${zimScore.maxLoanAmount}</strong> based on your employment type and DTNI.
-                                    After successful repayment, your limit unlocks to <strong>$${scoreBasedLimit}</strong>!
+                                    <i class="fas fa-calculator"></i>
+                                    <strong>DTNI Affordability Check:</strong> ${coldStartMessage}
+                                    ${hasColdStart ? ` After successful repayment, your limit unlocks to <strong>$${Math.min(scoreBasedLimit, finalMaxLoanLimit)}</strong> (still constrained by DTNI)!` : ''}
+                                    <br><small>All loans are subject to DTNI affordability verification based on your bank statement.</small>
+                                    ${!incomeVerified ? `<br><div style="background: rgba(251, 146, 60, 0.1); border: 1px solid rgba(251, 146, 60, 0.3); padding: 8px; border-radius: 6px; margin-top: 10px;">
+                                        <i class="fas fa-exclamation-triangle" style="color: #fb923c; margin-right: 5px;"></i>
+                                        <strong style="color: #fb923c;">Estimated limits shown</strong> - actual loan amount will be determined after bank statement verification.
+                                    </div>` : ''}
                                 </p>
                             </div>
                         ` : ''}
@@ -3135,6 +3377,73 @@
                     color: #94a3b8;
                     font-size: 14px;
                     margin-top: 5px;
+                }
+                .cold-start-rating {
+                    background: rgba(59, 130, 246, 0.1);
+                    padding: 15px;
+                    border-radius: 10px;
+                    margin: 15px 0;
+                    border: 1px solid rgba(59, 130, 246, 0.3);
+                }
+                .cold-start-notice {
+                    background: rgba(251, 146, 60, 0.1);
+                    padding: 12px;
+                    border-radius: 8px;
+                    margin: 10px 0;
+                    border: 1px solid rgba(251, 146, 60, 0.3);
+                    color: #fb923c;
+                    font-size: 14px;
+                }
+                .cold-start-notice i {
+                    margin-right: 8px;
+                }
+                .no-cold-start-notice {
+                    background: rgba(34, 197, 94, 0.1);
+                    padding: 12px;
+                    border-radius: 8px;
+                    margin: 10px 0;
+                    border: 1px solid rgba(34, 197, 94, 0.3);
+                    color: #22c55e;
+                    font-size: 14px;
+                }
+                .no-cold-start-notice i {
+                    margin-right: 8px;
+                }
+                .cold-start-rating h4 {
+                    color: #60a5fa;
+                    margin-bottom: 10px;
+                    font-size: 16px;
+                }
+                .rating-display {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 10px;
+                }
+                .rating-score {
+                    font-size: 20px;
+                    color: #38e77b;
+                    font-weight: bold;
+                }
+                .rating-risk {
+                    font-size: 12px;
+                    padding: 2px 8px;
+                    border-radius: 4px;
+                    background: rgba(239, 68, 68, 0.2);
+                    color: #f87171;
+                }
+                .rating-risk.LOW {
+                    background: rgba(34, 197, 94, 0.2);
+                    color: #4ade80;
+                }
+                .rating-risk.MEDIUM {
+                    background: rgba(251, 191, 36, 0.2);
+                    color: #fbbf24;
+                }
+                .rating-note {
+                    color: #94a3b8;
+                    font-size: 12px;
+                    margin: 5px 0 0 0;
                 }
                 .loan-offering {
                     display: flex;
@@ -3257,6 +3566,334 @@
                     input.dispatchEvent(new Event('change'));
                 }
             });
+        });
+    </script>
+    
+    <!-- Employer Type Rating System Functions -->
+    <script>
+        // Dynamic field visibility based on employer type
+        async function updateEmployerTypeFields() {
+            const employerType = document.getElementById('employerType').value;
+            const employmentType = document.getElementById('employmentType')?.value || 'full_time_salaried';
+            
+            // Hide all conditional fields
+            document.getElementById('governmentFields').style.display = 'none';
+            document.getElementById('privateFields').style.display = 'none';
+            document.getElementById('informalFields').style.display = 'none';
+            document.getElementById('ngoFields').style.display = 'none';
+            document.getElementById('studentFields').style.display = 'none';
+            
+            // Show relevant fields based on employer type
+            switch(employerType) {
+                case 'government':
+                    document.getElementById('governmentFields').style.display = 'block';
+                    break;
+                case 'private':
+                    document.getElementById('privateFields').style.display = 'block';
+                    break;
+                case 'informal':
+                    document.getElementById('informalFields').style.display = 'block';
+                    break;
+                case 'ngo':
+                    document.getElementById('ngoFields').style.display = 'block';
+                    break;
+                case 'student':
+                    document.getElementById('studentFields').style.display = 'block';
+                    break;
+                default:
+                    // Show no additional fields for 'other' or empty selection
+                    break;
+            }
+            
+            // Update loan form with employer-specific rules
+            if (employerType && employmentType) {
+                await updateLoanFormForEmployerType(employmentType, employerType);
+            }
+        }
+
+        // Function to validate required documents based on employer type
+        function validateEmployerDocuments(employerType) {
+            const requiredDocs = {
+                'government': ['ecNumber'],
+                'private': ['employmentLetter', 'payslip'],
+                'informal': ['businessRegistration', 'referenceLetter'],
+                'ngo': ['ngoEmploymentLetter', 'ngoCertificate'],
+                'student': ['studentId', 'enrollmentLetter'],
+                'other': []
+            };
+            
+            const missingDocs = [];
+            const docs = requiredDocs[employerType] || [];
+            
+            docs.forEach(docId => {
+                const element = document.getElementById(docId);
+                if (element && element.type === 'file') {
+                    if (!element.files || element.files.length === 0) {
+                        const label = document.querySelector(`label[for="${docId}"]`)?.textContent || docId;
+                        missingDocs.push(label);
+                    }
+                } else if (element && element.type === 'text') {
+                    if (!element.value.trim()) {
+                        const label = document.querySelector(`label[for="${docId}"]`)?.textContent || docId;
+                        missingDocs.push(label);
+                    }
+                }
+            });
+            
+            return missingDocs;
+        }
+
+        // Function to collect uploaded documents
+        function collectEmployerDocuments(employerType) {
+            const documentMap = {
+                'government': ['ecNumber'],
+                'private': ['employmentLetter', 'payslip'],
+                'informal': ['businessRegistration', 'referenceLetter'],
+                'ngo': ['ngoEmploymentLetter', 'ngoCertificate'],
+                'student': ['studentId', 'enrollmentLetter'],
+                'other': []
+            };
+            
+            const submittedDocs = [];
+            const docs = documentMap[employerType] || [];
+            
+            docs.forEach(docId => {
+                const element = document.getElementById(docId);
+                if (element && element.type === 'file') {
+                    if (element.files && element.files.length > 0) {
+                        submittedDocs.push(docId);
+                    }
+                } else if (element && element.type === 'text') {
+                    if (element.value.trim()) {
+                        submittedDocs.push(docId);
+                    }
+                }
+            });
+            
+            return submittedDocs;
+        }
+
+        // Enhanced function to calculate cold start rating with employer type
+        async function calculateEnhancedColdStartRating(employmentType, employerType, submittedDocuments) {
+            try {
+                const { data: ratingData, error: ratingError } = await supabase.rpc('calculate_enhanced_cold_start_rating', {
+                    p_user_id: (await supabase.auth.getUser()).data.user?.id,
+                    p_employment_type: employmentType,
+                    p_employer_type: employerType,
+                    p_submitted_documents: submittedDocuments
+                });
+                
+                if (ratingError) {
+                    console.warn('⚠️ Enhanced rating calculation failed:', ratingError.message);
+                    // Fallback to simple rating calculation
+                    const fallbackResult = calculateSimpleColdStartRating(employmentType, employerType);
+                    return fallbackResult.score;
+                }
+                
+                return ratingData;
+            } catch (error) {
+                console.warn('⚠️ Database rating calculation failed:', error.message);
+                // Fallback to simple rating calculation
+                const fallbackResult = calculateSimpleColdStartRating(employmentType, employerType);
+                return fallbackResult.score;
+            }
+        }
+
+        // Function to calculate ZimScore star rating (1.0-5.0 scale)
+        function calculateZimScoreStarRating(score) {
+            // Formula from ZIMSCORE_COMPLETE_GUIDE.md: starRating = 1.0 + ((score - 30) / 55) * 4.0
+            const starRating = 1.0 + ((score - 30) / 55) * 4.0;
+            // Round to nearest 0.5
+            return Math.round(starRating * 2) / 2;
+        }
+
+        // Function to generate star display HTML
+        function generateStarDisplay(starRating) {
+            const fullStars = Math.floor(starRating);
+            const hasHalfStar = starRating % 1 !== 0;
+            let starsHtml = '';
+            
+            // Add full stars
+            for (let i = 0; i < fullStars; i++) {
+                starsHtml += '⭐';
+            }
+            
+            // Add half star if needed
+            if (hasHalfStar) {
+                starsHtml += '☆';
+            }
+            
+            // Add empty stars to complete 5-star display
+            const totalStars = fullStars + (hasHalfStar ? 1 : 0);
+            for (let i = totalStars; i < 5; i++) {
+                starsHtml += '☆';
+            }
+            
+            return starsHtml;
+        }
+
+        // Function to get employer-specific cold start rules
+        async function getEmployerColdStartRules(employmentType, employerType) {
+            try {
+                const { data: rules, error } = await supabase
+                    .from('employment_employer_rating_matrix')
+                    .select('*')
+                    .eq('employment_type', employmentType)
+                    .eq('employer_type', employerType)
+                    .eq('is_active', true)
+                    .single();
+                
+                if (error || !rules) {
+                    // Fallback to default rules
+                    return {
+                        has_cold_start: true,
+                        cold_start_limit: 300,
+                        min_loan_amount: 50,
+                        max_loan_amount: 1000,
+                        min_tenure_days: 30,
+                        max_tenure_days: 90
+                    };
+                }
+                
+                return rules;
+            } catch (error) {
+                console.warn('⚠️ Could not fetch employer rules, using defaults:', error.message);
+                return {
+                    has_cold_start: true,
+                    cold_start_limit: 300,
+                    min_loan_amount: 50,
+                    max_loan_amount: 1000,
+                    min_tenure_days: 30,
+                    max_tenure_days: 90
+                };
+            }
+        }
+
+        // Function to update loan form based on employer type
+        async function updateLoanFormForEmployerType(employmentType, employerType) {
+            const rules = await getEmployerColdStartRules(employmentType, employerType);
+            
+            // Update cold start display
+            const coldStartInfo = document.getElementById('coldStartInfo');
+            if (coldStartInfo) {
+                if (rules.has_cold_start) {
+                    coldStartInfo.innerHTML = `
+                        <div class="cold-start-notice">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Cold Start Active:</strong> Maximum loan $${rules.cold_start_limit} for first loan
+                        </div>
+                    `;
+                    coldStartInfo.style.display = 'block';
+                } else {
+                    coldStartInfo.innerHTML = `
+                        <div class="no-cold-start-notice">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>No Cold Start:</strong> Full loan range available ($${rules.min_loan_amount}-${rules.max_loan_amount})
+                        </div>
+                    `;
+                    coldStartInfo.style.display = 'block';
+                }
+            }
+            
+            // Update loan amount slider
+            const loanAmountSlider = document.getElementById('loanAmount');
+            const loanAmountMin = document.getElementById('loanAmountMin');
+            const loanAmountMax = document.getElementById('loanAmountMax');
+            
+            if (loanAmountSlider) {
+                const maxLoan = rules.has_cold_start ? rules.cold_start_limit : rules.max_loan_amount;
+                loanAmountSlider.min = rules.min_loan_amount;
+                loanAmountSlider.max = maxLoan;
+                loanAmountSlider.value = rules.min_loan_amount; // Reset to minimum
+                
+                if (loanAmountMin) loanAmountMin.textContent = `$${rules.min_loan_amount}`;
+                if (loanAmountMax) loanAmountMax.textContent = `$${maxLoan}`;
+            }
+            
+            // Update tenure slider
+            const tenureSlider = document.getElementById('loanTenure');
+            const tenureMin = document.getElementById('tenureMin');
+            const tenureMax = document.getElementById('tenureMax');
+            
+            if (tenureSlider) {
+                tenureSlider.min = rules.min_tenure_days;
+                tenureSlider.max = rules.max_tenure_days;
+                tenureSlider.value = rules.min_tenure_days; // Reset to minimum
+                
+                if (tenureMin) tenureMin.textContent = `${rules.min_tenure_days} days`;
+                if (tenureMax) tenureMax.textContent = `${rules.max_tenure_days} days`;
+            }
+            
+            return rules;
+        }
+
+        // Simple fallback rating calculation (aligned with ZimScore 30-85 range)
+        function calculateSimpleColdStartRating(employmentType, employerType) {
+            // Fallback matrix aligned with ZimScore range
+            const fallbackRatings = {
+                'government': {
+                    'full_time_salaried': { score: 85, risk: 'very_low', maxLoan: 1000 },
+                    'part_time_salaried': { score: 75, risk: 'low', maxLoan: 800 },
+                    'self_employed': { score: 65, risk: 'medium', maxLoan: 600 }
+                },
+                'private': {
+                    'full_time_salaried': { score: 80, risk: 'very_low', maxLoan: 1000 },
+                    'part_time_salaried': { score: 70, risk: 'low', maxLoan: 800 },
+                    'self_employed': { score: 60, risk: 'medium', maxLoan: 600 }
+                },
+                'informal': {
+                    'full_time_salaried': { score: 55, risk: 'high', maxLoan: 400 },
+                    'part_time_salaried': { score: 45, risk: 'very_high', maxLoan: 300 },
+                    'self_employed': { score: 35, risk: 'building_credit', maxLoan: 100 }
+                },
+                'ngo': {
+                    'full_time_salaried': { score: 75, risk: 'low', maxLoan: 800 },
+                    'part_time_salaried': { score: 65, risk: 'medium', maxLoan: 600 },
+                    'self_employed': { score: 55, risk: 'high', maxLoan: 400 }
+                },
+                'student': {
+                    'student': { score: 40, risk: 'very_high', maxLoan: 300 },
+                    'part_time_salaried': { score: 50, risk: 'high', maxLoan: 400 }
+                },
+                'other': {
+                    'full_time_salaried': { score: 70, risk: 'low', maxLoan: 800 },
+                    'part_time_salaried': { score: 60, risk: 'medium', maxLoan: 600 },
+                    'self_employed': { score: 50, risk: 'high', maxLoan: 400 },
+                    'unemployed': { score: 30, risk: 'building_credit', maxLoan: 100 },
+                    'retired': { score: 65, risk: 'medium', maxLoan: 600 }
+                }
+            };
+            
+            return fallbackRatings[employerType]?.[employmentType] || { score: 50, risk: 'high', maxLoan: 400 };
+        }
+
+        // Initialize employer type functionality
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Add form validation for employer type
+            const employerTypeSelect = document.getElementById('employerType');
+            if (employerTypeSelect) {
+                employerTypeSelect.addEventListener('change', async function() {
+                    await updateEmployerTypeFields();
+                });
+                
+                // Initialize loan form with current employer type on page load
+                const employmentType = document.getElementById('employmentType')?.value || 'full_time_salaried';
+                const currentEmployerType = employerTypeSelect.value;
+                if (currentEmployerType && employmentType) {
+                    await updateLoanFormForEmployerType(employmentType, currentEmployerType);
+                }
+            }
+            
+            // Also initialize when employment type changes
+            const employmentTypeSelect = document.getElementById('employmentType');
+            if (employmentTypeSelect) {
+                employmentTypeSelect.addEventListener('change', async function() {
+                    const employerType = document.getElementById('employerType')?.value || 'other';
+                    if (employerType && this.value) {
+                        await updateLoanFormForEmployerType(this.value, employerType);
+                    }
+                });
+            }
         });
     </script>
     
