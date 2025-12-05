@@ -1978,6 +1978,253 @@
             border-color: #cbd5e1;
         }
 
+        /* Enhanced Document Processing UI */
+        .enhanced-document-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .enhanced-document-card:hover {
+            border-color: #38e77b;
+            box-shadow: 0 8px 32px rgba(56, 231, 123, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .doc-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            gap: 12px;
+        }
+
+        .doc-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #38e77b, #34d399);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .doc-info {
+            flex: 1;
+        }
+
+        .doc-info h4 {
+            margin: 0 0 4px 0;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .doc-info p {
+            margin: 0;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .status-indicator[data-status="pending"] {
+            color: #64748b;
+        }
+
+        .status-indicator[data-status="uploading"] {
+            color: #f59e0b;
+        }
+
+        .status-indicator[data-status="processing"] {
+            color: #3b82f6;
+        }
+
+        .status-indicator[data-status="verified"] {
+            color: #38e77b;
+        }
+
+        .status-indicator[data-status="rejected"] {
+            color: #ef4444;
+        }
+
+        .upload-zone {
+            border: 2px dashed #475569;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #0f172a;
+            position: relative;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-zone:hover {
+            border-color: #38e77b;
+            background: rgba(56, 231, 123, 0.05);
+        }
+
+        .upload-zone.drag-over {
+            border-color: #38e77b;
+            background: rgba(56, 231, 123, 0.1);
+            transform: scale(1.02);
+        }
+
+        .upload-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .upload-content i {
+            font-size: 32px;
+            color: #64748b;
+        }
+
+        .upload-content p {
+            margin: 0;
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .upload-content span {
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .upload-preview {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .preview-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+
+        .file-info {
+            flex: 1;
+            text-align: left;
+        }
+
+        .file-name {
+            display: block;
+            color: white;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .file-size {
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .remove-file {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #ef4444;
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .remove-file:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+        .doc-progress {
+            margin-top: 16px;
+            padding: 12px;
+            background: #0f172a;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #334155;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #38e77b, #34d399);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 3px;
+        }
+
+        .progress-text {
+            color: #94a3b8;
+            font-size: 12px;
+            text-align: center;
+            display: block;
+        }
+
+        /* Verification Stage Animations */
+        .verification-stage.active .stage-icon {
+            background: #38e77b;
+            box-shadow: 0 0 0 4px rgba(56, 231, 123, 0.2);
+        }
+
+        .verification-stage.active .stage-icon i {
+            color: white;
+        }
+
+        .verification-stage.completed .stage-icon {
+            background: #38e77b;
+            box-shadow: 0 0 0 4px rgba(56, 231, 123, 0.2);
+        }
+
+        .verification-stage.completed .stage-icon i {
+            color: white;
+        }
+
+        .verification-stage.active span,
+        .verification-stage.completed span {
+            color: #38e77b;
+        }
+
         /* Quick Actions */
         .quick-actions {
             display: grid;
@@ -7220,77 +7467,322 @@
                     <h3 style="margin-bottom: 20px;">🆔 KYC Documents & Verification</h3>
                     <p style="color: #94a3b8; margin-bottom: 25px;">Upload your documents for identity verification. All documents are encrypted and stored securely.</p>
                     
+                    <!-- Verification Progress Overview -->
+                    <div style="background: linear-gradient(135deg, #1e293b, #334155); border-radius: 16px; padding: 24px; margin-bottom: 30px; border: 1px solid #475569;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h4 style="color: white; margin: 0; font-size: 18px;">Verification Progress</h4>
+                            <span id="overall-progress" style="background: #38e77b; color: white; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px;">0% Complete</span>
+                        </div>
+                        
+                        <!-- Progress Stages -->
+                        <div style="display: flex; justify-content: space-between; position: relative; margin-bottom: 20px;">
+                            <div style="position: absolute; top: 20px; left: 0; right: 0; height: 2px; background: #475569; z-index: 1;">
+                                <div id="progress-line" style="height: 100%; background: #38e77b; width: 0%; transition: width 0.5s ease;"></div>
+                            </div>
+                            
+                            <div class="verification-stage" data-stage="upload" style="position: relative; z-index: 2; text-align: center;">
+                                <div class="stage-icon" style="width: 40px; height: 40px; border-radius: 50%; background: #475569; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; transition: all 0.3s;">
+                                    <i class="fas fa-upload" style="color: #64748b; font-size: 16px;"></i>
+                                </div>
+                                <span style="color: #64748b; font-size: 12px; font-weight: 500;">Upload</span>
+                            </div>
+                            
+                            <div class="verification-stage" data-stage="processing" style="position: relative; z-index: 2; text-align: center;">
+                                <div class="stage-icon" style="width: 40px; height: 40px; border-radius: 50%; background: #475569; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; transition: all 0.3s;">
+                                    <i class="fas fa-cog fa-spin" style="color: #64748b; font-size: 16px;"></i>
+                                </div>
+                                <span style="color: #64748b; font-size: 12px; font-weight: 500;">Processing</span>
+                            </div>
+                            
+                            <div class="verification-stage" data-stage="review" style="position: relative; z-index: 2; text-align: center;">
+                                <div class="stage-icon" style="width: 40px; height: 40px; border-radius: 50%; background: #475569; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; transition: all 0.3s;">
+                                    <i class="fas fa-user-check" style="color: #64748b; font-size: 16px;"></i>
+                                </div>
+                                <span style="color: #64748b; font-size: 12px; font-weight: 500;">Review</span>
+                            </div>
+                            
+                            <div class="verification-stage" data-stage="verified" style="position: relative; z-index: 2; text-align: center;">
+                                <div class="stage-icon" style="width: 40px; height: 40px; border-radius: 50%; background: #475569; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; transition: all 0.3s;">
+                                    <i class="fas fa-check-circle" style="color: #64748b; font-size: 16px;"></i>
+                                </div>
+                                <span style="color: #64748b; font-size: 12px; font-weight: 500;">Verified</span>
+                            </div>
+                        </div>
+                        
+                        <div id="verification-status-message" style="text-align: center; color: #94a3b8; font-size: 14px;">
+                            Start by uploading your required documents
+                        </div>
+                    </div>
+                    
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
                         <!-- National ID -->
-                        <div class="document-upload-area" data-doc-type="National ID" onmouseover="this.style.borderColor='#38e77b'" onmouseout="this.style.borderColor='#334155'">
-                            <i class="fas fa-id-card" style="font-size: 48px; color: #64748b; margin-bottom: 15px;"></i>
-                            <h4 style="margin-bottom: 10px;">National ID</h4>
-                            <p style="color: #64748b; font-size: 14px; margin-bottom: 15px;">Upload front and back of ID</p>
-                            <span class="doc-status-badge" style="padding: 6px 16px; background: rgba(100, 116, 139, 0.1); color: #64748b; border-radius: 20px; font-size: 12px; font-weight: 600; display: none;">
-                                <i class="fas fa-info-circle"></i> <span class="status-text">Not Uploaded</span>
-                            </span>
-                            <input type="file" accept="image/*,application/pdf" style="display: none;" id="nationalId">
-                            <button onclick="document.getElementById('nationalId').click()" class="btn-secondary" style="margin-top: 15px; width: 100%;"><i class="fas fa-cloud-arrow-up"></i> Upload Document</button>
+                        <div class="enhanced-document-card" data-doc-type="National ID">
+                            <div class="doc-header">
+                                <div class="doc-icon">
+                                    <i class="fas fa-id-card"></i>
+                                </div>
+                                <div class="doc-info">
+                                    <h4>National ID</h4>
+                                    <p>Upload front and back of ID</p>
+                                </div>
+                                <div class="doc-status">
+                                    <div class="status-indicator" data-status="pending">
+                                        <i class="fas fa-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="upload-zone" onclick="document.getElementById('nationalId').click()" ondrop="handleDrop(event, 'nationalId')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                                <div class="upload-content">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>Drag & drop files here or click to browse</p>
+                                    <span>PNG, JPG or PDF (max. 5MB)</span>
+                                </div>
+                                <div class="upload-preview" style="display: none;">
+                                    <img src="" alt="Preview" class="preview-image">
+                                    <div class="file-info">
+                                        <span class="file-name"></span>
+                                        <span class="file-size"></span>
+                                    </div>
+                                    <button class="remove-file" onclick="removeDocument('nationalId', event)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="doc-progress" style="display: none;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                                <span class="progress-text">Processing...</span>
+                            </div>
+                            
+                            <input type="file" accept="image/*,application/pdf" style="display: none;" id="nationalId" onchange="handleFileSelect(event, 'nationalId')">
                         </div>
 
                         <!-- Payslip -->
-                        <div class="document-upload-area" data-doc-type="Payslip" onmouseover="this.style.borderColor='#f97316'" onmouseout="this.style.borderColor='#334155'">
-                            <i class="fas fa-file-invoice-dollar" style="font-size: 48px; color: #64748b; margin-bottom: 15px;"></i>
-                            <h4 style="margin-bottom: 10px;">Payslip / Proof of Income</h4>
-                            <p style="color: #64748b; font-size: 14px; margin-bottom: 15px;">Recent payslip (last 3 months)</p>
-                            <span class="doc-status-badge" style="padding: 6px 16px; background: rgba(100, 116, 139, 0.1); color: #64748b; border-radius: 20px; font-size: 12px; font-weight: 600; display: none;">
-                                <i class="fas fa-info-circle"></i> <span class="status-text">Not Uploaded</span>
-                            </span>
-                            <input type="file" accept="image/*,application/pdf" style="display: none;" id="payslip">
-                            <button onclick="document.getElementById('payslip').click()" class="btn-secondary" style="margin-top: 15px; width: 100%;"><i class="fas fa-cloud-arrow-up"></i> Upload Document</button>
+                        <div class="enhanced-document-card" data-doc-type="Payslip">
+                            <div class="doc-header">
+                                <div class="doc-icon" style="background: linear-gradient(135deg, #f59e0b, #f97316);">
+                                    <i class="fas fa-file-invoice-dollar"></i>
+                                </div>
+                                <div class="doc-info">
+                                    <h4>Payslip / Proof of Income</h4>
+                                    <p>Recent payslip (last 3 months)</p>
+                                </div>
+                                <div class="doc-status">
+                                    <div class="status-indicator" data-status="pending">
+                                        <i class="fas fa-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="upload-zone" onclick="document.getElementById('payslip').click()" ondrop="handleDrop(event, 'payslip')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                                <div class="upload-content">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>Drag & drop files here or click to browse</p>
+                                    <span>PNG, JPG or PDF (max. 5MB)</span>
+                                </div>
+                                <div class="upload-preview" style="display: none;">
+                                    <img src="" alt="Preview" class="preview-image">
+                                    <div class="file-info">
+                                        <span class="file-name"></span>
+                                        <span class="file-size"></span>
+                                    </div>
+                                    <button class="remove-file" onclick="removeDocument('payslip', event)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="doc-progress" style="display: none;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                                <span class="progress-text">Processing...</span>
+                            </div>
+                            
+                            <input type="file" accept="image/*,application/pdf" style="display: none;" id="payslip" onchange="handleFileSelect(event, 'payslip')">
                         </div>
 
                         <!-- Employment Contract -->
-                        <div class="document-upload-area" data-doc-type="Employment Contract" onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='#334155'">
-                            <i class="fas fa-file-contract" style="font-size: 48px; color: #64748b; margin-bottom: 15px;"></i>
-                            <h4 style="margin-bottom: 10px;">Employment Contract</h4>
-                            <p style="color: #64748b; font-size: 14px; margin-bottom: 15px;">Current employment contract</p>
-                            <span class="doc-status-badge" style="padding: 6px 16px; background: rgba(100, 116, 139, 0.1); color: #64748b; border-radius: 20px; font-size: 12px; font-weight: 600; display: none;">
-                                <i class="fas fa-info-circle"></i> <span class="status-text">Not Uploaded</span>
-                            </span>
-                            <input type="file" accept="image/*,application/pdf" style="display: none;" id="contract">
-                            <button onclick="document.getElementById('contract').click()" class="btn-secondary" style="margin-top: 15px; width: 100%;"><i class="fas fa-cloud-arrow-up"></i> Upload Document</button>
+                        <div class="enhanced-document-card" data-doc-type="Employment Contract">
+                            <div class="doc-header">
+                                <div class="doc-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                                    <i class="fas fa-file-contract"></i>
+                                </div>
+                                <div class="doc-info">
+                                    <h4>Employment Contract</h4>
+                                    <p>Current employment contract</p>
+                                </div>
+                                <div class="doc-status">
+                                    <div class="status-indicator" data-status="pending">
+                                        <i class="fas fa-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="upload-zone" onclick="document.getElementById('contract').click()" ondrop="handleDrop(event, 'contract')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                                <div class="upload-content">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>Drag & drop files here or click to browse</p>
+                                    <span>PNG, JPG or PDF (max. 5MB)</span>
+                                </div>
+                                <div class="upload-preview" style="display: none;">
+                                    <img src="" alt="Preview" class="preview-image">
+                                    <div class="file-info">
+                                        <span class="file-name"></span>
+                                        <span class="file-size"></span>
+                                    </div>
+                                    <button class="remove-file" onclick="removeDocument('contract', event)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="doc-progress" style="display: none;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                                <span class="progress-text">Processing...</span>
+                            </div>
+                            
+                            <input type="file" accept="image/*,application/pdf" style="display: none;" id="contract" onchange="handleFileSelect(event, 'contract')">
                         </div>
 
                         <!-- Bank Statement -->
-                        <div class="document-upload-area" data-doc-type="Bank Statement" onmouseover="this.style.borderColor='#38e77b'" onmouseout="this.style.borderColor='#334155'">
-                            <i class="fas fa-university" style="font-size: 48px; color: #64748b; margin-bottom: 15px;"></i>
-                            <h4 style="margin-bottom: 10px;">Bank Statement</h4>
-                            <p style="color: #64748b; font-size: 14px; margin-bottom: 15px;">Last 3 months bank statement</p>
-                            <span class="doc-status-badge" style="padding: 6px 16px; background: rgba(100, 116, 139, 0.1); color: #64748b; border-radius: 20px; font-size: 12px; font-weight: 600; display: none;">
-                                <i class="fas fa-info-circle"></i> <span class="status-text">Not Uploaded</span>
-                            </span>
-                            <input type="file" accept="image/*,application/pdf" style="display: none;" id="bankStatement">
-                            <button onclick="document.getElementById('bankStatement').click()" class="btn-secondary" style="margin-top: 15px; width: 100%;"><i class="fas fa-cloud-arrow-up"></i> Upload Document</button>
+                        <div class="enhanced-document-card" data-doc-type="Bank Statement">
+                            <div class="doc-header">
+                                <div class="doc-icon" style="background: linear-gradient(135deg, #38e77b, #34d399);">
+                                    <i class="fas fa-university"></i>
+                                </div>
+                                <div class="doc-info">
+                                    <h4>Bank Statement</h4>
+                                    <p>Last 3 months bank statement</p>
+                                </div>
+                                <div class="doc-status">
+                                    <div class="status-indicator" data-status="pending">
+                                        <i class="fas fa-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="upload-zone" onclick="document.getElementById('bankStatement').click()" ondrop="handleDrop(event, 'bankStatement')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                                <div class="upload-content">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>Drag & drop files here or click to browse</p>
+                                    <span>PNG, JPG or PDF (max. 5MB)</span>
+                                </div>
+                                <div class="upload-preview" style="display: none;">
+                                    <img src="" alt="Preview" class="preview-image">
+                                    <div class="file-info">
+                                        <span class="file-name"></span>
+                                        <span class="file-size"></span>
+                                    </div>
+                                    <button class="remove-file" onclick="removeDocument('bankStatement', event)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="doc-progress" style="display: none;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                                <span class="progress-text">Processing...</span>
+                            </div>
+                            
+                            <input type="file" accept="image/*,application/pdf" style="display: none;" id="bankStatement" onchange="handleFileSelect(event, 'bankStatement')">
                         </div>
 
                         <!-- Proof of Address -->
-                        <div class="document-upload-area" data-doc-type="Proof of Address" onmouseover="this.style.borderColor='#38e77b'" onmouseout="this.style.borderColor='#334155'">
-                            <i class="fas fa-home" style="font-size: 48px; color: #64748b; margin-bottom: 15px;"></i>
-                            <h4 style="margin-bottom: 10px;">Proof of Address</h4>
-                            <p style="color: #64748b; font-size: 14px; margin-bottom: 15px;">Utility bill or lease agreement</p>
-                            <span class="doc-status-badge" style="padding: 6px 16px; background: rgba(100, 116, 139, 0.1); color: #64748b; border-radius: 20px; font-size: 12px; font-weight: 600; display: none;">
-                                <i class="fas fa-info-circle"></i> <span class="status-text">Not Uploaded</span>
-                            </span>
-                            <input type="file" accept="image/*,application/pdf" style="display: none;" id="proofAddress">
-                            <button onclick="document.getElementById('proofAddress').click()" class="btn-secondary" style="margin-top: 15px; width: 100%;"><i class="fas fa-cloud-arrow-up"></i> Upload Document</button>
+                        <div class="enhanced-document-card" data-doc-type="Proof of Address">
+                            <div class="doc-header">
+                                <div class="doc-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                                    <i class="fas fa-home"></i>
+                                </div>
+                                <div class="doc-info">
+                                    <h4>Proof of Address</h4>
+                                    <p>Utility bill or lease agreement</p>
+                                </div>
+                                <div class="doc-status">
+                                    <div class="status-indicator" data-status="pending">
+                                        <i class="fas fa-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="upload-zone" onclick="document.getElementById('proofAddress').click()" ondrop="handleDrop(event, 'proofAddress')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                                <div class="upload-content">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>Drag & drop files here or click to browse</p>
+                                    <span>PNG, JPG or PDF (max. 5MB)</span>
+                                </div>
+                                <div class="upload-preview" style="display: none;">
+                                    <img src="" alt="Preview" class="preview-image">
+                                    <div class="file-info">
+                                        <span class="file-name"></span>
+                                        <span class="file-size"></span>
+                                    </div>
+                                    <button class="remove-file" onclick="removeDocument('proofAddress', event)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="doc-progress" style="display: none;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                                <span class="progress-text">Processing...</span>
+                            </div>
+                            
+                            <input type="file" accept="image/*,application/pdf" style="display: none;" id="proofAddress" onchange="handleFileSelect(event, 'proofAddress')">
                         </div>
 
                         <!-- Additional Documents -->
-                        <div class="document-upload-area" onmouseover="this.style.borderColor='#64748b'" onmouseout="this.style.borderColor='#334155'">
-                            <i class="fas fa-folder-plus" style="font-size: 48px; color: #64748b; margin-bottom: 15px;"></i>
-                            <h4 style="margin-bottom: 10px;">Additional Documents</h4>
-                            <p style="color: #64748b; font-size: 14px; margin-bottom: 15px;">Any supporting documents</p>
-                            <span style="padding: 6px 16px; background: rgba(100, 116, 139, 0.1); color: #64748b; border-radius: 20px; font-size: 12px; font-weight: 600;">
-                                <i class="fas fa-info-circle"></i> Optional
-                            </span>
-                            <input type="file" accept="image/*,application/pdf" multiple style="display: none;" id="additionalDocs">
-                            <button onclick="document.getElementById('additionalDocs').click()" class="btn-secondary" style="margin-top: 15px; width: 100%;"><i class="fas fa-cloud-arrow-up"></i> Upload Documents</button>
+                        <div class="enhanced-document-card" data-doc-type="Additional Documents">
+                            <div class="doc-header">
+                                <div class="doc-icon" style="background: linear-gradient(135deg, #64748b, #475569);">
+                                    <i class="fas fa-folder-plus"></i>
+                                </div>
+                                <div class="doc-info">
+                                    <h4>Additional Documents</h4>
+                                    <p>Any supporting documents</p>
+                                </div>
+                                <div class="doc-status">
+                                    <span style="padding: 4px 8px; background: rgba(100, 116, 139, 0.1); color: #64748b; border-radius: 12px; font-size: 10px; font-weight: 600;">
+                                        OPTIONAL
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="upload-zone" onclick="document.getElementById('additionalDocs').click()" ondrop="handleDrop(event, 'additionalDocs')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                                <div class="upload-content">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>Drag & drop files here or click to browse</p>
+                                    <span>PNG, JPG or PDF (max. 5MB each)</span>
+                                </div>
+                                <div class="upload-preview" style="display: none;">
+                                    <img src="" alt="Preview" class="preview-image">
+                                    <div class="file-info">
+                                        <span class="file-name"></span>
+                                        <span class="file-size"></span>
+                                    </div>
+                                    <button class="remove-file" onclick="removeDocument('additionalDocs', event)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="doc-progress" style="display: none;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                                <span class="progress-text">Processing...</span>
+                            </div>
+                            
+                            <input type="file" accept="image/*,application/pdf" multiple style="display: none;" id="additionalDocs" onchange="handleFileSelect(event, 'additionalDocs')">
                         </div>
                     </div>
                 </div>
@@ -17296,7 +17788,7 @@ How it works:
                     window.inputLogTimeout = setTimeout(async () => {
                         await window.ActivityLogger.logActivity('form_interaction', {
                             field_type: fieldType,
-                            field_id: field_id,
+                            fieldId: fieldId,
                             interaction_type: 'input_change',
                             timestamp: Date.now()
                         });
