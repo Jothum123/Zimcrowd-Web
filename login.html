@@ -603,6 +603,43 @@
 
         // Check if already logged in (Supabase approach)
         window.addEventListener('load', async () => {
+            // Check for OAuth callback parameters first
+            const urlParams = new URLSearchParams(window.location.search);
+            const socialToken = urlParams.get('token');
+            const socialUser = urlParams.get('user');
+            const socialProvider = urlParams.get('provider');
+            
+            if (socialToken && socialUser && socialProvider) {
+                console.log('🔄 Processing social auth callback from', socialProvider);
+                
+                try {
+                    // Parse user data
+                    const userData = JSON.parse(decodeURIComponent(socialUser));
+                    
+                    // Store social auth data in localStorage
+                    localStorage.setItem('authToken', socialToken);
+                    localStorage.setItem('socialAuthData', JSON.stringify({
+                        ...userData,
+                        provider: socialProvider
+                    }));
+                    localStorage.setItem('socialSignupCompleted', 'true');
+                    localStorage.setItem('isAuthenticated', 'true');
+                    localStorage.setItem('userData', JSON.stringify(userData));
+                    
+                    console.log('✅ Social auth data stored successfully');
+                    showAlert('Login successful! Redirecting to dashboard...', 'success');
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 1000);
+                    return;
+                } catch (error) {
+                    console.error('❌ Error processing social auth callback:', error);
+                    showAlert('Login failed. Please try again.', 'error');
+                }
+            }
+            
             // Check for existing authentication
             const token = localStorage.getItem('authToken');
             const socialAuthData = localStorage.getItem('socialAuthData');
