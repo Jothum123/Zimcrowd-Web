@@ -8,6 +8,20 @@ class TestNotificationSystem {
         this.notifications = [];
         this.container = null;
         this.isInitialized = false;
+        this.config = {
+            icons: {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-circle',
+                warning: 'fas fa-exclamation-triangle',
+                info: 'fas fa-info-circle'
+            },
+            colors: {
+                success: '#10b981',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#3b82f6'
+            }
+        };
     }
 
     /**

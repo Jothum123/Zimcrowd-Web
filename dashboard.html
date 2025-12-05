@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.onesignal.com https://onesignal.com https://*.onesignal.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://use.fontawesome.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://use.fontawesome.com; img-src 'self' data: https: blob:; connect-src 'self' https://onesignal.com https://*.onesignal.com https://api.onesignal.com https://zimcrowd-api.onrender.com https://gjtkdrrvnffrmzigdqyp.supabase.co https://*.supabase.co wss://gjtkdrrvnffrmzigdqyp.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.google-analytics.com http://localhost:3000; frame-src 'self' https://onesignal.com https://*.onesignal.com; worker-src 'self' blob: https://cdn.onesignal.com https://*.onesignal.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.onesignal.com https://onesignal.com https://*.onesignal.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://use.fontawesome.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://use.fontawesome.com; img-src 'self' data: https: blob:; connect-src 'self' https://onesignal.com https://*.onesignal.com https://api.onesignal.com https://zimcrowd-api.onrender.com https://zimcrowd-backend.vercel.app https://gjtkdrrvnffrmzigdqyp.supabase.co https://*.supabase.co wss://gjtkdrrvnffrmzigdqyp.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.google-analytics.com http://localhost:3000; frame-src 'self' https://onesignal.com https://*.onesignal.com; worker-src 'self' blob: https://cdn.onesignal.com https://*.onesignal.com;">
     <title>Dashboard - ZimCrowd</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome Icons - Try multiple CDNs for reliability -->
@@ -10468,7 +10468,7 @@ How it works:
                 const authToken = localStorage.getItem('authToken');
                 if (!authToken) return;
                 
-                const response = await DashboardAPI.request('/api/account/status');
+                const response = await window.ZimCrowdAPI.request('/api/account/status');
                 if (response && response.success && response.data) {
                     const { status, reason, blocked_at, blocked_reason } = response.data;
                     
@@ -13389,7 +13389,7 @@ How it works:
         // Load and display user documents
         async function loadUserDocuments() {
             try {
-                const response = await DashboardAPI.request('/api/profile-setup/documents');
+                const response = await window.ZimCrowdAPI.request('/api/profile-setup/documents');
                 if (response && response.success && response.data) {
                     updateDocumentsDisplay(response.data);
                 }
