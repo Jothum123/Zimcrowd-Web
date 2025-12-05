@@ -4005,9 +4005,6 @@
 
         <!-- User Info with ZimScore -->
         <div class="user-info" id="sidebar-user-info">
-            <div class="user-avatar" id="sidebar-avatar">
-                <span id="sidebar-avatar-initials"></span>
-            </div>
             <div class="user-details">
                 <h4 id="sidebar-user-name">Loading...</h4>
                 <div class="sidebar-zimscore">
@@ -8497,19 +8494,7 @@ How it works:
                     console.log('Updated sidebar user name:', displayName);
                 }
                 
-                const sidebarAvatarEl = document.getElementById('sidebar-avatar');
-                const sidebarAvatarInitials = document.getElementById('sidebar-avatar-initials');
-                if (sidebarAvatarEl) {
-                    const initials = getInitials();
-                    if (userInfo.avatarUrl) {
-                        sidebarAvatarEl.innerHTML = `<img src="${userInfo.avatarUrl}" alt="Profile">`;
-                    } else if (sidebarAvatarInitials) {
-                        sidebarAvatarInitials.textContent = initials;
-                    } else {
-                        sidebarAvatarEl.innerHTML = `<span id="sidebar-avatar-initials">${initials}</span>`;
-                    }
-                    console.log('Updated sidebar avatar');
-                }
+                // Sidebar avatar removed - only header avatar remains
                 
                 // Show verified badge if user is verified
                 const sidebarVerifiedBadge = document.getElementById('sidebar-verified-badge');
@@ -11040,29 +11025,7 @@ How it works:
                 headerAvatar.appendChild(badge);
             }
             
-            // Add star badge to sidebar avatar
-            const sidebarAvatar = document.getElementById('sidebar-avatar');
-            if (sidebarAvatar && starRating > 0) {
-                const existingBadge = sidebarAvatar.querySelector('.avatar-star-badge');
-                if (existingBadge) existingBadge.remove();
-                
-                const badge = document.createElement('div');
-                badge.className = 'avatar-star-badge';
-                badge.innerHTML = `<span style="color: #fbbf24; font-size: 10px;">${'★'.repeat(Math.min(Math.floor(starRating), 5))}</span>`;
-                badge.style.cssText = `
-                    position: absolute;
-                    bottom: -3px;
-                    right: -3px;
-                    background: linear-gradient(135deg, #1e293b, #0f172a);
-                    border: 1px solid #fbbf24;
-                    border-radius: 6px;
-                    padding: 1px 3px;
-                    font-size: 7px;
-                    line-height: 1;
-                `;
-                sidebarAvatar.style.position = 'relative';
-                sidebarAvatar.appendChild(badge);
-            }
+            // Sidebar avatar star badge removed - only header avatar remains
 
             // Store in localStorage for quick access
             localStorage.setItem('zimscoreData', JSON.stringify(zimscoreData));
@@ -13520,12 +13483,7 @@ How it works:
                     userDetails.textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'User';
                 }
 
-                // Update avatar with initials
-                const avatar = userInfo.querySelector('.user-avatar');
-                if (avatar) {
-                    const initials = `${(user.first_name || '')[0] || ''}${(user.last_name || '')[0] || ''}`.toUpperCase();
-                    avatar.textContent = initials;
-                }
+                // Avatar update removed - sidebar avatar no longer exists
             }
 
             // Update header user info
