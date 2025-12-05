@@ -10985,8 +10985,14 @@ How it works:
                 else starRating = 1;
             }
 
-            // Generate star display using existing function
-            let starsHtml = generateStarRating(starRating);
+            // Generate star display with fallback
+            let starsHtml;
+            try {
+                starsHtml = generateStarRating ? generateStarRating(starRating) : generateStarsFallback(starRating);
+            } catch (error) {
+                console.warn('Error generating stars, using fallback:', error);
+                starsHtml = generateStarsFallback(starRating);
+            }
 
             if (zimscoreStars) zimscoreStars.innerHTML = starsHtml;
             if (zimscoreValue) zimscoreValue.textContent = `${scoreValue}/85`;
@@ -11062,6 +11068,29 @@ How it works:
             localStorage.setItem('zimscoreData', JSON.stringify(zimscoreData));
             
             console.log('✅ ZimScore displayed:', { scoreValue, starRating, starsHtml });
+        }
+
+        /**
+         * Fallback star generation function
+         * @param {number} starRating - Star rating (0-5)
+         * @returns {string} HTML string with stars
+         */
+        function generateStarsFallback(starRating) {
+            const fullStars = Math.floor(starRating || 0);
+            const hasHalfStar = (starRating || 0) % 1 >= 0.5;
+            const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+            
+            let html = '';
+            for (let i = 0; i < fullStars; i++) {
+                html += '★';
+            }
+            if (hasHalfStar) {
+                html += '⭐';
+            }
+            for (let i = 0; i < emptyStars; i++) {
+                html += '☆';
+            }
+            return html;
         }
 
         /**

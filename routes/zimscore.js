@@ -198,12 +198,59 @@ router.get('/current', authenticateUser, async (req, res) => {
             .single();
 
         if (error || !zimScore) {
-            // No ZimScore yet - user hasn't completed setup
-            return res.json({
-                success: true,
-                data: null,
-                message: 'Complete profile setup to get your ZimScore'
-            });
+            // No ZimScore yet - try to calculate it automatically
+            try {
+                console.log('📊 No ZimScore found, attempting auto-calculation for user:', userId);
+                
+                // Check if user has required data for calculation
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('employment_type, verified_net_salary, employer_type')
+                    .eq('id', userId)
+                    .single();
+
+                if (profileError || !profile) {
+                    return res.json({
+                        success: true,
+                        data: null,
+                        message: 'Please complete your profile setup to get your ZimScore'
+                    });
+                }
+
+                // If user has salary data, try to calculate score
+                if (profile.verified_net_salary && profile.verified_net_salary > 0) {
+                    const scoreResult = await getUserScore(userId);
+                    
+                    if (scoreResult.success && scoreResult.data) {
+                        return res.json({
+                            success: true,
+                            data: {
+                                score_value: scoreResult.data.score || scoreResult.data.score_value || 0,
+                                star_rating: scoreResult.data.star_rating || 0,
+                                max_loan_amount: scoreResult.data.max_loan_amount || 0,
+                                score_based_limit: scoreResult.data.score_based_limit || 0,
+                                risk_level: scoreResult.data.risk_level || 'unknown',
+                                cold_start_active: scoreResult.data.cold_start_active || false,
+                                last_calculated: new Date().toISOString()
+                            }
+                        });
+                    }
+                }
+
+                // Fallback message if calculation fails
+                return res.json({
+                    success: true,
+                    data: null,
+                    message: 'Upload bank statement to calculate your ZimScore'
+                });
+            } catch (calcError) {
+                console.error('Auto-calculation error:', calcError);
+                return res.json({
+                    success: true,
+                    data: null,
+                    message: 'Please upload documents to calculate your ZimScore'
+                });
+            }
         }
 
         res.json({
