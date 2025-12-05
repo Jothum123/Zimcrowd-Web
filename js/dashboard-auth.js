@@ -15,40 +15,8 @@ class DashboardAuth {
     }
 
     async checkAuthStatus() {
-        try {
-            this.token = localStorage.getItem('authToken');
-            const userData = localStorage.getItem('userData');
-            
-            if (!this.token || !userData) {
-                this.redirectToLogin();
-                return false;
-            }
-
-            this.user = JSON.parse(userData);
-            this.isAuthenticated = true;
-            
-            // Validate token with backend
-            const response = await fetch('/api/auth/validate', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                this.clearAuth();
-                this.redirectToLogin();
-                return false;
-            }
-
-            return true;
-        } catch (error) {
-            console.error('Auth check failed:', error);
-            this.clearAuth();
-            this.redirectToLogin();
-            return false;
-        }
+        // Use the new authentication check instead of the old validation
+        return await this.checkAuthentication();
     }
 
     async checkAuthentication() {
