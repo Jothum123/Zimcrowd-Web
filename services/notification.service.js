@@ -9,14 +9,40 @@ const twilio = require('twilio');
 
 class NotificationService {
     constructor() {
-        // Initialize email service
-        this.resend = new Resend(process.env.RESEND_API_KEY);
+        // Initialize email service with graceful fallback
+        try {
+            if (process.env.RESEND_API_KEY) {
+                this.resend = new Resend(process.env.RESEND_API_KEY);
+                this.emailEnabled = true;
+            } else {
+                console.log('⚠️ RESEND_API_KEY not configured - email features disabled');
+                this.resend = null;
+                this.emailEnabled = false;
+            }
+        } catch (error) {
+            console.log('⚠️ Failed to initialize email service:', error.message);
+            this.resend = null;
+            this.emailEnabled = false;
+        }
         
-        // Initialize SMS service
-        this.twilioClient = twilio(
-            process.env.TWILIO_ACCOUNT_SID,
-            process.env.TWILIO_AUTH_TOKEN
-        );
+        // Initialize SMS service with graceful fallback
+        try {
+            if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+                this.twilioClient = twilio(
+                    process.env.TWILIO_ACCOUNT_SID,
+                    process.env.TWILIO_AUTH_TOKEN
+                );
+                this.smsEnabled = true;
+            } else {
+                console.log('⚠️ Twilio credentials not configured - SMS features disabled');
+                this.twilioClient = null;
+                this.smsEnabled = false;
+            }
+        } catch (error) {
+            console.log('⚠️ Failed to initialize SMS service:', error.message);
+            this.twilioClient = null;
+            this.smsEnabled = false;
+        }
         
         // Email templates
         this.emailTemplates = {
@@ -170,6 +196,15 @@ class NotificationService {
      */
     async sendEmailNotification(user, type, data) {
         try {
+            // Check if email service is enabled
+            if (!this.emailEnabled || !this.resend) {
+                console.log('⚠️ Email service disabled - skipping email notification');
+                return {
+                    success: false,
+                    message: 'Email service not configured'
+                };
+            }
+
             const template = this.emailTemplates[type];
             if (!template) {
                 throw new Error(`Email template not found for type: ${type}`);
@@ -208,6 +243,15 @@ class NotificationService {
      */
     async sendSMSNotification(user, type, data) {
         try {
+            // Check if SMS service is enabled
+            if (!this.smsEnabled || !this.twilioClient) {
+                console.log('⚠️ SMS service disabled - skipping SMS notification');
+                return {
+                    success: false,
+                    message: 'SMS service not configured'
+                };
+            }
+
             const template = this.smsTemplates[type];
             if (!template) {
                 throw new Error(`SMS template not found for type: ${type}`);
