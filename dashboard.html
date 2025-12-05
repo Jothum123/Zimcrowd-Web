@@ -8231,6 +8231,26 @@ How it works:
                 console.log('✅ Multi-currency wallet updated successfully');
             }
 
+            // Currency configuration for multi-currency support
+            const CURRENCY_CONFIG = {
+                USD: {
+                    symbol: '$',
+                    name: 'US Dollar',
+                    minLoan: 25,
+                    maxLoan: 3000,
+                    interestRate: 8,
+                    color: '#38e77b'
+                },
+                ZWG: {
+                    symbol: 'ZWG',
+                    name: 'Zimbabwe Gold',
+                    minLoan: 675,
+                    maxLoan: 40000,
+                    interestRate: 10,
+                    color: '#f59e0b'
+                }
+            };
+
             // Wallet currency toggle functionality
             let selectedWalletCurrency = 'USD';
             let walletData = {
