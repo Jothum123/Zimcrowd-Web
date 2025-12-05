@@ -97,11 +97,12 @@ class ZimScoreAvatar {
         this.updateNavigationAvatar();
     }
 
-    // Update sidebar avatar with ZimScore - DISABLED (sidebar avatar removed)
+    // Update sidebar avatar with ZimScore
     updateSidebarAvatar() {
-        // Sidebar avatar has been removed - only update stars and score values
         const starsElement = document.getElementById('sidebar-zimscore-stars');
         const valueElement = document.getElementById('sidebar-zimscore-value');
+        const avatarElement = document.getElementById('sidebar-avatar');
+        const verifiedBadge = document.getElementById('sidebar-verified-badge');
 
         if (starsElement) {
             starsElement.textContent = this.stars;
@@ -112,6 +113,38 @@ class ZimScoreAvatar {
             valueElement.textContent = `${this.zimscore}/85`;
             valueElement.style.color = this.category.color;
             valueElement.style.background = `${this.category.color}20`;
+        }
+
+        if (avatarElement && this.zimscore > 0) {
+            // Add star badge to avatar
+            let starBadge = avatarElement.querySelector('.avatar-star-badge');
+            if (!starBadge) {
+                starBadge = document.createElement('div');
+                starBadge.className = 'avatar-star-badge';
+                starBadge.innerHTML = '★';
+                starBadge.style.cssText = `
+                    position: absolute;
+                    bottom: -2px;
+                    right: -2px;
+                    background: linear-gradient(135deg, #1e293b, #0f172a);
+                    border: 1.5px solid #fbbf24;
+                    border-radius: 50%;
+                    width: 18px;
+                    height: 18px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #fbbf24;
+                    font-size: 10px;
+                    font-weight: bold;
+                    z-index: 10;
+                `;
+                avatarElement.appendChild(starBadge);
+            }
+        }
+
+        if (verifiedBadge && this.zimscore > 0) {
+            verifiedBadge.style.display = 'inline-flex';
         }
     }
 

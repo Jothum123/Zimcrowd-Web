@@ -4005,6 +4005,9 @@
 
         <!-- User Info with ZimScore -->
         <div class="user-info" id="sidebar-user-info">
+            <div class="user-avatar" id="sidebar-avatar">
+                <span id="sidebar-avatar-initials">--</span>
+            </div>
             <div class="user-details">
                 <h4 id="sidebar-user-name">Loading...</h4>
                 <div class="sidebar-zimscore">
@@ -8494,7 +8497,22 @@ How it works:
                     console.log('Updated sidebar user name:', displayName);
                 }
                 
-                // Sidebar avatar removed - only header avatar remains
+                // Update sidebar avatar
+                const userAvatarEl = document.getElementById('sidebar-avatar');
+                const sidebarAvatarInitials = document.getElementById('sidebar-avatar-initials');
+                if (userAvatarEl && sidebarAvatarInitials) {
+                    if (userInfo.avatarUrl) {
+                        // Create image element for social auth avatar
+                        userAvatarEl.innerHTML = `<img src="${userInfo.avatarUrl}" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+                        console.log('Updated sidebar avatar with social auth image');
+                    } else {
+                        // Use initials as fallback
+                        const initials = getInitials();
+                        sidebarAvatarInitials.textContent = initials;
+                        userAvatarEl.innerHTML = `<span id="sidebar-avatar-initials">${initials}</span>`;
+                        console.log('Updated sidebar avatar with initials:', initials);
+                    }
+                }
                 
                 // Show verified badge if user is verified
                 const sidebarVerifiedBadge = document.getElementById('sidebar-verified-badge');
@@ -13483,7 +13501,12 @@ How it works:
                     userDetails.textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'User';
                 }
 
-                // Avatar update removed - sidebar avatar no longer exists
+                // Update avatar with initials
+                const avatar = userInfo.querySelector('.user-avatar');
+                if (avatar) {
+                    const initials = `${(user.first_name || '')[0] || ''}${(user.last_name || '')[0] || ''}`.toUpperCase();
+                    avatar.textContent = initials;
+                }
             }
 
             // Update header user info
