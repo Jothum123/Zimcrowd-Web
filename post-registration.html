@@ -807,7 +807,7 @@
 
                         <div class="form-group">
                             <label class="form-label">Employment Status <span class="required">*</span></label>
-                            <select class="form-select" id="employment" required>
+                            <select class="form-select" id="employment" required onchange="handleEmploymentTypeChange(this.value)">
                                 <option value="">Select Status</option>
                                 <option value="government">Government Employee</option>
                                 <option value="private">Private Sector Employee</option>
@@ -840,22 +840,7 @@
                             </small>
                         </div>
 
-                        <div class="form-group">
-                            <label class="form-label">Employer Type <span class="required">*</span></label>
-                            <select class="form-select" id="employerType" required onchange="updateEmployerTypeFields()">
-                                <option value="">Select Employer Type</option>
-                                <option value="government">Government Sector</option>
-                                <option value="private">Private Sector</option>
-                                <option value="informal">Informal Sector</option>
-                                <option value="ngo">NGO/Non-Profit</option>
-                                <option value="student">Student Institution</option>
-                                <option value="other">Other</option>
-                            </select>
-                            <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
-                                Determines required documentation and affects your credit rating
-                            </small>
-                        </div>
-
+                        
                         <!-- Government Sector Fields -->
                         <div id="governmentFields" style="display: none;">
                             <div class="form-group">
@@ -2416,9 +2401,9 @@
                 postal_code: document.getElementById('postalCode')?.value,
                 
                 // Employment information (from Employment step)
-                employment_status: document.getElementById('employmentType')?.value,
+                employment_status: document.getElementById('employment')?.value,
                 employer_name: document.getElementById('employerName')?.value,
-                employer_type: document.getElementById('employerType')?.value,
+                employer_type: document.getElementById('employment')?.value, // Map employment status to employer type for compatibility
                 job_title: document.getElementById('jobTitle')?.value,
                 ec_number: document.getElementById('ecNumber')?.value,
                 monthly_income: userNetSalary,
@@ -3855,8 +3840,8 @@
     <script>
         // Dynamic field visibility based on employer type
         async function updateEmployerTypeFields() {
-            const employerType = document.getElementById('employerType').value;
-            const employmentType = document.getElementById('employmentType')?.value || 'full_time_salaried';
+            const employerType = document.getElementById('employment').value; // Use employment field instead
+            const employmentType = document.getElementById('employment')?.value || 'full_time_salaried';
             
             // Hide all conditional fields
             document.getElementById('governmentFields').style.display = 'none';
@@ -4152,14 +4137,14 @@
         // Initialize employer type functionality
         document.addEventListener('DOMContentLoaded', async function() {
             // Add form validation for employer type
-            const employerTypeSelect = document.getElementById('employerType');
+            const employerTypeSelect = document.getElementById('employment'); // Use employment field instead
             if (employerTypeSelect) {
                 employerTypeSelect.addEventListener('change', async function() {
                     await updateEmployerTypeFields();
                 });
                 
                 // Initialize loan form with current employer type on page load
-                const employmentType = document.getElementById('employmentType')?.value || 'full_time_salaried';
+                const employmentType = document.getElementById('employment')?.value || 'full_time_salaried';
                 const currentEmployerType = employerTypeSelect.value;
                 if (currentEmployerType && employmentType) {
                     await updateLoanFormForEmployerType(employmentType, currentEmployerType);
@@ -4167,10 +4152,10 @@
             }
             
             // Also initialize when employment type changes
-            const employmentTypeSelect = document.getElementById('employmentType');
+            const employmentTypeSelect = document.getElementById('employment'); // Use employment field instead
             if (employmentTypeSelect) {
                 employmentTypeSelect.addEventListener('change', async function() {
-                    const employerType = document.getElementById('employerType')?.value || 'other';
+                    const employerType = document.getElementById('employment')?.value || 'other';
                     if (employerType && this.value) {
                         await updateLoanFormForEmployerType(this.value, employerType);
                     }
