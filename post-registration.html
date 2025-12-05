@@ -786,19 +786,7 @@
                         </div>
                     </div>
 
-                    <div class="form-row">
-                                                <div class="form-group">
-                            <label class="form-label">Monthly Income (USD)</label>
-                            <select class="form-select" id="income">
-                                <option value="">Select Range</option>
-                                <option value="0-500">$0 - $500</option>
-                                <option value="500-1000">$500 - $1,000</option>
-                                <option value="1000-2000">$1,000 - $2,000</option>
-                                <option value="2000+">$2,000+</option>
-                            </select>
-                        </div>
-                    </div>
-
+                    
                     <!-- Employment Details Section -->
                     <div style="margin-top: 30px; padding-top: 25px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
                         <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #38e77b;">
@@ -817,11 +805,7 @@
                             <small id="employmentTypeHint" style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;"></small>
                         </div>
 
-                        <div class="form-group">
-                            <label class="form-label">Employer/Business Name <span class="required">*</span></label>
-                            <input type="text" class="form-input" id="employer" placeholder="Company or business name" required>
-                        </div>
-
+                        
                         <div class="form-group">
                             <label class="form-label">Employment Type <span class="required">*</span></label>
                             <select class="form-select" id="employmentType" required>
@@ -1079,8 +1063,8 @@
                         <div id="ocrSalarySuggestion" style="margin-top: 10px; padding: 10px; background: rgba(56, 231, 123, 0.1); border: 1px solid rgba(56, 231, 123, 0.3); border-radius: 6px; display: none;">
                             <small style="color: #38e77b;">
                                 <i class="fas fa-robot"></i>
-                                <strong>OCR Suggestion:</strong> We detected an approximate monthly income of $<span id="ocrSuggestedAmount">0</span>. 
-                                Please enter your exact net salary above.
+                                <strong>OCR Detection:</strong> We detected an approximate monthly income of $<span id="ocrSuggestedAmount">0</span>. 
+                                This will be used for your loan eligibility calculation.
                             </small>
                         </div>
                         <div id="salaryValidationWarning" style="margin-top: 10px; padding: 10px; background: rgba(251, 146, 60, 0.1); border: 1px solid rgba(251, 146, 60, 0.3); border-radius: 6px; display: none;">
@@ -2040,8 +2024,7 @@
                 const gender = document.getElementById('gender').value;
                 const address = document.getElementById('address').value.trim();
                 const employment = document.getElementById('employment').value;
-                const employer = document.getElementById('employer').value.trim();
-                const occupation = document.getElementById('occupation').value.trim();
+                                const occupation = document.getElementById('occupation').value.trim();
                 const ecNumber = document.getElementById('ecNumber').value.trim();
                 const workAddress = document.getElementById('workAddress').value.trim();
                 const yearsEmployed = document.getElementById('yearsEmployed').value;
@@ -2083,12 +2066,7 @@
                     return false;
                 }
                 
-                if (!employer || employer.length < 2) {
-                    showValidationError('Please enter your employer or business name');
-                    document.getElementById('employer').focus();
-                    return false;
-                }
-                
+                                
                 if (!occupation || occupation.length < 2) {
                     showValidationError('Please enter your occupation or job title');
                     document.getElementById('occupation').focus();
@@ -2284,11 +2262,7 @@
                     field: document.getElementById('employment'),
                     message: 'Please select your employment status'
                 },
-                {
-                    field: document.getElementById('employer'),
-                    message: 'Please enter your employer/business name'
-                },
-                {
+                                {
                     field: document.getElementById('occupation'),
                     message: 'Please enter your occupation/job title'
                 },
@@ -2402,8 +2376,7 @@
                 
                 // Employment information (from Employment step)
                 employment_status: document.getElementById('employment')?.value,
-                employer_name: document.getElementById('employerName')?.value,
-                employer_type: document.getElementById('employment')?.value, // Map employment status to employer type for compatibility
+                                employer_type: document.getElementById('employment')?.value, // Map employment status to employer type for compatibility
                 job_title: document.getElementById('jobTitle')?.value,
                 ec_number: document.getElementById('ecNumber')?.value,
                 monthly_income: userNetSalary,
@@ -2774,8 +2747,7 @@
                                 employeeName: payslipData.employeeName,
                                 netSalary: payslipData.netSalary,
                                 grossSalary: payslipData.grossSalary,
-                                employerName: payslipData.employerName
-                            });
+                                                            });
                             
                             // Cross-validate payslip salary with manual input
                             if (payslipData?.netSalary && payslipData.netSalary > 0) {
