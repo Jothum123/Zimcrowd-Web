@@ -1,27 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const { createClient } = require('@supabase/supabase-js');
+const { supabase } = require('../utils/supabase-auth');
 const { authenticateUser, requireAdmin } = require('../middleware/auth');
 const VisionOCRService = require('../services/vision-ocr.service');
 const AzureFaceService = require('../services/azure-face.service');
 const { getVisionService } = require('../services/google-vision.service');
 const { getZimScoreService } = require('../services/zimscore.service');
-
-// Create Supabase client only if credentials are available
-let supabase = null;
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
-
-if (SUPABASE_URL && SUPABASE_KEY) {
-    try {
-        supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-    } catch (error) {
-        console.warn('⚠️ Failed to initialize Supabase for profile-setup:', error.message);
-    }
-} else {
-    console.warn('⚠️ Profile setup routes disabled - Supabase credentials not configured');
-}
 
 // Configure multer for file uploads
 const upload = multer({ 

@@ -6,13 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
-const { createClient } = require('@supabase/supabase-js');
-
-// Initialize Supabase client
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_KEY
-);
+const { supabase } = require('../utils/supabase-auth');
 
 /**
  * Verify hash from Paynow notification

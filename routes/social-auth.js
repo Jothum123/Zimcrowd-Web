@@ -1,22 +1,6 @@
 // Social authentication routes for Google and Facebook OAuth
 const express = require('express');
-const { createClient } = require('@supabase/supabase-js');
-
-// Create Supabase client only if credentials are available
-let supabase = null;
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
-
-if (SUPABASE_URL && SUPABASE_KEY) {
-    try {
-        supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-        console.log('✅ Social auth initialized with Supabase URL:', SUPABASE_URL.substring(0, 30) + '...');
-    } catch (error) {
-        console.warn('⚠️ Failed to initialize Supabase for social auth:', error.message);
-    }
-} else {
-    console.warn('⚠️ Social auth disabled - Supabase credentials not configured');
-}
+const { supabase } = require('../utils/supabase-auth');
 
 const socialRouter = express.Router();
 

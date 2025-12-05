@@ -1,14 +1,8 @@
 // Storage routes for file uploads (avatars, documents, etc.)
 const express = require('express');
 const router = express.Router();
-const { createClient } = require('@supabase/supabase-js');
+const { supabase } = require('../utils/supabase-auth');
 const multer = require('multer');
-
-// Initialize Supabase client
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 // Configure multer for memory storage
 const upload = multer({

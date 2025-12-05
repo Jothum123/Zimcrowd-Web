@@ -2,13 +2,8 @@ const express = require('express');
 const router = express.Router();
 const PayNowService = require('../services/paynow.service');
 const PaymentValidatorService = require('../services/payment-validator.service');
-const { createClient } = require('@supabase/supabase-js');
+const { supabase } = require('../utils/supabase-auth');
 const { authenticateUser } = require('../middleware/auth');
-
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 const paynowService = new PayNowService();
 const validatorService = new PaymentValidatorService();

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createClient } = require('@supabase/supabase-js');
+const { supabase } = require('../utils/supabase-auth');
 const { authenticateUser } = require('../middleware/auth');
 const { 
     BORROWER_FEES, 
