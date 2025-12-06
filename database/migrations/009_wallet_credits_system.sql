@@ -351,10 +351,204 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Create function to apply platform credits to transactions
+CREATE OR REPLACE FUNCTION apply_platform_credits(
+    p_user_id INTEGER,
+    p_amount DECIMAL,
+    p_usage_type TEXT DEFAULT 'future_loans' -- 'future_loans', 'platform_fees', 'lending'
+) RETURNS DECIMAL AS $$
+DECLARE
+    v_available_platform_credits DECIMAL;
+    v_credit_ids INTEGER[];
+    v_amount_to_apply DECIMAL;
+    v_remaining_amount DECIMAL;
+    v_credit_record RECORD;
+BEGIN
+    -- Validate usage type
+    IF p_usage_type NOT IN ('future_loans', 'platform_fees', 'lending') THEN
+        RAISE EXCEPTION 'Invalid usage type: %', p_usage_type;
+    END IF;
+    
+    -- Get available platform credits that can be used for this purpose
+    SELECT COALESCE(SUM(amount), 0) INTO v_available_platform_credits
+    FROM wallet_credits 
+    WHERE user_id = p_user_id 
+    AND status = 'available' 
+    AND is_withdrawable = false
+    AND p_usage_type = ANY(usable_for);
+    
+    -- Determine amount to apply (cannot exceed available credits or requested amount)
+    v_amount_to_apply := LEAST(p_amount, v_available_platform_credits);
+    
+    IF v_amount_to_apply <= 0 THEN
+        RETURN 0;
+    END IF;
+    
+    -- Get credit IDs to use (oldest first)
+    SELECT array_agg(id) INTO v_credit_ids
+    FROM wallet_credits 
+    WHERE user_id = p_user_id 
+    AND status = 'available' 
+    AND is_withdrawable = false
+    AND p_usage_type = ANY(usable_for)
+    ORDER BY created_at;
+    
+    v_remaining_amount := v_amount_to_apply;
+    
+    -- Apply credits to each credit record
+    FOREACH v_credit_record.id IN ARRAY v_credit_ids
+    LOOP
+        DECLARE
+            v_credit_amount DECIMAL;
+            v_amount_to_use DECIMAL;
+        BEGIN
+            -- Get credit amount
+            SELECT amount INTO v_credit_amount
+            FROM wallet_credits 
+            WHERE id = v_credit_record.id;
+            
+            -- Determine amount to use from this credit
+            v_amount_to_use := LEAST(v_remaining_amount, v_credit_amount);
+            
+            -- Update or mark credit as used
+            IF v_amount_to_use >= v_credit_amount THEN
+                -- Mark entire credit as used
+                UPDATE wallet_credits 
+                SET status = 'used',
+                    notes = notes || ' | Used for ' || p_usage_type
+                WHERE id = v_credit_record.id;
+                
+                -- Create transaction record
+                INSERT INTO credit_transactions (
+                    credit_id,
+                    transaction_type,
+                    amount,
+                    balance_after,
+                    reference_id,
+                    notes
+                ) VALUES (
+                    v_credit_record.id,
+                    'used',
+                    v_credit_amount,
+                    0,
+                    p_usage_type || '_' || CURRENT_TIMESTAMP,
+                    'Credit fully used for ' || p_usage_type
+                );
+            ELSE
+                -- Partially use credit (create new record for remaining amount)
+                UPDATE wallet_credits 
+                SET amount = amount - v_amount_to_use,
+                    notes = notes || ' | Partially used for ' || p_usage_type
+                WHERE id = v_credit_record.id;
+                
+                -- Create new credit record for used portion
+                INSERT INTO wallet_credits (
+                    user_id,
+                    credit_type,
+                    amount,
+                    source_reference,
+                    status,
+                    created_at,
+                    available_at,
+                    is_withdrawable,
+                    usable_for,
+                    notes
+                ) VALUES (
+                    p_user_id,
+                    'early_repayment_bonus',
+                    v_amount_to_use,
+                    (SELECT source_reference FROM wallet_credits WHERE id = v_credit_record.id),
+                    'used',
+                    CURRENT_TIMESTAMP,
+                    CURRENT_TIMESTAMP,
+                    false,
+                    ARRAY[p_usage_type],
+                    'Used portion of platform credit for ' || p_usage_type
+                ) RETURNING id INTO v_credit_record.id;
+                
+                -- Create transaction record for original credit
+                INSERT INTO credit_transactions (
+                    credit_id,
+                    transaction_type,
+                    amount,
+                    balance_after,
+                    reference_id,
+                    notes
+                ) VALUES (
+                    (SELECT id FROM wallet_credits WHERE id = v_credit_record.id AND status = 'available' LIMIT 1),
+                    'used',
+                    v_amount_to_use,
+                    (SELECT amount FROM wallet_credits WHERE id = v_credit_record.id AND status = 'available' LIMIT 1),
+                    p_usage_type || '_' || CURRENT_TIMESTAMP,
+                    'Credit partially used for ' || p_usage_type
+                );
+                
+                -- Create transaction record for used portion
+                INSERT INTO credit_transactions (
+                    credit_id,
+                    transaction_type,
+                    amount,
+                    balance_after,
+                    reference_id,
+                    notes
+                ) VALUES (
+                    v_credit_record.id,
+                    'used',
+                    v_amount_to_use,
+                    0,
+                    p_usage_type || '_' || CURRENT_TIMESTAMP,
+                    'Used portion of platform credit for ' || p_usage_type
+                );
+            END IF;
+            
+            v_remaining_amount := v_remaining_amount - v_amount_to_use;
+            
+            -- Exit if we've applied the full amount
+            IF v_remaining_amount <= 0 THEN
+                EXIT;
+            END IF;
+        END;
+    END LOOP;
+    
+    RETURN v_amount_to_apply;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create function to get platform credit balance for specific usage
+CREATE OR REPLACE FUNCTION get_platform_credit_balance(
+    p_user_id INTEGER,
+    p_usage_type TEXT DEFAULT NULL
+) RETURNS DECIMAL AS $$
+BEGIN
+    IF p_usage_type IS NOT NULL THEN
+        -- Get balance for specific usage type
+        RETURN (
+            SELECT COALESCE(SUM(amount), 0)
+            FROM wallet_credits 
+            WHERE user_id = p_user_id 
+            AND status = 'available' 
+            AND is_withdrawable = false
+            AND p_usage_type = ANY(usable_for)
+        );
+    ELSE
+        -- Get total platform credit balance
+        RETURN (
+            SELECT COALESCE(SUM(amount), 0)
+            FROM wallet_credits 
+            WHERE user_id = p_user_id 
+            AND status = 'available' 
+            AND is_withdrawable = false
+        );
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Add comments
 COMMENT ON TABLE wallet_credits IS 'Stores all user credits including tier discounts, referrals, and early repayment bonuses';
 COMMENT ON TABLE credit_transactions IS 'Tracks all credit movements and status changes';
 COMMENT ON TABLE credit_withdrawal_requests IS 'Manages user withdrawal requests for available credits';
 COMMENT ON TABLE credit_config IS 'Configuration parameters for the credit system';
+COMMENT ON FUNCTION apply_platform_credits IS 'Applies platform credits to transactions (loans, fees, lending)';
+COMMENT ON FUNCTION get_platform_credit_balance IS 'Gets available platform credit balance for specific usage types';
 
 COMMIT;

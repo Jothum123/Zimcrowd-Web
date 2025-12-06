@@ -423,7 +423,7 @@ router.post('/credits/award-tier-discount', requireAdmin, async (req, res) => {
 });
 
 // @desc    Award referral credits (internal use)
-// @route   POST /api/wallet/credits/award-referral
+// @route   POST /api/wallet-credits/credits/award-referral
 // @access  Admin
 router.post('/credits/award-referral', requireAdmin, async (req, res) => {
     try {
@@ -447,6 +447,113 @@ router.post('/credits/award-referral', requireAdmin, async (req, res) => {
     } catch (error) {
         console.error('Error awarding referral credits:', error);
         res.status(500).json({ error: 'Failed to award referral credits' });
+    }
+});
+
+// @desc    Apply platform credits to transaction
+// @route   POST /api/wallet-credits/credits/apply
+// @access  Private
+router.post('/credits/apply', requireAuth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { amount, usage_type } = req.body;
+        
+        // Validate input
+        if (!amount || amount <= 0) {
+            return res.status(400).json({ 
+                error: 'Amount must be greater than 0' 
+            });
+        }
+        
+        if (!usage_type || !['future_loans', 'platform_fees', 'lending'].includes(usage_type)) {
+            return res.status(400).json({ 
+                error: 'Usage type must be one of: future_loans, platform_fees, lending' 
+            });
+        }
+        
+        // Apply platform credits
+        const result = await pool.query(
+            'SELECT apply_platform_credits($1, $2, $3) as applied_amount',
+            [userId, amount, usage_type]
+        );
+        
+        const appliedAmount = result.rows[0].applied_amount;
+        
+        res.json({
+            message: 'Platform credits applied successfully',
+            requested_amount: amount,
+            applied_amount: appliedAmount,
+            usage_type: usage_type,
+            remaining_requested: amount - appliedAmount
+        });
+    } catch (error) {
+        console.error('Error applying platform credits:', error);
+        res.status(500).json({ error: 'Failed to apply platform credits' });
+    }
+});
+
+// @desc    Get platform credit balance for specific usage
+// @route   GET /api/wallet-credits/credits/platform-balance
+// @access  Private
+router.get('/credits/platform-balance', requireAuth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { usage_type } = req.query;
+        
+        let query = 'SELECT get_platform_credit_balance($1';
+        let params = [userId];
+        
+        if (usage_type) {
+            if (!['future_loans', 'platform_fees', 'lending'].includes(usage_type)) {
+                return res.status(400).json({ 
+                    error: 'Usage type must be one of: future_loans, platform_fees, lending' 
+                });
+            }
+            query += ', $2';
+            params.push(usage_type);
+        }
+        
+        query += ') as balance';
+        
+        const result = await pool.query(query, params);
+        
+        res.json({
+            user_id: userId,
+            usage_type: usage_type || 'all',
+            platform_credit_balance: parseFloat(result.rows[0].balance)
+        });
+    } catch (error) {
+        console.error('Error fetching platform credit balance:', error);
+        res.status(500).json({ error: 'Failed to fetch platform credit balance' });
+    }
+});
+
+// @desc    Award early repayment credits (updated to use new function)
+// @route   POST /api/wallet-credits/credits/award-early-repayment
+// @access  Admin
+router.post('/credits/award-early-repayment', requireAdmin, async (req, res) => {
+    try {
+        const { user_id, loan_id, early_payment_amount, remaining_principal, remaining_interest } = req.body;
+        
+        if (!user_id || !loan_id || early_payment_amount === undefined || remaining_principal === undefined || remaining_interest === undefined) {
+            return res.status(400).json({ 
+                error: 'User ID, loan ID, early payment amount, remaining principal, and remaining interest are required' 
+            });
+        }
+        
+        // Call the new function to award credits
+        await pool.query(
+            'SELECT award_early_repayment_credits($1, $2, $3, $4, $5)',
+            [user_id, loan_id, early_payment_amount, remaining_principal, remaining_interest]
+        );
+        
+        res.json({
+            message: 'Early repayment credits awarded successfully',
+            note: 'Credits are non-withdrawable platform credits that can be used for future loans, platform fees, or lending'
+        });
+    } catch (error) {
+        console.error('Error awarding early repayment credits:', error);
+        res.status(500).json({ error: 'Failed to award early repayment credits' });
     }
 });
 
