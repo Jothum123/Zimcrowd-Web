@@ -5,6 +5,16 @@
  */
 
 const MockMarketData = {
+    // ZimScore Range: 30-85 points (from ZIMSCORE_COMPLETE_GUIDE.md)
+    // Star Rating Formula: 1.0 + ((score - 30) / 55) * 4.0
+    // Risk Levels:
+    //   80-85: Very Low Risk (5.0 stars)
+    //   70-79: Low Risk (4.0 stars)
+    //   60-69: Medium Risk (3.0 stars)
+    //   50-59: High Risk (2.5 stars)
+    //   40-49: Very High Risk (2.0 stars)
+    //   30-39: Building Credit (1.0 stars)
+
     // Borrower profiles with avatars and ratings
     borrowers: [
         {
@@ -14,12 +24,12 @@ const MockMarketData = {
             avatar: null, // Will use initials
             occupation: 'Small Business Owner',
             location: 'Harare',
-            rating: 4.8,
+            rating: 5.0, // Calculated from ZimScore 82
             totalLoans: 5,
             repaidOnTime: 5,
             memberSince: '2023-06-15',
             verified: true,
-            zimScore: 720
+            zimScore: 82 // Very Low Risk - Max $1,000
         },
         {
             id: 'b002',
@@ -28,12 +38,12 @@ const MockMarketData = {
             avatar: null,
             occupation: 'IT Professional',
             location: 'Bulawayo',
-            rating: 4.5,
+            rating: 4.0, // Calculated from ZimScore 75
             totalLoans: 3,
             repaidOnTime: 3,
             memberSince: '2023-09-20',
             verified: true,
-            zimScore: 695
+            zimScore: 75 // Low Risk - Max $800
         },
         {
             id: 'b003',
@@ -42,12 +52,12 @@ const MockMarketData = {
             avatar: null,
             occupation: 'Teacher',
             location: 'Mutare',
-            rating: 4.9,
+            rating: 5.0, // Calculated from ZimScore 84
             totalLoans: 7,
             repaidOnTime: 7,
             memberSince: '2022-11-10',
             verified: true,
-            zimScore: 745
+            zimScore: 84 // Very Low Risk - Max $1,000
         },
         {
             id: 'b004',
@@ -56,12 +66,12 @@ const MockMarketData = {
             avatar: null,
             occupation: 'Farmer',
             location: 'Masvingo',
-            rating: 4.2,
+            rating: 3.0, // Calculated from ZimScore 65
             totalLoans: 4,
             repaidOnTime: 3,
             memberSince: '2024-01-05',
             verified: true,
-            zimScore: 650
+            zimScore: 65 // Medium Risk - Max $600
         },
         {
             id: 'b005',
@@ -70,12 +80,12 @@ const MockMarketData = {
             avatar: null,
             occupation: 'Nurse',
             location: 'Gweru',
-            rating: 5.0,
+            rating: 5.0, // Calculated from ZimScore 85
             totalLoans: 6,
             repaidOnTime: 6,
             memberSince: '2023-03-22',
             verified: true,
-            zimScore: 780
+            zimScore: 85 // Very Low Risk - Max $1,000 (Maximum score)
         },
         {
             id: 'b006',
@@ -84,12 +94,12 @@ const MockMarketData = {
             avatar: null,
             occupation: 'Software Developer',
             location: 'Harare',
-            rating: 4.7,
+            rating: 4.5, // Calculated from ZimScore 78
             totalLoans: 2,
             repaidOnTime: 2,
             memberSince: '2024-02-14',
             verified: true,
-            zimScore: 710
+            zimScore: 78 // Low Risk - Max $800
         },
         {
             id: 'b007',
@@ -98,12 +108,12 @@ const MockMarketData = {
             avatar: null,
             occupation: 'Accountant',
             location: 'Harare',
-            rating: 4.6,
+            rating: 4.0, // Calculated from ZimScore 72
             totalLoans: 4,
             repaidOnTime: 4,
             memberSince: '2023-07-30',
             verified: true,
-            zimScore: 735
+            zimScore: 72 // Low Risk - Max $800
         },
         {
             id: 'b008',
@@ -112,12 +122,40 @@ const MockMarketData = {
             avatar: null,
             occupation: 'Mechanic',
             location: 'Chitungwiza',
-            rating: 4.3,
+            rating: 2.5, // Calculated from ZimScore 55
             totalLoans: 3,
             repaidOnTime: 2,
             memberSince: '2023-12-01',
             verified: false,
-            zimScore: 620
+            zimScore: 55 // High Risk - Max $400
+        },
+        {
+            id: 'b009',
+            name: 'Chipo Mutasa',
+            initials: 'CM',
+            avatar: null,
+            occupation: 'Market Vendor',
+            location: 'Harare',
+            rating: 2.0, // Calculated from ZimScore 45
+            totalLoans: 2,
+            repaidOnTime: 1,
+            memberSince: '2024-03-10',
+            verified: false,
+            zimScore: 45 // Very High Risk - Max $300
+        },
+        {
+            id: 'b010',
+            name: 'Blessing Moyo',
+            initials: 'BM',
+            avatar: null,
+            occupation: 'Student',
+            location: 'Gweru',
+            rating: 1.5, // Calculated from ZimScore 38
+            totalLoans: 1,
+            repaidOnTime: 0,
+            memberSince: '2024-05-01',
+            verified: false,
+            zimScore: 38 // Building Credit - Max $100
         }
     ],
 
@@ -164,7 +202,7 @@ const MockMarketData = {
                 term: term,
                 monthlyPayment: schedule.monthlyPayment,
                 totalRepayment: schedule.totalRepayment,
-                riskLevel: this.calculateRiskLevel(borrower.zimScore, fundedPercent),
+                riskLevel: this.calculateRiskLevel(borrower.zimScore),
                 daysLeft: daysLeft,
                 lendersCount: lendersCount,
                 minInvestment: 25,
@@ -246,13 +284,22 @@ const MockMarketData = {
         };
     },
 
-    // Calculate risk level based on ZimScore
-    calculateRiskLevel(zimScore, fundedPercent) {
-        if (zimScore >= 720 && fundedPercent >= 50) return { level: 'Low', color: '#22c55e', score: 'A' };
-        if (zimScore >= 680 && fundedPercent >= 30) return { level: 'Low-Medium', color: '#84cc16', score: 'B+' };
-        if (zimScore >= 640) return { level: 'Medium', color: '#f59e0b', score: 'B' };
-        if (zimScore >= 600) return { level: 'Medium-High', color: '#f97316', score: 'C' };
-        return { level: 'High', color: '#ef4444', score: 'D' };
+    // Calculate risk level based on ZimScore (30-85 range per ZIMSCORE_COMPLETE_GUIDE.md)
+    calculateRiskLevel(zimScore) {
+        if (zimScore >= 80) return { level: 'Very Low', color: '#22c55e', score: 'A+', maxLoan: 1000 };
+        if (zimScore >= 70) return { level: 'Low', color: '#84cc16', score: 'A', maxLoan: 800 };
+        if (zimScore >= 60) return { level: 'Medium', color: '#f59e0b', score: 'B', maxLoan: 600 };
+        if (zimScore >= 50) return { level: 'High', color: '#f97316', score: 'C', maxLoan: 400 };
+        if (zimScore >= 40) return { level: 'Very High', color: '#ef4444', score: 'D', maxLoan: 300 };
+        return { level: 'Building Credit', color: '#94a3b8', score: 'E', maxLoan: 100 };
+    },
+
+    // Calculate star rating from ZimScore (formula from ZIMSCORE_COMPLETE_GUIDE.md)
+    calculateStarRating(zimScore) {
+        // Formula: starRating = 1.0 + ((score - 30) / 55) * 4.0
+        const rating = 1.0 + ((zimScore - 30) / 55) * 4.0;
+        // Round to nearest 0.5
+        return Math.round(rating * 2) / 2;
     },
 
     // Generate mock documents
@@ -307,7 +354,7 @@ const MockMarketData = {
                 totalExpectedReturn: totalExpectedReturn.toFixed(2),
                 earnedSoFar: earnedSoFar.toFixed(2),
                 returnRate: ((earnedSoFar / myInvestment) * 100).toFixed(1),
-                riskLevel: this.calculateRiskLevel(borrower.zimScore, 100),
+                riskLevel: this.calculateRiskLevel(borrower.zimScore),
                 investedAt: new Date(now - (monthsElapsed * 30 * 24 * 60 * 60 * 1000)).toISOString(),
                 canSellOnSecondary: status === 'active' && monthsElapsed >= 1,
                 secondaryMarketValue: this.calculateSecondaryValue(myInvestment, earnedSoFar, monthsRemaining = term - monthsElapsed, status)
