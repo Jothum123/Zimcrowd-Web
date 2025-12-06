@@ -61,6 +61,7 @@ function loadRoute(routePath, routeName) {
 console.log('\n' + '='.repeat(60));
 console.log('📦 Loading Routes...');
 console.log('='.repeat(60));
+console.log('🔄 Activity tracking routes included for production deployment');
 
 const routes = {
     authProduction: loadRoute('./routes/auth-production', 'Authentication (Production)'),
