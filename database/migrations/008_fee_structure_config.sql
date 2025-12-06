@@ -40,12 +40,13 @@ ALTER TABLE loan_config ADD CONSTRAINT loan_config_parameter_name_check
         -- Lender Fees
         'processing_fee_lender', 'processing_fee_lender_type', 'processing_fee_lender_max',
         'platform_fee_lender', 'platform_fee_lender_type', 'platform_fee_lender_max',
+        'portfolio_management_fee_lender', 'portfolio_management_fee_lender_type', 'portfolio_management_fee_lender_max',
+        'due_diligence_fee_lender', 'due_diligence_fee_lender_type', 'due_diligence_fee_lender_max',
+        'insurance_fee_lender', 'insurance_fee_lender_type', 'insurance_fee_lender_max',
         'withdrawal_fee_lender', 'withdrawal_fee_lender_type', 'withdrawal_fee_lender_max',
         'investment_fee_lender', 'investment_fee_lender_type', 'investment_fee_lender_max',
         'default_recovery_fee_lender', 'default_recovery_fee_lender_type', 'default_recovery_fee_lender_max',
-        'portfolio_management_fee_lender', 'portfolio_management_fee_lender_type', 'portfolio_management_fee_lender_max',
         'secondary_market_fee_lender', 'secondary_market_fee_lender_type', 'secondary_market_fee_lender_max',
-        'due_diligence_fee_lender', 'due_diligence_fee_lender_type', 'due_diligence_fee_lender_max',
         -- Tiered Pricing Support
         'tier_1_min_amount', 'tier_1_max_amount', 'tier_1_fee_multiplier',
         'tier_2_min_amount', 'tier_2_max_amount', 'tier_2_fee_multiplier',
@@ -125,13 +126,25 @@ INSERT INTO loan_config (config_type, target_key, parameter_name, parameter_valu
 ('global', 'all', 'early_settlement_fee_borrower_max', 10.00), -- max $10 settlement fee
 
 -- Enhanced Lender Fee Defaults
-('global', 'all', 'processing_fee_lender', 1.00), -- 1% processing fee
+('global', 'all', 'processing_fee_lender', 2.50), -- 2.5% processing fee (once-off)
 ('global', 'all', 'processing_fee_lender_type', 1.00), -- percentage
-('global', 'all', 'processing_fee_lender_max', 30.00), -- max $30 processing fee
+('global', 'all', 'processing_fee_lender_max', 50.00), -- max $50 processing fee
 
-('global', 'all', 'platform_fee_lender', 0.50), -- 0.5% platform fee
+('global', 'all', 'platform_fee_lender', 5.00), -- 5% platform fee (once-off)
 ('global', 'all', 'platform_fee_lender_type', 1.00), -- percentage
-('global', 'all', 'platform_fee_lender_max', 20.00), -- max $20 platform fee
+('global', 'all', 'platform_fee_lender_max', 100.00), -- max $100 platform fee
+
+('global', 'all', 'portfolio_management_fee_lender', 2.50), -- 2.5% portfolio management fee (monthly)
+('global', 'all', 'portfolio_management_fee_lender_type', 1.00), -- percentage
+('global', 'all', 'portfolio_management_fee_lender_max', 50.00), -- max $50 portfolio management fee per month
+
+('global', 'all', 'due_diligence_fee_lender', 3.00), -- $3 due diligence fee (once-off)
+('global', 'all', 'due_diligence_fee_lender_type', 2.00), -- fixed amount
+('global', 'all', 'due_diligence_fee_lender_max', 3.00), -- fixed $3
+
+('global', 'all', 'insurance_fee_lender', 5.00), -- 5% insurance fee (optional, once-off)
+('global', 'all', 'insurance_fee_lender_type', 1.00), -- percentage
+('global', 'all', 'insurance_fee_lender_max', 100.00), -- max $100 insurance fee
 
 ('global', 'all', 'withdrawal_fee_lender', 1.00), -- 1% withdrawal fee
 ('global', 'all', 'withdrawal_fee_lender_type', 1.00), -- percentage
@@ -143,20 +156,12 @@ INSERT INTO loan_config (config_type, target_key, parameter_name, parameter_valu
 
 ('global', 'all', 'default_recovery_fee_lender', 10.00), -- 10% default recovery fee
 ('global', 'all', 'default_recovery_fee_lender_type', 1.00), -- percentage
-('global', 'all', 'default_recovery_fee_lender_max', 200.00), -- max $200 recovery fee
+('global', 'all', 'default_recovery_fee_lender_max', 200.00), -- max $200 default recovery fee
 
--- New Lender Fees
-('global', 'all', 'portfolio_management_fee_lender', 0.25), -- 0.25% portfolio management
-('global', 'all', 'portfolio_management_fee_lender_type', 1.00), -- percentage
-('global', 'all', 'portfolio_management_fee_lender_max', 50.00), -- max $50 management fee
-
+-- Additional Lender Fees
 ('global', 'all', 'secondary_market_fee_lender', 1.50), -- 1.5% secondary market
 ('global', 'all', 'secondary_market_fee_lender_type', 1.00), -- percentage
 ('global', 'all', 'secondary_market_fee_lender_max', 100.00), -- max $100 market fee
-
-('global', 'all', 'due_diligence_fee_lender', 3.00), -- $3 due diligence
-('global', 'all', 'due_diligence_fee_lender_type', 2.00), -- fixed amount
-('global', 'all', 'due_diligence_fee_lender_max', 3.00) -- fixed $3
 ON CONFLICT (config_type, target_key, parameter_name) DO NOTHING;
 
 -- Create fee configuration summary view for admin dashboard
@@ -449,7 +454,7 @@ BEGIN
         v_calculated_fee := GREATEST(v_calculated_fee, v_min_threshold);
         RETURN QUERY SELECT 'Investment Fee', 'Lender Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name, 'once-off';
         
-        -- Portfolio Management Fee (Once-off)
+        -- Portfolio Management Fee (Monthly - calculated on investment amount)
         SELECT lc.parameter_value, lc_type.parameter_value, lc_max.parameter_value
         INTO v_fee_rate, v_fee_type, v_fee_max
         FROM loan_config lc
@@ -463,13 +468,36 @@ BEGIN
         LIMIT 1;
         
         IF v_fee_type = 1.00 THEN -- Percentage
+            v_calculated_fee := LEAST((p_loan_amount * v_fee_rate / 100), v_fee_max);
+        ELSE -- Fixed Amount
+            v_calculated_fee := LEAST(v_fee_rate, v_fee_max);
+        END IF;
+        
+        -- No tier multiplier for portfolio management fees (applied monthly)
+        v_calculated_fee := GREATEST(v_calculated_fee, v_min_threshold);
+        RETURN QUERY SELECT 'Portfolio Management Fee', 'Lender Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name, 'monthly';
+        
+        -- Insurance Fee (Optional, Once-off)
+        SELECT lc.parameter_value, lc_type.parameter_value, lc_max.parameter_value
+        INTO v_fee_rate, v_fee_type, v_fee_max
+        FROM loan_config lc
+        LEFT JOIN loan_config lc_type ON lc_type.parameter_name = 'insurance_fee_lender_type' 
+            AND lc_type.config_type = lc.config_type AND lc_type.target_key = lc.target_key
+        LEFT JOIN loan_config lc_max ON lc_max.parameter_name = 'insurance_fee_lender_max' 
+            AND lc_max.config_type = lc.config_type AND lc_max.target_key = lc.target_key
+        WHERE lc.parameter_name = 'insurance_fee_lender' 
+        AND lc.is_active = true 
+        AND lc.config_type = 'global' 
+        LIMIT 1;
+        
+        IF v_fee_type = 1.00 THEN -- Percentage
             v_calculated_fee := LEAST((p_loan_amount * v_fee_rate / 100 * v_tier_multiplier), v_fee_max);
         ELSE -- Fixed Amount
             v_calculated_fee := LEAST(v_fee_rate * v_tier_multiplier, v_fee_max);
         END IF;
         
         v_calculated_fee := GREATEST(v_calculated_fee, v_min_threshold);
-        RETURN QUERY SELECT 'Portfolio Management Fee', 'Lender Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name, 'once-off';
+        RETURN QUERY SELECT 'Insurance Fee (Optional)', 'Lender Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name, 'once-off';
         
         -- Due Diligence Fee (Fixed)
         SELECT lc.parameter_value, lc_type.parameter_value, lc_max.parameter_value

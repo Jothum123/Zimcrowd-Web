@@ -46,16 +46,17 @@ This document outlines the complete fee breakdown for:
 | Early Settlement Fee | 0.5% | Percentage | $10 | Once-off | Early loan settlement processing |
 
 ### **📈 Enhanced Lender Fee Categories:**
-| Fee Type | Rate | Type | Max Amount | Description |
-|----------|------|------|------------|-------------|
-| Processing Fee | 1.0% | Percentage | $30 | Investment processing |
-| Platform Fee | 0.5% | Percentage | $20 | Platform access and tools |
-| Withdrawal Fee | 1.0% | Percentage | $25 | Fund withdrawal processing |
-| Investment Fee | 0.5% | Percentage | $15 | Investment management |
-| Default Recovery Fee | 10.0% | Percentage | $200 | Default recovery services |
-| **Portfolio Management** | **0.25%** | **Percentage** | **$50** | **Portfolio monitoring and reporting** |
-| **Secondary Market Fee** | **1.5%** | **Percentage** | **$100** | **Secondary market transactions** |
-| **Due Diligence Fee** | **$3** | **Fixed** | **$3** | **Borrower due diligence and verification** |
+| Fee Type | Rate | Type | Max Amount | Frequency | Description |
+|----------|------|------|------------|-----------|-------------|
+| Processing Fee | 2.5% | Percentage | $50 | Once-off | Investment processing and verification |
+| Platform Fee | 5.0% | Percentage | $100 | Once-off | Platform access, tools, and maintenance |
+| Portfolio Management | 2.5% | Percentage | $50 | Monthly | Portfolio monitoring and reporting |
+| **Due Diligence Fee** | **$3** | **Fixed** | **$3** | **Once-off** | **Borrower due diligence and verification** |
+| Insurance Fee | 5.0% | Percentage | $100 | Once-off (Optional) | Default protection and coverage |
+| Withdrawal Fee | 1.0% | Percentage | $25 | Once-off | Fund withdrawal processing |
+| Investment Fee | 0.5% | Percentage | $15 | Once-off | Investment management |
+| Default Recovery Fee | 10.0% | Percentage | $200 | Once-off | Default recovery services |
+| **Secondary Market Fee** | **1.5%** | **Percentage** | **$100** | **Once-off** | **Secondary market transactions** |
 
 ### **🛡️ Validation & Constraints:**
 - ✅ **Fee Percentage Cap**: All percentage fees limited to 0-100%
@@ -88,18 +89,22 @@ This document outlines the complete fee breakdown for:
 - **Monthly Collection Fee:** 5% of each installment until maturity
 
 ### **Lender Fees (Enhanced v4.0)**
-- Processing: 1.0% upfront (max $30)
-- Platform: 0.5% upfront (max $20)
-- Portfolio Management: 0.25% upfront (max $50)
+- Processing: 2.5% upfront (max $50)
+- Platform: 5.0% upfront (max $100)
+- Portfolio Management: 2.5% monthly on investment (max $50/month)
 - Due Diligence: $3 fixed
-- **Total Base:** ~1.75% + $3 fixed
-- **With Tier Discounts:** 1.2-1.75% + $3 fixed
+- Insurance: 5.0% optional upfront (max $100)
+- **Total Once-off Base:** ~7.5% + $3 fixed (without insurance)
+- **With Tier Discounts:** 5.25-7.5% + $3 fixed (once-off fees only)
+- **Monthly Portfolio Management:** 2.5% of investment amount until loan maturity
+- **With Optional Insurance:** +5% once-off for default protection
 
 ### **Lender Break-Even**
-- **Without Insurance:** 5% borrower rate ✅ (much lower!)
-- **With Insurance:** 6% borrower rate
-- **Maximum Returns:** 9.7% ROI at 10% borrower rate
-- **No ongoing fees** - All fees upfront only
+- **Without Insurance:** ~8% borrower rate (higher due to enhanced fees)
+- **With Insurance:** ~13% borrower rate (includes optional 5% insurance)
+- **Maximum Returns:** 6.5% ROI at 10% borrower rate (after 7.5% + $3 upfront + 2.5% monthly fees)
+- **Monthly Portfolio Management:** 2.5% of investment amount until loan maturity
+- **Enhanced Fee Structure:** Higher upfront fees but comprehensive portfolio management
 
 ---
 
@@ -173,7 +178,7 @@ Insurance Fee (2.5%):          -$2.50
 Document Verification:         -$2.00
 Credit Score Check:             -$5.00
 Total Once-off Fees:            -$17.00
-Net Amount Received:            $83.00 ✅
+Net Amount Received:            $83.00 
 
 MONTHLY FEES (Applied to Each Installment):
 Collection Fee (5% of payment): $1.84/month
@@ -198,9 +203,7 @@ Insurance Fee (2.5%):          $112.50 (was $125.00)
 Document Verification:         $2.00 (fixed)
 Credit Score Check:             $5.00 (fixed)
 Total Once-off Fees:            $457.00 (was $507.00)
-Net Amount Received:            $4,543.00 ✅
-
-TIER SAVINGS: $50.00 (10% discount on percentage fees)
+Net Amount Received:            $4,543.00 
 ```
 
 **Effective Cost:**

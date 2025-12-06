@@ -426,12 +426,13 @@ router.get('/categories',
                 'Lender Fees': [
                     'processing_fee_lender', 'processing_fee_lender_type', 'processing_fee_lender_max',
                     'platform_fee_lender', 'platform_fee_lender_type', 'platform_fee_lender_max',
+                    'portfolio_management_fee_lender', 'portfolio_management_fee_lender_type', 'portfolio_management_fee_lender_max',
+                    'due_diligence_fee_lender', 'due_diligence_fee_lender_type', 'due_diligence_fee_lender_max',
+                    'insurance_fee_lender', 'insurance_fee_lender_type', 'insurance_fee_lender_max',
                     'withdrawal_fee_lender', 'withdrawal_fee_lender_type', 'withdrawal_fee_lender_max',
                     'investment_fee_lender', 'investment_fee_lender_type', 'investment_fee_lender_max',
                     'default_recovery_fee_lender', 'default_recovery_fee_lender_type', 'default_recovery_fee_lender_max',
-                    'portfolio_management_fee_lender', 'portfolio_management_fee_lender_type', 'portfolio_management_fee_lender_max',
-                    'secondary_market_fee_lender', 'secondary_market_fee_lender_type', 'secondary_market_fee_lender_max',
-                    'due_diligence_fee_lender', 'due_diligence_fee_lender_type', 'due_diligence_fee_lender_max'
+                    'secondary_market_fee_lender', 'secondary_market_fee_lender_type', 'secondary_market_fee_lender_max'
                 ],
                 'Tiered Pricing': [
                     'tier_1_min_amount', 'tier_1_max_amount', 'tier_1_fee_multiplier',
