@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Pool } = require('pg');
 const requireAuth = require('../middleware/auth');
-const requireAdmin = require('../middleware/admin');
+const { authenticateAdmin } = require('../middleware/admin-auth.middleware');
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -354,7 +354,7 @@ router.get('/credits/config', async (req, res) => {
 // @desc    Award early repayment bonus (internal use)
 // @route   POST /api/wallet/credits/award-early-repayment
 // @access  Admin
-router.post('/credits/award-early-repayment', requireAdmin, async (req, res) => {
+router.post('/credits/award-early-repayment', authenticateAdmin, async (req, res) => {
     try {
         const { user_id, loan_id, early_payment_amount, remaining_principal, remaining_interest } = req.body;
         
@@ -415,7 +415,7 @@ router.post('/credits/award-early-repayment', requireAdmin, async (req, res) => 
 // @desc    Award tier discount credits to lenders (internal use)
 // @route   POST /api/wallet/credits/award-tier-discount
 // @access  Admin
-router.post('/credits/award-tier-discount', requireAdmin, async (req, res) => {
+router.post('/credits/award-tier-discount', authenticateAdmin, async (req, res) => {
     try {
         const { user_id, loan_id, loan_amount, tier_multiplier } = req.body;
         
@@ -443,7 +443,7 @@ router.post('/credits/award-tier-discount', requireAdmin, async (req, res) => {
 // @desc    Award referral credits (internal use)
 // @route   POST /api/wallet-credits/credits/award-referral
 // @access  Admin
-router.post('/credits/award-referral', requireAdmin, async (req, res) => {
+router.post('/credits/award-referral', authenticateAdmin, async (req, res) => {
     try {
         const { referrer_id, referral_id, loan_amount } = req.body;
         
@@ -549,7 +549,7 @@ router.get('/credits/platform-balance', requireAuth, async (req, res) => {
 // @desc    Award early repayment credits (updated to use new function)
 // @route   POST /api/wallet-credits/credits/award-early-repayment
 // @access  Admin
-router.post('/credits/award-early-repayment', requireAdmin, async (req, res) => {
+router.post('/credits/award-early-repayment', authenticateAdmin, async (req, res) => {
     try {
         const { user_id, loan_id, early_payment_amount, remaining_principal, remaining_interest } = req.body;
         
@@ -578,7 +578,7 @@ router.post('/credits/award-early-repayment', requireAdmin, async (req, res) => 
 // @desc    Convert tier discount credits to withdrawable after loan funding
 // @route   POST /api/wallet-credits/credits/convert-to-withdrawable
 // @access  Admin
-router.post('/credits/convert-to-withdrawable', requireAdmin, async (req, res) => {
+router.post('/credits/convert-to-withdrawable', authenticateAdmin, async (req, res) => {
     try {
         const { user_id, funded_loan_id } = req.body;
         
