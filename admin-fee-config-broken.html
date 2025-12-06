@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fee Configuration - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #1e293b;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #64748b;
+            font-size: 16px;
+        }
+
+        .actions-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .fee-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .fee-category {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .category-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .category-count {
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+        }
+
+        .fee-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .fee-item:last-child {
+            border-bottom: none;
+        }
+
+        .fee-info {
+            flex: 1;
+        }
+
+        .fee-name {
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .fee-description {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .fee-value {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .value-display {
+            font-weight: 600;
+            color: #1e293b;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .value-badge {
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #64748b;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 6px;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .calculator {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .calculator-header {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+
+        .calculator-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .calculation-results {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .history-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .history-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .history-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .history-change {
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        .history-time {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .history-details {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .alert-error {
+            background: #ef4444;
+            color: white;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-inactive {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+            
+            .fee-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions-bar {
+                width: 100%;
+                padding: 10px 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                font-size: 14px;
+                transition: border-color 0.2s ease;
+            }
+
+            .form-input:focus, .form-select:focus {
+                outline: none;
+                border-color: #3b82f6;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        <div class="actions-bar">
+            <button class="btn btn-primary" onclick="openEditModal()">
+                <i class="fas fa-plus"></i> Add New Fee
+            </button>
+            <button class="btn btn-secondary" onclick="refreshFeeConfig()">
+                <i class="fas fa-sync"></i> Refresh
+            </button>
+            <button class="btn btn-secondary" onclick="viewHistory()">
+                <i class="fas fa-history"></i> View History
+            </button>
+            <button class="btn btn-success" onclick="openCalculator()">
+                <i class="fas fa-calculator"></i> Fee Calculator
+            </button>
+        </div>
+
+        <div id="feeGrid" class="fee-grid">
+            <!-- Fee categories will be loaded here -->
+        </div>
+
+        <div class="calculator" id="calculator" style="display: none;">
+            <div class="calculator-header">
+                <i class="fas fa-calculator"></i> Fee Impact Calculator
+            </div>
+            <div class="calculator-form">
+                <div class="form-group">
+                    <label class="form-label">Loan Amount ($)</label>
+                    <input type="number" id="calcLoanAmount" class="form-input" placeholder="1000" value="1000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">User Role</label>
+                    <select id="calcUserRole" class="form-select">
+                        <option value="borrower">Borrower</option>
+                        <option value="lender">Lender</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Loan Type</label>
+                    <select id="calcLoanType" class="form-select">
+                        <option value="direct">Direct Lending</option>
+                        <option value="p2p">P2P Lending</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-primary" onclick="calculateFees()">
+                        <i class="fas fa-calculator"></i> Calculate
+                    </button>
+                </div>
+            </div>
+            <div id="calculationResults" class="calculation-results" style="display: none;">
+                <!-- Results will be displayed here -->
+            </div>
+        </div>
+
+        <div class="history-section" id="historySection" style="display: none;">
+            <div class="history-header">
+                <div class="history-title">
+                    <i class="fas fa-history"></i> Fee Configuration History
+                </div>
+                <button class="btn btn-secondary" onclick="closeHistory()">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+            <div id="historyList" class="history-list">
+                <!-- History items will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Fee Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Edit Fee Configuration</div>
+                <button class="close-btn" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form id="feeForm">
+                <div class="form-group">
+                    <label class="form-label">Configuration Type</label>
+                    <select id="configType" class="form-select" required>
+                        <option value="global">Global Configuration</option>
+                        <option value="loan_type">Loan Type Specific</option>
+                        <option value="employment_type">Employment Type Specific</option>
+                        <option value="user_override">User Override</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target Key</label>
+                    <input type="text" id="targetKey" class="form-input" placeholder="all, p2p, direct, informal, etc." required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fee Parameter</label>
+                    <select id="parameterName" class="form-select" required>
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fee Value</label>
+                    <input type="number" id="parameterValue" class="form-input" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Reason for Change</label>
+                    <textarea id="reason" class="form-textarea" placeholder="Explain the reason for this fee adjustment..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Verify API_CONFIG is loaded
+        if (typeof API_CONFIG === 'undefined') {
+            console.error('❌ API_CONFIG not loaded. Please check api-config-new.js');
+        }
+
+        let feeCategories = {};
+        let currentEditData = null;
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFeeCategories();
+            loadFeeConfig();
+        });
+
+        // Load fee categories and parameters
+        async function loadFeeCategories() {
+            try {
+                const response = await fetch(API_CONFIG.ENDPOINTS.ADMIN_FEE_CONFIG_CATEGORIES, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    feeCategories = data.data.categories;
+                    populateParameterSelect();
+                }
+            } catch (error) {
+                console.error('Failed to load fee categories:', error);
+                showAlert('Failed to load fee categories', 'error');
+            }
+        }
+
+        // Populate parameter select dropdown
+        function populateParameterSelect() {
+            const select = document.getElementById('parameterName');
+            select.innerHTML = '<option value="">Select a parameter...</option>';
+            
+            Object.entries(feeCategories).forEach(([category, parameters]) => {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = category;
+                
+                parameters.forEach(param => {
+                    const option = document.createElement('option');
+                    option.value = param;
+                    option.textContent = formatParameterName(param);
+                    optgroup.appendChild(option);
+                });
+                
+                select.appendChild(optgroup);
+            });
+        }
+
+        // Format parameter name for display
+        function formatParameterName(name) {
+            return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        // Load fee configuration
+        async function loadFeeConfig() {
+            try {
+                const response = await fetch(API_CONFIG.ENDPOINTS.ADMIN_FEE_CONFIG, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    displayFeeConfig(data.data.groupedFees);
+                } else {
+                    showAlert(data.message || 'Failed to load fee configuration', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to load fee configuration:', error);
+                showAlert('Failed to load fee configuration', 'error');
+            }
+        }
+
+        // Display fee configuration in grid
+        function displayFeeConfig(groupedFees) {
+            const grid = document.getElementById('feeGrid');
+            grid.innerHTML = '';
+
+            Object.entries(groupedFees).forEach(([category, fees]) => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'fee-category';
+                
+                categoryDiv.innerHTML = `
+                    <div class="category-header">
+                        <div class="category-title">${category}</div>
+                        <div class="category-count">${fees.length} fees</div>
+                    </div>
+                    <div class="fee-list">
+                        ${fees.map(fee => createFeeItem(fee)).join('')}
+                    </div>
+                `;
+                
+                grid.appendChild(categoryDiv);
+            });
+        }
+
+        // Create fee item HTML
+        function createFeeItem(fee) {
+            const valueDisplay = formatFeeValue(fee.parameter_value, fee.parameter_type);
+            const statusClass = fee.is_active ? 'status-active' : 'status-inactive';
+            const statusText = fee.is_active ? 'Active' : 'Inactive';
+            
+            return `
+                <div class="fee-item">
+                    <div class="fee-info">
+                        <div class="fee-name">${formatParameterName(fee.parameter_name)}</div>
+                        <div class="fee-description">${fee.parameter_type} • ${fee.config_type} • ${fee.target_key}</div>
+                    </div>
+                    <div class="fee-value">
+                        <div class="value-display">${valueDisplay}</div>
+                        <div class="status-badge ${statusClass}">${statusText}</div>
+                        <button class="btn btn-secondary" onclick="editFee('${fee.config_type}', '${fee.target_key}', '${fee.parameter_name}', ${fee.parameter_value})" style="padding: 4px 8px; font-size: 12px;">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Format fee value for display
+        function formatFeeValue(value, type) {
+            if (type === 'Percentage') {
+                return `${value}%`;
+            } else if (type === 'Maximum Amount') {
+                return `$${value}`;
+            } else if (type === 'Fee Rate') {
+                return `${value}%`;
+            } else {
+                return value.toString();
+            }
+        }
+
+        // Open edit modal
+        function openEditModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Fee Configuration';
+            document.getElementById('feeForm').reset();
+            currentEditData = null;
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        // Edit existing fee
+        function editFee(configType, targetKey, parameterName, parameterValue) {
+            document.getElementById('modalTitle').textContent = 'Edit Fee Configuration';
+            document.getElementById('configType').value = configType;
+            document.getElementById('targetKey').value = targetKey;
+            document.getElementById('parameterName').value = parameterName;
+            document.getElementById('parameterValue').value = parameterValue;
+            
+            currentEditData = { configType, targetKey, parameterName };
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        // Close edit modal
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+            currentEditData = null;
+        }
+
+        // Handle fee form submission
+        document.getElementById('feeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                config_type: document.getElementById('configType').value,
+                target_key: document.getElementById('targetKey').value,
+                parameter_name: document.getElementById('parameterName').value,
+                parameter_value: parseFloat(document.getElementById('parameterValue').value),
+                reason: document.getElementById('reason').value
+            };
+
+            try {
+                const response = await fetch(API_CONFIG.ENDPOINTS.ADMIN_FEE_CONFIG, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showAlert(`Fee configuration ${data.data.action_type.toLowerCase()}d successfully`, 'success');
+                    closeEditModal();
+                    loadFeeConfig();
+                } else {
+                    showAlert(data.message || 'Failed to update fee configuration', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to update fee configuration:', error);
+                showAlert('Failed to update fee configuration', 'error');
+            }
+        });
+
+        // Calculate fees
+        async function calculateFees() {
+            const loanAmount = document.getElementById('calcLoanAmount').value;
+            const userRole = document.getElementById('calcUserRole').value;
+            const loanType = document.getElementById('calcLoanType').value;
+
+            if (!loanAmount) {
+                showAlert('Please enter a loan amount', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(API_CONFIG.ENDPOINTS.ADMIN_FEE_CONFIG_CALCULATE, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify({
+                        loan_amount: parseFloat(loanAmount),
+                        user_role: userRole,
+                        loan_type: loanType
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    displayCalculationResults(data.data);
+                } else {
+                    showAlert(data.message || 'Failed to calculate fees', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to calculate fees:', error);
+                showAlert('Failed to calculate fees', 'error');
+            }
+        }
+
+        // Display calculation results
+        function displayCalculationResults(data) {
+            const resultsDiv = document.getElementById('calculationResults');
+            
+            let html = `
+                <div style="font-weight: 600; margin-bottom: 12px;">Fee Breakdown for $${data.loan_amount} (${data.user_role})</div>
+            `;
+            
+            if (data.fees && data.fees.length > 0) {
+                data.fees.forEach(fee => {
+                    const feeType = fee.is_percentage ? '%' : '$';
+                    const feeAmount = fee.is_percentage ? `${fee.fee_value}%` : `$${fee.fee_value}`;
+                    const actualAmount = `$${fee.fee_amount.toFixed(2)}`;
+                    
+                    html += `
+                        <div class="result-item">
+                            <span>${fee.fee_name}</span>
+                            <span>${actualAmount} (${feeAmount})</span>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<div class="result-item"><span>No fees applicable</span><span>$0.00</span></div>';
+            }
+            
+            html += `
+                <div class="result-item">
+                    <span>Total Fees</span>
+                    <span>$${data.total_fees.toFixed(2)}</span>
+                </div>
+                <div class="result-item">
+                    <span>Net Amount</span>
+                    <span>$${data.net_amount.toFixed(2)}</span>
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = html;
+            resultsDiv.style.display = 'block';
+        }
+
+        // Open calculator
+        function openCalculator() {
+            document.getElementById('calculator').style.display = 'block';
+            document.getElementById('historySection').style.display = 'none';
+        }
+
+        // View history
+        async function viewHistory() {
+            try {
+                const response = await fetch(API_CONFIG.ENDPOINTS.ADMIN_FEE_CONFIG_HISTORY + '?limit=20', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    displayHistory(data.data.history);
+                    document.getElementById('historySection').style.display = 'block';
+                    document.getElementById('calculator').style.display = 'none';
+                } else {
+                    showAlert(data.message || 'Failed to load history', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to load history:', error);
+                showAlert('Failed to load history', 'error');
+            }
+        }
+
+        // Display history
+        function displayHistory(history) {
+            const historyList = document.getElementById('historyList');
+            
+            if (history.length === 0) {
+                historyList.innerHTML = '<div style="text-align: center; color: #64748b; padding: 20px;">No fee configuration changes found</div>';
+                return;
+            }
+            
+            historyList.innerHTML = history.map(item => `
+                <div class="history-item">
+                    <div class="history-meta">
+                        <div class="history-change">${item.change_summary} - ${formatParameterName(item.parameter_name)}</div>
+                        <div class="history-time">${new Date(item.timestamp).toLocaleString()}</div>
+                    </div>
+                    <div class="history-details">
+                        ${item.admin_email} • ${item.config_type} • ${item.target_key}
+                        ${item.old_value !== null ? `• Changed from ${item.old_value} to ${item.new_value}` : `• Set to ${item.new_value}`}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Close history
+        function closeHistory() {
+            document.getElementById('historySection').style.display = 'none';
+        }
+
+        // Refresh fee configuration
+        function refreshFeeConfig() {
+            loadFeeConfig();
+            showAlert('Fee configuration refreshed', 'success');
+        }
+
+        // Show alert
+        function showAlert(message, type = 'success') {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.textContent = message;
+            alertBox.className = `alert alert-${type} show`;
+            
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 5000);
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+    </script>
+</body>
+</html>
