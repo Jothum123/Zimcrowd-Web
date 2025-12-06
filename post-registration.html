@@ -2468,8 +2468,21 @@
                     const adminVerifiedDocs = ['bank_statement', 'ecocash_statement', 'payslip', 'proof_of_residence', 'employment_letter', 'employment_contract'];
                     
                     if (aiVerifiedDocs.includes(documentType)) {
-                        console.log(`🤖 Sending ${documentType} to Google AI for verification`);
-                        return await uploadDocumentWithOCR(file, documentType);
+                        console.log(`🤖 Sending ${documentType} to Google AI for verification AND admin for review`);
+                        
+                        // Send to Google AI for analysis first
+                        const aiResult = await uploadDocumentWithOCR(file, documentType);
+                        
+                        // Then send to admin for manual review
+                        const adminResult = await uploadDocumentForAdmin(file, documentType);
+                        
+                        // Return combined result with AI analysis data
+                        return {
+                            ...aiResult,
+                            adminUploadId: adminResult.documentId || adminResult.data?.documentId,
+                            verificationStatus: 'ai_analyzed_pending_admin_review',
+                            message: 'Document analyzed by AI and queued for admin review'
+                        };
                     } else if (adminVerifiedDocs.includes(documentType)) {
                         console.log(`👨‍💼 Sending ${documentType} to admin for manual verification`);
                         return await uploadDocumentForAdmin(file, documentType);
@@ -2637,9 +2650,9 @@
                         if (ocrName && !ocrName.toLowerCase().includes(enteredName.split(' ')[0])) {
                             console.warn('⚠️ ID name may not match entered name');
                         }
-                        updateVerificationStep('id-front', 'done', 'ID Front Verified ✓');
+                        updateVerificationStep('id-front', 'warning', 'Analyzed by AI, queued for admin review ⏳');
                     } else {
-                        updateVerificationStep('id-front', 'warning', 'ID Front uploaded (OCR pending)');
+                        updateVerificationStep('id-front', 'warning', 'ID Front uploaded (analysis & admin review pending)');
                     }
                 }
                 
@@ -2651,9 +2664,9 @@
                     ocrResults.idBack = await uploadDocument(idBackFile, 'id_back');
                     
                     if (ocrResults.idBack.success) {
-                        updateVerificationStep('id-back', 'done', 'ID Back Verified ✓');
+                        updateVerificationStep('id-back', 'warning', 'Analyzed by AI, queued for admin review ⏳');
                     } else {
-                        updateVerificationStep('id-back', 'warning', 'ID Back uploaded (OCR pending)');
+                        updateVerificationStep('id-back', 'warning', 'ID Back uploaded (analysis & admin review pending)');
                     }
                 }
                 
@@ -2666,9 +2679,9 @@
                     ocrResults.selfie = await uploadDocument(selfieFile, 'selfie');
                     
                     if (ocrResults.selfie.success && ocrResults.selfie.data?.ocrData?.faceDetected) {
-                        updateVerificationStep('selfie', 'done', 'Face Detected ✓');
+                        updateVerificationStep('selfie', 'warning', 'Face analyzed by AI, queued for admin review ⏳');
                     } else if (ocrResults.selfie.success) {
-                        updateVerificationStep('selfie', 'warning', 'Selfie uploaded (face check pending)');
+                        updateVerificationStep('selfie', 'warning', 'Selfie uploaded (analysis & admin review pending)');
                     } else {
                         showVerificationError('face_not_detected', 'Could not detect face in selfie');
                         return;

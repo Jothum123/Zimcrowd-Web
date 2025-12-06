@@ -14925,9 +14925,27 @@ How it works:
             const authData = JSON.parse(localStorage.getItem('authData') || '{}');
             const userData = authData.user || JSON.parse(localStorage.getItem('userData') || '{}');
             
+            // Get cold start data from post-registration setup
+            const coldStartData = JSON.parse(localStorage.getItem('coldStartRating') || '{}');
+            
             const monthlyIncome = parseFloat(userData.monthly_income || userData.monthlyIncome || 300);
             const employmentType = (userData.employment_type || userData.employmentType || 'private').toLowerCase();
             const existingDebt = parseFloat(userData.existing_monthly_payments || 0);
+            
+            // Apply cold start limits if user has cold start restrictions
+            let maxLoanLimit = 3000; // Default maximum
+            let hasColdStart = false;
+            let coldStartLimit = 0;
+            
+            if (coldStartData.has_cold_start && coldStartData.cold_start_limit > 0) {
+                hasColdStart = true;
+                coldStartLimit = coldStartData.cold_start_limit;
+                maxLoanLimit = Math.min(coldStartData.final_cold_start_limit || coldStartData.max_loan_amount || 3000, coldStartLimit);
+                console.log(`🧊 Cold start active: Limit $${maxLoanLimit} (cap: $${coldStartLimit})`);
+            } else if (coldStartData.max_loan_amount) {
+                maxLoanLimit = coldStartData.final_max_loan_limit || coldStartData.max_loan_amount;
+                console.log(`🏛️ No cold start: Full DTNI limit $${maxLoanLimit}`);
+            }
             
             // Check repayment history (from user data or API)
             const loansRepaidOnTime = parseInt(userData.loans_repaid_on_time || userData.loansRepaidOnTime || 0);
@@ -14959,7 +14977,17 @@ How it works:
             }
             
             // Step 1: Calculate Maximum Monthly Installment
-            const maxInstallment = monthlyIncome * dtniPercentage;
+            let maxInstallment;
+            
+            if (isCivilServant) {
+                // Government employees: Net salary - $70 buffer = max installment
+                maxInstallment = Math.max(0, monthlyIncome - 70);
+                console.log(`🏛️ Government employee: Net salary $${monthlyIncome} - $70 buffer = $${maxInstallment.toFixed(2)} max installment`);
+            } else {
+                // Private and informal employees: Apply DTNI percentage
+                maxInstallment = monthlyIncome * dtniPercentage;
+                console.log(`💼 Private/Informal employee: Net salary $${monthlyIncome} × ${(dtniPercentage * 100)}% DTNI = $${maxInstallment.toFixed(2)} max installment`);
+            }
             
             // Step 2: Calculate Available Installment
             const availableInstallment = Math.max(0, maxInstallment - existingDebt);
@@ -14975,9 +15003,20 @@ How it works:
                 dtniBasedLimit = (availableInstallment * (powerTerm - 1)) / (monthlyRate * powerTerm);
             }
             
-            // Step 4: Apply Cap Ceiling (DTNI is ALWAYS the primary limiter)
-            // maxLoanAmount = min(DTNI-based limit, Cap Ceiling)
-            const maxLoanAmount = Math.min(dtniBasedLimit, capCeiling);
+            // Step 4: Apply Cold Start Limits and Cap Ceiling
+            // For cold start users: maxLoanAmount = min(DTNI-based limit, Cold Start Limit)
+            // For non-cold start users: maxLoanAmount = min(DTNI-based limit, Cap Ceiling)
+            let maxLoanAmount;
+            
+            if (hasColdStart) {
+                // Cold start users have strict caps
+                maxLoanAmount = Math.min(dtniBasedLimit, coldStartLimit, maxLoanLimit);
+                console.log(`🧊 Cold start calculation: DTNI $${dtniBasedLimit.toFixed(2)} → Limited to $${maxLoanAmount.toFixed(2)} (cold start cap $${coldStartLimit})`);
+            } else {
+                // Non-cold start users use normal caps
+                maxLoanAmount = Math.min(dtniBasedLimit, capCeiling, maxLoanLimit);
+                console.log(`🏛️ Full DTNI calculation: DTNI $${dtniBasedLimit.toFixed(2)} → Final limit $${maxLoanAmount.toFixed(2)}`);
+            }
             
             // Calculate DTNI ratio
             const dtniRatio = maxInstallment > 0 ? (existingDebt / maxInstallment) : 0;
@@ -15327,6 +15366,9 @@ How it works:
         }
 
         async function submitLoanRequest() {
+            // Get cold start data for validation
+            const coldStartData = JSON.parse(localStorage.getItem('coldStartRating') || '{}');
+            
             const loanData = {
                 amount: parseFloat(document.getElementById('loanAmount')?.value),
                 term: parseInt(document.getElementById('loanTerm')?.value),
@@ -15335,12 +15377,26 @@ How it works:
                 description: document.getElementById('loanDescription')?.value,
                 agreed_to_fees: document.getElementById('agreeToFees')?.checked,
                 agreed_to_terms: document.getElementById('agreeToTerms')?.checked,
-                e_signature: document.getElementById('eSignature')?.value
+                e_signature: document.getElementById('eSignature')?.value,
+                // Admin review workflow
+                status: 'pending_admin_review',
+                has_cold_start: coldStartData.has_cold_start || false,
+                cold_start_limit: coldStartData.cold_start_limit || 0,
+                employment_type: coldStartData.employment_type || 'private'
             };
             
             if (!loanData.amount || !loanData.term || !loanData.purpose) {
                 alert('Please fill in all required fields');
                 return;
+            }
+            
+            // Cold start validation
+            if (coldStartData.has_cold_start && coldStartData.cold_start_limit > 0) {
+                if (loanData.amount > coldStartData.cold_start_limit) {
+                    alert(`Cold start limit: Maximum loan amount is $${coldStartData.cold_start_limit}. Your requested amount is $${loanData.amount.toFixed(2)}.`);
+                    return;
+                }
+                console.log(`🧊 Cold start validation passed: Requested $${loanData.amount} ≤ Limit $${coldStartData.cold_start_limit}`);
             }
             
             if (!loanData.agreed_to_fees) {
@@ -15361,7 +15417,11 @@ How it works:
             try {
                 const response = await window.ZimCrowdAPI.createLoanRequest(loanData);
                 if (response.success) {
-                    alert('Loan request submitted successfully! It will appear in the primary market for investors.');
+                    const statusMessage = coldStartData.has_cold_start ? 
+                        `Loan request submitted for admin review! Amount: $${loanData.amount.toFixed(2)} (Cold start limit: $${coldStartData.cold_start_limit}). After approval, it will appear in the primary market.` :
+                        `Loan request submitted for admin review! Amount: $${loanData.amount.toFixed(2)}. After approval, it will appear in the primary market.`;
+                    
+                    alert(statusMessage);
                     closeLoanRequestModal();
                     // Reset form
                     document.getElementById('loanAmount').value = '';
