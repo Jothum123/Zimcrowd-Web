@@ -161,8 +161,7 @@ INSERT INTO loan_config (config_type, target_key, parameter_name, parameter_valu
 -- Additional Lender Fees
 ('global', 'all', 'secondary_market_fee_lender', 1.50), -- 1.5% secondary market
 ('global', 'all', 'secondary_market_fee_lender_type', 1.00), -- percentage
-('global', 'all', 'secondary_market_fee_lender_max', 100.00), -- max $100 market fee
-ON CONFLICT (config_type, target_key, parameter_name) DO NOTHING;
+('global', 'all', 'secondary_market_fee_lender_max', 100.00); -- max $100 market fee
 
 -- Create fee configuration summary view for admin dashboard
 CREATE OR REPLACE VIEW fee_config_summary AS
