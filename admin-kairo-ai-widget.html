@@ -543,9 +543,10 @@
     </div>
 
     <script>
-        const API_BASE_URL = window.location.hostname === 'localhost'
-            ? 'http://localhost:3000'
-            : 'https://zimcrowd-backend.vercel.app';
+        // Verify API_CONFIG is loaded
+        if (typeof API_CONFIG === 'undefined') {
+            console.error('❌ API_CONFIG not loaded. Please check api-config-new.js');
+        }
 
         let isTyping = false;
         let conversationHistory = [];
@@ -621,7 +622,7 @@
             try {
                 updateAIStatus('Processing...');
                 
-                const response = await fetch(`${API_BASE_URL}/api/admin/kairo-ai/chat`, {
+                const response = await fetch(API_CONFIG.ENDPOINTS.ADMIN_AI_CHAT, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

@@ -91,7 +91,22 @@ const API_CONFIG = {
       
       // Admin
       ADMIN: `${this.BASE_URL}/api/admin`,
-      ADMIN_DASHBOARD: `${this.BASE_URL}/api/admin-dashboard`
+      ADMIN_DASHBOARD: `${this.BASE_URL}/api/admin-dashboard`,
+      
+      // Admin Fee Configuration
+      ADMIN_FEE_CONFIG: `${this.BASE_URL}/api/admin/fee-config`,
+      ADMIN_FEE_CONFIG_HISTORY: `${this.BASE_URL}/api/admin/fee-config/history`,
+      ADMIN_FEE_CONFIG_CALCULATE: `${this.BASE_URL}/api/admin/fee-config/calculate`,
+      ADMIN_FEE_CONFIG_CATEGORIES: `${this.BASE_URL}/api/admin/fee-config/categories`,
+      
+      // Admin AI
+      ADMIN_AI: `${this.BASE_URL}/api/admin/kairo-ai`,
+      ADMIN_AI_CHAT: `${this.BASE_URL}/api/admin/kairo-ai/chat`,
+      ADMIN_AI_INSIGHTS: `${this.BASE_URL}/api/admin/kairo-ai/insights`,
+      ADMIN_AI_STATS: `${this.BASE_URL}/api/admin/kairo-ai/stats`,
+      ADMIN_AI_ANALYZE: `${this.BASE_URL}/api/admin/kairo-ai/analyze`,
+      ADMIN_AI_CONFIGURE: `${this.BASE_URL}/api/admin/kairo-ai/configure`,
+      ADMIN_AI_HISTORY: `${this.BASE_URL}/api/admin/kairo-ai/history`
     };
   },
   

@@ -394,6 +394,13 @@
         console.log('API_CONFIG available:', typeof API_CONFIG !== 'undefined');
         console.log('ZimCrowdAPI available:', typeof window.ZimCrowdAPI !== 'undefined');
         
+        // Verify API_CONFIG is loaded
+        if (typeof API_CONFIG === 'undefined') {
+            console.error('❌ API_CONFIG not loaded. Please check api-config-new.js');
+            showAlert('Configuration error. Please refresh the page.', 'error');
+            return;
+        }
+
         // Use centralized API configuration
         const API_URL = API_CONFIG.BASE_URL + '/api/auth';
         console.log('🌐 Admin API_URL set to:', API_URL);
@@ -424,7 +431,7 @@
                 console.log('🔐 Checking admin role for user:', user.email);
                 
                 // Check if user is admin by testing admin endpoint
-                const response = await fetch(`${API_CONFIG.BASE_URL}/api/admin/kairo-ai`, {
+                const response = await fetch(API_CONFIG.ENDPOINTS.ADMIN_AI, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,

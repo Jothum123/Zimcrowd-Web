@@ -86,15 +86,6 @@
             border-color: #cbd5e1;
         }
 
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-
         .btn-success {
             background: #10b981;
             color: white;
@@ -402,21 +393,6 @@
             color: white;
         }
 
-        .loading {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top: 2px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
         .status-badge {
             padding: 2px 8px;
             border-radius: 4px;
@@ -577,10 +553,17 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/api-config-new.js"></script>
+    <script src="js/api-helper.js"></script>
+    <script src="js/api-client.js"></script>
+    
     <script>
-        const API_BASE_URL = window.location.hostname === 'localhost'
-            ? 'http://localhost:3000'
-            : 'https://zimcrowd-backend.vercel.app';
+        // Verify API_CONFIG is loaded
+        if (typeof API_CONFIG === 'undefined') {
+            console.error('❌ API_CONFIG not loaded. Please check api-config-new.js');
+        }
 
         let feeCategories = {};
         let currentEditData = null;
@@ -594,7 +577,7 @@
         // Load fee categories and parameters
         async function loadFeeCategories() {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/fee-config/categories`, {
+                const response = await fetch(API_CONFIG.ENDPOINTS.ADMIN_FEE_CONFIG_CATEGORIES, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                     }
@@ -639,7 +622,7 @@
         // Load fee configuration
         async function loadFeeConfig() {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/fee-config`, {
+                const response = await fetch(API_CONFIG.ENDPOINTS.ADMIN_FEE_CONFIG, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                     }
@@ -755,7 +738,7 @@
             };
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/fee-config`, {
+                const response = await fetch(API_CONFIG.ENDPOINTS.ADMIN_FEE_CONFIG, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -790,7 +773,7 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/fee-config/calculate`, {
+                const response = await fetch(API_CONFIG.ENDPOINTS.ADMIN_FEE_CONFIG_CALCULATE, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -864,7 +847,7 @@
         // View history
         async function viewHistory() {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/fee-config/history?limit=20`, {
+                const response = await fetch(API_CONFIG.ENDPOINTS.ADMIN_FEE_CONFIG_HISTORY + '?limit=20', {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                     }
