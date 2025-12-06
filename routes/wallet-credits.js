@@ -27,6 +27,16 @@ router.get('/credits/summary', requireAuth, async (req, res) => {
             WHERE user_id = $1 AND is_withdrawable = true
         `, [userId]);
         
+        // Get lending credits summary (withdrawable credits that can be used for lending)
+        const lendingResult = await pool.query(`
+            SELECT 
+                COALESCE(SUM(CASE WHEN status = 'available' AND is_withdrawable = true AND 'lending' = ANY(usable_for) THEN amount ELSE 0 END), 0) as lending_balance,
+                COALESCE(SUM(CASE WHEN status = 'used' AND is_withdrawable = true AND 'lending' = ANY(usable_for) THEN amount ELSE 0 END), 0) as used_lending,
+                COUNT(CASE WHEN status = 'available' AND is_withdrawable = true AND 'lending' = ANY(usable_for) THEN 1 END) as lending_credits_count
+            FROM wallet_credits 
+            WHERE user_id = $1 AND is_withdrawable = true AND 'lending' = ANY(usable_for)
+        `, [userId]);
+        
         // Get platform credits summary (non-withdrawable)
         const platformResult = await pool.query(`
             SELECT 
@@ -40,6 +50,7 @@ router.get('/credits/summary', requireAuth, async (req, res) => {
         `, [userId]);
         
         const withdrawable = withdrawableResult.rows[0];
+        const lending = lendingResult.rows[0];
         const platform = platformResult.rows[0];
         
         res.json({
@@ -49,6 +60,11 @@ router.get('/credits/summary', requireAuth, async (req, res) => {
             withdrawn_total: parseFloat(withdrawable.withdrawn_total),
             expired_withdrawable: parseFloat(withdrawable.expired_withdrawable),
             withdrawable_credits_count: parseInt(withdrawable.withdrawable_credits_count),
+            
+            // Lending credits (withdrawable credits usable for funding loans)
+            lending_balance: parseFloat(lending.lending_balance),
+            used_lending: parseFloat(lending.used_lending),
+            lending_credits_count: parseInt(lending.lending_credits_count),
             
             // Platform credits (non-withdrawable)
             platform_balance: parseFloat(platform.platform_balance),
@@ -210,10 +226,10 @@ router.post('/credits/withdraw', requireAuth, async (req, res) => {
             });
         }
         
-        // Check user's withdrawable balance only (exclude non-withdrawable platform credits)
+        // Check user's withdrawable balance only (exclude non-withdrawable platform credits and used credits)
         const balanceResult = await pool.query(
-            'SELECT COALESCE(SUM(amount), 0) as withdrawable_balance FROM wallet_credits WHERE user_id = $1 AND status = $2 AND is_withdrawable = true',
-            [userId, 'available']
+            'SELECT COALESCE(SUM(amount), 0) as withdrawable_balance FROM wallet_credits WHERE user_id = $1 AND status = $2 AND is_withdrawable = true AND status != $3',
+            [userId, 'available', 'used']
         );
         
         const withdrawableBalance = balanceResult.rows[0].withdrawable_balance;

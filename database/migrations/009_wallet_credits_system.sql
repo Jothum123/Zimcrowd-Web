@@ -208,7 +208,7 @@ BEGIN
     -- Convert to credits (percentage of discount)
     v_credit_amount := v_discount_amount * (v_discount_percentage / 100);
     
-    -- Insert credit record
+    -- Insert credit record (withdrawable AND usable for lending)
     INSERT INTO wallet_credits (
         user_id, 
         credit_type, 
@@ -216,6 +216,8 @@ BEGIN
         source_reference, 
         status,
         available_at,
+        is_withdrawable,
+        usable_for,
         notes
     ) VALUES (
         p_user_id,
@@ -224,7 +226,9 @@ BEGIN
         'loan_' || p_loan_id,
         'pending',
         CURRENT_TIMESTAMP + INTERVAL '1 day', -- Available next day
-        'Tier discount credit for loan ' || p_loan_id
+        true, -- Withdrawable as cash
+        ARRAY['lending'], -- Can be used to fund loans
+        'Tier discount credit for loan ' || p_loan_id || ' - withdrawable or usable for lending'
     );
     
     -- Create transaction record
