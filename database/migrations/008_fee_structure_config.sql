@@ -11,9 +11,10 @@ BEGIN
         CHECK (
             -- Allow reasonable fee percentages (0-100%)
             (parameter_name LIKE '%_type' AND parameter_value IN (1.00, 2.00)) OR
-            (parameter_name LIKE '%fee%' AND parameter_name NOT LIKE '%_type' AND parameter_name NOT LIKE '%_max' AND parameter_value >= 0 AND parameter_value <= 100) OR
+            (parameter_name LIKE '%fee%' AND parameter_name NOT LIKE '%_type' AND parameter_name NOT LIKE '%_max' AND parameter_name NOT LIKE '%_threshold' AND parameter_value >= 0 AND parameter_value <= 100) OR
             (parameter_name LIKE '%_max' AND parameter_value >= 0) OR
-            (parameter_name NOT LIKE '%fee%' AND parameter_name NOT LIKE '%_type' AND parameter_name NOT LIKE '%_max')
+            (parameter_name LIKE '%_threshold' AND parameter_value >= 0) OR
+            (parameter_name NOT LIKE '%fee%' AND parameter_name NOT LIKE '%_type' AND parameter_name NOT LIKE '%_max' AND parameter_name NOT LIKE '%_threshold')
         );
 EXCEPTION
     WHEN duplicate_object THEN
