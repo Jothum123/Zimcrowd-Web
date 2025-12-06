@@ -66,18 +66,21 @@ try {
     var primaryMarketRoutes = require('./routes/primary-market');
     console.log('✅ Primary market routes loaded');
     var secondaryMarketRoutes = require('./routes/secondary-market');
-    console.log('✅ Secondary market routes loaded');
+    console.log(' Secondary market routes loaded');
     var kairoAIRoutes = require('./routes/kairo-ai');
-    console.log('✅ Kairo AI routes loaded');
+    console.log(' Kairo AI routes loaded');
     var adminKairoAIRoutes = require('./routes/admin-kairo-ai');
-    console.log('✅ Admin Kairo AI routes loaded');
+    console.log(' Admin Kairo AI routes loaded');
     var adminFeeConfigRoutes = require('./routes/admin-fee-config');
-    console.log('✅ Admin Fee Config routes loaded');
+    console.log(' Admin Fee Config routes loaded');
+    var walletCreditsRoutes = require('./routes/wallet-credits');
+    console.log(' Wallet Credits routes loaded');
     var p2pPrimaryMarketRoutes = require('./routes/p2p-primary-market');
-    console.log('✅ P2P Primary Market routes loaded');
+    console.log(' P2P Primary Market routes loaded');
     var p2pSecondaryMarketRoutes = require('./routes/p2p-secondary-market');
-    console.log('✅ P2P Secondary Market routes loaded');
+    console.log(' P2P Secondary Market routes loaded');
     var settingsRoutes = require('./routes/settings');
+    console.log(' Settings routes loaded');
     console.log('✅ Settings routes loaded');
     var securityRoutes = require('./routes/security');
     console.log('✅ Security routes loaded');
@@ -248,6 +251,8 @@ app.use('/api/profile-setup', profileSetupRoutes);
 console.log('✅ Profile setup routes registered');
 app.use('/api/storage', storageRoutes);
 console.log('✅ Storage routes registered');
+app.use('/api/wallet-credits', walletCreditsRoutes);
+console.log('✅ Wallet Credits routes registered');
 app.use('/api/kyc', kycOcrRoutes); // Alias for /api/kyc-ocr
 console.log('✅ KYC routes registered (alias for kyc-ocr)');
 

@@ -221,30 +221,33 @@ DECLARE
     v_min_threshold DECIMAL;
     v_max_threshold DECIMAL;
 BEGIN
-    -- Get tier multiplier based on loan amount
+    -- Get tier multiplier based on loan amount and user role
     v_tier_multiplier := 1.0;
-    v_tier_name := 'Tier 1 (Standard)';
+    v_tier_name := 'No Tier Discount - Early Repayment Bonus Available';
     
-    SELECT tier_multiplier, 
-           CASE 
-               WHEN p_loan_amount BETWEEN tier_1_min_amount AND tier_1_max_amount THEN 'Tier 1 (Standard)'
-               WHEN p_loan_amount BETWEEN tier_2_min_amount AND tier_2_max_amount THEN 'Tier 2 (10% Discount)'
-               WHEN p_loan_amount BETWEEN tier_3_min_amount AND tier_3_max_amount THEN 'Tier 3 (20% Discount)'
-               WHEN p_loan_amount >= tier_4_min_amount THEN 'Tier 4 (30% Discount)'
-               ELSE 'Tier 1 (Standard)'
-           END
-    INTO v_tier_multiplier, v_tier_name
-    FROM (
-        SELECT 
-            (SELECT parameter_value FROM loan_config WHERE parameter_name = 'tier_1_fee_multiplier' AND is_active = true LIMIT 1) as tier_multiplier,
-            (SELECT parameter_value FROM loan_config WHERE parameter_name = 'tier_1_min_amount' AND is_active = true LIMIT 1) as tier_1_min_amount,
-            (SELECT parameter_value FROM loan_config WHERE parameter_name = 'tier_1_max_amount' AND is_active = true LIMIT 1) as tier_1_max_amount,
-            (SELECT parameter_value FROM loan_config WHERE parameter_name = 'tier_2_min_amount' AND is_active = true LIMIT 1) as tier_2_min_amount,
-            (SELECT parameter_value FROM loan_config WHERE parameter_name = 'tier_2_max_amount' AND is_active = true LIMIT 1) as tier_2_max_amount,
-            (SELECT parameter_value FROM loan_config WHERE parameter_name = 'tier_3_min_amount' AND is_active = true LIMIT 1) as tier_3_min_amount,
-            (SELECT parameter_value FROM loan_config WHERE parameter_name = 'tier_3_max_amount' AND is_active = true LIMIT 1) as tier_3_max_amount,
-            (SELECT parameter_value FROM loan_config WHERE parameter_name = 'tier_4_min_amount' AND is_active = true LIMIT 1) as tier_4_min_amount
-    ) tier_config;
+    -- Only apply tier discounts for lenders, not borrowers
+    IF p_user_role = 'lender' THEN
+        SELECT tier_multiplier, 
+               CASE 
+                   WHEN p_loan_amount BETWEEN tier_1_min_amount AND tier_1_max_amount THEN 'Tier 1 (Standard)'
+                   WHEN p_loan_amount BETWEEN tier_2_min_amount AND tier_2_max_amount THEN 'Tier 2 (10% Discount)'
+                   WHEN p_loan_amount BETWEEN tier_3_min_amount AND tier_3_max_amount THEN 'Tier 3 (20% Discount)'
+                   WHEN p_loan_amount >= tier_4_min_amount THEN 'Tier 4 (30% Discount)'
+                   ELSE 'Tier 1 (Standard)'
+               END
+        INTO v_tier_multiplier, v_tier_name
+        FROM (
+            SELECT 
+                (SELECT parameter_value FROM loan_config WHERE parameter_name = 'tier_1_fee_multiplier' AND is_active = true LIMIT 1) as tier_multiplier,
+                (SELECT parameter_value FROM loan_config WHERE parameter_name = 'tier_1_min_amount' AND is_active = true LIMIT 1) as tier_1_min_amount,
+                (SELECT parameter_value FROM loan_config WHERE parameter_name = 'tier_1_max_amount' AND is_active = true LIMIT 1) as tier_1_max_amount,
+                (SELECT parameter_value FROM loan_config WHERE parameter_name = 'tier_2_min_amount' AND is_active = true LIMIT 1) as tier_2_min_amount,
+                (SELECT parameter_value FROM loan_config WHERE parameter_name = 'tier_2_max_amount' AND is_active = true LIMIT 1) as tier_2_max_amount,
+                (SELECT parameter_value FROM loan_config WHERE parameter_name = 'tier_3_min_amount' AND is_active = true LIMIT 1) as tier_3_min_amount,
+                (SELECT parameter_value FROM loan_config WHERE parameter_name = 'tier_3_max_amount' AND is_active = true LIMIT 1) as tier_3_max_amount,
+                (SELECT parameter_value FROM loan_config WHERE parameter_name = 'tier_4_min_amount' AND is_active = true LIMIT 1) as tier_4_min_amount
+        ) tier_config;
+    END IF;
     
     -- Get fee thresholds
     SELECT parameter_value, parameter_value 
