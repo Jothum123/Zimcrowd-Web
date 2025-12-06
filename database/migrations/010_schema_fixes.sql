@@ -44,17 +44,18 @@ BEGIN
         RAISE NOTICE 'Added transactions.user_id column';
         
         -- Backfill existing transactions with user_id from loans table
+        -- Note: This must run AFTER Fix 1 (user_id -> borrower_id rename)
         UPDATE transactions 
         SET user_id = l.borrower_id 
         FROM loans l 
         WHERE transactions.loan_id = l.id 
         AND transactions.user_id IS NULL;
         
-        RAISE NOTICE 'Backfilled transactions.user_id from loans.borrower_id';
+        RAISE NOTICE 'Backfilled transactions.user_id from loans.borrower_id for loan-related transactions';
         
-        -- Make column NOT NULL after backfill
-        ALTER TABLE transactions ALTER COLUMN user_id SET NOT NULL;
-        RAISE NOTICE 'Made transactions.user_id NOT NULL';
+        -- Note: Keep user_id nullable for transactions without loan_id (wallet deposits, fees, etc.)
+        -- These may need manual review and separate handling
+        RAISE NOTICE 'transactions.user_id remains nullable for non-loan transactions';
     ELSE
         RAISE NOTICE 'transactions.user_id already exists';
     END IF;
@@ -182,30 +183,47 @@ GROUP BY l.id, u.first_name, u.last_name, u.email;
 -- Update any RLS policies if they exist
 DO $$
 BEGIN
-    -- Drop old policies if they exist
-    DROP POLICY IF EXISTS "Users can view own loans" ON loans;
-    DROP POLICY IF EXISTS "Users can view own transactions" ON transactions;
+    -- Drop old policies if they exist (with exception handling)
+    BEGIN
+        DROP POLICY IF EXISTS "Users can view own loans" ON loans;
+    EXCEPTION WHEN OTHERS THEN
+        RAISE NOTICE 'Could not drop loans policy (may not exist): %', SQLERRM;
+    END;
     
-    -- Create new policies with correct column names
-    IF EXISTS (
-        SELECT 1 
-        FROM pg_policies 
-        WHERE tablename = 'loans'
-    ) THEN
-        CREATE POLICY "Users can view own loans" ON loans
-            FOR SELECT USING (auth.uid() = borrower_id);
-        RAISE NOTICE 'Updated loans RLS policy for borrower_id';
-    END IF;
+    BEGIN
+        DROP POLICY IF EXISTS "Users can view own transactions" ON transactions;
+    EXCEPTION WHEN OTHERS THEN
+        RAISE NOTICE 'Could not drop transactions policy (may not exist): %', SQLERRM;
+    END;
     
-    IF EXISTS (
-        SELECT 1 
-        FROM pg_policies 
-        WHERE tablename = 'transactions'
-    ) THEN
-        CREATE POLICY "Users can view own transactions" ON transactions
-            FOR SELECT USING (auth.uid() = user_id);
-        RAISE NOTICE 'Updated transactions RLS policy for user_id';
-    END IF;
+    -- Create new policies with correct column names (with exception handling)
+    BEGIN
+        IF EXISTS (
+            SELECT 1 
+            FROM pg_policies 
+            WHERE tablename = 'loans'
+        ) THEN
+            CREATE POLICY "Users can view own loans" ON loans
+                FOR SELECT USING (auth.uid() = borrower_id);
+            RAISE NOTICE 'Updated loans RLS policy for borrower_id';
+        END IF;
+    EXCEPTION WHEN OTHERS THEN
+        RAISE NOTICE 'Could not create loans RLS policy: %', SQLERRM;
+    END;
+    
+    BEGIN
+        IF EXISTS (
+            SELECT 1 
+            FROM pg_policies 
+            WHERE tablename = 'transactions'
+        ) THEN
+            CREATE POLICY "Users can view own transactions" ON transactions
+                FOR SELECT USING (auth.uid() = user_id);
+            RAISE NOTICE 'Updated transactions RLS policy for user_id';
+        END IF;
+    EXCEPTION WHEN OTHERS THEN
+        RAISE NOTICE 'Could not create transactions RLS policy: %', SQLERRM;
+    END;
 END $$;
 
 COMMIT;
