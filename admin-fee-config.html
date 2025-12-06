@@ -802,8 +802,15 @@
         function displayCalculationResults(data) {
             const resultsDiv = document.getElementById('calculationResults');
             
+            // Determine tier from first fee (all fees use same tier)
+            const tierInfo = data.fees && data.fees.length > 0 ? data.fees[0].fee_tier : 'No Tier Applied';
+            
             let html = `
                 <div style="font-weight: 600; margin-bottom: 12px;">Fee Breakdown for $${data.loan_amount} (${data.user_role})</div>
+                <div style="background: #e0f2fe; padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; font-size: 14px;">
+                    <i class="fas fa-layer-group" style="color: #0284c7; margin-right: 6px;"></i>
+                    <strong>Pricing Tier:</strong> ${tierInfo}
+                </div>
             `;
             
             if (data.fees && data.fees.length > 0) {

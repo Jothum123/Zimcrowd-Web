@@ -412,44 +412,36 @@ router.get('/categories',
         try {
             const feeCategories = {
                 'Borrower Fees': [
-                    'processing_fee_borrower',
-                    'processing_fee_borrower_type',
-                    'processing_fee_borrower_max',
-                    'platform_fee_borrower',
-                    'platform_fee_borrower_type',
-                    'platform_fee_borrower_max',
-                    'late_payment_fee_borrower',
-                    'late_payment_fee_borrower_type',
-                    'late_payment_fee_borrower_max',
-                    'early_repayment_fee_borrower',
-                    'early_repayment_fee_borrower_type',
-                    'early_repayment_fee_borrower_max',
-                    'disbursement_fee_borrower',
-                    'disbursement_fee_borrower_type',
-                    'disbursement_fee_borrower_max',
-                    'insurance_fee_borrower',
-                    'insurance_fee_borrower_type',
-                    'insurance_fee_borrower_max'
+                    'processing_fee_borrower', 'processing_fee_borrower_type', 'processing_fee_borrower_max',
+                    'platform_fee_borrower', 'platform_fee_borrower_type', 'platform_fee_borrower_max',
+                    'late_payment_fee_borrower', 'late_payment_fee_borrower_type', 'late_payment_fee_borrower_max',
+                    'early_repayment_fee_borrower', 'early_repayment_fee_borrower_type', 'early_repayment_fee_borrower_max',
+                    'disbursement_fee_borrower', 'disbursement_fee_borrower_type', 'disbursement_fee_borrower_max',
+                    'insurance_fee_borrower', 'insurance_fee_borrower_type', 'insurance_fee_borrower_max',
+                    'document_verification_fee_borrower', 'document_verification_fee_borrower_type', 'document_verification_fee_borrower_max',
+                    'credit_score_check_fee_borrower', 'credit_score_check_fee_borrower_type', 'credit_score_check_fee_borrower_max',
+                    'early_settlement_fee_borrower', 'early_settlement_fee_borrower_type', 'early_settlement_fee_borrower_max'
                 ],
                 'Lender Fees': [
-                    'processing_fee_lender',
-                    'processing_fee_lender_type',
-                    'processing_fee_lender_max',
-                    'platform_fee_lender',
-                    'platform_fee_lender_type',
-                    'platform_fee_lender_max',
-                    'withdrawal_fee_lender',
-                    'withdrawal_fee_lender_type',
-                    'withdrawal_fee_lender_max',
-                    'investment_fee_lender',
-                    'investment_fee_lender_type',
-                    'investment_fee_lender_max',
-                    'default_recovery_fee_lender',
-                    'default_recovery_fee_lender_type',
-                    'default_recovery_fee_lender_max'
+                    'processing_fee_lender', 'processing_fee_lender_type', 'processing_fee_lender_max',
+                    'platform_fee_lender', 'platform_fee_lender_type', 'platform_fee_lender_max',
+                    'withdrawal_fee_lender', 'withdrawal_fee_lender_type', 'withdrawal_fee_lender_max',
+                    'investment_fee_lender', 'investment_fee_lender_type', 'investment_fee_lender_max',
+                    'default_recovery_fee_lender', 'default_recovery_fee_lender_type', 'default_recovery_fee_lender_max',
+                    'portfolio_management_fee_lender', 'portfolio_management_fee_lender_type', 'portfolio_management_fee_lender_max',
+                    'secondary_market_fee_lender', 'secondary_market_fee_lender_type', 'secondary_market_fee_lender_max',
+                    'due_diligence_fee_lender', 'due_diligence_fee_lender_type', 'due_diligence_fee_lender_max'
                 ],
-                'General Fees': [
-                    'fee_calculation_method'
+                'Tiered Pricing': [
+                    'tier_1_min_amount', 'tier_1_max_amount', 'tier_1_fee_multiplier',
+                    'tier_2_min_amount', 'tier_2_max_amount', 'tier_2_fee_multiplier',
+                    'tier_3_min_amount', 'tier_3_max_amount', 'tier_3_fee_multiplier',
+                    'tier_4_min_amount', 'tier_4_max_amount', 'tier_4_fee_multiplier'
+                ],
+                'Fee Configuration': [
+                    'fee_calculation_method',
+                    'minimum_fee_threshold',
+                    'maximum_fee_threshold'
                 ]
             };
             
