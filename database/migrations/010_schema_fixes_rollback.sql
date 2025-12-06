@@ -137,4 +137,7 @@ END $$;
 
 COMMIT;
 
-RAISE NOTICE 'Schema fixes rollback completed successfully';
+DO $$
+BEGIN
+    RAISE NOTICE 'Schema fixes rollback completed successfully';
+END $$;
