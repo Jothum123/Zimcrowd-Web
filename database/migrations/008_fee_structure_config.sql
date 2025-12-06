@@ -96,13 +96,13 @@ INSERT INTO loan_config (config_type, target_key, parameter_name, parameter_valu
 ('global', 'all', 'collection_fee_borrower_type', 1.00), -- percentage
 ('global', 'all', 'collection_fee_borrower_max', 50.00), -- max $50 collection fee per installment
 
-('global', 'all', 'late_payment_fee_borrower', 5.00), -- 5% late payment fee
+('global', 'all', 'late_payment_fee_borrower', 10.00), -- 10% late payment fee
 ('global', 'all', 'late_payment_fee_borrower_type', 1.00), -- percentage
-('global', 'all', 'late_payment_fee_borrower_max', 100.00), -- max $100 late fee
+('global', 'all', 'late_payment_fee_borrower_max', 200.00), -- max $200 late fee
 
-('global', 'all', 'early_repayment_fee_borrower', 1.00), -- 1% early repayment fee
+('global', 'all', 'early_repayment_fee_borrower', 0.00), -- 0% early repayment fee (removed)
 ('global', 'all', 'early_repayment_fee_borrower_type', 1.00), -- percentage
-('global', 'all', 'early_repayment_fee_borrower_max', 20.00), -- max $20 early repayment fee
+('global', 'all', 'early_repayment_fee_borrower_max', 0.00), -- max $0 early repayment fee
 
 ('global', 'all', 'disbursement_fee_borrower', 0.00), -- 0% disbursement fee
 ('global', 'all', 'disbursement_fee_borrower_type', 1.00), -- percentage

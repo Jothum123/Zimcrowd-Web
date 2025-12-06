@@ -40,8 +40,8 @@ This document outlines the complete fee breakdown for:
 | **Document Verification** | **$2** | **Fixed** | **$2** | **Once-off** | **Document processing and validation** |
 | **Credit Score Check** | **$5** | **Fixed** | **$5** | **Once-off** | **Credit assessment and scoring** |
 | Collection Fee | 5.0% | Percentage | $50 | Monthly | Applied to each installment until maturity |
-| Late Payment Fee | 5.0% | Percentage | $100 | Once-off | Penalty for late payments |
-| Early Repayment Fee | 1.0% | Percentage | $20 | Once-off | Fee for early loan settlement |
+| Late Payment Fee | 10.0% | Percentage | $200 | Once-off | Penalty for late payments |
+| Early Repayment Fee | 0.0% | Percentage | $0 | Once-off | No fee for early loan settlement |
 | Disbursement Fee | 0.0% | Percentage | $0 | Once-off | Fee for loan disbursement |
 | Early Settlement Fee | 0.5% | Percentage | $10 | Once-off | Early loan settlement processing |
 
@@ -84,6 +84,8 @@ This document outlines the complete fee breakdown for:
 - Document Verification: $2 fixed
 - Credit Score Check: $5 fixed
 - Collection Fee: 5% monthly on installments (max $50/month)
+- Late Payment Fee: 10% (max $200) - increased from 5%
+- Early Repayment Fee: 0% (removed) - no penalty for early settlement
 - **Total Once-off Base:** ~10% + $7 fixed fees
 - **With Tier Discounts:** 7-10% + $7 fixed (once-off fees only)
 - **Monthly Collection Fee:** 5% of each installment until maturity
