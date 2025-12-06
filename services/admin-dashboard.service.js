@@ -433,54 +433,7 @@ class AdminDashboardService {
             };
         }
     }
-    
-    /**
-     * Get loans list with filters
-     * @param {Object} filters - Filter options
-     * @returns {Promise<Object>} Loans list
-     */
-    async getLoans(filters = {}) {
-        try {
-            const { page = 1, limit = 20, status = 'pending' } = filters;
-            const offset = (page - 1) * limit;
-            
-            const { data: loans, count, error } = await supabase
-                .from('loans')
-                .select(`
-                    *,
-                    users (
-                        email,
-                        first_name,
-                        last_name
-                    )
-                `, { count: 'exact' })
-                .eq('status', status)
-                .order('created_at', { ascending: false })
-                .range(offset, offset + limit - 1);
-            
-            if (error) throw error;
-            
-            return {
-                success: true,
-                data: {
-                    loans: loans || [],
-                    pagination: {
-                        page: parseInt(page),
-                        limit: parseInt(limit),
-                        total: count || 0,
-                        pages: Math.ceil((count || 0) / limit)
-                    }
-                }
-            };
-        } catch (error) {
-            console.error('❌ Error getting loans:', error);
-            return {
-                success: false,
-                error: error.message
-            };
-        }
-    }
-    
+
     /**
      * Calculate growth rate
      * @param {number} total - Total count

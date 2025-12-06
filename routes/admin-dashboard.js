@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const AdminDashboardService = require('../services/admin-dashboard.service');
+const LoanManagementService = require('../services/loan-management.service');
 
 const dashboardService = new AdminDashboardService();
+const loanService = new LoanManagementService();
 
 /**
  * Simple admin authentication middleware
@@ -73,7 +75,8 @@ router.get('/loans', authenticateAdmin, async (req, res) => {
         const filters = {
             page: parseInt(req.query.page) || 1,
             limit: parseInt(req.query.limit) || 20,
-            status: req.query.status || 'pending'
+            status: req.query.status || 'all',
+            loan_type: req.query.loan_type || 'all'
         };
         
         const loans = await dashboardService.getLoans(filters);
@@ -83,6 +86,168 @@ router.get('/loans', authenticateAdmin, async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to get loans'
+        });
+    }
+});
+
+/**
+ * GET /api/admin-dashboard/loans/:id
+ * Get detailed loan information
+ */
+router.get('/loans/:id', authenticateAdmin, async (req, res) => {
+    try {
+        const loanId = req.params.id;
+        const loan = await loanService.getLoanDetails(loanId);
+        
+        if (!loan.success) {
+            return res.status(404).json({
+                success: false,
+                message: 'Loan not found'
+            });
+        }
+        
+        res.json(loan);
+    } catch (error) {
+        console.error('Error getting loan details:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get loan details'
+        });
+    }
+});
+
+/**
+ * GET /api/admin-dashboard/loans/:id/schedule
+ * Get repayment schedule for a loan
+ */
+router.get('/loans/:id/schedule', authenticateAdmin, async (req, res) => {
+    try {
+        const loanId = req.params.id;
+        const schedule = await loanService.getLoanSchedule(loanId);
+        
+        res.json({
+            success: true,
+            data: schedule
+        });
+    } catch (error) {
+        console.error('Error getting loan schedule:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get loan schedule'
+        });
+    }
+});
+
+/**
+ * GET /api/admin-dashboard/loans/:id/transactions
+ * Get transaction ledger for a loan
+ */
+router.get('/loans/:id/transactions', authenticateAdmin, async (req, res) => {
+    try {
+        const loanId = req.params.id;
+        const transactions = await loanService.getLoanTransactions(loanId);
+        
+        res.json({
+            success: true,
+            data: transactions
+        });
+    } catch (error) {
+        console.error('Error getting loan transactions:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get loan transactions'
+        });
+    }
+});
+
+/**
+ * POST /api/admin-dashboard/loans/:id/approve
+ * Approve a loan and generate repayment schedule
+ */
+router.post('/loans/:id/approve', authenticateAdmin, async (req, res) => {
+    try {
+        const loanId = req.params.id;
+        const result = await loanService.approveLoan(loanId);
+        
+        if (!result.success) {
+            return res.status(400).json({
+                success: false,
+                message: result.message || 'Failed to approve loan'
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Loan approved successfully',
+            data: result.data
+        });
+    } catch (error) {
+        console.error('Error approving loan:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to approve loan'
+        });
+    }
+});
+
+/**
+ * POST /api/admin-dashboard/loans/:id/reject
+ * Reject a loan
+ */
+router.post('/loans/:id/reject', authenticateAdmin, async (req, res) => {
+    try {
+        const loanId = req.params.id;
+        const { reason } = req.body;
+        
+        const result = await loanService.rejectLoan(loanId, reason);
+        
+        if (!result.success) {
+            return res.status(400).json({
+                success: false,
+                message: result.message || 'Failed to reject loan'
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Loan rejected successfully',
+            data: result.data
+        });
+    } catch (error) {
+        console.error('Error rejecting loan:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to reject loan'
+        });
+    }
+});
+
+/**
+ * POST /api/admin-dashboard/loans/:id/disburse
+ * Disburse funds for an approved loan
+ */
+router.post('/loans/:id/disburse', authenticateAdmin, async (req, res) => {
+    try {
+        const loanId = req.params.id;
+        const result = await loanService.disburseLoan(loanId);
+        
+        if (!result.success) {
+            return res.status(400).json({
+                success: false,
+                message: result.message || 'Failed to disburse loan'
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Loan disbursed successfully',
+            data: result.data
+        });
+    } catch (error) {
+        console.error('Error disbursing loan:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to disburse loan'
         });
     }
 });

@@ -454,6 +454,35 @@
             }
         };
 
+        // Employment-based loan limits for direct lending
+        const DIRECT_LOAN_LIMITS = {
+            government: {
+                maxLoan: 3000,
+                maxTermMonths: 24,
+                usesBuffer: true,
+                bufferAmount: 70,
+                dtniPercentage: 0
+            },
+            private: {
+                maxLoan: 1000,
+                maxTermMonths: 12,
+                usesBuffer: false,
+                bufferAmount: 0,
+                dtniPercentage: 0.33
+            },
+            informal: {
+                maxLoan: 500,
+                maxTermMonths: 6,
+                usesBuffer: false,
+                bufferAmount: 0,
+                dtniPercentage: 0.33
+            }
+        };
+
+        // Employment type and salary data
+        let selectedEmploymentType = 'private';
+        let monthlyIncome = 0;
+
         // Get auth token
         const authToken = localStorage.getItem('authToken');
 
@@ -515,6 +544,28 @@
                     <h4 style="color: #1e293b; margin-bottom: 15px; font-size: 16px;">Loan Details</h4>
                     
                     <div style="margin-bottom: 20px;">
+                        <label style="display: block; color: #374151; font-weight: 500; margin-bottom: 8px;">Employment Type <span style="color: red;">*</span></label>
+                        <select id="employment-type" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 16px;" onchange="handleEmploymentTypeChange()">
+                            <option value="government">Government Employee</option>
+                            <option value="private" selected>Private Sector Employee</option>
+                            <option value="informal">Informal Sector / Business</option>
+                        </select>
+                        <div style="margin-top: 5px; font-size: 12px; color: #64748b;" id="employment-info">
+                            Maximum loan: $1,000 over 12 months
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; color: #374151; font-weight: 500; margin-bottom: 8px;">Net Monthly Salary (<span id="currency-label">USD</span>) <span style="color: red;">*</span></label>
+                        <input type="number" id="monthly-salary" min="100" max="10000" step="50" 
+                               style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 16px;"
+                               placeholder="Enter your net monthly salary" onchange="handleSalaryChange()">
+                        <div style="margin-top: 5px; font-size: 12px; color: #64748b;" id="salary-info">
+                            Enter your take-home pay after deductions
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
                         <label style="display: block; color: #374151; font-weight: 500; margin-bottom: 8px;">Loan Amount (<span id="currency-label">USD</span>)</label>
                         <input type="number" id="loan-amount" min="25" max="3000" step="25" 
                                style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 16px;"
@@ -530,7 +581,13 @@
                             <option value="30">30 days (1 month)</option>
                             <option value="60">60 days (2 months)</option>
                             <option value="90">90 days (3 months)</option>
+                            <option value="180">180 days (6 months)</option>
+                            <option value="360">360 days (12 months)</option>
+                            <option value="720">720 days (24 months)</option>
                         </select>
+                        <div style="margin-top: 5px; font-size: 12px; color: #64748b;" id="duration-info">
+                            Maximum duration: 12 months
+                        </div>
                     </div>
 
                     <div style="margin-bottom: 20px;">
@@ -575,13 +632,121 @@
             showCurrencySelector();
         }
 
+        function handleEmploymentTypeChange() {
+            const employmentType = document.getElementById('employment-type').value;
+            selectedEmploymentType = employmentType;
+            
+            const limits = DIRECT_LOAN_LIMITS[employmentType];
+            
+            // Update employment info
+            const infoText = employmentType === 'government' 
+                ? `Maximum loan: $${limits.maxLoan} over ${limits.maxTermMonths} months (with $${limits.bufferAmount} buffer)`
+                : `Maximum loan: $${limits.maxLoan} over ${limits.maxTermMonths} months (DTNI-based)`;
+            
+            document.getElementById('employment-info').textContent = infoText;
+            
+            // Update loan amount limits
+            const loanAmountInput = document.getElementById('loan-amount');
+            loanAmountInput.max = limits.maxLoan;
+            document.getElementById('amount-limits').textContent = `Minimum: $25, Maximum: $${limits.maxLoan}`;
+            
+            // Update duration options and info
+            updateDurationOptions(limits.maxTermMonths);
+            
+            // Reset loan amount if it exceeds new limit
+            if (parseFloat(loanAmountInput.value) > limits.maxLoan) {
+                loanAmountInput.value = Math.min(25, limits.maxLoan);
+            }
+            
+            // Recalculate with new limits
+            updateLoanCalculation();
+        }
+
+        function handleSalaryChange() {
+            monthlyIncome = parseFloat(document.getElementById('monthly-salary').value) || 0;
+            updateLoanCalculation();
+        }
+
+        function updateDurationOptions(maxMonths) {
+            const durationSelect = document.getElementById('loan-duration');
+            const options = [
+                { value: 30, text: '30 days (1 month)', months: 1 },
+                { value: 60, text: '60 days (2 months)', months: 2 },
+                { value: 90, text: '90 days (3 months)', months: 3 },
+                { value: 180, text: '180 days (6 months)', months: 6 },
+                { value: 360, text: '360 days (12 months)', months: 12 },
+                { value: 720, text: '720 days (24 months)', months: 24 }
+            ];
+            
+            // Clear existing options
+            durationSelect.innerHTML = '';
+            
+            // Add allowed options
+            options.forEach(option => {
+                if (option.months <= maxMonths) {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option.value;
+                    optionElement.textContent = option.text;
+                    durationSelect.appendChild(optionElement);
+                }
+            });
+            
+            // Update duration info
+            document.getElementById('duration-info').textContent = `Maximum duration: ${maxMonths} months`;
+        }
+
+        function calculateMaxLoanAmount() {
+            if (!monthlyIncome || monthlyIncome <= 0) {
+                return 0;
+            }
+            
+            const limits = DIRECT_LOAN_LIMITS[selectedEmploymentType];
+            
+            if (limits.usesBuffer) {
+                // Government: Net salary - buffer
+                const availableAmount = monthlyIncome - limits.bufferAmount;
+                return Math.max(0, Math.min(limits.maxLoan, availableAmount));
+            } else {
+                // Private/Informal: DTNI calculation using reducing balance method
+                const maxInstallment = monthlyIncome * limits.dtniPercentage;
+                const monthlyRate = 0.08 / 12; // 8% annual rate / 12 months
+                
+                // Use reducing balance formula for 3-month term as baseline
+                const termMonths = 3;
+                const powerTerm = Math.pow(1 + monthlyRate, termMonths);
+                const maxLoan = (maxInstallment * (powerTerm - 1)) / (monthlyRate * powerTerm);
+                
+                return Math.min(limits.maxLoan, Math.max(0, maxLoan));
+            }
+        }
+
         function updateLoanCalculation() {
             const amount = parseFloat(document.getElementById('loan-amount').value) || 0;
             const duration = parseInt(document.getElementById('loan-duration').value) || 30;
             const config = CURRENCY_CONFIG[selectedCurrency];
             
-            if (amount < config.minLoan || amount > config.maxLoan) {
+            // Check if salary is entered
+            if (!monthlyIncome || monthlyIncome <= 0) {
                 document.getElementById('loan-calculation').style.display = 'none';
+                document.getElementById('amount-limits').innerHTML = 
+                    `<span style="color: red;">Please enter your monthly salary to calculate loan eligibility</span>`;
+                return;
+            }
+            
+            // Calculate maximum allowed amount based on employment and salary
+            const maxAllowedAmount = calculateMaxLoanAmount();
+            
+            if (amount < config.minLoan || amount > maxAllowedAmount) {
+                document.getElementById('loan-calculation').style.display = 'none';
+                
+                // Show warning if amount exceeds calculated limit
+                if (amount > maxAllowedAmount && maxAllowedAmount > 0) {
+                    document.getElementById('amount-limits').innerHTML = 
+                        `Minimum: $25, Maximum: $${maxAllowedAmount} <span style="color: red;">(Based on your income)</span>`;
+                } else if (maxAllowedAmount === 0) {
+                    document.getElementById('amount-limits').innerHTML = 
+                        `<span style="color: red;">Insufficient income for loan eligibility</span>`;
+                }
                 return;
             }
             
@@ -601,6 +766,8 @@
             const amount = parseFloat(document.getElementById('loan-amount').value);
             const duration = parseInt(document.getElementById('loan-duration').value);
             const purpose = document.getElementById('loan-purpose').value;
+            const employmentType = document.getElementById('employment-type').value;
+            const salary = parseFloat(document.getElementById('monthly-salary').value);
             const config = CURRENCY_CONFIG[selectedCurrency];
             
             // Validation
@@ -609,8 +776,13 @@
                 return;
             }
             
-            if (amount < config.minLoan || amount > config.maxLoan) {
-                showError(`Loan amount must be between ${formatAmount(config.minLoan)} and ${formatAmount(config.maxLoan)}`);
+            if (!salary || salary <= 0) {
+                showError('Please enter your monthly salary');
+                return;
+            }
+            
+            if (amount < config.minLoan || amount > calculateMaxLoanAmount()) {
+                showError(`Loan amount must be between ${formatAmount(config.minLoan)} and ${formatAmount(calculateMaxLoanAmount())} based on your income`);
                 return;
             }
             
@@ -620,7 +792,15 @@
             }
             
             // Store loan details and proceed
-            loanDetails = { amount, duration, purpose, currency: selectedCurrency };
+            loanDetails = { 
+                amount, 
+                duration, 
+                purpose, 
+                currency: selectedCurrency,
+                employmentType,
+                monthlySalary: salary,
+                loanType: 'direct'
+            };
             loadOffer();
         }
         
@@ -664,12 +844,13 @@
             content.innerHTML = `
                 <div class="loading-state">
                     <div class="spinner"></div>
-                    <p style="color: #64748b;">Preparing your personalized ${loanDetails.currency} offer...</p>
+                    <p style="color: #64748b;">Submitting your direct loan request for admin review...</p>
                 </div>
             `;
             
             try {
-                const response = await fetch(`${API_BASE_URL}/api/direct-loans/create-offer`, {
+                // Submit direct loan request for admin review
+                const response = await fetch(`${API_BASE_URL}/api/loans/create`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -677,28 +858,87 @@
                     },
                     body: JSON.stringify({ 
                         amount: loanDetails.amount,
-                        durationDays: loanDetails.duration,
+                        term: Math.floor(loanDetails.duration / 30), // Convert days to months
+                        rate: 8, // Direct loan fixed rate
+                        purpose: loanDetails.purpose,
+                        description: `Direct loan request - ${loanDetails.employmentType} employee`,
+                        loan_type: 'direct',
+                        employment_type: loanDetails.employmentType,
+                        monthly_salary: loanDetails.monthlySalary,
                         currency: loanDetails.currency,
-                        purpose: loanDetails.purpose
+                        status: 'pending_admin_review',
+                        agreed_to_fees: true,
+                        agreed_to_terms: true,
+                        e_signature: 'Digital Signature Accepted'
                     })
                 });
 
                 const result = await response.json();
 
-                if (result.success && result.data.offer) {
-                    offerData = result.data.offer;
-                    offerData.currency = loanDetails.currency;
-                    displayOffer(offerData);
-                    if (offerData.expiresAt) {
-                        startCountdown(offerData.expiresAt);
-                    }
+                if (result.success) {
+                    // Show success message for admin review
+                    displayAdminReviewConfirmation(loanDetails);
                 } else {
-                    showError(result.message || result.data?.error || 'Failed to create offer');
+                    showError(result.message || 'Failed to submit loan request');
                 }
             } catch (error) {
-                console.error('Error loading offer:', error);
+                console.error('Error submitting loan request:', error);
                 showError('Unable to connect to server. Please try again.');
             }
+        }
+
+        function displayAdminReviewConfirmation(loanDetails) {
+            const content = document.getElementById('offer-content');
+            const config = CURRENCY_CONFIG[loanDetails.currency];
+            
+            content.innerHTML = `
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #38e77b, #34d399); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                        <i class="fas fa-check" style="color: white; font-size: 32px;"></i>
+                    </div>
+                    <h3 style="color: #1e293b; margin-bottom: 10px;">Loan Request Submitted!</h3>
+                    <p style="color: #64748b; font-size: 14px;">Your direct loan request has been submitted for admin review</p>
+                </div>
+                
+                <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                    <h4 style="color: #1e293b; margin-bottom: 15px; font-size: 16px;">Request Summary</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">Loan Amount</div>
+                            <div style="font-weight: 600; color: #1e293b;">${config.symbol}${loanDetails.amount.toLocaleString()}</div>
+                        </div>
+                        <div>
+                            <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">Duration</div>
+                            <div style="font-weight: 600; color: #1e293b;">${Math.floor(loanDetails.duration / 30)} months</div>
+                        </div>
+                        <div>
+                            <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">Employment Type</div>
+                            <div style="font-weight: 600; color: #1e293b;">${loanDetails.employmentType.charAt(0).toUpperCase() + loanDetails.employmentType.slice(1)}</div>
+                        </div>
+                        <div>
+                            <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">Monthly Salary</div>
+                            <div style="font-weight: 600; color: #1e293b;">${config.symbol}${loanDetails.monthlySalary.toLocaleString()}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 15px; margin-bottom: 25px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-clock" style="color: #f59e0b; margin-right: 10px;"></i>
+                        <span style="font-weight: 600; color: #1e293b;">Pending Admin Review</span>
+                    </div>
+                    <p style="color: #64748b; font-size: 14px; margin: 0;">Your loan request is being reviewed by our admin team. You will receive an email notification once a decision has been made.</p>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button class="cta-button" style="flex: 1;" onclick="window.location.href='dashboard.html'">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </button>
+                    <button class="btn btn-secondary" style="flex: 1;" onclick="window.location.reload()">
+                        <i class="fas fa-plus"></i> New Request
+                    </button>
+                </div>
+            `;
         }
 
         function displayOffer(offer) {

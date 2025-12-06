@@ -1364,7 +1364,12 @@
                     <div class="card-header">
                         <h3>Loan Management</h3>
                         <div>
-                            <select class="form-select" style="width: 150px; display: inline-block; margin-right: 10px;">
+                            <select id="loanTypeFilter" class="form-select" style="width: 120px; display: inline-block; margin-right: 10px;" onchange="loadLoans()">
+                                <option value="all">All Types</option>
+                                <option value="direct">Direct</option>
+                                <option value="p2p">P2P</option>
+                            </select>
+                            <select id="loanStatusFilter" class="form-select" style="width: 150px; display: inline-block; margin-right: 10px;" onchange="loadLoans()">
                                 <option value="all">All Status</option>
                                 <option value="pending">Pending</option>
                                 <option value="approved">Approved</option>
@@ -1372,7 +1377,9 @@
                                 <option value="completed">Completed</option>
                                 <option value="rejected">Rejected</option>
                             </select>
-                            <button class="btn btn-primary" onclick="loadLoans()">Filter</button>
+                            <button class="btn btn-primary" onclick="loadLoans()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -3069,7 +3076,15 @@
             const container = document.getElementById('loansContent');
             container.innerHTML = '<div class="loading-spinner"></div><p style="text-align: center; color: #718096; margin-top: 16px;">Loading loans...</p>';
             
-            const data = await makeAPIRequest('/api/admin-dashboard/loans?page=1&limit=50');
+            const loanType = document.getElementById('loanTypeFilter').value;
+            const loanStatus = document.getElementById('loanStatusFilter').value;
+            
+            // Build query parameters
+            let queryParams = 'page=1&limit=50';
+            if (loanType !== 'all') queryParams += `&loan_type=${loanType}`;
+            if (loanStatus !== 'all') queryParams += `&status=${loanStatus}`;
+            
+            const data = await makeAPIRequest(`/api/admin-dashboard/loans?${queryParams}`);
             if (data && data.success) {
                 displayLoans(data.data.loans);
             } else {
@@ -3089,10 +3104,12 @@
                 <table class="data-table">
                     <thead>
                         <tr>
+                            <th>Type</th>
                             <th>Borrower</th>
                             <th>Amount</th>
                             <th>Interest</th>
                             <th>Term</th>
+                            <th>Employment</th>
                             <th>Status</th>
                             <th>Created</th>
                             <th>Actions</th>
@@ -3102,19 +3119,34 @@
                         ${loans.map(loan => `
                             <tr>
                                 <td>
+                                    <span class="status-badge ${loan.loan_type === 'direct' ? 'success' : 'info'}" style="font-size: 11px; padding: 4px 8px;">
+                                        ${loan.loan_type === 'direct' ? 'DIRECT' : 'P2P'}
+                                    </span>
+                                </td>
+                                <td>
                                     <div style="font-weight: 600;">${loan.borrower_name || 'Unknown'}</div>
                                     <div style="color: #718096; font-size: 12px;">${loan.borrower_email || ''}</div>
                                 </td>
                                 <td>${formatCurrency(loan.amount)}</td>
                                 <td>${loan.interest_rate || 0}%</td>
-                                <td>${loan.term_months || 0} months</td>
+                                <td>${loan.term || 0} months</td>
+                                <td>
+                                    ${loan.loan_type === 'direct' ? `
+                                        <div style="font-size: 12px;">
+                                            <div style="font-weight: 600;">${loan.employment_type || 'N/A'}</div>
+                                            <div style="color: #718096;">$${loan.monthly_salary || 0}/mo</div>
+                                        </div>
+                                    ` : `
+                                        <div style="font-size: 12px; color: #718096;">Marketplace</div>
+                                    `}
+                                </td>
                                 <td><span class="status-badge ${getStatusClass(loan.status)}">${loan.status?.replace('_', ' ') || 'Unknown'}</span></td>
                                 <td>${new Date(loan.created_at).toLocaleDateString()}</td>
                                 <td>
                                     <button class="btn btn-primary btn-sm" onclick="viewLoanDetails('${loan.id}')">
                                         <i class="fas fa-eye"></i> View
                                     </button>
-                                    ${loan.status === 'pending' ? `
+                                    ${loan.status === 'pending' || loan.status === 'pending_admin_review' ? `
                                         <button class="btn btn-success btn-sm" onclick="approveLoan('${loan.id}')">
                                             <i class="fas fa-check"></i>
                                         </button>
@@ -4091,10 +4123,194 @@
 
         // Additional action functions for loan and admin management
         async function viewLoanDetails(loanId) {
-            const data = await makeAPIRequest(`/api/admin-dashboard/loans/${loanId}`);
-            if (data && data.success) {
-                alert(`Loan Details:\\nID: ${data.data.id}\\nBorrower: ${data.data.borrower_name}\\nAmount: ${formatCurrency(data.data.amount)}\\nStatus: ${data.data.status}\\nCreated: ${new Date(data.data.created_at).toLocaleDateString()}`);
+            // Show loading modal
+            showLoanDetailsModal();
+            
+            try {
+                // Fetch loan details, schedule, and transactions in parallel
+                const [loanData, scheduleData, transactionData] = await Promise.all([
+                    makeAPIRequest(`/api/admin-dashboard/loans/${loanId}`),
+                    makeAPIRequest(`/api/admin-dashboard/loans/${loanId}/schedule`),
+                    makeAPIRequest(`/api/admin-dashboard/loans/${loanId}/transactions`)
+                ]);
+
+                if (loanData && loanData.success) {
+                    displayComprehensiveLoanDetails(loanData.data, scheduleData?.data || [], transactionData?.data || []);
+                } else {
+                    hideLoanDetailsModal();
+                    alert('❌ Failed to load loan details');
+                }
+            } catch (error) {
+                hideLoanDetailsModal();
+                alert('❌ Error loading loan details: ' + error.message);
             }
+        }
+
+        function showLoanDetailsModal() {
+            const modal = document.createElement('div');
+            modal.id = 'loanDetailsModal';
+            modal.className = 'modal-overlay';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 12px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto; padding: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="margin: 0; color: #1e293b;">Loading Loan Details...</h3>
+                        <button onclick="hideLoanDetailsModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #64748b;">×</button>
+                    </div>
+                    <div style="text-align: center; padding: 40px;">
+                        <div class="loading-spinner"></div>
+                        <p style="color: #64748b; margin-top: 16px;">Fetching loan data...</p>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        function hideLoanDetailsModal() {
+            const modal = document.getElementById('loanDetailsModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function displayComprehensiveLoanDetails(loan, schedule, transactions) {
+            const modal = document.getElementById('loanDetailsModal');
+            const currentBalance = calculateCurrentBalance(transactions);
+            const stateMachine = getLoanStateMachine(loan.status);
+            
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 12px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto; padding: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h3 style="margin: 0; color: #1e293b;">Loan Management Details</h3>
+                        <button onclick="hideLoanDetailsModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #64748b;">×</button>
+                    </div>
+                    
+                    <!-- State Machine Visualization -->
+                    <div style="background: #f8fafc; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                        <h4 style="margin: 0 0 12px 0; color: #1e293b; font-size: 14px;">LOAN STATE MACHINE</h4>
+                        <div style="display: flex; align-items: center; justify-content: space-between; position: relative;">
+                            ${stateMachine.map((state, index) => `
+                                <div style="text-align: center; position: relative; z-index: 2;">
+                                    <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; 
+                                        background: ${state.completed ? '#38e77b' : state.current ? '#3b82f6' : '#e5e7eb'};
+                                        border: 2px solid ${state.current ? '#1e40af' : 'transparent'};">
+                                        <i class="fas fa-${state.icon}" style="color: ${state.completed || state.current ? 'white' : '#9ca3af'}; font-size: 14px;"></i>
+                                    </div>
+                                    <div style="font-size: 10px; font-weight: 600; color: ${state.current ? '#1e40af' : '#64748b'};">${state.name}</div>
+                                </div>
+                                ${index < stateMachine.length - 1 ? `
+                                    <div style="flex: 1; height: 2px; background: ${stateMachine[index + 1].completed ? '#38e77b' : '#e5e7eb'}; margin: 0 8px;"></div>
+                                ` : ''}
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <!-- Loan Contract Details -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+                        <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px;">
+                            <h4 style="margin: 0 0 12px 0; color: #1e293b; font-size: 14px;">CONTRACT DETAILS</h4>
+                            <div style="display: grid; gap: 8px; font-size: 12px;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #64748b;">Loan ID:</span>
+                                    <span style="font-weight: 600;">${loan.id}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #64748b;">Borrower:</span>
+                                    <span style="font-weight: 600;">${loan.borrower_name}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #64748b;">Type:</span>
+                                    <span class="status-badge ${loan.loan_type === 'direct' ? 'success' : 'info'}" style="font-size: 10px;">${loan.loan_type?.toUpperCase()}</span>
+                                </div>
+                                ${loan.loan_type === 'direct' ? `
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: #64748b;">Employment:</span>
+                                        <span style="font-weight: 600;">${loan.employment_type}</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: #64748b;">Salary:</span>
+                                        <span style="font-weight: 600;">$${loan.monthly_salary}/mo</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        
+                        <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px;">
+                            <h4 style="margin: 0 0 12px 0; color: #1e293b; font-size: 14px;">FINANCIAL TERMS</h4>
+                            <div style="display: grid; gap: 8px; font-size: 12px;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #64748b;">Principal:</span>
+                                    <span style="font-weight: 600;">${formatCurrency(loan.amount)}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #64748b;">Interest Rate:</span>
+                                    <span style="font-weight: 600;">${loan.interest_rate}%</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #64748b;">Term:</span>
+                                    <span style="font-weight: 600;">${loan.term} months</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #64748b;">Current Balance:</span>
+                                    <span style="font-weight: 600; color: ${currentBalance > 0 ? '#dc2626' : '#38e77b'};">${formatCurrency(Math.abs(currentBalance))}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabs for Schedule and Transactions -->
+                    <div style="border-bottom: 1px solid #e5e7eb; margin-bottom: 16px;">
+                        <button onclick="showLoanTab('schedule')" id="scheduleTab" style="background: none; border: none; padding: 12px 16px; border-bottom: 2px solid #3b82f6; color: #3b82f6; font-weight: 600; cursor: pointer;">
+                            Repayment Schedule (${schedule.length})
+                        </button>
+                        <button onclick="showLoanTab('transactions')" id="transactionsTab" style="background: none; border: none; padding: 12px 16px; color: #64748b; cursor: pointer;">
+                            Transaction Ledger (${transactions.length})
+                        </button>
+                    </div>
+                    
+                    <!-- Tab Content -->
+                    <div id="scheduleContent">
+                        ${displayRepaymentSchedule(schedule)}
+                    </div>
+                    
+                    <div id="transactionsContent" style="display: none;">
+                        ${displayTransactionLedger(transactions)}
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 12px; margin-top: 24px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
+                        ${loan.status === 'pending' || loan.status === 'pending_admin_review' ? `
+                            <button class="btn btn-success" onclick="approveLoan('${loan.id}'); hideLoanDetailsModal();">
+                                <i class="fas fa-check"></i> Approve Loan
+                            </button>
+                            <button class="btn btn-danger" onclick="rejectLoan('${loan.id}'); hideLoanDetailsModal();">
+                                <i class="fas fa-times"></i> Reject Loan
+                            </button>
+                        ` : ''}
+                        ${loan.status === 'approved' ? `
+                            <button class="btn btn-primary" onclick="disburseLoan('${loan.id}'); hideLoanDetailsModal();">
+                                <i class="fas fa-money-bill-wave"></i> Disburse Funds
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-secondary" onclick="hideLoanDetailsModal()">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            `;
         }
 
         async function approveLoan(loanId) {
@@ -4126,6 +4342,202 @@
                 loadLoans();
             } else {
                 alert('❌ Failed to reject loan: ' + (data?.message || 'Unknown error'));
+            }
+        }
+
+        // Helper functions for comprehensive loan management
+        function getLoanStateMachine(status) {
+            const states = [
+                { name: 'DRAFT', icon: 'file-alt', completed: true, current: false },
+                { name: 'APPLIED', icon: 'paper-plane', completed: true, current: false },
+                { name: 'APPROVED', icon: 'check-circle', completed: false, current: false },
+                { name: 'DISBURSED', icon: 'money-bill-wave', completed: false, current: false },
+                { name: 'ACTIVE', icon: 'play-circle', completed: false, current: false },
+                { name: 'CLOSED', icon: 'flag-checkered', completed: false, current: false }
+            ];
+
+            // Set current state based on loan status
+            switch(status?.toLowerCase()) {
+                case 'pending':
+                case 'pending_admin_review':
+                    states[1].current = true;
+                    break;
+                case 'approved':
+                    states[2].current = true;
+                    break;
+                case 'disbursed':
+                    states[3].current = true;
+                    break;
+                case 'active':
+                    states[4].current = true;
+                    break;
+                case 'completed':
+                case 'closed':
+                    states[5].current = true;
+                    break;
+                default:
+                    states[0].current = true;
+            }
+
+            // Mark completed states
+            const currentIndex = states.findIndex(state => state.current);
+            for (let i = 0; i < currentIndex; i++) {
+                states[i].completed = true;
+            }
+
+            return states;
+        }
+
+        function calculateCurrentBalance(transactions) {
+            return transactions.reduce((balance, transaction) => {
+                return balance + (transaction.type === 'DISBURSEMENT' ? transaction.amount : -transaction.amount);
+            }, 0);
+        }
+
+        function displayRepaymentSchedule(schedule) {
+            if (!schedule || schedule.length === 0) {
+                return '<div style="text-align: center; padding: 40px; color: #64748b;">No repayment schedule available</div>';
+            }
+
+            const today = new Date();
+            const scheduleHTML = `
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="background: #f8fafc;">
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb;">Installment #</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb;">Due Date</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb;">Amount Due</th>
+                                <th style="padding: 12px; text-align: center; border-bottom: 1px solid #e5e7eb;">Status</th>
+                                <th style="padding: 12px; text-align: center; border-bottom: 1px solid #e5e7eb;">Days Overdue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${schedule.map((installment, index) => {
+                                const dueDate = new Date(installment.due_date);
+                                const isOverdue = dueDate < today && installment.status === 'UNPAID';
+                                const daysOverdue = isOverdue ? Math.floor((today - dueDate) / (1000 * 60 * 60 * 24)) : 0;
+                                
+                                return `
+                                    <tr style="${isOverdue ? 'background: #fef2f2;' : ''}">
+                                        <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${index + 1}</td>
+                                        <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${dueDate.toLocaleDateString()}</td>
+                                        <td style="padding: 12px; text-align: right; border-bottom: 1px solid #f3f4f6; font-weight: 600;">${formatCurrency(installment.amount_due)}</td>
+                                        <td style="padding: 12px; text-align: center; border-bottom: 1px solid #f3f4f6;">
+                                            <span class="status-badge ${installment.status === 'PAID' ? 'success' : isOverdue ? 'rejected' : 'pending'}" style="font-size: 10px;">
+                                                ${installment.status}
+                                            </span>
+                                        </td>
+                                        <td style="padding: 12px; text-align: center; border-bottom: 1px solid #f3f4f6;">
+                                            ${isOverdue ? `<span style="color: #dc2626; font-weight: 600;">${daysOverdue}</span>` : '-'}
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            return scheduleHTML;
+        }
+
+        function displayTransactionLedger(transactions) {
+            if (!transactions || transactions.length === 0) {
+                return '<div style="text-align: center; padding: 40px; color: #64748b;">No transactions recorded</div>';
+            }
+
+            const runningBalance = [];
+            let balance = 0;
+            
+            transactions.forEach(transaction => {
+                if (transaction.type === 'DISBURSEMENT') {
+                    balance += transaction.amount;
+                } else {
+                    balance -= transaction.amount;
+                }
+                runningBalance.push(balance);
+            });
+
+            const ledgerHTML = `
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="background: #f8fafc;">
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb;">Date</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb;">Type</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb;">Amount</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb;">Running Balance</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb;">Reference</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${transactions.map((transaction, index) => `
+                                <tr style="${transaction.type === 'DISBURSEMENT' ? 'background: #f0fdf4;' : 'background: #fefce8;'}">
+                                    <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${new Date(transaction.timestamp).toLocaleDateString()}</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">
+                                        <span class="status-badge ${transaction.type === 'DISBURSEMENT' ? 'success' : 'warning'}" style="font-size: 10px;">
+                                            ${transaction.type}
+                                        </span>
+                                    </td>
+                                    <td style="padding: 12px; text-align: right; border-bottom: 1px solid #f3f4f6; font-weight: 600;">
+                                        ${transaction.type === 'DISBURSEMENT' ? '+' : '-'}${formatCurrency(transaction.amount)}
+                                    </td>
+                                    <td style="padding: 12px; text-align: right; border-bottom: 1px solid #f3f4f6; font-weight: 600;">
+                                        ${formatCurrency(runningBalance[index])}
+                                    </td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #f3f4f6; font-size: 11px; color: #64748b;">
+                                        ${transaction.reference || transaction.id}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr style="background: #f8fafc; font-weight: 600;">
+                                <td colspan="3" style="padding: 12px; text-align: right; border-top: 2px solid #e5e7eb;">Current Balance:</td>
+                                <td style="padding: 12px; text-align: right; border-top: 2px solid #e5e7eb; color: ${balance > 0 ? '#dc2626' : '#38e77b'};">
+                                    ${formatCurrency(Math.abs(balance))}
+                                </td>
+                                <td style="padding: 12px; border-top: 2px solid #e5e7eb;"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div style="margin-top: 16px; padding: 12px; background: #f8fafc; border-radius: 6px; font-size: 11px; color: #64748b;">
+                    <i class="fas fa-info-circle"></i> <strong>Ledger Principle:</strong> Balance is calculated by summing all transactions. Disbursements increase balance (+), repayments decrease balance (-).
+                </div>
+            `;
+            
+            return ledgerHTML;
+        }
+
+        function showLoanTab(tabName) {
+            // Update tab styles
+            document.getElementById('scheduleTab').style.cssText = tabName === 'schedule' 
+                ? 'background: none; border: none; padding: 12px 16px; border-bottom: 2px solid #3b82f6; color: #3b82f6; font-weight: 600; cursor: pointer;'
+                : 'background: none; border: none; padding: 12px 16px; color: #64748b; cursor: pointer;';
+            
+            document.getElementById('transactionsTab').style.cssText = tabName === 'transactions'
+                ? 'background: none; border: none; padding: 12px 16px; border-bottom: 2px solid #3b82f6; color: #3b82f6; font-weight: 600; cursor: pointer;'
+                : 'background: none; border: none; padding: 12px 16px; color: #64748b; cursor: pointer;';
+            
+            // Show/hide content
+            document.getElementById('scheduleContent').style.display = tabName === 'schedule' ? 'block' : 'none';
+            document.getElementById('transactionsContent').style.display = tabName === 'transactions' ? 'block' : 'none';
+        }
+
+        async function disburseLoan(loanId) {
+            if (!confirm('Are you sure you want to disburse funds for this loan? This will create the initial transaction and activate the loan.')) return;
+            
+            const data = await makeAPIRequest(`/api/admin-dashboard/loans/${loanId}/disburse`, {
+                method: 'POST'
+            });
+            
+            if (data && data.success) {
+                alert('✅ Loan disbursed successfully! Funds have been released.');
+                loadLoans();
+            } else {
+                alert('❌ Failed to disburse loan: ' + (data?.message || 'Unknown error'));
             }
         }
 
