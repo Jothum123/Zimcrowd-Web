@@ -514,26 +514,6 @@ Always provide specific, actionable advice with clear reasoning and next steps.`
     /**
      * Get AI system status and statistics
      */
-    getSystemStatus() {
-        const totalRequests = this.stats.totalRequests;
-        const primarySuccessRate = totalRequests > 0 ? 
-            (this.stats.primaryAIUsed / totalRequests * 100).toFixed(1) : 0;
-        const fallbackRate = totalRequests > 0 ? 
-            (this.stats.kairoFallbackUsed / totalRequests * 100).toFixed(1) : 0;
-
-        return {
-            primaryAI: {
-                enabled: this.primaryAI.enabled,
-                provider: this.primaryAI.provider,
-                model: this.primaryAI.model,
-                successRate: `${primarySuccessRate}%`,
-                totalUsage: this.stats.primaryAIUsed
-            },
-            fallbackAI: {
-                provider: 'kairo-ai',
-                model: 'gemini-pro + rules',
-                fallbackRate: `${fallbackRate}%`,
-                totalUsage: this.stats.kairoFallbackUsed
             },
             statistics: {
                 totalRequests: totalRequests,
