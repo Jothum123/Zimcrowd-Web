@@ -10,6 +10,7 @@
     "api": "node api-server-minimal.js",
     "api:dev": "nodemon api-server-minimal.js",
     "api:full": "node api-server.js",
+    "migrate:prepare": "node scripts/run-migrations.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {
