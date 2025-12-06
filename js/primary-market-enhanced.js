@@ -157,8 +157,8 @@ class EnhancedPrimaryMarket {
                             <h4 class="borrower-name">${loan.borrower.name}</h4>
                             <p class="borrower-occupation">${loan.borrower.occupation}</p>
                             <div class="borrower-rating">
-                                ${MockMarketData.generateStarRating(loan.borrower.rating)}
-                                <span class="rating-value">${loan.borrower.rating.toFixed(1)}</span>
+                                ${MockMarketData.generateStarRating(loan.borrower.rating, loan.borrower.zimScore)}
+                                <span class="rating-value">${loan.riskLevel.level}</span>
                             </div>
                         </div>
                     </div>
@@ -272,8 +272,8 @@ class EnhancedPrimaryMarket {
                                 <h2>${loan.borrower.name}</h2>
                                 <p>${loan.borrower.occupation} • ${loan.borrower.location}</p>
                                 <div class="rating-large">
-                                    ${MockMarketData.generateStarRating(loan.borrower.rating)}
-                                    <span>${loan.borrower.rating.toFixed(1)} (${loan.borrower.totalLoans} loans)</span>
+                                    ${MockMarketData.generateStarRating(loan.borrower.rating, loan.borrower.zimScore)}
+                                    <span>${loan.riskLevel.level} (${loan.borrower.totalLoans} loans)</span>
                                 </div>
                             </div>
                         </div>

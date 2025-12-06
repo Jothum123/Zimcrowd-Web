@@ -6,14 +6,13 @@
 
 const MockMarketData = {
     // ZimScore Range: 30-85 points (from ZIMSCORE_COMPLETE_GUIDE.md)
-    // Star Rating Formula: 1.0 + ((score - 30) / 55) * 4.0
-    // Risk Levels:
-    //   80-85: Very Low Risk (5.0 stars)
-    //   70-79: Low Risk (4.0 stars)
-    //   60-69: Medium Risk (3.0 stars)
-    //   50-59: High Risk (2.5 stars)
-    //   40-49: Very High Risk (2.0 stars)
-    //   30-39: Building Credit (1.0 stars)
+    // Star Rating Display (from ZIMSCORE-AVATAR-DEPLOYMENT.md):
+    //   80-85: ★★★★★ Excellent (#10b981 green)
+    //   70-79: ★★★★☆ Good (#3b82f6 blue)
+    //   60-69: ★★★☆☆ Fair (#f59e0b amber)
+    //   50-59: ★★☆☆☆ Average (#6b7280 gray)
+    //   40-49: ★☆☆☆☆ Below Average (#ef4444 red)
+    //   30-39: ☆☆☆☆☆ Poor (#991b1b dark red)
 
     // Borrower profiles with avatars and ratings
     borrowers: [
@@ -24,7 +23,7 @@ const MockMarketData = {
             avatar: null, // Will use initials
             occupation: 'Small Business Owner',
             location: 'Harare',
-            rating: 5.0, // Calculated from ZimScore 82
+            rating: 5, // Excellent (ZimScore 80-85)
             totalLoans: 5,
             repaidOnTime: 5,
             memberSince: '2023-06-15',
@@ -38,7 +37,7 @@ const MockMarketData = {
             avatar: null,
             occupation: 'IT Professional',
             location: 'Bulawayo',
-            rating: 4.0, // Calculated from ZimScore 75
+            rating: 4, // Good (ZimScore 70-79)
             totalLoans: 3,
             repaidOnTime: 3,
             memberSince: '2023-09-20',
@@ -52,7 +51,7 @@ const MockMarketData = {
             avatar: null,
             occupation: 'Teacher',
             location: 'Mutare',
-            rating: 5.0, // Calculated from ZimScore 84
+            rating: 5, // Excellent (ZimScore 80-85)
             totalLoans: 7,
             repaidOnTime: 7,
             memberSince: '2022-11-10',
@@ -66,7 +65,7 @@ const MockMarketData = {
             avatar: null,
             occupation: 'Farmer',
             location: 'Masvingo',
-            rating: 3.0, // Calculated from ZimScore 65
+            rating: 3, // Fair (ZimScore 60-69)
             totalLoans: 4,
             repaidOnTime: 3,
             memberSince: '2024-01-05',
@@ -80,7 +79,7 @@ const MockMarketData = {
             avatar: null,
             occupation: 'Nurse',
             location: 'Gweru',
-            rating: 5.0, // Calculated from ZimScore 85
+            rating: 5, // Excellent (ZimScore 80-85)
             totalLoans: 6,
             repaidOnTime: 6,
             memberSince: '2023-03-22',
@@ -94,7 +93,7 @@ const MockMarketData = {
             avatar: null,
             occupation: 'Software Developer',
             location: 'Harare',
-            rating: 4.5, // Calculated from ZimScore 78
+            rating: 4, // Good (ZimScore 70-79)
             totalLoans: 2,
             repaidOnTime: 2,
             memberSince: '2024-02-14',
@@ -108,7 +107,7 @@ const MockMarketData = {
             avatar: null,
             occupation: 'Accountant',
             location: 'Harare',
-            rating: 4.0, // Calculated from ZimScore 72
+            rating: 4, // Good (ZimScore 70-79)
             totalLoans: 4,
             repaidOnTime: 4,
             memberSince: '2023-07-30',
@@ -122,7 +121,7 @@ const MockMarketData = {
             avatar: null,
             occupation: 'Mechanic',
             location: 'Chitungwiza',
-            rating: 2.5, // Calculated from ZimScore 55
+            rating: 2, // Average (ZimScore 50-59)
             totalLoans: 3,
             repaidOnTime: 2,
             memberSince: '2023-12-01',
@@ -136,7 +135,7 @@ const MockMarketData = {
             avatar: null,
             occupation: 'Market Vendor',
             location: 'Harare',
-            rating: 2.0, // Calculated from ZimScore 45
+            rating: 1, // Below Average (ZimScore 40-49)
             totalLoans: 2,
             repaidOnTime: 1,
             memberSince: '2024-03-10',
@@ -150,7 +149,7 @@ const MockMarketData = {
             avatar: null,
             occupation: 'Student',
             location: 'Gweru',
-            rating: 1.5, // Calculated from ZimScore 38
+            rating: 0, // Poor (ZimScore 30-39)
             totalLoans: 1,
             repaidOnTime: 0,
             memberSince: '2024-05-01',
@@ -284,22 +283,24 @@ const MockMarketData = {
         };
     },
 
-    // Calculate risk level based on ZimScore (30-85 range per ZIMSCORE_COMPLETE_GUIDE.md)
+    // Calculate risk level and category based on ZimScore (per ZIMSCORE-AVATAR-DEPLOYMENT.md)
     calculateRiskLevel(zimScore) {
-        if (zimScore >= 80) return { level: 'Very Low', color: '#22c55e', score: 'A+', maxLoan: 1000 };
-        if (zimScore >= 70) return { level: 'Low', color: '#84cc16', score: 'A', maxLoan: 800 };
-        if (zimScore >= 60) return { level: 'Medium', color: '#f59e0b', score: 'B', maxLoan: 600 };
-        if (zimScore >= 50) return { level: 'High', color: '#f97316', score: 'C', maxLoan: 400 };
-        if (zimScore >= 40) return { level: 'Very High', color: '#ef4444', score: 'D', maxLoan: 300 };
-        return { level: 'Building Credit', color: '#94a3b8', score: 'E', maxLoan: 100 };
+        if (zimScore >= 80) return { level: 'Excellent', color: '#10b981', score: 'A+', maxLoan: 1000, stars: 5 };
+        if (zimScore >= 70) return { level: 'Good', color: '#3b82f6', score: 'A', maxLoan: 800, stars: 4 };
+        if (zimScore >= 60) return { level: 'Fair', color: '#f59e0b', score: 'B', maxLoan: 600, stars: 3 };
+        if (zimScore >= 50) return { level: 'Average', color: '#6b7280', score: 'C', maxLoan: 400, stars: 2 };
+        if (zimScore >= 40) return { level: 'Below Average', color: '#ef4444', score: 'D', maxLoan: 300, stars: 1 };
+        return { level: 'Poor', color: '#991b1b', score: 'E', maxLoan: 100, stars: 0 };
     },
 
-    // Calculate star rating from ZimScore (formula from ZIMSCORE_COMPLETE_GUIDE.md)
+    // Calculate star rating from ZimScore (per ZIMSCORE-AVATAR-DEPLOYMENT.md)
     calculateStarRating(zimScore) {
-        // Formula: starRating = 1.0 + ((score - 30) / 55) * 4.0
-        const rating = 1.0 + ((zimScore - 30) / 55) * 4.0;
-        // Round to nearest 0.5
-        return Math.round(rating * 2) / 2;
+        if (zimScore >= 80) return 5.0;
+        if (zimScore >= 70) return 4.0;
+        if (zimScore >= 60) return 3.0;
+        if (zimScore >= 50) return 2.0;
+        if (zimScore >= 40) return 1.0;
+        return 0;
     },
 
     // Generate mock documents
@@ -381,21 +382,36 @@ const MockMarketData = {
         return (remainingValue * premium).toFixed(2);
     },
 
-    // Generate star rating HTML
-    generateStarRating(rating) {
+    // Generate star rating HTML with category-based colors (per ZIMSCORE-AVATAR-DEPLOYMENT.md)
+    generateStarRating(rating, zimScore = null) {
+        // Determine color based on rating/zimScore
+        let color;
+        if (zimScore !== null) {
+            if (zimScore >= 80) color = '#10b981'; // Excellent - green
+            else if (zimScore >= 70) color = '#3b82f6'; // Good - blue
+            else if (zimScore >= 60) color = '#f59e0b'; // Fair - amber
+            else if (zimScore >= 50) color = '#6b7280'; // Average - gray
+            else if (zimScore >= 40) color = '#ef4444'; // Below Average - red
+            else color = '#991b1b'; // Poor - dark red
+        } else {
+            // Fallback based on rating
+            if (rating >= 5) color = '#10b981';
+            else if (rating >= 4) color = '#3b82f6';
+            else if (rating >= 3) color = '#f59e0b';
+            else if (rating >= 2) color = '#6b7280';
+            else if (rating >= 1) color = '#ef4444';
+            else color = '#991b1b';
+        }
+
         const fullStars = Math.floor(rating);
-        const hasHalfStar = rating % 1 >= 0.5;
-        const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+        const emptyStars = 5 - fullStars;
         
         let html = '';
         for (let i = 0; i < fullStars; i++) {
-            html += '<i class="fas fa-star" style="color: #f59e0b;"></i>';
-        }
-        if (hasHalfStar) {
-            html += '<i class="fas fa-star-half-alt" style="color: #f59e0b;"></i>';
+            html += `<i class="fas fa-star" style="color: ${color};"></i>`;
         }
         for (let i = 0; i < emptyStars; i++) {
-            html += '<i class="far fa-star" style="color: #f59e0b;"></i>';
+            html += `<i class="far fa-star" style="color: ${color}; opacity: 0.4;"></i>`;
         }
         return html;
     },

@@ -217,8 +217,8 @@ class PortfolioInvestmentsManager {
                                 <h2>${investment.title}</h2>
                                 <p>Borrower: ${investment.borrower.name} • ${investment.borrower.occupation}</p>
                                 <div class="rating-display">
-                                    ${MockMarketData.generateStarRating(investment.borrower.rating)}
-                                    <span>${investment.borrower.rating.toFixed(1)}</span>
+                                    ${MockMarketData.generateStarRating(investment.borrower.rating, investment.borrower.zimScore)}
+                                    <span>${investment.riskLevel.level}</span>
                                 </div>
                             </div>
                         </div>
