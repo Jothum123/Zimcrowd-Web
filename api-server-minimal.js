@@ -62,7 +62,6 @@ console.log('\n' + '='.repeat(60));
 console.log('📦 Loading Routes...');
 console.log('='.repeat(60));
 console.log('🔄 Activity tracking routes included for production deployment');
-console.log('📋 Available routes:', Object.keys(routes).filter(key => routes[key]));
 
 const routes = {
     authProduction: loadRoute('./routes/auth-production', 'Authentication (Production)'),
@@ -103,6 +102,8 @@ const routes = {
     settings: loadRoute('./routes/settings', 'User Settings')
 };
 
+console.log('='.repeat(60));
+console.log('📋 Loaded routes:', Object.keys(routes).filter(key => routes[key]).join(', '));
 console.log('='.repeat(60) + '\n');
 
 // =====================================================
