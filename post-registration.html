@@ -851,8 +851,21 @@
                             </div>
                         </div>
 
-                        <!-- Private Sector Fields -->
-                        <div id="privateFields" style="display: none;">
+                        <!-- Government Employee Documents -->
+                        <div id="governmentDocs" style="display: none;">
+                            <h4 style="margin-bottom: 15px; color: #38e77b;">📋 Government Employee Required Documents</h4>
+                            <div class="form-group">
+                                <label class="form-label">Recent Payslip <span class="required">*</span></label>
+                                <input type="file" class="form-input" id="govPayslip" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                                    Upload recent payslip (last 3 months) for income verification
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Private Sector Employee Documents -->
+                        <div id="privateDocs" style="display: none;">
+                            <h4 style="margin-bottom: 15px; color: #38e77b;">📋 Private Employee Required Documents</h4>
                             <div class="form-group">
                                 <label class="form-label">Employment Letter <span class="required">*</span></label>
                                 <input type="file" class="form-input" id="employmentLetter" accept=".pdf,.jpg,.jpeg,.png" required>
@@ -861,10 +874,40 @@
                                 </small>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Recent Payslip <span class="required">*</span></label>
-                                <input type="file" class="form-input" id="payslip" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <label class="form-label">Bank Statement <span class="required">*</span></label>
+                                <input type="file" class="form-input" id="bankStatement" accept=".pdf,.jpg,.jpeg,.png" required>
                                 <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
-                                    Upload recent payslip (last 3 months) for income verification
+                                    Upload recent bank statement (last 3 months)
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Informal Employment Documents -->
+                        <div id="informalDocs" style="display: none;">
+                            <h4 style="margin-bottom: 15px; color: #38e77b;">📋 Self-Employed Required Documents</h4>
+                            <div class="form-group">
+                                <label class="form-label">Statement Type <span class="required">*</span></label>
+                                <select class="form-select" id="statementType" required onchange="handleStatementTypeChange(this.value)">
+                                    <option value="">Choose statement type</option>
+                                    <option value="bank">Bank Statement</option>
+                                    <option value="mobile">Mobile Money Statement</option>
+                                </select>
+                                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                                    Select either bank statement or mobile money statement
+                                </small>
+                            </div>
+                            <div class="form-group" id="bankStatementGroup" style="display: none;">
+                                <label class="form-label">Bank Statement <span class="required">*</span></label>
+                                <input type="file" class="form-input" id="informalBankStatement" accept=".pdf,.jpg,.jpeg,.png">
+                                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                                    Upload recent bank statement (last 3 months)
+                                </small>
+                            </div>
+                            <div class="form-group" id="mobileMoneyGroup" style="display: none;">
+                                <label class="form-label">Mobile Money Statement <span class="required">*</span></label>
+                                <input type="file" class="form-input" id="mobileMoneyStatement" accept=".pdf,.jpg,.jpeg,.png">
+                                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                                    Upload mobile money statement (last 3 months)
                                 </small>
                             </div>
                         </div>
@@ -886,8 +929,6 @@
                                 </small>
                             </div>
                         </div>
-
-                                                                            </div>
 
                         <div class="form-group">
                             <label class="form-label">Occupation/Job Title <span class="required">*</span></label>
@@ -979,32 +1020,7 @@
                         </div>
                     </div>
 
-                    <!-- Financial Documents Section -->
-                    <div style="margin-top: 30px; padding-top: 25px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #38e77b;">
-                            <i class="fas fa-file-invoice-dollar"></i> Financial Documents
-                        </h3>
-
-                    <div class="form-group">
-                        <label class="form-label">Upload Bank Statement (Last 3 months) <span class="required">*</span></label>
-                        <div class="upload-area" id="bankStatementUploadArea" onclick="document.getElementById('bankStatement').click()">
-                            <i class="fas fa-file-invoice-dollar upload-icon"></i>
-                            <div class="upload-text">Click to upload or drag and drop</div>
-                            <div class="upload-hint">PDF, CSV, PNG or JPG (max. 10MB) - Helps us verify your income</div>
-                        </div>
-                        <input type="file" id="bankStatement" class="file-input" accept=".pdf,.csv,image/*">
-                        <div class="uploaded-file" id="bankStatementFilePreview">
-                            <i class="fas fa-check-circle file-icon" style="color: #38e77b;"></i>
-                            <div class="file-info">
-                                <div class="file-name" id="bankStatementFileName"></div>
-                                <div class="file-size" id="bankStatementFileSize"></div>
-                            </div>
-                            <button type="button" class="remove-file-btn" onclick="removeFile('bankStatement')">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-
+                    
                     <!-- Net Monthly Salary Input Field -->
                     <div class="form-group" style="margin-top: 20px;">
                         <label class="form-label">
@@ -1042,106 +1058,8 @@
                         </div>
                     </div>
 
-                    <!-- Payslip Upload -->
-                    <div class="form-group" style="margin-top: 20px;">
-                        <label class="form-label">
-                            <i class="fas fa-money-check-alt" style="color: #10b981; margin-right: 8px;"></i>
-                            Upload Payslip (Latest) <span class="required">*</span>
-                        </label>
-                        <p style="color: #94a3b8; font-size: 13px; margin-bottom: 15px;">
-                            Upload your most recent payslip to verify your income
-                        </p>
-                        
-                        <div class="info-box" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); margin-bottom: 15px;">
-                            <i class="fas fa-info-circle info-icon" style="color: #10b981;"></i>
-                            <div class="info-text">
-                                <strong>Requirements:</strong><br>
-                                • Must be from the last 3 months<br>
-                                • Should show your name, employer, and net salary<br>
-                                • Government employees: Include EC number
-                            </div>
-                        </div>
-
-                        <div class="upload-area" id="payslipUploadArea" onclick="document.getElementById('payslip').click()" style="border-color: rgba(16, 185, 129, 0.5);">
-                            <i class="fas fa-money-check-alt upload-icon" style="color: #10b981;"></i>
-                            <div class="upload-text">Click to upload Payslip</div>
-                            <div class="upload-hint">PDF, PNG or JPG (max. 5MB)</div>
-                        </div>
-                        <input type="file" id="payslip" class="file-input" accept=".pdf,image/*">
-                        <div class="uploaded-file" id="payslipFilePreview">
-                            <i class="fas fa-check-circle file-icon" style="color: #10b981;"></i>
-                            <div class="file-info">
-                                <div class="file-name" id="payslipFileName"></div>
-                                <div class="file-size" id="payslipFileSize"></div>
-                            </div>
-                            <button type="button" class="remove-file" onclick="removeFile('payslip')" title="Remove file">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Mobile Money Statement (For Informal Employees Only) -->
-                    <div class="form-group" id="ecocashStatementSection" style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.05); display: none;">
-                        <label class="form-label">
-                            <i class="fas fa-mobile-alt" style="color: #22c55e; margin-right: 8px;"></i>
-                            Mobile Money Statement (Proof of Income) <span class="required">*</span>
-                        </label>
-                        <p style="color: #94a3b8; font-size: 13px; margin-bottom: 15px;">
-                            Upload your mobile money statement as proof of income (required for informal/self-employed)
-                        </p>
-                        
-                        <!-- Mobile Money Provider Selection -->
-                        <div class="form-group" style="margin-bottom: 15px;">
-                            <label class="form-label" style="font-size: 13px;">Select Mobile Money Provider</label>
-                            <select class="form-select" id="mobileMoneyProvider" style="background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3);">
-                                <option value="">Select Provider</option>
-                                <option value="ecocash">EcoCash (Econet)</option>
-                                <option value="onemoney">OneMoney (NetOne)</option>
-                                <option value="omari">Omari (Telecel)</option>
-                                <option value="innbucks">InnBucks</option>
-                                <option value="other">Other Mobile Money</option>
-                            </select>
-                        </div>
-                        
-                        <div class="info-box" style="background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3); margin-bottom: 15px;">
-                            <i class="fas fa-info-circle info-icon" style="color: #22c55e;"></i>
-                            <div class="info-text">
-                                <strong>Accepted Mobile Money Statements:</strong><br>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 8px;">
-                                    <span>• <strong>EcoCash</strong> (Econet)</span>
-                                    <span>• <strong>OneMoney</strong> (NetOne)</span>
-                                    <span>• <strong>Omari</strong> (Telecel)</span>
-                                    <span>• <strong>InnBucks</strong></span>
-                                </div>
-                                <p style="margin-top: 10px; font-size: 12px; color: #64748b;">
-                                    📋 Statement must be from the <strong>last 3 months</strong> and show transaction history
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="upload-area" id="ecocashStatementUploadArea" onclick="document.getElementById('ecocashStatement').click()" style="border-color: rgba(34, 197, 94, 0.5);">
-                            <i class="fas fa-mobile-alt upload-icon" style="color: #22c55e;"></i>
-                            <div class="upload-text">Click to upload Mobile Money Statement</div>
-                            <div class="upload-hint">EcoCash / OneMoney / Omari / InnBucks - PDF, PNG or JPG (max. 10MB)</div>
-                        </div>
-                        <input type="file" id="ecocashStatement" class="file-input" accept=".pdf,image/*">
-                        <div class="uploaded-file" id="ecocashStatementFilePreview">
-                            <i class="fas fa-check-circle file-icon" style="color: #22c55e;"></i>
-                            <div class="file-info">
-                                <div class="file-name" id="ecocashStatementFileName"></div>
-                                <div class="file-size" id="ecocashStatementFileSize"></div>
-                            </div>
-                            <button type="button" class="remove-file" onclick="removeFile('ecocashStatement')" title="Remove file">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                        
-                        <p style="color: #64748b; font-size: 11px; margin-top: 10px;">
-                            <i class="fas fa-lightbulb" style="color: #f59e0b;"></i>
-                            <strong>How to get your statement:</strong> Dial *151# (EcoCash), *111# (OneMoney), *133# (Omari), or use the InnBucks app
-                        </p>
-                    </div>
-                    </div>
+                    
+                                        </div>
 
                     <!-- Next of Kin Section -->
                     <div style="margin-top: 40px; padding-top: 30px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
@@ -1457,23 +1375,45 @@
                 if (ecocashSection) ecocashSection.style.display = 'none';
                 
                 // Handle document sections based on employment type
-                const privateFields = document.getElementById('privateFields');
-                const ngoFields = document.getElementById('ngoFields');
-                const studentFields = document.getElementById('studentFields');
+                const governmentDocs = document.getElementById('governmentDocs');
+                const privateDocs = document.getElementById('privateDocs');
+                const informalDocs = document.getElementById('informalDocs');
                 
-                // Show private sector documents for government, private, and business employees
-                if (employmentType === 'government' || employmentType === 'private' || employmentType === 'business') {
-                    if (privateFields) privateFields.style.display = 'block';
-                } else {
-                    if (privateFields) privateFields.style.display = 'none';
+                // Hide all document sections first
+                if (governmentDocs) governmentDocs.style.display = 'none';
+                if (privateDocs) privateDocs.style.display = 'none';
+                if (informalDocs) informalDocs.style.display = 'none';
+                
+                // Show appropriate documents based on employment type
+                if (employmentType === 'government') {
+                    if (governmentDocs) governmentDocs.style.display = 'block';
+                } else if (employmentType === 'private') {
+                    if (privateDocs) privateDocs.style.display = 'block';
+                } else if (employmentType === 'informal' || employmentType === 'business') {
+                    if (informalDocs) informalDocs.style.display = 'block';
                 }
-                
-                // Hide unused sections
-                if (ngoFields) ngoFields.style.display = 'none';
-                if (studentFields) studentFields.style.display = 'none';
                 
                 console.log(`💼 ${employmentType} employee selected - all employment fields shown`);
             }
+        }
+
+        // Handle statement type change for informal employment
+        function handleStatementTypeChange(statementType) {
+            const bankStatementGroup = document.getElementById('bankStatementGroup');
+            const mobileMoneyGroup = document.getElementById('mobileMoneyGroup');
+            
+            // Hide both groups first
+            if (bankStatementGroup) bankStatementGroup.style.display = 'none';
+            if (mobileMoneyGroup) mobileMoneyGroup.style.display = 'none';
+            
+            // Show the appropriate group based on selection
+            if (statementType === 'bank') {
+                if (bankStatementGroup) bankStatementGroup.style.display = 'block';
+            } else if (statementType === 'mobile') {
+                if (mobileMoneyGroup) mobileMoneyGroup.style.display = 'block';
+            }
+            
+            console.log(`📄 Statement type changed to: ${statementType}`);
         }
 
         // File upload handling
@@ -2485,6 +2425,61 @@
                 // Step 1: Upload all documents with OCR processing
                 updateVerificationStep('id', 'active', 'Uploading & analyzing ID...');
                 
+                // Upload document for admin verification (no OCR processing)
+                const uploadDocumentForAdmin = async (file, documentType) => {
+                    const formData = new FormData();
+                    formData.append('document', file);
+                    formData.append('document_type', documentType);
+                    formData.append('verification_method', 'admin_review');
+                    
+                    try {
+                        // Use makeAuthRequest for automatic token refresh on 401
+                        const uploadResponse = await makeAuthRequest(`${API_BASE}/api/profile-setup/upload-document-for-admin`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${authToken}`
+                            },
+                            body: formData
+                        });
+                        
+                        if (!uploadResponse) {
+                            return { success: false, message: 'Session expired' };
+                        }
+                        
+                        const result = await uploadResponse.json();
+                        console.log(`📄 ${documentType} uploaded for admin review:`, result);
+                        
+                        // Set status to pending admin verification
+                        result.verification_status = 'pending_admin_review';
+                        
+                        return result;
+                    } catch (err) {
+                        console.error(`❌ ${documentType} admin upload failed:`, err);
+                        return { success: false, message: 'Upload failed' };
+                    }
+                };
+
+                // Document routing function - decides which upload method to use
+                const uploadDocument = async (file, documentType) => {
+                    // Documents that require Google AI verification
+                    const aiVerifiedDocs = ['national_id', 'id_back', 'selfie'];
+                    
+                    // Documents that require admin verification
+                    const adminVerifiedDocs = ['bank_statement', 'ecocash_statement', 'payslip', 'proof_of_residence', 'employment_letter', 'employment_contract'];
+                    
+                    if (aiVerifiedDocs.includes(documentType)) {
+                        console.log(`🤖 Sending ${documentType} to Google AI for verification`);
+                        return await uploadDocumentWithOCR(file, documentType);
+                    } else if (adminVerifiedDocs.includes(documentType)) {
+                        console.log(`👨‍💼 Sending ${documentType} to admin for manual verification`);
+                        return await uploadDocumentForAdmin(file, documentType);
+                    } else {
+                        // Default to admin verification for unknown document types
+                        console.log(`📋 Sending ${documentType} to admin (default route)`);
+                        return await uploadDocumentForAdmin(file, documentType);
+                    }
+                };
+
                 const uploadDocumentWithOCR = async (file, documentType) => {
                     const formData = new FormData();
                     formData.append('document', file);
@@ -2631,7 +2626,7 @@
                 const idFrontFile = document.getElementById('idFront').files[0];
                 if (idFrontFile) {
                     console.log('📤 Uploading ID Front with OCR...');
-                    ocrResults.idFront = await uploadDocumentWithOCR(idFrontFile, 'national_id');
+                    ocrResults.idFront = await uploadDocument(idFrontFile, 'national_id');
                     
                     if (ocrResults.idFront.success) {
                         // Check if ID name matches entered name
@@ -2653,7 +2648,7 @@
                 const idBackFile = document.getElementById('idBack').files[0];
                 if (idBackFile) {
                     console.log('📤 Uploading ID Back with OCR...');
-                    ocrResults.idBack = await uploadDocumentWithOCR(idBackFile, 'id_back');
+                    ocrResults.idBack = await uploadDocument(idBackFile, 'id_back');
                     
                     if (ocrResults.idBack.success) {
                         updateVerificationStep('id-back', 'done', 'ID Back Verified ✓');
@@ -2668,7 +2663,7 @@
                 const selfieFile = document.getElementById('selfiePhoto').files[0];
                 if (selfieFile) {
                     console.log('📤 Uploading Selfie with Face Detection...');
-                    ocrResults.selfie = await uploadDocumentWithOCR(selfieFile, 'selfie');
+                    ocrResults.selfie = await uploadDocument(selfieFile, 'selfie');
                     
                     if (ocrResults.selfie.success && ocrResults.selfie.data?.ocrData?.faceDetected) {
                         updateVerificationStep('selfie', 'done', 'Face Detected ✓');
@@ -2680,72 +2675,88 @@
                     }
                 }
                 
-                updateVerificationStep('bank', 'active', 'Analyzing bank statement...');
-                
-                // Upload Bank Statement with OCR (optional but recommended)
-                const bankStatementFile = document.getElementById('bankStatement').files[0];
-                if (bankStatementFile) {
-                    console.log('📤 Uploading Bank Statement with OCR...');
-                    ocrResults.bankStatement = await uploadDocumentWithOCR(bankStatementFile, 'bank_statement');
-                    
-                    if (ocrResults.bankStatement.success) {
-                        const bankData = ocrResults.bankStatement.data?.ocrData?.extractedFields;
-                        if (bankData) {
-                            console.log('💰 Bank Statement Data:', {
-                                accountHolder: bankData.accountHolderName,
-                                openingBalance: bankData.openingBalance,
-                                closingBalance: bankData.closingBalance,
-                                totalCredits: bankData.totalCredits,
-                                totalDebits: bankData.totalDebits,
-                                estimatedMonthlyIncome: bankData.estimatedMonthlyIncome
-                            });
-                            
-                            // Show OCR suggestion for net salary
-                            if (bankData.estimatedMonthlyIncome && bankData.estimatedMonthlyIncome > 0) {
-                                showOCRSuggestion(bankData.estimatedMonthlyIncome);
-                            } else {
-                                console.log('ℹ️ No estimated monthly income detected in OCR - user will need to enter manually');
-                            }
-                        }
-                        updateVerificationStep('bank', 'done', 'Bank Statement Analyzed ✓');
+                // Upload Proof of Residence for admin verification (required for all employment types)
+                const proofOfResidenceFile = document.getElementById('proofOfResidence')?.files[0];
+                if (proofOfResidenceFile) {
+                    console.log('📤 Uploading Proof of Residence for admin verification...');
+                    ocrResults.proofOfResidence = await uploadDocument(proofOfResidenceFile, 'proof_of_residence');
+                    if (ocrResults.proofOfResidence.success) {
+                        updateVerificationStep('proof-of-residence', 'done', 'Proof of Residence uploaded for admin review ✓');
                     } else {
-                        updateVerificationStep('bank', 'warning', 'Bank statement uploaded (analysis pending)');
+                        updateVerificationStep('proof-of-residence', 'warning', 'Proof of Residence uploaded (admin review pending)');
                     }
-                } else {
-                    updateVerificationStep('bank', 'done', 'No bank statement (optional)');
                 }
                 
-                // Upload Payslip with OCR for salary cross-validation
-                updateVerificationStep('payslip', 'active', 'Analyzing payslip...');
-                const payslipFile = document.getElementById('payslip').files[0];
-                if (payslipFile) {
-                    console.log('📤 Uploading Payslip with OCR for salary validation...');
-                    ocrResults.payslip = await uploadDocumentWithOCR(payslipFile, 'payslip');
+                // Collect and upload employment-specific documents
+                const employmentType = document.getElementById('employment').value;
+                console.log(`📋 Processing documents for ${employmentType} employment type`);
+                
+                if (employmentType === 'government') {
+                    // Government: Upload payslip
+                    const govPayslipFile = document.getElementById('govPayslip')?.files[0];
+                    if (govPayslipFile) {
+                        console.log('📤 Uploading Government Payslip for admin verification...');
+                        ocrResults.payslip = await uploadDocument(govPayslipFile, 'gov_payslip');
+                        if (ocrResults.payslip.success) {
+                            updateVerificationStep('payslip', 'done', 'Payslip uploaded for admin review ✓');
+                        } else {
+                            updateVerificationStep('payslip', 'warning', 'Payslip uploaded (admin review pending)');
+                        }
+                    }
+                } 
+                else if (employmentType === 'private') {
+                    // Private: Upload employment letter and bank statement
+                    const employmentLetterFile = document.getElementById('employmentLetter')?.files[0];
+                    const bankStatementFile = document.getElementById('bankStatement')?.files[0];
                     
-                    if (ocrResults.payslip.success) {
-                        const payslipData = ocrResults.payslip.data?.ocrData?.extractedFields;
-                        if (payslipData) {
-                            console.log('💰 Payslip Data:', {
-                                employeeName: payslipData.employeeName,
-                                netSalary: payslipData.netSalary,
-                                grossSalary: payslipData.grossSalary,
-                                                            });
-                            
-                            // Cross-validate payslip salary with manual input
-                            if (payslipData?.netSalary && payslipData.netSalary > 0) {
-                                validatePayslipSalaryConsistency(payslipData.netSalary);
+                    if (employmentLetterFile) {
+                        console.log('📤 Uploading Employment Letter for admin verification...');
+                        ocrResults.employmentLetter = await uploadDocument(employmentLetterFile, 'employment_letter');
+                        if (ocrResults.employmentLetter.success) {
+                            updateVerificationStep('employment-letter', 'done', 'Employment Letter uploaded for admin review ✓');
+                        } else {
+                            updateVerificationStep('employment-letter', 'warning', 'Employment Letter uploaded (admin review pending)');
+                        }
+                    }
+                    
+                    if (bankStatementFile) {
+                        console.log('📤 Uploading Bank Statement for admin verification...');
+                        ocrResults.bankStatement = await uploadDocument(bankStatementFile, 'bank_statement');
+                        if (ocrResults.bankStatement.success) {
+                            updateVerificationStep('bank', 'done', 'Bank Statement uploaded for admin review ✓');
+                        } else {
+                            updateVerificationStep('bank', 'warning', 'Bank Statement uploaded (admin review pending)');
+                        }
+                    }
+                }
+                else if (employmentType === 'informal' || employmentType === 'business') {
+                    // Informal/Business: Upload statement based on selection
+                    const statementType = document.getElementById('statementType')?.value;
+                    
+                    if (statementType === 'bank') {
+                        const informalBankStatementFile = document.getElementById('informalBankStatement')?.files[0];
+                        if (informalBankStatementFile) {
+                            console.log('📤 Uploading Bank Statement for admin verification...');
+                            ocrResults.bankStatement = await uploadDocument(informalBankStatementFile, 'bank_statement');
+                            if (ocrResults.bankStatement.success) {
+                                updateVerificationStep('bank', 'done', 'Bank Statement uploaded for admin review ✓');
                             } else {
-                                console.log('ℹ️ No net salary detected in payslip OCR - using manual input only');
-                                // Show gentle reminder that payslip OCR couldn't extract salary
-                                showPayslipOCRReminder();
+                                updateVerificationStep('bank', 'warning', 'Bank Statement uploaded (admin review pending)');
                             }
                         }
-                        updateVerificationStep('payslip', 'done', 'Payslip Verified ✓');
-                    } else {
-                        updateVerificationStep('payslip', 'warning', 'Payslip uploaded (verification pending)');
                     }
-                } else {
-                    updateVerificationStep('payslip', 'warning', 'Payslip required for salary verification');
+                    else if (statementType === 'mobile') {
+                        const mobileMoneyStatementFile = document.getElementById('mobileMoneyStatement')?.files[0];
+                        if (mobileMoneyStatementFile) {
+                            console.log('📤 Uploading Mobile Money Statement for admin verification...');
+                            ocrResults.mobileMoneyStatement = await uploadDocument(mobileMoneyStatementFile, 'mobile_money_statement');
+                            if (ocrResults.mobileMoneyStatement.success) {
+                                updateVerificationStep('mobile-money', 'done', 'Mobile Money Statement uploaded for admin review ✓');
+                            } else {
+                                updateVerificationStep('mobile-money', 'warning', 'Mobile Money Statement uploaded (admin review pending)');
+                            }
+                        }
+                    }
                 }
                 
                 updateVerificationStep('score', 'active', 'Calculating ZimScore...');
@@ -3832,36 +3843,66 @@
             }
         }
 
-        // Function to validate required documents based on employer type
+        // Function to validate required documents based on employment type
         function validateEmployerDocuments(employerType) {
-            const requiredDocs = {
-                'government': ['ecNumber'],
-                'private': ['employmentLetter', 'payslip'],
-                'informal': ['businessRegistration', 'referenceLetter'],
-                'ngo': ['ngoEmploymentLetter', 'ngoCertificate'],
-                'student': ['studentId', 'enrollmentLetter'],
-                'other': []
-            };
-            
             const missingDocs = [];
-            const docs = requiredDocs[employerType] || [];
             
-            docs.forEach(docId => {
-                const element = document.getElementById(docId);
-                if (element && element.type === 'file') {
-                    if (!element.files || element.files.length === 0) {
-                        const label = document.querySelector(`label[for="${docId}"]`)?.textContent || docId;
-                        missingDocs.push(label);
-                    }
-                } else if (element && element.type === 'text') {
-                    if (!element.value.trim()) {
-                        const label = document.querySelector(`label[for="${docId}"]`)?.textContent || docId;
-                        missingDocs.push(label);
+            // Government employees: payslip required
+            if (employerType === 'government') {
+                const govPayslip = document.getElementById('govPayslip');
+                if (!govPayslip || !govPayslip.files || govPayslip.files.length === 0) {
+                    missingDocs.push('Government Payslip');
+                }
+            }
+            
+            // Private employees: employment letter + bank statement required
+            else if (employerType === 'private') {
+                const employmentLetter = document.getElementById('employmentLetter');
+                const bankStatement = document.getElementById('bankStatement');
+                
+                if (!employmentLetter || !employmentLetter.files || employmentLetter.files.length === 0) {
+                    missingDocs.push('Employment Letter');
+                }
+                if (!bankStatement || !bankStatement.files || bankStatement.files.length === 0) {
+                    missingDocs.push('Bank Statement');
+                }
+            }
+            
+            // Informal/Business: statement type + either bank or mobile money statement required
+            else if (employerType === 'informal' || employerType === 'business') {
+                const statementType = document.getElementById('statementType');
+                const informalBankStatement = document.getElementById('informalBankStatement');
+                const mobileMoneyStatement = document.getElementById('mobileMoneyStatement');
+                
+                // Check if statement type is selected
+                if (!statementType || !statementType.value) {
+                    missingDocs.push('Statement Type Selection');
+                } else {
+                    // Check appropriate statement based on selection
+                    if (statementType.value === 'bank') {
+                        if (!informalBankStatement || !informalBankStatement.files || informalBankStatement.files.length === 0) {
+                            missingDocs.push('Bank Statement');
+                        }
+                    } else if (statementType.value === 'mobile') {
+                        if (!mobileMoneyStatement || !mobileMoneyStatement.files || mobileMoneyStatement.files.length === 0) {
+                            missingDocs.push('Mobile Money Statement');
+                        }
                     }
                 }
-            });
+            }
             
-            return missingDocs;
+            // Return validation result
+            if (missingDocs.length > 0) {
+                return {
+                    isValid: false,
+                    missingDocuments: missingDocs
+                };
+            }
+            
+            return {
+                isValid: true,
+                missingDocuments: []
+            };
         }
 
         // Function to collect uploaded documents
@@ -3966,6 +4007,19 @@
                 
                 if (error || !rules) {
                     // Fallback to default rules
+                    // Government employees have NO cold start - full DTNI-based limits
+                    if (employerType === 'government') {
+                        return {
+                            has_cold_start: false,
+                            cold_start_limit: 0, // No cold start cap
+                            min_loan_amount: 25,
+                            max_loan_amount: 3000, // Full DTNI-based limit
+                            min_tenure_days: 30,
+                            max_tenure_days: 90
+                        };
+                    }
+                    
+                    // Private and informal employees have cold start limitations
                     return {
                         has_cold_start: true,
                         cold_start_limit: 300,
@@ -3976,9 +4030,36 @@
                     };
                 }
                 
+                // Ensure government employees have no cold start even if database has different settings
+                if (employerType === 'government') {
+                    return {
+                        ...rules,
+                        has_cold_start: false,
+                        cold_start_limit: 0, // No cold start cap
+                        min_loan_amount: 25,
+                        max_loan_amount: 3000, // Full DTNI-based limit
+                        min_tenure_days: rules.min_tenure_days || 30,
+                        max_tenure_days: rules.max_tenure_days || 90
+                    };
+                }
+                
                 return rules;
             } catch (error) {
                 console.warn('⚠️ Could not fetch employer rules, using defaults:', error.message);
+                
+                // Government employees have NO cold start - full DTNI-based limits
+                if (employerType === 'government') {
+                    return {
+                        has_cold_start: false,
+                        cold_start_limit: 0, // No cold start cap
+                        min_loan_amount: 25,
+                        max_loan_amount: 3000, // Full DTNI-based limit
+                        min_tenure_days: 30,
+                        max_tenure_days: 90
+                    };
+                }
+                
+                // Private and informal employees have cold start limitations
                 return {
                     has_cold_start: true,
                     cold_start_limit: 300,
