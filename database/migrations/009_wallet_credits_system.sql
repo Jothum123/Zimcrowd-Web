@@ -10,12 +10,14 @@ CREATE TABLE IF NOT EXISTS wallet_credits (
     credit_type TEXT NOT NULL CHECK (credit_type IN ('tier_discount', 'referral', 'early_repayment_bonus')),
     amount DECIMAL(12,2) NOT NULL CHECK (amount >= 0),
     source_reference TEXT, -- Reference to loan_id, referral_code, etc.
-    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'available', 'withdrawn', 'expired')),
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'available', 'withdrawn', 'expired', 'used')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    available_at TIMESTAMP, -- When credits become available for withdrawal
+    available_at TIMESTAMP, -- When credits become available for use
     expires_at TIMESTAMP, -- Credit expiration date
     withdrawn_at TIMESTAMP,
-    withdrawal_method TEXT, -- 'bank_transfer', 'platform_credit', etc.
+    withdrawal_method TEXT, -- 'bank_transfer', 'mobile_money', 'platform_credit'
+    is_withdrawable BOOLEAN DEFAULT true, -- Whether credits can be withdrawn as cash
+    usable_for TEXT[] DEFAULT ARRAY['future_loans', 'platform_fees', 'lending'], -- What credits can be used for
     notes TEXT,
     metadata JSONB -- Additional data for specific credit types
 );
@@ -118,6 +120,63 @@ BEGIN
     v_bonus_amount := v_saved_interest * (v_bonus_percentage / 100);
     
     RETURN v_bonus_amount;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create function to award early repayment bonus credits (non-withdrawable)
+CREATE OR REPLACE FUNCTION award_early_repayment_credits(
+    p_user_id INTEGER,
+    p_loan_id INTEGER,
+    p_early_payment_amount DECIMAL,
+    p_remaining_principal DECIMAL,
+    p_remaining_interest DECIMAL
+) RETURNS VOID AS $$
+DECLARE
+    v_bonus_amount DECIMAL;
+BEGIN
+    -- Calculate bonus amount
+    SELECT calculate_early_repayment_bonus(p_loan_id, p_early_payment_amount, p_remaining_principal, p_remaining_interest)
+    INTO v_bonus_amount;
+    
+    IF v_bonus_amount > 0 THEN
+        -- Insert non-withdrawable platform credit record
+        INSERT INTO wallet_credits (
+            user_id, 
+            credit_type, 
+            amount, 
+            source_reference, 
+            status,
+            available_at,
+            is_withdrawable,
+            usable_for,
+            notes
+        ) VALUES (
+            p_user_id,
+            'early_repayment_bonus',
+            v_bonus_amount,
+            'loan_' || p_loan_id,
+            'available',
+            CURRENT_TIMESTAMP,
+            false, -- Non-withdrawable
+            ARRAY['future_loans', 'platform_fees', 'lending'], -- Can be used for these purposes
+            'Non-withdrawable platform credit for early repayment on loan ' || p_loan_id
+        );
+        
+        -- Create transaction record
+        INSERT INTO credit_transactions (
+            credit_id,
+            transaction_type,
+            amount,
+            balance_after,
+            reference_id
+        ) VALUES (
+            currval('wallet_credits_id_seq'),
+            'earned',
+            v_bonus_amount,
+            v_bonus_amount,
+            'loan_' || p_loan_id
+        );
+    END IF;
 END;
 $$ LANGUAGE plpgsql;
 

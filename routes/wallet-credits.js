@@ -9,30 +9,59 @@ const pool = new Pool({
 });
 
 // @desc    Get user credit summary
-// @route   GET /api/wallet/credits/summary
+// @route   GET /api/wallet-credits/credits/summary
 // @access  Private
 router.get('/credits/summary', requireAuth, async (req, res) => {
     try {
         const userId = req.user.id;
         
-        const result = await pool.query(
-            'SELECT * FROM user_credit_summary WHERE user_id = $1',
-            [userId]
-        );
+        // Get withdrawable credits summary
+        const withdrawableResult = await pool.query(`
+            SELECT 
+                COALESCE(SUM(CASE WHEN status = 'available' AND is_withdrawable = true THEN amount ELSE 0 END), 0) as withdrawable_balance,
+                COALESCE(SUM(CASE WHEN status = 'pending' AND is_withdrawable = true THEN amount ELSE 0 END), 0) as pending_withdrawable,
+                COALESCE(SUM(CASE WHEN status = 'withdrawn' AND is_withdrawable = true THEN amount ELSE 0 END), 0) as withdrawn_total,
+                COALESCE(SUM(CASE WHEN status = 'expired' AND is_withdrawable = true THEN amount ELSE 0 END), 0) as expired_withdrawable,
+                COUNT(CASE WHEN status = 'available' AND is_withdrawable = true THEN 1 END) as withdrawable_credits_count
+            FROM wallet_credits 
+            WHERE user_id = $1 AND is_withdrawable = true
+        `, [userId]);
         
-        if (result.rows.length === 0) {
-            return res.json({
-                available_balance: 0,
-                pending_balance: 0,
-                withdrawn_total: 0,
-                expired_total: 0,
-                total_earned: 0,
-                available_credits_count: 0,
-                pending_credits_count: 0
-            });
-        }
+        // Get platform credits summary (non-withdrawable)
+        const platformResult = await pool.query(`
+            SELECT 
+                COALESCE(SUM(CASE WHEN status = 'available' AND is_withdrawable = false THEN amount ELSE 0 END), 0) as platform_balance,
+                COALESCE(SUM(CASE WHEN status = 'pending' AND is_withdrawable = false THEN amount ELSE 0 END), 0) as pending_platform,
+                COALESCE(SUM(CASE WHEN status = 'used' AND is_withdrawable = false THEN amount ELSE 0 END), 0) as used_platform,
+                COALESCE(SUM(CASE WHEN status = 'expired' AND is_withdrawable = false THEN amount ELSE 0 END), 0) as expired_platform,
+                COUNT(CASE WHEN status = 'available' AND is_withdrawable = false THEN 1 END) as platform_credits_count
+            FROM wallet_credits 
+            WHERE user_id = $1 AND is_withdrawable = false
+        `, [userId]);
         
-        res.json(result.rows[0]);
+        const withdrawable = withdrawableResult.rows[0];
+        const platform = platformResult.rows[0];
+        
+        res.json({
+            // Withdrawable credits (cash)
+            withdrawable_balance: parseFloat(withdrawable.withdrawable_balance),
+            pending_withdrawable: parseFloat(withdrawable.pending_withdrawable),
+            withdrawn_total: parseFloat(withdrawable.withdrawn_total),
+            expired_withdrawable: parseFloat(withdrawable.expired_withdrawable),
+            withdrawable_credits_count: parseInt(withdrawable.withdrawable_credits_count),
+            
+            // Platform credits (non-withdrawable)
+            platform_balance: parseFloat(platform.platform_balance),
+            pending_platform: parseFloat(platform.pending_platform),
+            used_platform: parseFloat(platform.used_platform),
+            expired_platform: parseFloat(platform.expired_platform),
+            platform_credits_count: parseInt(platform.platform_credits_count),
+            
+            // Totals
+            total_available: parseFloat(withdrawable.withdrawable_balance) + parseFloat(platform.platform_balance),
+            total_earned: parseFloat(withdrawable.withdrawable_balance) + parseFloat(platform.platform_balance) + 
+                          parseFloat(withdrawable.withdrawn_total) + parseFloat(platform.used_platform)
+        });
     } catch (error) {
         console.error('Error fetching credit summary:', error);
         res.status(500).json({ error: 'Failed to fetch credit summary' });
@@ -150,7 +179,7 @@ router.get('/credits/transactions', requireAuth, async (req, res) => {
 });
 
 // @desc    Create withdrawal request
-// @route   POST /api/wallet/credits/withdraw
+// @route   POST /api/wallet-credits/credits/withdraw
 // @access  Private
 router.post('/credits/withdraw', requireAuth, async (req, res) => {
     try {
@@ -181,17 +210,18 @@ router.post('/credits/withdraw', requireAuth, async (req, res) => {
             });
         }
         
-        // Check user's available balance
+        // Check user's withdrawable balance only (exclude non-withdrawable platform credits)
         const balanceResult = await pool.query(
-            'SELECT COALESCE(SUM(amount), 0) as available_balance FROM wallet_credits WHERE user_id = $1 AND status = $2',
+            'SELECT COALESCE(SUM(amount), 0) as withdrawable_balance FROM wallet_credits WHERE user_id = $1 AND status = $2 AND is_withdrawable = true',
             [userId, 'available']
         );
         
-        const availableBalance = balanceResult.rows[0].available_balance;
-        if (amount > availableBalance) {
+        const withdrawableBalance = balanceResult.rows[0].withdrawable_balance;
+        if (amount > withdrawableBalance) {
             return res.status(400).json({ 
-                error: 'Insufficient available balance',
-                available_balance: availableBalance
+                error: 'Insufficient withdrawable balance',
+                withdrawable_balance: withdrawableBalance,
+                note: 'Platform credits from early repayment cannot be withdrawn as cash'
             });
         }
         
@@ -209,7 +239,8 @@ router.post('/credits/withdraw', requireAuth, async (req, res) => {
         
         res.status(201).json({
             message: 'Withdrawal request created successfully',
-            withdrawal_request: result.rows[0]
+            withdrawal_request: result.rows[0],
+            note: 'Only withdrawable credits can be withdrawn. Platform credits can be used for future loans, fees, or lending.'
         });
     } catch (error) {
         console.error('Error creating withdrawal request:', error);
