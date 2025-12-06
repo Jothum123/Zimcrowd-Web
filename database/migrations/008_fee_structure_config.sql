@@ -5,15 +5,28 @@
 BEGIN;
 
 -- Add validation constraints to loan_config table for fee values
-ALTER TABLE loan_config ADD CONSTRAINT loan_config_parameter_value_check 
-    CHECK (
-        -- Allow reasonable fee percentages (0-100%)
-        (parameter_name LIKE '%_type' AND parameter_value IN (1.00, 2.00)) OR
-        (parameter_name LIKE '%fee%' AND parameter_name NOT LIKE '%_type' AND parameter_name NOT LIKE '%_max' AND parameter_name NOT LIKE '%_threshold' AND parameter_value >= 0 AND parameter_value <= 100) OR
-        (parameter_name LIKE '%_max' AND parameter_value >= 0) OR
-        (parameter_name LIKE '%_threshold' AND parameter_value >= 0) OR
-        (parameter_name NOT LIKE '%fee%' AND parameter_name NOT LIKE '%_type' AND parameter_name NOT LIKE '%_max' AND parameter_name NOT LIKE '%_threshold')
-    );
+-- Use multiple simpler constraints instead of one complex constraint
+ALTER TABLE loan_config DROP CONSTRAINT IF EXISTS loan_config_parameter_value_check;
+ALTER TABLE loan_config DROP CONSTRAINT IF EXISTS loan_config_type_value_check;
+ALTER TABLE loan_config DROP CONSTRAINT IF EXISTS loan_config_fee_value_check;
+ALTER TABLE loan_config DROP CONSTRAINT IF EXISTS loan_config_max_value_check;
+ALTER TABLE loan_config DROP CONSTRAINT IF EXISTS loan_config_threshold_value_check;
+
+-- Constraint for type parameters
+ALTER TABLE loan_config ADD CONSTRAINT loan_config_type_value_check 
+    CHECK (parameter_name NOT LIKE '%_type' OR parameter_value IN (1.00, 2.00));
+
+-- Constraint for fee parameters
+ALTER TABLE loan_config ADD CONSTRAINT loan_config_fee_value_check 
+    CHECK (parameter_name NOT LIKE '%fee%' OR parameter_name LIKE '%_type' OR parameter_name LIKE '%_max' OR parameter_name LIKE '%_threshold' OR (parameter_value >= 0 AND parameter_value <= 100));
+
+-- Constraint for max parameters
+ALTER TABLE loan_config ADD CONSTRAINT loan_config_max_value_check 
+    CHECK (parameter_name NOT LIKE '%_max' OR parameter_value >= 0);
+
+-- Constraint for threshold parameters
+ALTER TABLE loan_config ADD CONSTRAINT loan_config_threshold_value_check 
+    CHECK (parameter_name NOT LIKE '%_threshold' OR parameter_value >= 0);
 
 -- Update loan_config parameter_name constraint to include enhanced fee parameters
 ALTER TABLE loan_config DROP CONSTRAINT IF EXISTS loan_config_parameter_name_check;
@@ -559,7 +572,7 @@ ON loan_config(parameter_name, is_active, config_type, target_key);
 -- Success message
 DO $$
 BEGIN
-    RAISE NOTICE '✅ Enhanced fee structure configuration migration completed successfully!';
+    RAISE NOTICE 'Enhanced fee structure configuration migration completed successfully!';
     RAISE NOTICE 'Added: Comprehensive fee parameters for borrowers and lenders';
     RAISE NOTICE 'Features: Fee validation, tiered pricing, calculation functions, audit views';
     RAISE NOTICE 'Tables: Extended loan_config with fee parameters and validation';
