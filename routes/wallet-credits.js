@@ -27,14 +27,15 @@ router.get('/credits/summary', requireAuth, async (req, res) => {
             WHERE user_id = $1 AND is_withdrawable = true
         `, [userId]);
         
-        // Get lending credits summary (withdrawable credits that can be used for lending)
+        // Get lending credits summary (tier discount credits usable for lending)
         const lendingResult = await pool.query(`
             SELECT 
-                COALESCE(SUM(CASE WHEN status = 'available' AND is_withdrawable = true AND 'lending' = ANY(usable_for) THEN amount ELSE 0 END), 0) as lending_balance,
-                COALESCE(SUM(CASE WHEN status = 'used' AND is_withdrawable = true AND 'lending' = ANY(usable_for) THEN amount ELSE 0 END), 0) as used_lending,
-                COUNT(CASE WHEN status = 'available' AND is_withdrawable = true AND 'lending' = ANY(usable_for) THEN 1 END) as lending_credits_count
+                COALESCE(SUM(CASE WHEN status = 'available' AND credit_type = 'tier_discount' AND 'lending' = ANY(usable_for) THEN amount ELSE 0 END), 0) as lending_balance,
+                COALESCE(SUM(CASE WHEN status = 'used' AND credit_type = 'tier_discount' AND 'lending' = ANY(usable_for) THEN amount ELSE 0 END), 0) as used_lending,
+                COUNT(CASE WHEN status = 'available' AND credit_type = 'tier_discount' AND 'lending' = ANY(usable_for) THEN 1 END) as lending_credits_count,
+                COALESCE(SUM(CASE WHEN status = 'available' AND credit_type = 'tier_discount' AND is_withdrawable = false AND 'lending' = ANY(usable_for) THEN amount ELSE 0 END), 0) as pending_conversion_balance
             FROM wallet_credits 
-            WHERE user_id = $1 AND is_withdrawable = true AND 'lending' = ANY(usable_for)
+            WHERE user_id = $1 AND credit_type = 'tier_discount' AND 'lending' = ANY(usable_for)
         `, [userId]);
         
         // Get platform credits summary (non-withdrawable)
@@ -61,10 +62,11 @@ router.get('/credits/summary', requireAuth, async (req, res) => {
             expired_withdrawable: parseFloat(withdrawable.expired_withdrawable),
             withdrawable_credits_count: parseInt(withdrawable.withdrawable_credits_count),
             
-            // Lending credits (withdrawable credits usable for funding loans)
+            // Lending credits (tier discount credits usable for funding loans)
             lending_balance: parseFloat(lending.lending_balance),
             used_lending: parseFloat(lending.used_lending),
             lending_credits_count: parseInt(lending.lending_credits_count),
+            pending_conversion_balance: parseFloat(lending.pending_conversion_balance),
             
             // Platform credits (non-withdrawable)
             platform_balance: parseFloat(platform.platform_balance),
@@ -226,10 +228,10 @@ router.post('/credits/withdraw', requireAuth, async (req, res) => {
             });
         }
         
-        // Check user's withdrawable balance only (exclude non-withdrawable platform credits and used credits)
+        // Check user's withdrawable balance only (exclude non-withdrawable platform credits)
         const balanceResult = await pool.query(
-            'SELECT COALESCE(SUM(amount), 0) as withdrawable_balance FROM wallet_credits WHERE user_id = $1 AND status = $2 AND is_withdrawable = true AND status != $3',
-            [userId, 'available', 'used']
+            'SELECT COALESCE(SUM(amount), 0) as withdrawable_balance FROM wallet_credits WHERE user_id = $1 AND status = $2 AND is_withdrawable = true',
+            [userId, 'available']
         );
         
         const withdrawableBalance = balanceResult.rows[0].withdrawable_balance;
@@ -570,6 +572,41 @@ router.post('/credits/award-early-repayment', requireAdmin, async (req, res) => 
     } catch (error) {
         console.error('Error awarding early repayment credits:', error);
         res.status(500).json({ error: 'Failed to award early repayment credits' });
+    }
+});
+
+// @desc    Convert tier discount credits to withdrawable after loan funding
+// @route   POST /api/wallet-credits/credits/convert-to-withdrawable
+// @access  Admin
+router.post('/credits/convert-to-withdrawable', requireAdmin, async (req, res) => {
+    try {
+        const { user_id, funded_loan_id } = req.body;
+        
+        if (!user_id || !funded_loan_id) {
+            return res.status(400).json({ 
+                error: 'User ID and funded loan ID are required' 
+            });
+        }
+        
+        // Convert tier discount credits to withdrawable
+        const result = await pool.query(
+            'SELECT convert_tier_credits_to_withdrawable($1, $2) as converted_amount',
+            [user_id, funded_loan_id]
+        );
+        
+        const convertedAmount = result.rows[0].converted_amount;
+        
+        res.json({
+            message: 'Tier discount credits converted to withdrawable successfully',
+            converted_amount: parseFloat(convertedAmount),
+            funded_loan_id: funded_loan_id,
+            note: convertedAmount > 0 ? 
+                `${convertedAmount} in tier discount credits are now withdrawable or can be used for future lending` :
+                'No tier discount credits were available for conversion'
+        });
+    } catch (error) {
+        console.error('Error converting tier discount credits:', error);
+        res.status(500).json({ error: 'Failed to convert tier discount credits' });
     }
 });
 

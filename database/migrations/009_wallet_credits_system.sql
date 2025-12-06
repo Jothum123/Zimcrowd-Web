@@ -208,7 +208,7 @@ BEGIN
     -- Convert to credits (percentage of discount)
     v_credit_amount := v_discount_amount * (v_discount_percentage / 100);
     
-    -- Insert credit record (withdrawable AND usable for lending)
+    -- Insert credit record (non-withdrawable initially, only usable for lending)
     INSERT INTO wallet_credits (
         user_id, 
         credit_type, 
@@ -226,9 +226,9 @@ BEGIN
         'loan_' || p_loan_id,
         'pending',
         CURRENT_TIMESTAMP + INTERVAL '1 day', -- Available next day
-        true, -- Withdrawable as cash
+        false, -- Non-withdrawable initially
         ARRAY['lending'], -- Can be used to fund loans
-        'Tier discount credit for loan ' || p_loan_id || ' - withdrawable or usable for lending'
+        'Tier discount credit for loan ' || p_loan_id || ' - non-withdrawable, becomes withdrawable after funding new loans'
     );
     
     -- Create transaction record
@@ -547,6 +547,56 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Create function to convert tier discount credits to withdrawable status
+CREATE OR REPLACE FUNCTION convert_tier_credits_to_withdrawable(
+    p_user_id INTEGER,
+    p_funded_loan_id INTEGER
+) RETURNS DECIMAL AS $$
+DECLARE
+    v_converted_amount DECIMAL := 0;
+    v_credit_record RECORD;
+BEGIN
+    -- Get available tier discount credits that are not yet withdrawable
+    FOR v_credit_record IN 
+        SELECT id, amount, source_reference
+        FROM wallet_credits 
+        WHERE user_id = p_user_id 
+        AND credit_type = 'tier_discount'
+        AND status = 'available'
+        AND is_withdrawable = false
+        ORDER BY created_at
+    LOOP
+        -- Convert credit to withdrawable status
+        UPDATE wallet_credits 
+        SET is_withdrawable = true,
+            usable_for = ARRAY['lending'], -- Keep lending usage
+            notes = notes || ' | Converted to withdrawable after funding loan ' || p_funded_loan_id
+        WHERE id = v_credit_record.id;
+        
+        -- Create conversion transaction record
+        INSERT INTO credit_transactions (
+            credit_id,
+            transaction_type,
+            amount,
+            balance_after,
+            reference_id,
+            notes
+        ) VALUES (
+            v_credit_record.id,
+            'earned', -- Using 'earned' to track conversion
+            v_credit_record.amount,
+            v_credit_record.amount,
+            'conversion_loan_' || p_funded_loan_id,
+            'Tier discount credit converted to withdrawable after funding loan ' || p_funded_loan_id
+        );
+        
+        v_converted_amount := v_converted_amount + v_credit_record.amount;
+    END LOOP;
+    
+    RETURN v_converted_amount;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Add comments
 COMMENT ON TABLE wallet_credits IS 'Stores all user credits including tier discounts, referrals, and early repayment bonuses';
 COMMENT ON TABLE credit_transactions IS 'Tracks all credit movements and status changes';
@@ -554,5 +604,6 @@ COMMENT ON TABLE credit_withdrawal_requests IS 'Manages user withdrawal requests
 COMMENT ON TABLE credit_config IS 'Configuration parameters for the credit system';
 COMMENT ON FUNCTION apply_platform_credits IS 'Applies platform credits to transactions (loans, fees, lending)';
 COMMENT ON FUNCTION get_platform_credit_balance IS 'Gets available platform credit balance for specific usage types';
+COMMENT ON FUNCTION convert_tier_credits_to_withdrawable IS 'Converts tier discount credits to withdrawable status after loan funding';
 
 COMMIT;
