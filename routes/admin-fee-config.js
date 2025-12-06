@@ -414,6 +414,7 @@ router.get('/categories',
                 'Borrower Fees': [
                     'processing_fee_borrower', 'processing_fee_borrower_type', 'processing_fee_borrower_max',
                     'platform_fee_borrower', 'platform_fee_borrower_type', 'platform_fee_borrower_max',
+                    'collection_fee_borrower', 'collection_fee_borrower_type', 'collection_fee_borrower_max',
                     'late_payment_fee_borrower', 'late_payment_fee_borrower_type', 'late_payment_fee_borrower_max',
                     'early_repayment_fee_borrower', 'early_repayment_fee_borrower_type', 'early_repayment_fee_borrower_max',
                     'disbursement_fee_borrower', 'disbursement_fee_borrower_type', 'disbursement_fee_borrower_max',

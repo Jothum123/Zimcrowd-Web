@@ -32,17 +32,18 @@ This document outlines the complete fee breakdown for:
 | **Tier 4** | $10,001+ | 30% | 0.7x | 30% discount on fees |
 
 ### **📊 Enhanced Borrower Fee Categories:**
-| Fee Type | Rate | Type | Max Amount | Description |
-|----------|------|------|------------|-------------|
-| Processing Fee | 2.5% | Percentage | $50 | Loan processing and verification |
-| Platform Fee | 1.0% | Percentage | $25 | Platform operations and maintenance |
-| Late Payment Fee | 5.0% | Percentage | $100 | Penalty for late payments |
-| Early Repayment Fee | 1.0% | Percentage | $20 | Fee for early loan settlement |
-| Disbursement Fee | 0.0% | Percentage | $0 | Fee for loan disbursement |
-| Insurance Fee | 0.5% | Percentage | $15 | Default protection coverage |
-| **Document Verification** | **$2** | **Fixed** | **$2** | **Document processing and validation** |
-| **Credit Score Check** | **$5** | **Fixed** | **$5** | **Credit assessment and scoring** |
-| **Early Settlement Fee** | **0.5%** | **Percentage** | **$10** | **Early loan settlement processing** |
+| Fee Type | Rate | Type | Max Amount | Frequency | Description |
+|----------|------|------|------------|-----------|-------------|
+| Processing Fee | 2.5% | Percentage | $50 | Once-off | Loan processing and verification |
+| Platform Fee | 5.0% | Percentage | $100 | Once-off | Platform operations and maintenance |
+| Insurance Fee | 2.5% | Percentage | $50 | Once-off | Default protection coverage |
+| **Document Verification** | **$2** | **Fixed** | **$2** | **Once-off** | **Document processing and validation** |
+| **Credit Score Check** | **$5** | **Fixed** | **$5** | **Once-off** | **Credit assessment and scoring** |
+| Collection Fee | 5.0% | Percentage | $50 | Monthly | Applied to each installment until maturity |
+| Late Payment Fee | 5.0% | Percentage | $100 | Once-off | Penalty for late payments |
+| Early Repayment Fee | 1.0% | Percentage | $20 | Once-off | Fee for early loan settlement |
+| Disbursement Fee | 0.0% | Percentage | $0 | Once-off | Fee for loan disbursement |
+| Early Settlement Fee | 0.5% | Percentage | $10 | Once-off | Early loan settlement processing |
 
 ### **📈 Enhanced Lender Fee Categories:**
 | Fee Type | Rate | Type | Max Amount | Description |
@@ -77,12 +78,14 @@ This document outlines the complete fee breakdown for:
 
 ### **Borrower Fees (Enhanced v4.0)**
 - Processing: 2.5% upfront (max $50)
-- Platform: 1.0% upfront (max $25)
-- Insurance: 0.5% upfront (max $15)
+- Platform: 5.0% upfront (max $100)
+- Insurance: 2.5% upfront (max $50)
 - Document Verification: $2 fixed
 - Credit Score Check: $5 fixed
-- **Total Base:** ~4% + $7 fixed fees
-- **With Tier Discounts:** 2.8-4% + $7 fixed
+- Collection Fee: 5% monthly on installments (max $50/month)
+- **Total Once-off Base:** ~10% + $7 fixed fees
+- **With Tier Discounts:** 7-10% + $7 fixed (once-off fees only)
+- **Monthly Collection Fee:** 5% of each installment until maturity
 
 ### **Lender Fees (Enhanced v4.0)**
 - Processing: 1.0% upfront (max $30)
@@ -163,52 +166,51 @@ Pricing Tier: Tier 1 (Standard - No Discount)
 
 **Fee Breakdown:**
 ```
-UPFRONT FEES (Deducted Before Disbursement):
+ONCE-OFF FEES (Deducted Before Disbursement):
 Processing Fee (2.5%):         -$2.50
-Platform Fee (1.0%):           -$1.00
-Insurance Fee (0.5%):          -$0.50
+Platform Fee (5.0%):           -$5.00
+Insurance Fee (2.5%):          -$2.50
 Document Verification:         -$2.00
 Credit Score Check:             -$5.00
-Total Upfront Fees:             -$11.00
-Net Amount Received:            $89.00 ✅
+Total Once-off Fees:            -$17.00
+Net Amount Received:            $83.00 ✅
 
-ONGOING FEES (Added to Monthly Payment):
-Tenure Fee (1% monthly):        $1.00/month
-Total Tenure Fees (3 months):   $3.00
-
+MONTHLY FEES (Applied to Each Installment):
 Collection Fee (5% of payment): $1.84/month
-Total Collection Fees:          $5.51
+Total Collection Fees (3 months):$5.51
 
-TOTAL PLATFORM FEES:            $19.51
+TOTAL PLATFORM FEES:            $22.51
 
 LOAN SUMMARY:
 Base Monthly Payment:           $36.72
-Total Monthly Payment:          $39.56
+Total Monthly Payment:          $38.56 (includes collection fee)
 Total Interest:                 $10.16
-Total Repayment:                $118.67
+Total Repayment:                $115.67
 ```
 
 **Enhanced Example with Tier Discounts:**
 ```
 LOAN AMOUNT: $5,000 (Tier 2 - 10% Discount)
-UPFRONT FEES (After 10% Discount):
+ONCE-OFF FEES (After 10% Discount):
 Processing Fee (2.5%):         $112.50 (was $125.00)
-Platform Fee (1.0%):           $45.00 (was $50.00)
-Insurance Fee (0.5%):          $22.50 (was $25.00)
+Platform Fee (5.0%):           $225.00 (was $250.00)
+Insurance Fee (2.5%):          $112.50 (was $125.00)
 Document Verification:         $2.00 (fixed)
 Credit Score Check:             $5.00 (fixed)
-Total Upfront Fees:             $187.00 (was $207.00)
-Net Amount Received:            $4,813.00 ✅
+Total Once-off Fees:            $457.00 (was $507.00)
+Net Amount Received:            $4,543.00 ✅
 
-TIER SAVINGS: $20.00 (10% discount on percentage fees)
+TIER SAVINGS: $50.00 (10% discount on percentage fees)
 ```
 
 **Effective Cost:**
-- Platform fees: $19.51 (19.51% of loan amount - Tier 1)
-- Platform fees: $187.00 (3.74% of loan amount - Tier 2)
+- Once-off platform fees: $17.00 (17.00% of loan amount - Tier 1)
+- Once-off platform fees: $457.00 (9.14% of loan amount - Tier 2)
+- Monthly collection fees: $5.51 (5.51% of loan amount over 3 months)
+- Total platform fees: $22.51 (22.51% of loan amount - Tier 1)
 - Interest: $10.16 (10.16% of loan amount)
-- Total cost: $29.67 (29.67% of loan amount - Tier 1)
-- **Tier Benefits:** Volume discounts reduce effective platform fee percentage
+- Total cost: $32.67 (32.67% of loan amount - Tier 1)
+- **Tier Benefits:** Volume discounts reduce effective once-off fee percentage
 
 ---
 
@@ -1059,7 +1061,7 @@ No tier discounts, limited fee categories, basic validation
 
 ### **v4.0 Model (Enhanced):**
 ```
-Borrower pays: 2.8-4% + $7 fixed (with tier discounts)
+Borrower pays: 7-10% + $7 fixed once-off + 5% monthly collection fees
 Lender pays: 1.2-1.75% + $3 fixed (with tier discounts)
 4-tier pricing system, 15+ enhanced fee categories, enterprise validation
 Performance optimized, comprehensive audit trail, production-ready

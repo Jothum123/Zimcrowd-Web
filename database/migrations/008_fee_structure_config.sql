@@ -29,6 +29,7 @@ ALTER TABLE loan_config ADD CONSTRAINT loan_config_parameter_name_check
         -- Borrower Fees
         'processing_fee_borrower', 'processing_fee_borrower_type', 'processing_fee_borrower_max',
         'platform_fee_borrower', 'platform_fee_borrower_type', 'platform_fee_borrower_max',
+        'collection_fee_borrower', 'collection_fee_borrower_type', 'collection_fee_borrower_max',
         'late_payment_fee_borrower', 'late_payment_fee_borrower_type', 'late_payment_fee_borrower_max',
         'early_repayment_fee_borrower', 'early_repayment_fee_borrower_type', 'early_repayment_fee_borrower_max',
         'disbursement_fee_borrower', 'disbursement_fee_borrower_type', 'disbursement_fee_borrower_max',
@@ -82,13 +83,17 @@ INSERT INTO loan_config (config_type, target_key, parameter_name, parameter_valu
 ('global', 'all', 'tier_4_fee_multiplier', 0.7), -- 30% discount
 
 -- Enhanced Borrower Fee Defaults
-('global', 'all', 'processing_fee_borrower', 2.50), -- 2.5% processing fee
+('global', 'all', 'processing_fee_borrower', 2.50), -- 2.5% processing fee (once-off)
 ('global', 'all', 'processing_fee_borrower_type', 1.00), -- percentage
 ('global', 'all', 'processing_fee_borrower_max', 50.00), -- max $50 processing fee
 
-('global', 'all', 'platform_fee_borrower', 1.00), -- 1% platform fee
+('global', 'all', 'platform_fee_borrower', 5.00), -- 5% platform fee (once-off)
 ('global', 'all', 'platform_fee_borrower_type', 1.00), -- percentage
-('global', 'all', 'platform_fee_borrower_max', 25.00), -- max $25 platform fee
+('global', 'all', 'platform_fee_borrower_max', 100.00), -- max $100 platform fee
+
+('global', 'all', 'collection_fee_borrower', 5.00), -- 5% collection fee (monthly on installments)
+('global', 'all', 'collection_fee_borrower_type', 1.00), -- percentage
+('global', 'all', 'collection_fee_borrower_max', 50.00), -- max $50 collection fee per installment
 
 ('global', 'all', 'late_payment_fee_borrower', 5.00), -- 5% late payment fee
 ('global', 'all', 'late_payment_fee_borrower_type', 1.00), -- percentage
@@ -102,9 +107,9 @@ INSERT INTO loan_config (config_type, target_key, parameter_name, parameter_valu
 ('global', 'all', 'disbursement_fee_borrower_type', 1.00), -- percentage
 ('global', 'all', 'disbursement_fee_borrower_max', 0.00), -- max $0 disbursement fee
 
-('global', 'all', 'insurance_fee_borrower', 0.50), -- 0.5% insurance fee
+('global', 'all', 'insurance_fee_borrower', 2.50), -- 2.5% insurance fee (once-off)
 ('global', 'all', 'insurance_fee_borrower_type', 1.00), -- percentage
-('global', 'all', 'insurance_fee_borrower_max', 15.00), -- max $15 insurance fee
+('global', 'all', 'insurance_fee_borrower_max', 50.00), -- max $50 insurance fee
 
 -- New Borrower Fees
 ('global', 'all', 'document_verification_fee_borrower', 2.00), -- $2 document verification
@@ -189,7 +194,8 @@ ORDER BY fee_category, parameter_name;
 CREATE OR REPLACE FUNCTION calculate_loan_fees(
     p_loan_amount DECIMAL,
     p_loan_type TEXT DEFAULT 'direct',
-    p_user_role TEXT DEFAULT 'borrower'
+    p_user_role TEXT DEFAULT 'borrower',
+    p_tenure_months INTEGER DEFAULT 3
 )
 RETURNS TABLE (
     fee_name TEXT,
@@ -197,7 +203,8 @@ RETURNS TABLE (
     fee_value DECIMAL,
     fee_amount DECIMAL,
     is_percentage BOOLEAN,
-    fee_tier TEXT
+    fee_tier TEXT,
+    fee_frequency TEXT -- 'once-off' or 'monthly'
 ) AS $$
 DECLARE
     v_fee_rate DECIMAL;
@@ -244,7 +251,7 @@ BEGIN
     
     -- BORROWER FEES
     IF p_user_role = 'borrower' THEN
-        -- Processing Fee
+        -- Processing Fee (Once-off)
         SELECT lc.parameter_value, lc_type.parameter_value, lc_max.parameter_value
         INTO v_fee_rate, v_fee_type, v_fee_max
         FROM loan_config lc
@@ -264,9 +271,9 @@ BEGIN
         END IF;
         
         v_calculated_fee := GREATEST(v_calculated_fee, v_min_threshold);
-        RETURN QUERY SELECT 'Processing Fee', 'Borrower Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name;
+        RETURN QUERY SELECT 'Processing Fee', 'Borrower Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name, 'once-off';
         
-        -- Platform Fee
+        -- Platform Fee (Once-off)
         SELECT lc.parameter_value, lc_type.parameter_value, lc_max.parameter_value
         INTO v_fee_rate, v_fee_type, v_fee_max
         FROM loan_config lc
@@ -286,9 +293,9 @@ BEGIN
         END IF;
         
         v_calculated_fee := GREATEST(v_calculated_fee, v_min_threshold);
-        RETURN QUERY SELECT 'Platform Fee', 'Borrower Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name;
+        RETURN QUERY SELECT 'Platform Fee', 'Borrower Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name, 'once-off';
         
-        -- Insurance Fee
+        -- Insurance Fee (Once-off)
         SELECT lc.parameter_value, lc_type.parameter_value, lc_max.parameter_value
         INTO v_fee_rate, v_fee_type, v_fee_max
         FROM loan_config lc
@@ -308,7 +315,38 @@ BEGIN
         END IF;
         
         v_calculated_fee := GREATEST(v_calculated_fee, v_min_threshold);
-        RETURN QUERY SELECT 'Insurance Fee', 'Borrower Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name;
+        RETURN QUERY SELECT 'Insurance Fee', 'Borrower Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name, 'once-off';
+        
+        -- Collection Fee (Monthly - calculated on estimated monthly installment)
+        SELECT lc.parameter_value, lc_type.parameter_value, lc_max.parameter_value
+        INTO v_fee_rate, v_fee_type, v_fee_max
+        FROM loan_config lc
+        LEFT JOIN loan_config lc_type ON lc_type.parameter_name = 'collection_fee_borrower_type' 
+            AND lc_type.config_type = lc.config_type AND lc_type.target_key = lc.target_key
+        LEFT JOIN loan_config lc_max ON lc_max.parameter_name = 'collection_fee_borrower_max' 
+            AND lc_max.config_type = lc.config_type AND lc_max.target_key = lc.target_key
+        WHERE lc.parameter_name = 'collection_fee_borrower' 
+        AND lc.is_active = true 
+        AND lc.config_type = 'global' 
+        LIMIT 1;
+        
+        -- Calculate estimated monthly installment (principal + estimated interest)
+        DECLARE
+            v_estimated_monthly_installment DECIMAL;
+            v_estimated_interest_rate DECIMAL := 5.0; -- Default 5% monthly for calculation
+        BEGIN
+            v_estimated_monthly_installment := (p_loan_amount / p_tenure_months) + (p_loan_amount * v_estimated_interest_rate / 100);
+            
+            IF v_fee_type = 1.00 THEN -- Percentage
+                v_calculated_fee := LEAST((v_estimated_monthly_installment * v_fee_rate / 100), v_fee_max);
+            ELSE -- Fixed Amount
+                v_calculated_fee := LEAST(v_fee_rate, v_fee_max);
+            END IF;
+            
+            -- No tier multiplier for collection fees (applied monthly)
+            v_calculated_fee := GREATEST(v_calculated_fee, v_min_threshold);
+            RETURN QUERY SELECT 'Collection Fee', 'Borrower Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name, 'monthly';
+        END;
         
         -- Document Verification Fee (Fixed)
         SELECT lc.parameter_value, lc_type.parameter_value, lc_max.parameter_value
@@ -324,7 +362,7 @@ BEGIN
         LIMIT 1;
         
         v_calculated_fee := v_fee_rate; -- Fixed amount, no tier multiplier
-        RETURN QUERY SELECT 'Document Verification Fee', 'Borrower Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name;
+        RETURN QUERY SELECT 'Document Verification Fee', 'Borrower Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name, 'once-off';
         
         -- Credit Score Check Fee (Fixed)
         SELECT lc.parameter_value, lc_type.parameter_value, lc_max.parameter_value
@@ -340,12 +378,12 @@ BEGIN
         LIMIT 1;
         
         v_calculated_fee := v_fee_rate; -- Fixed amount, no tier multiplier
-        RETURN QUERY SELECT 'Credit Score Check Fee', 'Borrower Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name;
+        RETURN QUERY SELECT 'Credit Score Check Fee', 'Borrower Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name, 'once-off';
     END IF;
     
     -- LENDER FEES
     IF p_user_role = 'lender' THEN
-        -- Processing Fee
+        -- Processing Fee (Once-off)
         SELECT lc.parameter_value, lc_type.parameter_value, lc_max.parameter_value
         INTO v_fee_rate, v_fee_type, v_fee_max
         FROM loan_config lc
@@ -365,9 +403,9 @@ BEGIN
         END IF;
         
         v_calculated_fee := GREATEST(v_calculated_fee, v_min_threshold);
-        RETURN QUERY SELECT 'Processing Fee', 'Lender Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name;
+        RETURN QUERY SELECT 'Processing Fee', 'Lender Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name, 'once-off';
         
-        -- Platform Fee
+        -- Platform Fee (Once-off)
         SELECT lc.parameter_value, lc_type.parameter_value, lc_max.parameter_value
         INTO v_fee_rate, v_fee_type, v_fee_max
         FROM loan_config lc
@@ -387,9 +425,9 @@ BEGIN
         END IF;
         
         v_calculated_fee := GREATEST(v_calculated_fee, v_min_threshold);
-        RETURN QUERY SELECT 'Platform Fee', 'Lender Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name;
+        RETURN QUERY SELECT 'Platform Fee', 'Lender Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name, 'once-off';
         
-        -- Investment Fee
+        -- Investment Fee (Once-off)
         SELECT lc.parameter_value, lc_type.parameter_value, lc_max.parameter_value
         INTO v_fee_rate, v_fee_type, v_fee_max
         FROM loan_config lc
@@ -409,9 +447,9 @@ BEGIN
         END IF;
         
         v_calculated_fee := GREATEST(v_calculated_fee, v_min_threshold);
-        RETURN QUERY SELECT 'Investment Fee', 'Lender Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name;
+        RETURN QUERY SELECT 'Investment Fee', 'Lender Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name, 'once-off';
         
-        -- Portfolio Management Fee
+        -- Portfolio Management Fee (Once-off)
         SELECT lc.parameter_value, lc_type.parameter_value, lc_max.parameter_value
         INTO v_fee_rate, v_fee_type, v_fee_max
         FROM loan_config lc
@@ -431,7 +469,7 @@ BEGIN
         END IF;
         
         v_calculated_fee := GREATEST(v_calculated_fee, v_min_threshold);
-        RETURN QUERY SELECT 'Portfolio Management Fee', 'Lender Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name;
+        RETURN QUERY SELECT 'Portfolio Management Fee', 'Lender Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name, 'once-off';
         
         -- Due Diligence Fee (Fixed)
         SELECT lc.parameter_value, lc_type.parameter_value, lc_max.parameter_value
@@ -447,7 +485,7 @@ BEGIN
         LIMIT 1;
         
         v_calculated_fee := v_fee_rate; -- Fixed amount, no tier multiplier
-        RETURN QUERY SELECT 'Due Diligence Fee', 'Lender Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name;
+        RETURN QUERY SELECT 'Due Diligence Fee', 'Lender Fee', v_fee_rate, v_calculated_fee, (v_fee_type = 1.00), v_tier_name, 'once-off';
     END IF;
     
     RETURN;

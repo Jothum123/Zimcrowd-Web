@@ -806,7 +806,7 @@
             const tierInfo = data.fees && data.fees.length > 0 ? data.fees[0].fee_tier : 'No Tier Applied';
             
             let html = `
-                <div style="font-weight: 600; margin-bottom: 12px;">Fee Breakdown for $${data.loan_amount} (${data.user_role})</div>
+                <div style="font-weight: 600; margin-bottom: 12px;">Enhanced Fee Breakdown for $${data.loan_amount} (${data.user_role})</div>
                 <div style="background: #e0f2fe; padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; font-size: 14px;">
                     <i class="fas fa-layer-group" style="color: #0284c7; margin-right: 6px;"></i>
                     <strong>Pricing Tier:</strong> ${tierInfo}
@@ -814,29 +814,66 @@
             `;
             
             if (data.fees && data.fees.length > 0) {
-                data.fees.forEach(fee => {
-                    const feeType = fee.is_percentage ? '%' : '$';
-                    const feeAmount = fee.is_percentage ? `${fee.fee_value}%` : `$${fee.fee_value}`;
-                    const actualAmount = `$${fee.fee_amount.toFixed(2)}`;
-                    
+                // Group fees by frequency
+                const onceOffFees = data.fees.filter(fee => fee.fee_frequency === 'once-off');
+                const monthlyFees = data.fees.filter(fee => fee.fee_frequency === 'monthly');
+                
+                // Display once-off fees
+                if (onceOffFees.length > 0) {
                     html += `
-                        <div class="result-item">
-                            <span>${fee.fee_name}</span>
-                            <span>${actualAmount} (${feeAmount})</span>
+                        <div style="background: #f0f9ff; padding: 6px 10px; border-radius: 4px; margin-bottom: 8px; font-size: 13px; font-weight: 500;">
+                            <i class="fas fa-hand-holding-usd" style="color: #0369a1; margin-right: 4px;"></i>
+                            Once-off Fees (Deducted Before Disbursement)
                         </div>
                     `;
-                });
+                    
+                    onceOffFees.forEach(fee => {
+                        const feeType = fee.is_percentage ? '%' : '$';
+                        const feeAmount = fee.is_percentage ? `${fee.fee_value}%` : `$${fee.fee_value}`;
+                        const actualAmount = `$${fee.fee_amount.toFixed(2)}`;
+                        
+                        html += `
+                            <div class="result-item" style="border-left: 3px solid #0ea5e9;">
+                                <span>${fee.fee_name}</span>
+                                <span>${actualAmount} (${feeAmount})</span>
+                            </div>
+                        `;
+                    });
+                }
+                
+                // Display monthly fees
+                if (monthlyFees.length > 0) {
+                    html += `
+                        <div style="background: #fef3c7; padding: 6px 10px; border-radius: 4px; margin-bottom: 8px; margin-top: 12px; font-size: 13px; font-weight: 500;">
+                            <i class="fas fa-calendar-alt" style="color: #d97706; margin-right: 4px;"></i>
+                            Monthly Fees (Applied to Each Installment)
+                        </div>
+                    `;
+                    
+                    monthlyFees.forEach(fee => {
+                        const feeType = fee.is_percentage ? '%' : '$';
+                        const feeAmount = fee.is_percentage ? `${fee.fee_value}%` : `$${fee.fee_value}`;
+                        const actualAmount = `$${fee.fee_amount.toFixed(2)}`;
+                        
+                        html += `
+                            <div class="result-item" style="border-left: 3px solid #f59e0b;">
+                                <span>${fee.fee_name}</span>
+                                <span>${actualAmount} (${feeAmount})/month</span>
+                            </div>
+                        `;
+                    });
+                }
             } else {
                 html += '<div class="result-item"><span>No fees applicable</span><span>$0.00</span></div>';
             }
             
             html += `
-                <div class="result-item">
-                    <span>Total Fees</span>
-                    <span>$${data.total_fees.toFixed(2)}</span>
+                <div class="result-item" style="background: #f8fafc; border-top: 2px solid #e2e8f0; margin-top: 12px; padding-top: 8px;">
+                    <span style="font-weight: 600;">Total Once-off Fees</span>
+                    <span style="font-weight: 600;">$${data.total_fees.toFixed(2)}</span>
                 </div>
                 <div class="result-item">
-                    <span>Net Amount</span>
+                    <span>Net Amount Received</span>
                     <span>$${data.net_amount.toFixed(2)}</span>
                 </div>
             `;
