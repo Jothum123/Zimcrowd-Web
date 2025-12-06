@@ -5090,8 +5090,8 @@
                     </div>
                 </div>
 
-                <div id="portfolioCardsContainer" class="portfolio-cards">
-                    <!-- Investment cards will be loaded from API -->
+                <div id="portfolioGrid" class="portfolio-cards">
+                    <!-- Investment cards will be loaded by portfolio-investments.js -->
                     <div class="portfolio-card" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: rgba(15, 23, 42, 0.5);">
                         <div style="display: inline-block;">
                             <div class="spinner" style="width: 50px; height: 50px; border: 4px solid rgba(56, 231, 123, 0.1); border-top-color: #38e77b; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
@@ -17975,5 +17975,10 @@ How it works:
     <script src="js/notifications-bell.js"></script>
     <script src="js/test-notifications.js"></script>
     <script src="js/document-management.js"></script>
+    
+    <!-- Portfolio Investments with Mock Data -->
+    <link rel="stylesheet" href="css/portfolio-investments.css">
+    <script src="js/mock-market-data.js"></script>
+    <script src="js/portfolio-investments.js"></script>
 </body>
 </html>

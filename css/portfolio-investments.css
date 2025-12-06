@@ -1,0 +1,871 @@
+/**
+ * Portfolio Investments Styles
+ * Styles for investment cards and sell-to-secondary modals
+ */
+
+/* ============================================ */
+/* PORTFOLIO GRID */
+/* ============================================ */
+
+#portfolioGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+}
+
+/* ============================================ */
+/* INVESTMENT CARD STYLES */
+/* ============================================ */
+
+.portfolio-investment-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(56, 231, 123, 0.1);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.portfolio-investment-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(56, 231, 123, 0.3);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Card Header */
+.investment-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.borrower-mini-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.borrower-avatar-mini {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: white;
+}
+
+.borrower-mini-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.borrower-mini-info .borrower-name {
+    font-weight: 600;
+    color: white;
+    font-size: 14px;
+}
+
+.borrower-mini-info .loan-title {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.investment-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Card Body */
+.investment-card-body {
+    padding: 20px;
+}
+
+.investment-amounts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.amount-item {
+    text-align: center;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+}
+
+.amount-label {
+    display: block;
+    font-size: 11px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+}
+
+.amount-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+}
+
+.investment-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+}
+
+.metric-row .metric-label {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.metric-row .metric-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+}
+
+/* Loan Progress */
+.loan-progress {
+    margin-bottom: 15px;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 8px;
+}
+
+.progress-bar-mini {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill-mini {
+    height: 100%;
+    background: linear-gradient(90deg, #38e77b, #22c55e);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+/* Next Payment */
+.next-payment {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    background: rgba(56, 231, 123, 0.1);
+    border-radius: 10px;
+    font-size: 13px;
+    color: #94a3b8;
+}
+
+.next-payment i {
+    color: #38e77b;
+}
+
+.next-payment .payment-amount {
+    margin-left: auto;
+    font-weight: 600;
+    color: #38e77b;
+}
+
+/* Card Actions */
+.investment-card-actions {
+    display: flex;
+    gap: 10px;
+    padding: 15px 20px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.btn-view-investment,
+.btn-sell-secondary {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+}
+
+.btn-view-investment {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.btn-view-investment:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.btn-sell-secondary {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+}
+
+.btn-sell-secondary:hover:not(.disabled) {
+    transform: scale(1.02);
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+.btn-sell-secondary.disabled {
+    background: rgba(255, 255, 255, 0.05);
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+/* ============================================ */
+/* INVESTMENT DETAIL MODAL */
+/* ============================================ */
+
+.investment-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.investment-modal {
+    background: #1e293b;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    border: 1px solid rgba(56, 231, 123, 0.2);
+}
+
+.investment-modal .modal-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: all 0.2s ease;
+}
+
+.investment-modal .modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.investment-modal .modal-close i {
+    color: white;
+    font-size: 16px;
+}
+
+.investment-modal .modal-header {
+    padding: 30px;
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.investment-header-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.investment-header-info .borrower-avatar-large {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 24px;
+    color: white;
+}
+
+.investment-header-info h2 {
+    color: white;
+    margin: 0 0 5px 0;
+    font-size: 22px;
+}
+
+.investment-header-info p {
+    color: #94a3b8;
+    margin: 0 0 10px 0;
+    font-size: 14px;
+}
+
+.rating-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rating-display i {
+    font-size: 12px;
+}
+
+.rating-display span {
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.investment-modal .modal-content {
+    padding: 30px;
+}
+
+/* Investment Summary Grid */
+.investment-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.summary-card {
+    text-align: center;
+    padding: 20px 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.summary-card.highlight {
+    background: rgba(56, 231, 123, 0.1);
+    border-color: rgba(56, 231, 123, 0.2);
+}
+
+.summary-card.success {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.2);
+}
+
+.summary-label {
+    display: block;
+    font-size: 11px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.summary-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+}
+
+.summary-card.success .summary-value {
+    color: #22c55e;
+}
+
+/* Loan Details Section */
+.loan-details-section,
+.payment-schedule-section,
+.secondary-market-section {
+    margin-bottom: 25px;
+}
+
+.loan-details-section h4,
+.payment-schedule-section h4,
+.secondary-market-section h4 {
+    color: white;
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.detail-item {
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+.detail-item .label {
+    display: block;
+    font-size: 11px;
+    color: #94a3b8;
+    margin-bottom: 5px;
+}
+
+.detail-item .value {
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+}
+
+/* Upcoming Payments */
+.upcoming-payments {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.payment-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+.payment-date {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.payment-date i {
+    color: #38e77b;
+}
+
+.payment-breakdown {
+    display: flex;
+    gap: 20px;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.payment-total {
+    font-weight: 700;
+    color: #38e77b;
+    font-size: 15px;
+}
+
+/* Secondary Market Section */
+.secondary-info {
+    padding: 20px;
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: 12px;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.secondary-value {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.secondary-value .label {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.secondary-value .value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #f59e0b;
+}
+
+.secondary-note {
+    color: #94a3b8;
+    font-size: 13px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.secondary-note i {
+    color: #f59e0b;
+    margin-top: 2px;
+}
+
+.btn-sell-large {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s ease;
+}
+
+.btn-sell-large:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
+}
+
+/* ============================================ */
+/* SELL MODAL */
+/* ============================================ */
+
+.sell-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+    padding: 20px;
+}
+
+.sell-modal {
+    background: #1e293b;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.sell-modal .modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sell-modal .modal-close i {
+    color: white;
+    font-size: 14px;
+}
+
+.sell-modal-header {
+    text-align: center;
+    padding: 30px 30px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sell-modal-header h2 {
+    color: white;
+    margin: 15px 0 5px;
+    font-size: 22px;
+}
+
+.sell-modal-header p {
+    color: #94a3b8;
+    margin: 0;
+    font-size: 14px;
+}
+
+.sell-modal-content {
+    padding: 25px 30px;
+}
+
+/* Investment Summary */
+.sell-investment-summary {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 25px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 14px;
+}
+
+.summary-row:last-child {
+    border-bottom: none;
+}
+
+.summary-row span:first-child {
+    color: #94a3b8;
+}
+
+.summary-row span:last-child {
+    color: white;
+    font-weight: 500;
+}
+
+.summary-row.highlight {
+    background: rgba(245, 158, 11, 0.1);
+    margin: 10px -15px -15px;
+    padding: 15px;
+    border-radius: 0 0 12px 12px;
+}
+
+.summary-row.highlight span:last-child {
+    color: #f59e0b;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+/* Pricing Section */
+.pricing-section {
+    margin-bottom: 20px;
+}
+
+.pricing-section h4 {
+    color: white;
+    margin: 0 0 15px;
+    font-size: 15px;
+}
+
+.price-input-group {
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.price-input-group .currency {
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.2);
+    color: #94a3b8;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.price-input-group input {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    background: transparent;
+    color: white;
+    font-size: 24px;
+    font-weight: 700;
+    outline: none;
+}
+
+.price-suggestions {
+    display: flex;
+    gap: 10px;
+}
+
+.price-suggestions button {
+    flex: 1;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #94a3b8;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.price-suggestions button:hover {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #f59e0b;
+}
+
+/* Price Analysis */
+.price-analysis {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.analysis-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 14px;
+}
+
+.analysis-item:last-child {
+    border-bottom: none;
+}
+
+.analysis-item .label {
+    color: #94a3b8;
+}
+
+.analysis-item .value {
+    color: white;
+    font-weight: 600;
+}
+
+.analysis-item.highlight {
+    background: rgba(56, 231, 123, 0.1);
+    margin: 10px -15px -15px;
+    padding: 15px;
+    border-radius: 0 0 12px 12px;
+}
+
+.analysis-item.highlight .value {
+    color: #38e77b;
+    font-size: 18px;
+}
+
+/* Terms Checkbox */
+.sell-terms {
+    margin-bottom: 20px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.checkbox-label input {
+    margin-top: 3px;
+    width: 18px;
+    height: 18px;
+    accent-color: #f59e0b;
+}
+
+.checkbox-label span {
+    color: #94a3b8;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* Modal Footer */
+.sell-modal-footer {
+    display: flex;
+    gap: 15px;
+    padding: 20px 30px 25px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-cancel {
+    flex: 1;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.btn-confirm-sell {
+    flex: 2;
+    padding: 15px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s ease;
+}
+
+.btn-confirm-sell:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
+}
+
+/* ============================================ */
+/* RESPONSIVE STYLES */
+/* ============================================ */
+
+@media (max-width: 768px) {
+    #portfolioGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .investment-summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .details-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .investment-header-info {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .payment-item {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .payment-breakdown {
+        flex-direction: column;
+        gap: 5px;
+    }
+}
