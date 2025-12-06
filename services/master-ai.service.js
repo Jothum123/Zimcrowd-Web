@@ -514,6 +514,19 @@ Always provide specific, actionable advice with clear reasoning and next steps.`
     /**
      * Get AI system status and statistics
      */
+    getSystemStatus() {
+        const totalRequests = this.stats.primaryAIUsed + this.stats.kairoFallbackUsed + this.stats.errors;
+        
+        return {
+            status: 'operational',
+            primaryAI: {
+                provider: this.primaryAI?.provider || 'none',
+                model: this.primaryAI?.model || 'none',
+                available: !!this.primaryAI
+            },
+            fallbackAI: {
+                provider: 'kairo',
+                available: true
             },
             statistics: {
                 totalRequests: totalRequests,
