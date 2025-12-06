@@ -5,21 +5,15 @@
 BEGIN;
 
 -- Add validation constraints to loan_config table for fee values
-DO $$
-BEGIN
-    ALTER TABLE loan_config ADD CONSTRAINT loan_config_parameter_value_check 
-        CHECK (
-            -- Allow reasonable fee percentages (0-100%)
-            (parameter_name LIKE '%_type' AND parameter_value IN (1.00, 2.00)) OR
-            (parameter_name LIKE '%fee%' AND parameter_name NOT LIKE '%_type' AND parameter_name NOT LIKE '%_max' AND parameter_name NOT LIKE '%_threshold' AND parameter_value >= 0 AND parameter_value <= 100) OR
-            (parameter_name LIKE '%_max' AND parameter_value >= 0) OR
-            (parameter_name LIKE '%_threshold' AND parameter_value >= 0) OR
-            (parameter_name NOT LIKE '%fee%' AND parameter_name NOT LIKE '%_type' AND parameter_name NOT LIKE '%_max' AND parameter_name NOT LIKE '%_threshold')
-        );
-EXCEPTION
-    WHEN duplicate_object THEN
-        NULL; -- Constraint already exists, ignore
-END $$;
+ALTER TABLE loan_config ADD CONSTRAINT loan_config_parameter_value_check 
+    CHECK (
+        -- Allow reasonable fee percentages (0-100%)
+        (parameter_name LIKE '%_type' AND parameter_value IN (1.00, 2.00)) OR
+        (parameter_name LIKE '%fee%' AND parameter_name NOT LIKE '%_type' AND parameter_name NOT LIKE '%_max' AND parameter_name NOT LIKE '%_threshold' AND parameter_value >= 0 AND parameter_value <= 100) OR
+        (parameter_name LIKE '%_max' AND parameter_value >= 0) OR
+        (parameter_name LIKE '%_threshold' AND parameter_value >= 0) OR
+        (parameter_name NOT LIKE '%fee%' AND parameter_name NOT LIKE '%_type' AND parameter_name NOT LIKE '%_max' AND parameter_name NOT LIKE '%_threshold')
+    );
 
 -- Update loan_config parameter_name constraint to include enhanced fee parameters
 ALTER TABLE loan_config DROP CONSTRAINT IF EXISTS loan_config_parameter_name_check;
