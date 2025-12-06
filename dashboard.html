@@ -7920,6 +7920,9 @@
         </div>
     </div>
 
+    <!-- Mock Market Data (loaded before main scripts) -->
+    <script src="js/mock-market-data.js"></script>
+
     <script>
         // ============================================
         // API CONFIGURATION & UTILITY
@@ -12069,15 +12072,88 @@ How it works:
             try {
                 const response = await window.ZimCrowdAPI.getPrimaryMarketLoans(1, 6);
                 
-                if (response.success && response.data && response.data.loans) {
+                if (response.success && response.data && response.data.loans && response.data.loans.length > 0) {
                     updatePrimaryMarketUI(response.data.loans);
                 } else {
-                    showMarketError('primaryMarketLoans', 'No investment opportunities available');
+                    // Use mock data when no real loans available
+                    loadMockPrimaryMarketLoans();
                 }
             } catch (error) {
                 console.error('Failed to load primary market:', error);
-                showMarketError('primaryMarketLoans', 'Failed to load opportunities');
+                // Use mock data on error
+                loadMockPrimaryMarketLoans();
             }
+        }
+
+        // Load Mock Primary Market Loans (when API has no data)
+        function loadMockPrimaryMarketLoans() {
+            if (typeof MockMarketData === 'undefined') {
+                showMarketError('primaryMarketLoans', 'No investment opportunities available');
+                return;
+            }
+            
+            const mockLoans = MockMarketData.generatePrimaryMarketLoans(6);
+            const container = document.getElementById('primaryMarketLoans');
+            if (!container) return;
+            
+            container.innerHTML = mockLoans.map(loan => {
+                const riskColor = loan.riskLevel.color;
+                const riskLabel = loan.riskLevel.level.toUpperCase();
+                const starHtml = MockMarketData.generateStarRating(loan.borrower.rating, loan.borrower.zimScore);
+                
+                return `
+                    <div class="portfolio-card" style="cursor: pointer;" onclick="window.location.href='primary-market.html'">
+                        <div class="card-header">
+                            <div class="borrower-info">
+                                <div class="borrower-avatar" style="background: linear-gradient(135deg, ${loan.purpose.color}, ${loan.purpose.color}dd);">${loan.borrower.initials}</div>
+                                <div class="borrower-details">
+                                    <div class="borrower-name">${loan.borrower.name}</div>
+                                    <div class="borrower-purpose">${loan.purpose.category}</div>
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                                        <span style="font-size: 12px;">${starHtml}</span>
+                                        <span class="risk-badge" style="background: rgba(${riskColor === '#10b981' ? '16, 185, 129' : riskColor === '#3b82f6' ? '59, 130, 246' : riskColor === '#f59e0b' ? '245, 158, 11' : riskColor === '#6b7280' ? '107, 114, 128' : '239, 68, 68'}, 0.1); color: ${riskColor}; font-size: 10px; padding: 2px 6px;">
+                                            ${riskLabel}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="card-metrics">
+                                <div class="metric-item">
+                                    <span class="metric-label">Loan Amount</span>
+                                    <span class="metric-value">$${loan.amount.toLocaleString()}</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Interest Rate</span>
+                                    <span class="metric-value returns-positive">${loan.interestRate.toFixed(1)}%</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Term</span>
+                                    <span class="metric-value">${loan.term} months</span>
+                                </div>
+                            </div>
+
+                            <div class="card-progress">
+                                <div class="progress-info">
+                                    <span>Funded (${loan.lendersCount} lenders)</span>
+                                    <span>${loan.fundedPercent}%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${loan.fundedPercent}%; background: ${riskColor};"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-actions">
+                            <button class="btn-primary" style="width: 100%; padding: 10px;">
+                                <i class="fas fa-hand-holding-usd"></i> Invest Now
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // Load Secondary Market Loans
