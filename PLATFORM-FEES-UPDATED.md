@@ -1,14 +1,69 @@
-# ZimCrowd Platform Fees - Updated Implementation
+# ZimCrowd Platform Fees - Enhanced Implementation v4.0
 
 ## 🎯 Executive Summary
 
-**ZimCrowd now operates with a comprehensive fee structure for both borrowers and lenders.**
+**ZimCrowd now operates with a comprehensive, tiered fee structure for both borrowers and lenders with enterprise-grade validation and flexible pricing.**
 
 This document outlines the complete fee breakdown for:
-1. **Borrower Fees** - Service, Insurance, Tenure, and Collection fees
-2. **Lender/Investor Fees** - Service, Insurance (OPTIONAL), Collection, and Deal fees
-3. **Interest Rate Structure** - 0-10% per month range
-4. **Platform Revenue Model** - How fees are calculated and collected
+1. **Borrower Fees** - Processing, Platform, Insurance, Document Verification, Credit Score Check, and Early Settlement fees
+2. **Lender/Investor Fees** - Processing, Platform, Portfolio Management, Secondary Market, Due Diligence, and Default Recovery fees
+3. **Tiered Pricing System** - Volume-based discounts (10%, 20%, 30%) for larger loans
+4. **Interest Rate Structure** - 0-10% per month range
+5. **Platform Revenue Model** - How fees are calculated and collected with validation constraints
+
+---
+
+## 🆕 **ENHANCED FEE STRUCTURE v4.0 - DECEMBER 2025**
+
+### **🎯 Major New Features:**
+- ✅ **4-Tier Pricing System** with automatic volume discounts
+- ✅ **Enhanced Fee Categories** - 15+ new fee parameters
+- ✅ **Validation Constraints** - Fee percentages capped at 0-100%
+- ✅ **Performance Optimization** - Indexed fee parameter lookups
+- ✅ **Comprehensive Audit Trail** - Complete change tracking
+- ✅ **Production-Ready Scale** - Enterprise-grade fee management
+
+### **💰 Tiered Pricing Structure:**
+| Tier | Loan Amount | Discount | Multiplier | Example ($1000 loan) |
+|------|-------------|----------|------------|---------------------|
+| **Tier 1** | $0-$1,000 | Standard | 1.0x | Full fees apply |
+| **Tier 2** | $1,001-$5,000 | 10% | 0.9x | 10% discount on fees |
+| **Tier 3** | $5,001-$10,000 | 20% | 0.8x | 20% discount on fees |
+| **Tier 4** | $10,001+ | 30% | 0.7x | 30% discount on fees |
+
+### **📊 Enhanced Borrower Fee Categories:**
+| Fee Type | Rate | Type | Max Amount | Description |
+|----------|------|------|------------|-------------|
+| Processing Fee | 2.5% | Percentage | $50 | Loan processing and verification |
+| Platform Fee | 1.0% | Percentage | $25 | Platform operations and maintenance |
+| Late Payment Fee | 5.0% | Percentage | $100 | Penalty for late payments |
+| Early Repayment Fee | 1.0% | Percentage | $20 | Fee for early loan settlement |
+| Disbursement Fee | 0.0% | Percentage | $0 | Fee for loan disbursement |
+| Insurance Fee | 0.5% | Percentage | $15 | Default protection coverage |
+| **Document Verification** | **$2** | **Fixed** | **$2** | **Document processing and validation** |
+| **Credit Score Check** | **$5** | **Fixed** | **$5** | **Credit assessment and scoring** |
+| **Early Settlement Fee** | **0.5%** | **Percentage** | **$10** | **Early loan settlement processing** |
+
+### **📈 Enhanced Lender Fee Categories:**
+| Fee Type | Rate | Type | Max Amount | Description |
+|----------|------|------|------------|-------------|
+| Processing Fee | 1.0% | Percentage | $30 | Investment processing |
+| Platform Fee | 0.5% | Percentage | $20 | Platform access and tools |
+| Withdrawal Fee | 1.0% | Percentage | $25 | Fund withdrawal processing |
+| Investment Fee | 0.5% | Percentage | $15 | Investment management |
+| Default Recovery Fee | 10.0% | Percentage | $200 | Default recovery services |
+| **Portfolio Management** | **0.25%** | **Percentage** | **$50** | **Portfolio monitoring and reporting** |
+| **Secondary Market Fee** | **1.5%** | **Percentage** | **$100** | **Secondary market transactions** |
+| **Due Diligence Fee** | **$3** | **Fixed** | **$3** | **Borrower due diligence and verification** |
+
+### **🛡️ Validation & Constraints:**
+- ✅ **Fee Percentage Cap**: All percentage fees limited to 0-100%
+- ✅ **Non-negative Values**: All fee values must be ≥ 0
+- ✅ **Minimum Threshold**: $1 minimum fee amount
+- ✅ **Maximum Threshold**: $500 maximum fee amount
+- ✅ **Type Validation**: Strict validation for percentage vs fixed fees
+
+---
 
 ---
 
@@ -20,17 +75,22 @@ This document outlines the complete fee breakdown for:
 - **4-7%:** Moderate rates
 - **8-10%:** Market rates (profitable for lenders)
 
-### **Borrower Fees**
-- Service: 10% upfront
-- Insurance: 5% upfront
-- Tenure: 1% per month
-- Collection: 5% of payment
-- **Total:** ~23.51% of loan amount
+### **Borrower Fees (Enhanced v4.0)**
+- Processing: 2.5% upfront (max $50)
+- Platform: 1.0% upfront (max $25)
+- Insurance: 0.5% upfront (max $15)
+- Document Verification: $2 fixed
+- Credit Score Check: $5 fixed
+- **Total Base:** ~4% + $7 fixed fees
+- **With Tier Discounts:** 2.8-4% + $7 fixed
 
-### **Lender Fees**
-- Service: 10% upfront (mandatory)
-- Insurance: 5% upfront (OPTIONAL ⭐)
-- **Total:** 10% (no insurance) or 15% (with insurance)
+### **Lender Fees (Enhanced v4.0)**
+- Processing: 1.0% upfront (max $30)
+- Platform: 0.5% upfront (max $20)
+- Portfolio Management: 0.25% upfront (max $50)
+- Due Diligence: $3 fixed
+- **Total Base:** ~1.75% + $3 fixed
+- **With Tier Discounts:** 1.2-1.75% + $3 fixed
 
 ### **Lender Break-Even**
 - **Without Insurance:** 5% borrower rate ✅ (much lower!)
@@ -44,20 +104,36 @@ This document outlines the complete fee breakdown for:
 
 ### **1. Upfront Fees (Deducted Before Disbursement)**
 
-#### **Service Fee: 10%**
-- **What it covers:** Platform operations, loan processing, KYC verification
+#### **Processing Fee: 2.5%** (max $50)
+- **What it covers:** Loan processing, verification, underwriting
 - **When charged:** Deducted from loan amount before disbursement
-- **Example:** $100 loan → $10 service fee → $90 received
+- **Example:** $100 loan → $2.50 processing fee → $97.50 received
 
-#### **Insurance Fee: 5%**
+#### **Platform Fee: 1.0%** (max $25)
+- **What it covers:** Platform operations, maintenance, support
+- **When charged:** Deducted from loan amount before disbursement
+- **Example:** $100 loan → $1.00 platform fee → $99.00 received
+
+#### **Insurance Fee: 0.5%** (max $15)
 - **What it covers:** Default protection, payment coverage, risk management
 - **When charged:** Deducted from loan amount before disbursement
-- **Example:** $100 loan → $5 insurance fee → $95 received
+- **Example:** $100 loan → $0.50 insurance fee → $99.50 received
 
-#### **Total Upfront Fees: 15%**
-- **Combined deduction:** Service (10%) + Insurance (5%)
-- **Net amount received:** 85% of requested loan amount
-- **Example:** Request $100 → Receive $85
+#### **Document Verification: $2 Fixed**
+- **What it covers:** Document processing, validation, storage
+- **When charged:** Deducted from loan amount before disbursement
+- **Example:** $100 loan → $2.00 verification fee → $98.00 received
+
+#### **Credit Score Check: $5 Fixed**
+- **What it covers:** Credit assessment, scoring, risk evaluation
+- **When charged:** Deducted from loan amount before disbursement
+- **Example:** $100 loan → $5.00 credit check fee → $95.00 received
+
+#### **Total Upfront Fees: 4% + $7 Fixed**
+- **Combined deduction:** Processing (2.5%) + Platform (1%) + Insurance (0.5%) + $7 fixed
+- **Net amount received:** 96% of loan amount minus $7
+- **Example:** Request $100 → Receive $89.00 (before tier discounts)
+- **With Tier Discounts:** 2.8-4% + $7 fixed based on loan amount
 
 ---
 
@@ -75,22 +151,26 @@ This document outlines the complete fee breakdown for:
 
 ---
 
-### **3. Borrower Fee Example**
+### **3. Enhanced Borrower Fee Example (v4.0)**
 
 **Loan Details:**
 ```
 Requested Amount: $100
 Interest Rate: 5% per month
 Tenure: 3 months (90 days)
+Pricing Tier: Tier 1 (Standard - No Discount)
 ```
 
 **Fee Breakdown:**
 ```
 UPFRONT FEES (Deducted Before Disbursement):
-Service Fee (10%):              -$10.00
-Insurance Fee (5%):             -$5.00
-Total Upfront Fees:             -$15.00
-Net Amount Received:            $85.00 ✅
+Processing Fee (2.5%):         -$2.50
+Platform Fee (1.0%):           -$1.00
+Insurance Fee (0.5%):          -$0.50
+Document Verification:         -$2.00
+Credit Score Check:             -$5.00
+Total Upfront Fees:             -$11.00
+Net Amount Received:            $89.00 ✅
 
 ONGOING FEES (Added to Monthly Payment):
 Tenure Fee (1% monthly):        $1.00/month
@@ -99,7 +179,7 @@ Total Tenure Fees (3 months):   $3.00
 Collection Fee (5% of payment): $1.84/month
 Total Collection Fees:          $5.51
 
-TOTAL PLATFORM FEES:            $23.51
+TOTAL PLATFORM FEES:            $19.51
 
 LOAN SUMMARY:
 Base Monthly Payment:           $36.72
@@ -108,10 +188,27 @@ Total Interest:                 $10.16
 Total Repayment:                $118.67
 ```
 
+**Enhanced Example with Tier Discounts:**
+```
+LOAN AMOUNT: $5,000 (Tier 2 - 10% Discount)
+UPFRONT FEES (After 10% Discount):
+Processing Fee (2.5%):         $112.50 (was $125.00)
+Platform Fee (1.0%):           $45.00 (was $50.00)
+Insurance Fee (0.5%):          $22.50 (was $25.00)
+Document Verification:         $2.00 (fixed)
+Credit Score Check:             $5.00 (fixed)
+Total Upfront Fees:             $187.00 (was $207.00)
+Net Amount Received:            $4,813.00 ✅
+
+TIER SAVINGS: $20.00 (10% discount on percentage fees)
+```
+
 **Effective Cost:**
-- Platform fees: $23.51 (23.51% of loan amount)
+- Platform fees: $19.51 (19.51% of loan amount - Tier 1)
+- Platform fees: $187.00 (3.74% of loan amount - Tier 2)
 - Interest: $10.16 (10.16% of loan amount)
-- Total cost: $33.67 (33.67% of loan amount)
+- Total cost: $29.67 (29.67% of loan amount - Tier 1)
+- **Tier Benefits:** Volume discounts reduce effective platform fee percentage
 
 ---
 
@@ -122,26 +219,37 @@ Total Repayment:                $118.67
 - **Per loan request:** Fees apply when funding any borrower's loan request
 - **Example:** If 5 lenders each invest $20 in a $100 loan, each pays fees on their $20
 
-### **1. Upfront Fees (Added to Investment Amount)**
+### **1. Enhanced Upfront Fees (Added to Investment Amount)**
 
-#### **Service Fee: 10%** (MANDATORY)
-- **What it covers:** Platform operations, borrower verification, loan matching
+#### **Processing Fee: 1.0%** (max $30) - MANDATORY
+- **What it covers:** Investment processing, verification, underwriting
 - **When charged:** Added to each lender's investment amount when funding a loan
-- **Example:** Invest $20 → Pay $2 service fee → Total paid: $22
-- **Full loan example:** Invest $100 → Pay $10 service fee → Total paid: $110
+- **Example:** Invest $20 → Pay $0.20 processing fee → Total paid: $20.20
+- **Full loan example:** Invest $100 → Pay $1.00 processing fee → Total paid: $101.00
 
-#### **Insurance Fee: 5%** (OPTIONAL) ⭐
-- **What it covers:** Default protection, payment coverage for lenders
-- **When charged:** Added to each lender's investment (ONLY if investor opts in)
-- **Example:** Invest $20 → Pay $1 insurance fee → Total paid: $21
-- **Full loan example:** Invest $100 → Pay $5 insurance fee → Total paid: $105
-- **Note:** Each investor decides independently whether to insure their portion
+#### **Platform Fee: 0.5%** (max $20) - MANDATORY
+- **What it covers:** Platform access, tools, maintenance, support
+- **When charged:** Added to each lender's investment amount when funding a loan
+- **Example:** Invest $20 → Pay $0.10 platform fee → Total paid: $20.10
+- **Full loan example:** Invest $100 → Pay $0.50 platform fee → Total paid: $100.50
 
-#### **Total Upfront Fees: 10-15%**
-- **Without Insurance:** Service (10%) = 10% total per investment
-- **With Insurance:** Service (10%) + Insurance (5%) = 15% total per investment
-- **Example (No Insurance):** Invest $20 → Pay $2 fees → Total paid: $22
-- **Example (With Insurance):** Invest $20 → Pay $3 fees → Total paid: $23
+#### **Portfolio Management Fee: 0.25%** (max $50) - MANDATORY
+- **What it covers:** Portfolio monitoring, reporting, analytics
+- **When charged:** Added to each lender's investment amount when funding a loan
+- **Example:** Invest $20 → Pay $0.05 portfolio fee → Total paid: $20.05
+- **Full loan example:** Invest $100 → Pay $0.25 portfolio fee → Total paid: $100.25
+
+#### **Due Diligence Fee: $3 Fixed** - MANDATORY
+- **What it covers:** Borrower due diligence, verification, risk assessment
+- **When charged:** Added to each lender's investment amount when funding a loan
+- **Example:** Invest $20 → Pay $3.00 due diligence fee → Total paid: $23.00
+- **Full loan example:** Invest $100 → Pay $3.00 due diligence fee → Total paid: $103.00
+
+#### **Enhanced Total Upfront Fees: 1.75% + $3 Fixed**
+- **Base Fees:** Processing (1%) + Platform (0.5%) + Portfolio Management (0.25%) = 1.75%
+- **Fixed Fees:** Due Diligence ($3.00)
+- **Example (Standard):** Invest $100 → Pay $4.75 fees → Total paid: $104.75
+- **With Tier Discounts:** 1.2-1.75% + $3 fixed based on loan amount
 
 ---
 
@@ -151,12 +259,19 @@ Total Repayment:                $118.67
 
 ---
 
-### **3. Secondary Market Fees**
+### **3. Enhanced Secondary Market Fees**
 
-#### **Deal Fee: 2% of deal amount**
-- **What it covers:** Secondary market transaction processing
+#### **Secondary Market Fee: 1.5%** (max $100)
+- **What it covers:** Secondary market transaction processing, matching, settlement
 - **When charged:** When selling loan on secondary market
-- **Example:** Sell $100 loan position → $2 deal fee → $98 received
+- **Example:** Sell $100 loan position → $1.50 deal fee → $98.50 received
+- **Large Transaction Example:** Sell $10,000 loan position → $100.00 deal fee (max cap) → $9,900.00 received
+
+#### **Default Recovery Fee: 10%** (max $200)
+- **What it covers:** Default recovery services, legal proceedings, collection
+- **When charged:** When borrower defaults and recovery services are engaged
+- **Example:** $100 defaulted loan → $10 recovery fee → $90 recovered (if successful)
+- **Large Default Example:** $2,000 defaulted loan → $200 recovery fee (max cap) → $1,800 recovered
 
 ---
 
@@ -735,28 +850,48 @@ Investment Summary:
 
 ---
 
-## ✅ IMPLEMENTATION STATUS
+## ✅ ENHANCED IMPLEMENTATION STATUS v4.0
 
-### **Backend:**
-✅ Borrower upfront fees calculation  
-✅ Borrower ongoing fees calculation  
-✅ Lender upfront fees calculation  
-✅ Lender ongoing fees calculation  
-✅ Fee breakdown in API responses  
-✅ Fee storage in database  
+### **Database Migration (008_fee_structure_config.sql):**
+✅ Enhanced fee structure with 15+ new parameters  
+✅ 4-tier pricing system with volume discounts  
+✅ Validation constraints (0-100% fee caps, non-negative values)  
+✅ Performance indexes for fee parameter lookups  
+✅ Comprehensive audit logging and change tracking  
+✅ Production-ready error handling  
 
-### **Frontend:**
-✅ Borrower fee breakdown display  
-✅ Real-time fee calculations  
-✅ Net amount received display  
-✅ Total platform fees display  
-✅ Complete loan summary  
-⏳ Lender fee breakdown display (pending)  
+### **Backend API (routes/admin-fee-config.js):**
+✅ Enhanced fee categories for borrowers and lenders  
+✅ Tiered pricing configuration support  
+✅ New fee parameters: document verification, credit score, portfolio management, etc.  
+✅ Fee calculation function with tier multipliers  
+✅ Complete audit trail integration  
 
-### **Database:**
-✅ All fee fields in loans table  
-✅ Fee tracking and reporting  
-✅ Historical fee data  
+### **Frontend UI (admin-fee-config.html):**
+✅ Tier information display in fee calculator  
+✅ Enhanced fee breakdown with pricing tier context  
+✅ Visual discount indicators  
+✅ Real-time tier-based calculations  
+✅ Complete admin fee management interface  
+
+### **Validation & Security:**
+✅ Fee percentage validation (0-100%)  
+✅ Non-negative value enforcement  
+✅ Minimum/maximum fee thresholds ($1-$500)  
+✅ Type validation for percentage vs fixed fees  
+✅ Comprehensive constraint management  
+
+### **Performance Optimization:**
+✅ Indexed fee parameter lookups  
+✅ Optimized fee calculation queries  
+✅ Efficient audit logging  
+✅ Scalable database schema  
+
+### **Documentation:**
+✅ Enhanced fee structure documentation  
+✅ Tier pricing examples and calculations  
+✅ Complete implementation guide  
+✅ Production deployment checklist  
 
 ---
 
@@ -863,8 +998,78 @@ Revenue: From all loans (P2P and Direct)
 
 ---
 
-**Document Version: 3.0**  
-**Last Updated: November 28, 2025**  
-**Status: Complete fee structure with interest rates and optional insurance**  
-**Fee Model: Borrower + Lender fees on all loans**  
-**Interest Range: 0-10% per month**
+## 🚀 MIGRATION GUIDE v3.0 → v4.0
+
+### **Database Migration:**
+```sql
+-- Run the enhanced migration
+\i database/migrations/008_fee_structure_config.sql
+
+-- Verify migration success
+SELECT COUNT(*) as new_fee_parameters 
+FROM loan_config 
+WHERE parameter_name IN (
+    'document_verification_fee_borrower', 'credit_score_check_fee_borrower',
+    'portfolio_management_fee_lender', 'secondary_market_fee_lender',
+    'due_diligence_fee_lender', 'tier_1_fee_multiplier', 'tier_2_fee_multiplier',
+    'tier_3_fee_multiplier', 'tier_4_fee_multiplier'
+);
+-- Should return 9+ new parameters
+```
+
+### **Backend Updates:**
+- ✅ Enhanced admin-fee-config.js with new fee categories
+- ✅ Updated fee calculation function with tier support
+- ✅ Added comprehensive validation constraints
+
+### **Frontend Updates:**
+- ✅ Enhanced admin-fee-config.html with tier display
+- ✅ Updated fee calculator to show pricing tiers
+- ✅ Added visual discount indicators
+
+### **Testing & Verification:**
+```sql
+-- Test tier 1 calculation (no discount)
+SELECT * FROM calculate_loan_fees(500, 'direct', 'borrower');
+
+-- Test tier 2 calculation (10% discount)  
+SELECT * FROM calculate_loan_fees(2500, 'direct', 'borrower');
+
+-- Test tier 3 calculation (20% discount)
+SELECT * FROM calculate_loan_fees(7500, 'direct', 'borrower');
+
+-- Test tier 4 calculation (30% discount)
+SELECT * FROM calculate_loan_fees(15000, 'direct', 'borrower');
+
+-- Verify validation constraints
+SELECT * FROM loan_config WHERE parameter_value < 0 OR parameter_value > 100;
+-- Should return no rows for percentage fees
+```
+
+---
+
+## 🎯 KEY DIFFERENCES v3.0 → v4.0
+
+### **v3.0 Model (Previous):**
+```
+Borrower pays: 23.51% in platform fees (Service 10% + Insurance 5% + ongoing fees)
+Lender pays: 10-15% in platform fees (Service 10% + optional Insurance 5%)
+No tier discounts, limited fee categories, basic validation
+```
+
+### **v4.0 Model (Enhanced):**
+```
+Borrower pays: 2.8-4% + $7 fixed (with tier discounts)
+Lender pays: 1.2-1.75% + $3 fixed (with tier discounts)
+4-tier pricing system, 15+ enhanced fee categories, enterprise validation
+Performance optimized, comprehensive audit trail, production-ready
+```
+
+---
+
+**Document Version: 4.0**  
+**Last Updated: December 6, 2025**  
+**Status: Enhanced fee structure with tiered pricing, validation, and comprehensive categories**  
+**Fee Model: Borrower + Lender fees with volume-based tier discounts**  
+**Interest Range: 0-10% per month**  
+**Features: 4-tier pricing, 15+ fee categories, enterprise validation, performance optimization**
