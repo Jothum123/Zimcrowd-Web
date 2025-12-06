@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Pool } = require('pg');
-const requireAuth = require('../middleware/auth');
+const { authenticateUser } = require('../middleware/auth');
 const { authenticateAdmin } = require('../middleware/admin-auth.middleware');
 
 const pool = new Pool({
@@ -11,7 +11,7 @@ const pool = new Pool({
 // @desc    Get user credit summary
 // @route   GET /api/wallet-credits/credits/summary
 // @access  Private
-router.get('/credits/summary', requireAuth, async (req, res) => {
+router.get('/credits/summary', authenticateUser, async (req, res) => {
     try {
         const userId = req.user.id;
         
@@ -89,7 +89,7 @@ router.get('/credits/summary', requireAuth, async (req, res) => {
 // @desc    Get detailed credit history
 // @route   GET /api/wallet/credits/history
 // @access  Private
-router.get('/credits/history', requireAuth, async (req, res) => {
+router.get('/credits/history', authenticateUser, async (req, res) => {
     try {
         const userId = req.user.id;
         const { page = 1, limit = 20, status, credit_type } = req.query;
@@ -160,7 +160,7 @@ router.get('/credits/history', requireAuth, async (req, res) => {
 // @desc    Get credit transactions
 // @route   GET /api/wallet/credits/transactions
 // @access  Private
-router.get('/credits/transactions', requireAuth, async (req, res) => {
+router.get('/credits/transactions', authenticateUser, async (req, res) => {
     try {
         const userId = req.user.id;
         const { credit_id } = req.query;
@@ -199,7 +199,7 @@ router.get('/credits/transactions', requireAuth, async (req, res) => {
 // @desc    Create withdrawal request
 // @route   POST /api/wallet-credits/credits/withdraw
 // @access  Private
-router.post('/credits/withdraw', requireAuth, async (req, res) => {
+router.post('/credits/withdraw', authenticateUser, async (req, res) => {
     try {
         const userId = req.user.id;
         const { amount, withdrawal_method, withdrawal_details } = req.body;
@@ -269,7 +269,7 @@ router.post('/credits/withdraw', requireAuth, async (req, res) => {
 // @desc    Get user withdrawal requests
 // @route   GET /api/wallet/credits/withdrawals
 // @access  Private
-router.get('/credits/withdrawals', requireAuth, async (req, res) => {
+router.get('/credits/withdrawals', authenticateUser, async (req, res) => {
     try {
         const userId = req.user.id;
         const { page = 1, limit = 20, status } = req.query;
@@ -471,7 +471,7 @@ router.post('/credits/award-referral', authenticateAdmin, async (req, res) => {
 // @desc    Apply platform credits to transaction
 // @route   POST /api/wallet-credits/credits/apply
 // @access  Private
-router.post('/credits/apply', requireAuth, async (req, res) => {
+router.post('/credits/apply', authenticateUser, async (req, res) => {
     try {
         const userId = req.user.id;
         const { amount, usage_type } = req.body;
@@ -513,7 +513,7 @@ router.post('/credits/apply', requireAuth, async (req, res) => {
 // @desc    Get platform credit balance for specific usage
 // @route   GET /api/wallet-credits/credits/platform-balance
 // @access  Private
-router.get('/credits/platform-balance', requireAuth, async (req, res) => {
+router.get('/credits/platform-balance', authenticateUser, async (req, res) => {
     try {
         const userId = req.user.id;
         const { usage_type } = req.query;
