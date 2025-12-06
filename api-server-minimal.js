@@ -81,6 +81,7 @@ const routes = {
     market: loadRoute('./routes/market', 'Market'),
     analytics: loadRoute('./routes/analytics', 'Analytics'),
     referrals: loadRoute('./routes/referrals', 'Referrals'),
+    activityTracking: loadRoute('./routes/activity-tracking', 'Activity Tracking'),
     zimscore: loadRoute('./routes/zimscore', 'ZimScore'),
     kairo: loadRoute('./routes/kairo', 'Kairo AI'),
     kairoAzure: loadRoute('./routes/kairo-azure', 'Kairo AI with Azure OpenAI'),
@@ -142,6 +143,7 @@ if (routes.notifications) app.use('/api/notifications', routes.notifications);
 if (routes.market) app.use('/api/market', routes.market);
 if (routes.analytics) app.use('/api/analytics', routes.analytics);
 if (routes.referrals) app.use('/api/referrals', routes.referrals);
+if (routes.activityTracking) app.use('/api/activity', routes.activityTracking);
 if (routes.zimscore) app.use('/api/zimscore', routes.zimscore);
 if (routes.kairo) app.use('/api/kairo', routes.kairo);
 if (routes.kairoAzure) app.use('/api/kairo-azure', routes.kairoAzure);
