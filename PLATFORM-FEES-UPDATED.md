@@ -48,7 +48,7 @@ This document outlines the complete fee breakdown for:
 ### **📈 Enhanced Lender Fee Categories:**
 | Fee Type | Rate | Type | Max Amount | Frequency | Description |
 |----------|------|------|------------|-----------|-------------|
-| Processing Fee | 2.5% | Percentage | $50 | Once-off | Investment processing and verification |
+| Processing Fee | 2.0% | Percentage | $40 | Once-off | Investment processing and verification |
 | Platform Fee | 5.0% | Percentage | $100 | Once-off | Platform access, tools, and maintenance |
 | Portfolio Management | 2.5% | Percentage | $50 | Monthly | Portfolio monitoring and reporting |
 | **Due Diligence Fee** | **$3** | **Fixed** | **$3** | **Once-off** | **Borrower due diligence and verification** |
@@ -89,22 +89,22 @@ This document outlines the complete fee breakdown for:
 - **Monthly Collection Fee:** 5% of each installment until maturity
 
 ### **Lender Fees (Enhanced v4.0)**
-- Processing: 2.5% upfront (max $50)
+- Processing: 2.0% upfront (max $40)
 - Platform: 5.0% upfront (max $100)
 - Portfolio Management: 2.5% monthly on investment (max $50/month)
 - Due Diligence: $3 fixed
 - Insurance: 5.0% optional upfront (max $100)
-- **Total Once-off Base:** ~7.5% + $3 fixed (without insurance)
-- **With Tier Discounts:** 5.25-7.5% + $3 fixed (once-off fees only)
+- **Total Once-off Base:** ~7% + $3 fixed ≈ 10% (without insurance)
+- **With Tier Discounts:** 4.9-7% + $3 fixed ≈ 7-10% (once-off fees only)
 - **Monthly Portfolio Management:** 2.5% of investment amount until loan maturity
 - **With Optional Insurance:** +5% once-off for default protection
 
 ### **Lender Break-Even**
-- **Without Insurance:** ~8% borrower rate (higher due to enhanced fees)
-- **With Insurance:** ~13% borrower rate (includes optional 5% insurance)
-- **Maximum Returns:** 6.5% ROI at 10% borrower rate (after 7.5% + $3 upfront + 2.5% monthly fees)
+- **Without Insurance:** ~7.5% borrower rate (reduced due to lower processing fee)
+- **With Insurance:** ~12.5% borrower rate (includes optional 5% insurance)
+- **Maximum Returns:** 7.5% ROI at 10% borrower rate (after 7% + $3 upfront + 2.5% monthly fees)
 - **Monthly Portfolio Management:** 2.5% of investment amount until loan maturity
-- **Enhanced Fee Structure:** Higher upfront fees but comprehensive portfolio management
+- **Reduced Fee Structure:** More competitive with 10% total once-off fees
 
 ---
 

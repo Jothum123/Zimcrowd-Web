@@ -126,9 +126,9 @@ INSERT INTO loan_config (config_type, target_key, parameter_name, parameter_valu
 ('global', 'all', 'early_settlement_fee_borrower_max', 10.00), -- max $10 settlement fee
 
 -- Enhanced Lender Fee Defaults
-('global', 'all', 'processing_fee_lender', 2.50), -- 2.5% processing fee (once-off)
+('global', 'all', 'processing_fee_lender', 2.00), -- 2% processing fee (once-off)
 ('global', 'all', 'processing_fee_lender_type', 1.00), -- percentage
-('global', 'all', 'processing_fee_lender_max', 50.00), -- max $50 processing fee
+('global', 'all', 'processing_fee_lender_max', 40.00), -- max $40 processing fee
 
 ('global', 'all', 'platform_fee_lender', 5.00), -- 5% platform fee (once-off)
 ('global', 'all', 'platform_fee_lender_type', 1.00), -- percentage
