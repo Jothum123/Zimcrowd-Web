@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - ZimCrowd</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/api-config-new.js"></script>
+    <script src="js/api-helper.js"></script>
+    <script src="js/api-client.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: 
+                linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(51, 65, 85, 0.95) 100%),
+                url('/assets/images/pexels-brett-sayles-3963829.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(220, 38, 38, 0.15) 0%, transparent 70%);
+            animation: pulse 15s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(180deg); }
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 450px;
+            max-height: 90vh;
+            padding: 40px;
+            animation: slideUp 0.5s ease;
+            position: relative;
+            z-index: 1;
+            overflow-y: auto;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .admin-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 8px 24px rgba(220, 38, 38, 0.3);
+        }
+
+        .logo-section h2 {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .logo-section p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px 14px 44px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #dc2626;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 16px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            font-size: 16px;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-error {
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            color: #fca5a5;
+        }
+
+        .alert-success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #86efac;
+        }
+
+        .security-notice {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+        }
+
+        .security-notice i {
+            color: #dc2626;
+            margin-right: 6px;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .back-link a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .back-link a:hover {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .back-link a i {
+            margin-right: 6px;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+            
+            .logo-section h2 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="admin-badge">
+            <i class="fas fa-shield-alt"></i> Admin Access
+        </div>
+
+        <div class="logo-section">
+            <div class="logo">
+                <i class="fas fa-crown"></i>
+            </div>
+            <h2>Admin Portal</h2>
+            <p>ZimCrowd Administrative Dashboard</p>
+        </div>
+
+        <div class="security-notice">
+            <i class="fas fa-lock"></i>
+            Secure admin access - Authorized personnel only
+        </div>
+
+        <div id="alertBox" class="alert alert-error"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Admin Email</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-user input-icon"></i>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        placeholder="admin@zimcrowd.com" 
+                        required
+                        autocomplete="email"
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="Enter admin password" 
+                        required
+                        autocomplete="current-password"
+                    >
+                    <button type="button" class="password-toggle" onclick="togglePassword()">
+                        <i class="fas fa-eye" id="passwordIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" id="loginBtn" class="login-btn">
+                <i class="fas fa-sign-in-alt"></i> Sign In to Admin Dashboard
+            </button>
+        </form>
+
+        <div class="back-link">
+            <a href="/login.html">
+                <i class="fas fa-arrow-left"></i> Back to User Login
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Debug script loading
+        console.log('🔍 Admin login page scripts loading...');
+        console.log('API_CONFIG available:', typeof API_CONFIG !== 'undefined');
+        console.log('ZimCrowdAPI available:', typeof window.ZimCrowdAPI !== 'undefined');
+        
+        // Use centralized API configuration
+        const API_URL = API_CONFIG.BASE_URL + '/api/auth';
+        console.log('🌐 Admin API_URL set to:', API_URL);
+
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const passwordIcon = document.getElementById('passwordIcon');
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+            passwordIcon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+        }
+
+        // Show alert
+        function showAlert(message, type = 'error') {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.textContent = message;
+            alertBox.className = `alert alert-${type} show`;
+            
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 5000);
+        }
+
+        // Check admin role and redirect
+        async function checkAdminRole(token, user) {
+            try {
+                console.log('🔐 Checking admin role for user:', user.email);
+                
+                // Check if user is admin by testing admin endpoint
+                const response = await fetch(`${API_CONFIG.BASE_URL}/api/admin/kairo-ai`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    console.log('✅ Admin role verified');
+                    return true;
+                } else {
+                    console.log('❌ Admin access denied');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Admin role check failed:', error);
+                return false;
+            }
+        }
+
+        // Handle admin login form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+
+            // Validate
+            if (!email || !password) {
+                showAlert('Please fill in all fields');
+                return;
+            }
+
+            // Disable button and show loading
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="loading"></span>Authenticating...';
+
+            try {
+                console.log('🔐 Admin login attempt - API URL:', `${API_URL}/login`);
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ emailOrPhone: email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ Login successful, checking admin role...');
+                    
+                    // Store token temporarily
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('userData', JSON.stringify(data.user));
+                    localStorage.setItem('isAuthenticated', 'true');
+                    
+                    // Check admin role
+                    const isAdmin = await checkAdminRole(data.token, data.user);
+                    
+                    if (isAdmin) {
+                        // Store admin-specific data
+                        localStorage.setItem('isAdmin', 'true');
+                        localStorage.setItem('adminData', JSON.stringify(data.user));
+                        
+                        console.log('✅ Admin authentication successful');
+                        showAlert('Admin login successful! Redirecting...', 'success');
+                        
+                        // Redirect to admin dashboard
+                        setTimeout(() => {
+                            window.location.href = '/admin-dashboard.html';
+                        }, 1000);
+                    } else {
+                        // Clear authentication and show error
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('userData');
+                        localStorage.removeItem('isAuthenticated');
+                        
+                        showAlert('Access denied. This account does not have admin privileges.');
+                        loginBtn.disabled = false;
+                        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In to Admin Dashboard';
+                    }
+                } else {
+                    showAlert(data.message || 'Admin login failed. Please check your credentials.');
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In to Admin Dashboard';
+                }
+            } catch (error) {
+                console.error('Admin login error:', error);
+                showAlert('An error occurred during admin authentication. Please try again.');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In to Admin Dashboard';
+            }
+        });
+
+        // Prevent non-admin access
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if already authenticated as admin
+            const token = localStorage.getItem('authToken');
+            const isAdmin = localStorage.getItem('isAdmin');
+            
+            if (token && isAdmin === 'true') {
+                console.log('🔄 Already authenticated as admin, redirecting...');
+                window.location.href = '/admin-dashboard.html';
+            }
+        });
+    </script>
+</body>
+</html>

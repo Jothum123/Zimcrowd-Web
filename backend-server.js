@@ -71,6 +71,8 @@ try {
     console.log('✅ Kairo AI routes loaded');
     var adminKairoAIRoutes = require('./routes/admin-kairo-ai');
     console.log('✅ Admin Kairo AI routes loaded');
+    var adminFeeConfigRoutes = require('./routes/admin-fee-config');
+    console.log('✅ Admin Fee Config routes loaded');
     var p2pPrimaryMarketRoutes = require('./routes/p2p-primary-market');
     console.log('✅ P2P Primary Market routes loaded');
     var p2pSecondaryMarketRoutes = require('./routes/p2p-secondary-market');
@@ -228,6 +230,8 @@ app.use('/api/kairo-ai', kairoAIRoutes);
 console.log('✅ Kairo AI routes registered');
 app.use('/api/admin/kairo-ai', adminKairoAIRoutes);
 console.log('✅ Admin Kairo AI routes registered');
+app.use('/api/admin/fee-config', adminFeeConfigRoutes);
+console.log('✅ Admin Fee Config routes registered');
 app.use('/api/p2p/primary', p2pPrimaryMarketRoutes);
 console.log('✅ P2P Primary Market routes registered at /api/p2p/primary');
 app.use('/api/p2p/secondary', p2pSecondaryMarketRoutes);
