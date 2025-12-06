@@ -14786,29 +14786,68 @@ How it works:
                 employmentCap: 100
             }
         };
-        
-        // Loan Limit Caps (ceiling limits - actual limit is min of DTNI and cap)
-        const LOAN_LIMIT_CAPS = {
-            // Cold Start Caps (first-time borrowers)
-            coldStart: {
-                government: 300,    // Government employees
-                private: 100,       // Private sector
-                business: 100,      // Business owners
-                informal: 100       // Informal sector
-            },
-            // Verified Caps (after successful repayment - still requires DTNI check)
-            verified: {
-                government: 3000,   // Government employees - up to $3000 based on DTNI
-                private: 3000,      // Private sector - up to $3000 based on DTNI
-                business: 3000,     // Business owners - up to $3000 based on DTNI
-                informal: 3000      // Informal sector - up to $3000 based on DTNI
+
+        // Configure loan terms based on employment type
+        function configureLoanTerms() {
+            // Get employment type from localStorage or cold start data
+            const coldStartData = JSON.parse(localStorage.getItem('coldStartRating') || '{}');
+            const authData = JSON.parse(localStorage.getItem('authData') || '{}');
+            const userData = authData.user || JSON.parse(localStorage.getItem('userData') || '{}');
+            
+            const employmentType = (coldStartData.employment_type || userData.employment_type || userData.employmentType || 'private').toLowerCase();
+            const maxTermMonths = LOAN_TERM_LIMITS[employmentType] || LOAN_TERM_LIMITS.private;
+            
+            console.log(`🏛️ Configuring loan terms for ${employmentType} employees (max: ${maxTermMonths} months)`);
+            
+            // Get all term buttons
+            const termButtons = document.querySelectorAll('.term-btn');
+            
+            // Show/hide buttons based on employment type limits
+            termButtons.forEach(button => {
+                const termValue = parseInt(button.dataset.term);
+                if (termValue <= maxTermMonths) {
+                    button.style.display = 'block';
+                } else {
+                    button.style.display = 'none';
+                }
+            });
+            
+            // Special handling for 24-month button (government only)
+            const term24Btn = document.getElementById('term24Btn');
+            if (employmentType === 'government' || employmentType === 'civil_servant') {
+                term24Btn.style.display = 'block';
+            } else {
+                term24Btn.style.display = 'none';
             }
-        };
+            
+            // Adjust grid layout based on visible buttons
+            const loanTermButtons = document.getElementById('loanTermButtons');
+            const visibleButtons = Array.from(termButtons).filter(btn => btn.style.display !== 'none').length;
+            
+            // Update grid columns for better layout
+            if (visibleButtons <= 5) {
+                loanTermButtons.style.gridTemplateColumns = `repeat(${visibleButtons}, 1fr)`;
+            } else {
+                loanTermButtons.style.gridTemplateColumns = 'repeat(6, 1fr)';
+            }
+            
+            // Reset to default term if current term exceeds limit
+            const currentTerm = parseInt(document.getElementById('loanTerm').value);
+            if (currentTerm > maxTermMonths) {
+                selectLoanTerm(3); // Reset to 3 months default
+                console.log(`🔄 Reset term from ${currentTerm} to 3 months (exceeds ${maxTermMonths} month limit)`);
+            }
+            
+            return { employmentType, maxTermMonths };
+        }
 
         // Loan Request Modal Functions
         async function openLoanRequestModal() {
             const modal = document.getElementById('loanRequestModal');
             modal.style.display = 'flex';
+            
+            // Configure loan terms based on employment type
+            configureLoanTerms();
             
             // Show loading state
             document.getElementById('eligibilityLoading').style.display = 'block';
@@ -14995,7 +15034,14 @@ How it works:
             // Step 3: Calculate Maximum Loan (Reducing Balance Method)
             // Formula: P = (M × [(1 + r)^n - 1]) / [r × (1 + r)^n]
             const monthlyRate = 0.05 / 12; // 5% annual / 12 months = 0.4167%
-            const termMonths = 3; // Default term for calculation
+            
+            // Get selected loan term or use employment-specific max term
+            const selectedTerm = parseInt(document.getElementById('loanTerm')?.value) || 3;
+            const maxTermMonths = LOAN_TERM_LIMITS[empType] || LOAN_TERM_LIMITS.private;
+            const termMonths = Math.min(selectedTerm, maxTermMonths);
+            
+            console.log(`📊 Using ${termMonths} months for loan calculation (selected: ${selectedTerm}, max for ${empType}: ${maxTermMonths})`);
+            
             const powerTerm = Math.pow(1 + monthlyRate, termMonths);
             
             let dtniBasedLimit = 0;
@@ -15247,25 +15293,36 @@ How it works:
         }
 
         function selectLoanTerm(months) {
-            // Update hidden input
+            // Check if selected term is allowed for current employment type
+            const coldStartData = JSON.parse(localStorage.getItem('coldStartRating') || '{}');
+            const employmentType = (coldStartData.employment_type || 'private').toLowerCase();
+            const maxTermMonths = LOAN_TERM_LIMITS[employmentType] || LOAN_TERM_LIMITS.private;
+            
+            if (months > maxTermMonths) {
+                console.warn(`⚠️ Term ${months} exceeds limit for ${employmentType} employees (${maxTermMonths} months)`);
+                return;
+            }
+            
             document.getElementById('loanTerm').value = months;
             
             // Update button styles
             document.querySelectorAll('.term-btn').forEach(btn => {
-                const btnTerm = parseInt(btn.getAttribute('data-term'));
-                if (btnTerm === months) {
-                    btn.style.background = 'rgba(139, 92, 246, 0.2)';
-                    btn.style.borderColor = '#8b5cf6';
-                    btn.style.color = '#8b5cf6';
-                } else {
-                    btn.style.background = '#0f172a';
-                    btn.style.borderColor = '#334155';
-                    btn.style.color = '#94a3b8';
-                }
+                btn.classList.remove('active');
+                btn.style.background = '#0f172a';
+                btn.style.border = '2px solid #334155';
+                btn.style.color = '#94a3b8';
             });
             
-            // Calculate fees
-            calculateLoanFees();
+            const selectedBtn = document.querySelector(`[data-term="${months}"]`);
+            if (selectedBtn && selectedBtn.style.display !== 'none') {
+                selectedBtn.classList.add('active');
+                selectedBtn.style.background = 'rgba(139, 92, 246, 0.2)';
+                selectedBtn.style.border = '2px solid #8b5cf6';
+                selectedBtn.style.color = '#8b5cf6';
+            }
+            
+            // Recalculate eligibility when term changes
+            calculateLoanEligibility();
         }
 
         function setMaxLoanAmount() {
@@ -15389,6 +15446,16 @@ How it works:
                 alert('Please fill in all required fields');
                 return;
             }
+            
+            // Employment-based loan term validation
+            const employmentType = (coldStartData.employment_type || 'private').toLowerCase();
+            const maxTermMonths = LOAN_TERM_LIMITS[employmentType] || LOAN_TERM_LIMITS.private;
+            
+            if (loanData.term > maxTermMonths) {
+                alert(`Loan term limit: ${employmentType} employees can select up to ${maxTermMonths} months. You selected ${loanData.term} months.`);
+                return;
+            }
+            console.log(`🏛️ Loan term validation passed: ${loanData.term} months ≤ ${maxTermMonths} months limit for ${employmentType}`);
             
             // Cold start validation
             if (coldStartData.has_cold_start && coldStartData.cold_start_limit > 0) {
@@ -15876,7 +15943,7 @@ How it works:
                     <label style="display: block; margin-bottom: 12px; color: #94a3b8; font-size: 14px;">
                         <i class="fas fa-calendar-alt" style="color: #8b5cf6;"></i> Loan Term
                     </label>
-                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
+                    <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px;" id="loanTermButtons">
                         <button type="button" onclick="selectLoanTerm(1)" class="term-btn" data-term="1" style="padding: 12px; background: #0f172a; border: 2px solid #334155; border-radius: 8px; color: #94a3b8; cursor: pointer; transition: all 0.2s;">
                             <div style="font-size: 18px; font-weight: 700;">1</div>
                             <div style="font-size: 11px;">month</div>
@@ -15895,6 +15962,10 @@ How it works:
                         </button>
                         <button type="button" onclick="selectLoanTerm(12)" class="term-btn" data-term="12" style="padding: 12px; background: #0f172a; border: 2px solid #334155; border-radius: 8px; color: #94a3b8; cursor: pointer; transition: all 0.2s;">
                             <div style="font-size: 18px; font-weight: 700;">12</div>
+                            <div style="font-size: 11px;">months</div>
+                        </button>
+                        <button type="button" onclick="selectLoanTerm(24)" class="term-btn" data-term="24" id="term24Btn" style="padding: 12px; background: #0f172a; border: 2px solid #334155; border-radius: 8px; color: #94a3b8; cursor: pointer; transition: all 0.2s; display: none;">
+                            <div style="font-size: 18px; font-weight: 700;">24</div>
                             <div style="font-size: 11px;">months</div>
                         </button>
                     </div>
