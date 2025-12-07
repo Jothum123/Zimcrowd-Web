@@ -140,9 +140,12 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     is_active BOOLEAN DEFAULT true,
     last_activity TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     expires_at TIMESTAMP WITH TIME ZONE,
+    logout_at TIMESTAMP WITH TIME ZONE,
+    session_data JSONB,
     
     -- Timestamps
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     
     UNIQUE(session_token)
 );

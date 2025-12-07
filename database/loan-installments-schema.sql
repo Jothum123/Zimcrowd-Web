@@ -5,7 +5,7 @@
 
 CREATE TABLE IF NOT EXISTS loan_installments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    loan_id UUID NOT NULL,
+    loan_id UUID NOT NULL REFERENCES loans(id) ON DELETE CASCADE,
     installment_number INT NOT NULL,
     
     -- Payment Details
