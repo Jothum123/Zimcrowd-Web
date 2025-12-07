@@ -12118,11 +12118,29 @@ How it works:
                     return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
                 };
                 
-                // Loan history badge
+                // Loan history badge and status logic
                 const isFirstLoan = loan.borrower.totalLoans === 1 && loan.borrower.repaidOnTime === 0;
-                const loanHistoryBadge = isFirstLoan 
-                    ? '<span style="background: rgba(139, 92, 246, 0.2); color: #a78bfa; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">FIRST LOAN</span>'
-                    : `<span style="background: rgba(56, 231, 123, 0.2); color: #38e77b; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">${loan.borrower.repaidOnTime}/${loan.borrower.totalLoans} REPAID</span>`;
+                // Assume default if repayment rate is low (e.g. < 80% and not first loan)
+                const repaymentRate = loan.borrower.totalLoans > 0 ? (loan.borrower.repaidOnTime / loan.borrower.totalLoans) : 1;
+                const isDefaulter = !isFirstLoan && repaymentRate < 0.8;
+
+                let starDisplayHtml = '';
+                let historyText = '';
+
+                if (isFirstLoan) {
+                    // Gray stars with zero fill
+                    starDisplayHtml = Array(5).fill('<i class="far fa-star" style="color: #64748b;"></i>').join('');
+                    historyText = 'First Loan';
+                } else if (isDefaulter) {
+                    // Red stars: 1 filled, 4 empty
+                    starDisplayHtml = '<i class="fas fa-star" style="color: #ef4444;"></i>' + 
+                                      Array(4).fill('<i class="far fa-star" style="color: #ef4444;"></i>').join('');
+                    historyText = `${loan.borrower.repaidOnTime}/${loan.borrower.totalLoans} loans repaid`;
+                } else {
+                    // Standard star rating
+                    starDisplayHtml = MockMarketData.generateStarRating(loan.borrower.rating, loan.borrower.zimScore);
+                    historyText = `${loan.borrower.repaidOnTime} loans repaid`;
+                }
                 
                 // Calculate ZimScore color
                 const zimScore = loan.borrower.zimScore;
@@ -12176,8 +12194,8 @@ How it works:
                                     border: 3px solid #1e293b;">${zimScore}</div>
                             </div>
                             <div style="color: #f1f5f9; font-weight: 700; font-size: 15px; margin-bottom: 4px; text-align: center; line-height: 1.2;">${displayName}</div>
-                            <div style="margin-bottom: 4px; transform: scale(0.85);">${starHtml}</div>
-                            <div style="color: #94a3b8; font-size: 11px; text-align: center;">${loan.borrower.repaidOnTime} loans repaid</div>
+                            <div style="margin-bottom: 4px; transform: scale(0.85); white-space: nowrap;">${starDisplayHtml}</div>
+                            <div style="color: ${isDefaulter ? '#ef4444' : '#94a3b8'}; font-size: 11px; text-align: center; font-weight: ${isFirstLoan ? '600' : '400'};">${historyText}</div>
                         </div>
 
                         <!-- Right Column: Details List -->
