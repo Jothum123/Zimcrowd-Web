@@ -12093,16 +12093,17 @@ How it works:
             }
             
             const mockLoans = MockMarketData.generatePrimaryMarketLoans(6);
+            window.currentMockLoans = mockLoans; // Store globally for modal access
             const container = document.getElementById('primaryMarketLoans');
             if (!container) return;
             
-            container.innerHTML = mockLoans.map(loan => {
+            container.innerHTML = mockLoans.map((loan, index) => {
                 const riskColor = loan.riskLevel.color;
                 const riskLabel = loan.riskLevel.level.toUpperCase();
                 const starHtml = MockMarketData.generateStarRating(loan.borrower.rating, loan.borrower.zimScore);
                 
                 return `
-                    <div class="portfolio-card" style="cursor: pointer;" onclick="window.location.href='primary-market.html'">
+                    <div class="portfolio-card" style="cursor: pointer;" onclick="openMockLoanDetailModal(${index})">
                         <div class="card-header">
                             <div class="borrower-info">
                                 <div class="borrower-avatar" style="background: linear-gradient(135deg, ${loan.purpose.color}, ${loan.purpose.color}dd);">${loan.borrower.initials}</div>
@@ -12147,13 +12148,208 @@ How it works:
                         </div>
 
                         <div class="card-actions">
-                            <button class="btn-primary" style="width: 100%; padding: 10px;">
+                            <button class="btn-primary" style="width: 100%; padding: 10px;" onclick="event.stopPropagation(); openMockLoanDetailModal(${index})">
                                 <i class="fas fa-hand-holding-usd"></i> Invest Now
                             </button>
                         </div>
                     </div>
                 `;
             }).join('');
+        }
+
+        // Open Mock Loan Detail Modal
+        function openMockLoanDetailModal(index) {
+            const loan = window.currentMockLoans[index];
+            if (!loan) return;
+
+            const starHtml = MockMarketData.generateStarRating(loan.borrower.rating, loan.borrower.zimScore);
+            const riskColor = loan.riskLevel.color;
+            
+            // Generate repayment schedule HTML
+            const scheduleHtml = loan.schedule.slice(0, 6).map(payment => `
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">${payment.month}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">$${payment.payment}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">$${payment.principal}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">$${payment.interest}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">$${payment.balance}</td>
+                </tr>
+            `).join('');
+
+            const modalHtml = `
+                <div id="mockLoanDetailModal" class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                    <div class="modal-content" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 20px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; border: 1px solid rgba(56, 231, 123, 0.2);">
+                        <!-- Modal Header -->
+                        <div style="padding: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="display: flex; gap: 15px; align-items: center;">
+                                <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, ${loan.purpose.color}, ${loan.purpose.color}dd); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: white;">
+                                    ${loan.borrower.initials}
+                                </div>
+                                <div>
+                                    <h2 style="margin: 0; color: white; font-size: 22px;">${loan.borrower.name}</h2>
+                                    <p style="margin: 5px 0; color: #94a3b8;">${loan.borrower.occupation} • ${loan.borrower.location}</p>
+                                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+                                        ${starHtml}
+                                        <span style="color: ${riskColor}; font-weight: 600;">${loan.riskLevel.level}</span>
+                                        ${loan.borrower.verified ? '<span style="color: #38e77b;"><i class="fas fa-check-circle"></i> Verified</span>' : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="closeMockLoanDetailModal()" style="background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer; padding: 5px;">&times;</button>
+                        </div>
+
+                        <!-- Loan Details -->
+                        <div style="padding: 25px;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                                <i class="fas ${loan.purpose.icon}" style="color: ${loan.purpose.color}; font-size: 20px;"></i>
+                                <h3 style="margin: 0; color: white;">${loan.title}</h3>
+                            </div>
+                            <p style="color: #94a3b8; line-height: 1.6; margin-bottom: 25px;">${loan.description}</p>
+
+                            <!-- Key Metrics -->
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+                                <div style="background: rgba(56, 231, 123, 0.1); padding: 15px; border-radius: 12px; text-align: center;">
+                                    <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">Loan Amount</div>
+                                    <div style="color: #38e77b; font-size: 20px; font-weight: bold;">$${loan.amount.toLocaleString()}</div>
+                                </div>
+                                <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 12px; text-align: center;">
+                                    <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">Interest Rate</div>
+                                    <div style="color: #3b82f6; font-size: 20px; font-weight: bold;">${loan.interestRate}%</div>
+                                </div>
+                                <div style="background: rgba(245, 158, 11, 0.1); padding: 15px; border-radius: 12px; text-align: center;">
+                                    <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">Term</div>
+                                    <div style="color: #f59e0b; font-size: 20px; font-weight: bold;">${loan.term} mo</div>
+                                </div>
+                                <div style="background: rgba(139, 92, 246, 0.1); padding: 15px; border-radius: 12px; text-align: center;">
+                                    <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">Monthly Payment</div>
+                                    <div style="color: #8b5cf6; font-size: 20px; font-weight: bold;">$${loan.monthlyPayment}</div>
+                                </div>
+                            </div>
+
+                            <!-- Funding Progress -->
+                            <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                    <span style="color: white; font-weight: 600;">Funding Progress</span>
+                                    <span style="color: #38e77b;">${loan.fundedPercent}% funded by ${loan.lendersCount} lenders</span>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.1); height: 12px; border-radius: 6px; overflow: hidden;">
+                                    <div style="width: ${loan.fundedPercent}%; height: 100%; background: linear-gradient(90deg, #38e77b, #22c55e); border-radius: 6px;"></div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-top: 10px; color: #94a3b8; font-size: 14px;">
+                                    <span>$${loan.fundedAmount.toLocaleString()} raised</span>
+                                    <span>$${(loan.amount - loan.fundedAmount).toLocaleString()} remaining</span>
+                                </div>
+                            </div>
+
+                            <!-- Repayment Schedule Preview -->
+                            <div style="margin-bottom: 25px;">
+                                <h4 style="color: white; margin-bottom: 15px;"><i class="fas fa-calendar-alt" style="color: #38e77b; margin-right: 10px;"></i>Repayment Schedule (First 6 Months)</h4>
+                                <div style="overflow-x: auto;">
+                                    <table style="width: 100%; border-collapse: collapse; color: #e2e8f0; font-size: 14px;">
+                                        <thead>
+                                            <tr style="background: rgba(56, 231, 123, 0.1);">
+                                                <th style="padding: 12px; text-align: left;">Month</th>
+                                                <th style="padding: 12px; text-align: left;">Payment</th>
+                                                <th style="padding: 12px; text-align: left;">Principal</th>
+                                                <th style="padding: 12px; text-align: left;">Interest</th>
+                                                <th style="padding: 12px; text-align: left;">Balance</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${scheduleHtml}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Borrower Profile -->
+                            <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                                <h4 style="color: white; margin-bottom: 15px;"><i class="fas fa-user" style="color: #38e77b; margin-right: 10px;"></i>Borrower Profile</h4>
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                                    <div>
+                                        <div style="color: #94a3b8; font-size: 12px;">ZimScore</div>
+                                        <div style="color: white; font-size: 18px; font-weight: bold;">${loan.borrower.zimScore}/85</div>
+                                    </div>
+                                    <div>
+                                        <div style="color: #94a3b8; font-size: 12px;">Total Loans</div>
+                                        <div style="color: white; font-size: 18px; font-weight: bold;">${loan.borrower.totalLoans}</div>
+                                    </div>
+                                    <div>
+                                        <div style="color: #94a3b8; font-size: 12px;">Repaid On Time</div>
+                                        <div style="color: #38e77b; font-size: 18px; font-weight: bold;">${loan.borrower.repaidOnTime}/${loan.borrower.totalLoans}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Investment Section -->
+                            <div style="background: linear-gradient(135deg, rgba(56, 231, 123, 0.1), rgba(34, 197, 94, 0.05)); padding: 20px; border-radius: 12px; border: 1px solid rgba(56, 231, 123, 0.3);">
+                                <h4 style="color: white; margin-bottom: 15px;"><i class="fas fa-hand-holding-usd" style="color: #38e77b; margin-right: 10px;"></i>Make an Investment</h4>
+                                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                                    <div style="flex: 1; min-width: 200px;">
+                                        <label style="color: #94a3b8; font-size: 12px; display: block; margin-bottom: 5px;">Investment Amount ($)</label>
+                                        <input type="number" id="mockInvestAmount" min="${loan.minInvestment}" max="${loan.maxInvestment}" value="${Math.min(100, loan.maxInvestment)}" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(56, 231, 123, 0.3); background: rgba(0,0,0,0.3); color: white; font-size: 16px;">
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div style="color: #94a3b8; font-size: 12px;">Expected Return</div>
+                                        <div style="color: #38e77b; font-size: 18px; font-weight: bold;" id="expectedReturn">$${(100 * (1 + loan.interestRate/100 * loan.term/12)).toFixed(2)}</div>
+                                    </div>
+                                    <button onclick="confirmMockInvestment(${index})" style="background: linear-gradient(135deg, #38e77b, #22c55e); color: #0f172a; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px;">
+                                        <i class="fas fa-check"></i> Confirm Investment
+                                    </button>
+                                </div>
+                                <p style="color: #94a3b8; font-size: 12px; margin-top: 10px;">Min: $${loan.minInvestment} • Max: $${loan.maxInvestment.toLocaleString()} (remaining amount)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Remove existing modal if any
+            const existingModal = document.getElementById('mockLoanDetailModal');
+            if (existingModal) existingModal.remove();
+
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            // Add investment amount change listener
+            const amountInput = document.getElementById('mockInvestAmount');
+            if (amountInput) {
+                amountInput.addEventListener('input', function() {
+                    const amount = parseFloat(this.value) || 0;
+                    const expectedReturn = amount * (1 + loan.interestRate/100 * loan.term/12);
+                    document.getElementById('expectedReturn').textContent = '$' + expectedReturn.toFixed(2);
+                });
+            }
+
+            // Close on overlay click
+            document.getElementById('mockLoanDetailModal').addEventListener('click', function(e) {
+                if (e.target === this) closeMockLoanDetailModal();
+            });
+        }
+
+        // Close Mock Loan Detail Modal
+        function closeMockLoanDetailModal() {
+            const modal = document.getElementById('mockLoanDetailModal');
+            if (modal) modal.remove();
+        }
+
+        // Confirm Mock Investment
+        function confirmMockInvestment(index) {
+            const loan = window.currentMockLoans[index];
+            const amount = parseFloat(document.getElementById('mockInvestAmount').value) || 0;
+            
+            if (amount < loan.minInvestment) {
+                alert('Minimum investment is $' + loan.minInvestment);
+                return;
+            }
+            if (amount > loan.maxInvestment) {
+                alert('Maximum investment is $' + loan.maxInvestment.toLocaleString());
+                return;
+            }
+
+            // Show success message (mock)
+            alert(`Investment of $${amount.toFixed(2)} in "${loan.title}" confirmed!\n\nExpected return: $${(amount * (1 + loan.interestRate/100 * loan.term/12)).toFixed(2)}\n\nNote: This is a demo. In production, this would process through the payment system.`);
+            closeMockLoanDetailModal();
         }
 
         // Load Secondary Market Loans
