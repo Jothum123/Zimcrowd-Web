@@ -15962,6 +15962,22 @@ How it works:
             const loanAmountText = document.getElementById('investLoanAmount')?.textContent || '$0';
             const loanTotal = parseFloat(loanAmountText.replace(/[^0-9.-]+/g,"")) || 1;
             const sharePercent = (investAmount / loanTotal) * 100;
+
+            // Calculate Monthly Returns (Amortization)
+            const interestRateText = document.getElementById('investInterestRate')?.textContent || '0';
+            const interestRate = parseFloat(interestRateText) || 0;
+            const termText = document.getElementById('investTerm')?.textContent || '0';
+            const term = parseFloat(termText) || 0;
+            
+            let monthlyPayment = 0;
+            if (interestRate > 0 && term > 0) {
+                const r = interestRate / 100 / 12;
+                monthlyPayment = investAmount * (r * Math.pow(1 + r, term)) / (Math.pow(1 + r, term) - 1);
+            }
+            if (!isFinite(monthlyPayment)) monthlyPayment = 0;
+            
+            const portfolioFeeAmount = monthlyPayment * (portfolioMgmtPercent / 100);
+            const netMonthly = monthlyPayment - portfolioFeeAmount;
             
             // Update UI
             if(document.getElementById('investRequestedAmount')) 
@@ -15995,8 +16011,15 @@ How it works:
             if(document.getElementById('investPrincipalAmount'))
                 document.getElementById('investPrincipalAmount').textContent = `$${investAmount.toFixed(2)}`;
                 
-            if(document.getElementById('investPortfolioFeePercent'))
-                document.getElementById('investPortfolioFeePercent').textContent = `${portfolioMgmtPercent}% / mo`;
+            // Monthly Return Breakdown
+            if(document.getElementById('investGrossMonthly'))
+                document.getElementById('investGrossMonthly').textContent = `$${monthlyPayment.toFixed(2)}`;
+            
+            if(document.getElementById('investPortfolioFeeAmount'))
+                document.getElementById('investPortfolioFeeAmount').textContent = `-$${portfolioFeeAmount.toFixed(2)}`;
+                
+            if(document.getElementById('investNetMonthly'))
+                document.getElementById('investNetMonthly').textContent = `$${netMonthly.toFixed(2)}`;
         }
 
         async function submitInvestment() {
@@ -16188,12 +16211,24 @@ How it works:
                         <!-- Ongoing Fees -->
                         <div style="background: rgba(245, 158, 11, 0.1); padding: 10px; border-radius: 8px; margin-top: 10px;">
                             <p style="color: #f59e0b; font-weight: 600; margin-bottom: 8px;">Ongoing Fees (Deducted from Returns):</p>
+                            
                             <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <span style="color: #94a3b8;">Portfolio Mgmt:</span>
-                                <strong id="investPortfolioFeePercent" style="color: #f59e0b;">2.5% / mo</strong>
+                                <span style="color: #94a3b8;">Est. Monthly Return (Gross):</span>
+                                <strong id="investGrossMonthly" style="color: #e2e8f0;">$0.00</strong>
                             </div>
-                            <p style="color: #94a3b8; font-size: 12px; margin-top: 8px;">
-                                <i class="fas fa-info-circle"></i> This fee is deducted from each monthly payment you receive.
+                            
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span style="color: #94a3b8;">Portfolio Mgmt (2.5%):</span>
+                                <strong id="investPortfolioFeeAmount" style="color: #f59e0b;">-$0.00</strong>
+                            </div>
+                            
+                            <div style="border-top: 1px solid rgba(245, 158, 11, 0.3); padding-top: 5px; margin-top: 5px; display: flex; justify-content: space-between;">
+                                <span style="color: #e2e8f0; font-weight: 600;">Net Monthly Return:</span>
+                                <strong id="investNetMonthly" style="color: #38e77b;">$0.00</strong>
+                            </div>
+                            
+                            <p style="color: #94a3b8; font-size: 11px; margin-top: 8px; font-style: italic;">
+                                <i class="fas fa-info-circle"></i> The 2.5% fee is automatically deducted from each monthly payment.
                             </p>
                         </div>
                     </div>
