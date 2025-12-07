@@ -153,7 +153,7 @@ const ProductionDataLoader = {
     async apiRequest(endpoint, options = {}, retryCount = 0) {
         const token = this.getAuthToken();
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
         
         try {
             const response = await fetch(`${this.apiBase}${endpoint}`, {
@@ -268,7 +268,8 @@ const ProductionDataLoader = {
             const results = await Promise.allSettled([
                 this.apiRequest('/investments/portfolio'),
                 this.apiRequest('/investments/performance'),
-                this.apiRequest(`/investments/my-investments?page=${page}&limit=${limit}`)
+                // this.apiRequest(`/investments/my-investments?page=${page}&limit=${limit}`) // Paused as per request
+                Promise.resolve({ success: false }) // Force mock data
             ]);
             
             const portfolio = results[0].status === 'fulfilled' ? results[0].value : { success: false };
