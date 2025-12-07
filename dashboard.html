@@ -12208,8 +12208,8 @@ How it works:
 
                             <!-- Row 2: Interest -->
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div style="color: #94a3b8; font-size: 13px; font-weight: 500;">Interest</div>
-                                <div style="color: #f1f5f9; font-size: 15px; font-weight: 600;">$${Math.round(loan.amount * (loan.interestRate/100))} <span style="color: #64748b; font-size: 12px; font-weight: 400;">(${loan.interestRate}%)</span></div>
+                                <div style="color: #94a3b8; font-size: 13px; font-weight: 500;">Monthly Interest</div>
+                                <div style="color: #f1f5f9; font-size: 15px; font-weight: 600;">$${Math.round(loan.amount * (loan.interestRate/100))} <span style="color: #3b82f6; font-size: 12px; font-weight: 600;">(${loan.interestRate}%/mo)</span></div>
                             </div>
 
                             <!-- Row 3: Due in -->
@@ -12303,15 +12303,15 @@ How it works:
                                 </div>
                                 <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 12px; text-align: center;">
                                     <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">Interest Rate</div>
-                                    <div style="color: #3b82f6; font-size: 20px; font-weight: bold;">${loan.interestRate}%</div>
+                                    <div style="color: #3b82f6; font-size: 20px; font-weight: bold;">${loan.interestRate}%<span style="font-size: 12px; color: #94a3b8;">/mo</span></div>
                                 </div>
                                 <div style="background: rgba(245, 158, 11, 0.1); padding: 15px; border-radius: 12px; text-align: center;">
                                     <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">Term</div>
                                     <div style="color: #f59e0b; font-size: 20px; font-weight: bold;">${loan.term} mo</div>
                                 </div>
                                 <div style="background: rgba(139, 92, 246, 0.1); padding: 15px; border-radius: 12px; text-align: center;">
-                                    <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">Monthly Payment</div>
-                                    <div style="color: #8b5cf6; font-size: 20px; font-weight: bold;">$${loan.monthlyPayment}</div>
+                                    <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">Borrower Payment</div>
+                                    <div style="color: #8b5cf6; font-size: 20px; font-weight: bold;">$${loan.monthlyPayment}<span style="font-size: 12px; color: #94a3b8;">/mo</span></div>
                                 </div>
                             </div>
 
@@ -12466,6 +12466,9 @@ How it works:
                                     </button>
                                 </div>
                                 <p style="color: #94a3b8; font-size: 12px; margin-top: 10px;">Min: $${loan.minInvestment} • Max: $${loan.maxInvestment.toLocaleString()} (remaining amount)</p>
+                                <div style="background: rgba(56, 231, 123, 0.1); padding: 10px; border-radius: 8px; margin-top: 10px; border-left: 3px solid #38e77b;">
+                                    <p style="color: #38e77b; font-size: 11px; margin: 0; font-weight: 600;"><i class="fas fa-info-circle"></i> High Returns: ${loan.interestRate}% monthly interest (${(loan.interestRate * 12).toFixed(0)}% annual equivalent)</p>
+                                </div>
                             </div>
                         </div>
                     </div>
