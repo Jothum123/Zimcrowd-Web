@@ -12299,14 +12299,56 @@ How it works:
                             </div>
 
                             <!-- Fees & Charges -->
-                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px;">
-                                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.1);">
-                                    <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">Platform Fee</div>
-                                    <div style="color: #e2e8f0; font-size: 16px; font-weight: 600;">10.0% <span style="font-size: 12px; font-weight: 400; color: #94a3b8;">($${(loan.amount * 0.10).toLocaleString()})</span></div>
-                                </div>
-                                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.1);">
-                                    <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">Insurance (Optional)</div>
-                                    <div style="color: #e2e8f0; font-size: 16px; font-weight: 600;">5.0% <span style="font-size: 12px; font-weight: 400; color: #94a3b8;">($${(loan.amount * 0.05).toLocaleString()})</span></div>
+                            <div style="margin-bottom: 25px;">
+                                <h4 style="color: white; margin-bottom: 15px;"><i class="fas fa-percentage" style="color: #38e77b; margin-right: 10px;"></i>Lender Fees Breakdown</h4>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                    <!-- Upfront Fees -->
+                                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.1);">
+                                        <div style="color: #e2e8f0; font-size: 14px; font-weight: 600; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Upfront Fees</div>
+                                        
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                            <span style="color: #94a3b8; font-size: 12px;">Platform (5%)</span>
+                                            <span style="color: #e2e8f0; font-size: 12px;">$${(loan.amount * 0.05).toLocaleString()}</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                            <span style="color: #94a3b8; font-size: 12px;">Processing (2%)</span>
+                                            <span style="color: #e2e8f0; font-size: 12px;">$${(loan.amount * 0.02).toLocaleString()}</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                            <span style="color: #94a3b8; font-size: 12px;">Investment (0.5%)</span>
+                                            <span style="color: #e2e8f0; font-size: 12px;">$${(loan.amount * 0.005).toLocaleString()}</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                            <span style="color: #94a3b8; font-size: 12px;">Due Diligence</span>
+                                            <span style="color: #e2e8f0; font-size: 12px;">$3.00</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-weight: 600; color: #38e77b;">
+                                            <span style="font-size: 12px;">Total Upfront</span>
+                                            <span style="font-size: 12px;">$${(loan.amount * 0.075 + 3).toLocaleString()}</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Other Fees -->
+                                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.1);">
+                                        <div style="color: #e2e8f0; font-size: 14px; font-weight: 600; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Other Charges</div>
+                                        
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                            <span style="color: #94a3b8; font-size: 12px;">Insurance (Opt)</span>
+                                            <span style="color: #e2e8f0; font-size: 12px;">5.0% ($${(loan.amount * 0.05).toLocaleString()})</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                            <span style="color: #94a3b8; font-size: 12px;">Portfolio Mgmt</span>
+                                            <span style="color: #e2e8f0; font-size: 12px;">2.5% / mo</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                            <span style="color: #94a3b8; font-size: 12px;">Secondary Mkt</span>
+                                            <span style="color: #e2e8f0; font-size: 12px;">1.5%</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                            <span style="color: #94a3b8; font-size: 12px;">Recovery</span>
+                                            <span style="color: #e2e8f0; font-size: 12px;">10.0%</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
