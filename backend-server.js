@@ -67,6 +67,8 @@ try {
     console.log('✅ Primary market routes loaded');
     var secondaryMarketRoutes = require('./routes/secondary-market');
     console.log(' Secondary market routes loaded');
+    var legacyKairoRoutes = require('./routes/kairo'); // Legacy Kairo routes
+    console.log(' Legacy Kairo routes loaded');
     var kairoAIRoutes = require('./routes/kairo-ai');
     console.log(' Kairo AI routes loaded');
     var adminKairoAIRoutes = require('./routes/admin-kairo-ai');
@@ -229,6 +231,8 @@ app.use('/api/primary-market', primaryMarketRoutes);
 console.log('✅ Primary market routes registered');
 app.use('/api/secondary-market', secondaryMarketRoutes);
 console.log('✅ Secondary market routes registered');
+app.use('/api/kairo', legacyKairoRoutes); // Mount legacy Kairo routes
+console.log('✅ Legacy Kairo routes registered');
 app.use('/api/kairo-ai', kairoAIRoutes);
 console.log('✅ Kairo AI routes registered');
 app.use('/api/admin/kairo-ai', adminKairoAIRoutes);
