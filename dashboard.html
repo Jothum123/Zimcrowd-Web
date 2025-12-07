@@ -13134,7 +13134,8 @@ How it works:
             document.getElementById('portfolioHeaderAvgReturn').textContent = `${parseFloat(data.average_return || 0).toFixed(1)}% Avg. Return`;
         }
 
-        function updateInvestmentsList(investments) {
+        // Make function globally accessible
+        window.updateInvestmentsList = function(investments) {
             const container = document.getElementById('portfolioGrid');
             if (!container || !investments || investments.length === 0) return;
             
@@ -13143,16 +13144,37 @@ How it works:
                 const currencySymbol = inv.currency === 'USD' ? '$' : 'Z$';
                 
                 const initial = (inv.borrower_name || inv.borrower?.name || 'U').charAt(0).toUpperCase();
-                const riskClass = inv.risk_rating === 'low' ? 'low' : inv.risk_rating === 'high' ? 'high' : 'medium';
-                const progress = inv.progress_percentage || 0;
-                const returns = inv.returns_amount || 0;
-                const returnsPercent = inv.returns_percentage || 0;
+                
+                // Handle both API and mock data structures for risk
+                let riskClass;
+                if (inv.risk_rating) {
+                    riskClass = inv.risk_rating === 'low' ? 'low' : inv.risk_rating === 'high' ? 'high' : 'medium';
+                } else if (inv.riskLevel) {
+                    riskClass = inv.riskLevel.toLowerCase();
+                }
+                
+                // Calculate progress - handle both API and mock structures
+                const progress = inv.progress_percentage || 
+                                (inv.monthsElapsed && inv.term ? ((inv.monthsElapsed / inv.term) * 100).toFixed(0) : 0);
+                
+                // Returns - handle both structures
+                const returns = inv.returns_amount || parseFloat(inv.earnedSoFar) || 0;
+                const returnsPercent = inv.returns_percentage || parseFloat(inv.returnRate) || 0;
                 const returnsClass = returns >= 0 ? 'returns-positive' : 'returns-negative';
+                
                 const borrowerName = inv.borrower_name || inv.borrower?.name || 'Anonymous';
                 const loanPurpose = inv.loan_purpose || inv.purpose?.category || 'Loan';
-                const zimscore = inv.zimscore || inv.borrower?.zimscore || 3.5;
+                const zimscore = inv.zimscore || inv.borrower?.zimScore || 3.5;
                 const principalAmount = inv.amount || inv.myInvestment || 0;
-                const monthlyReturn = inv.monthly_return || (inv.myInvestment * (inv.interestRate / 100)) || 0;
+                
+                // Calculate monthly return - handle both structures
+                const monthlyReturn = inv.monthly_return || 
+                                     (inv.myInvestment && inv.interestRate ? (inv.myInvestment * (inv.interestRate / 100)) : 0);
+                
+                // Ownership percentage
+                const ownershipPercent = inv.ownership_percentage || inv.ownershipPercent || 
+                                        (inv.myInvestment && inv.totalLoanAmount ? 
+                                         ((inv.myInvestment / inv.totalLoanAmount) * 100).toFixed(1) : 0);
                 
                 return `
                     <div class="portfolio-card">
@@ -13180,6 +13202,10 @@ How it works:
                                 <div class="metric-item">
                                     <span class="metric-label">Monthly Return</span>
                                     <span class="metric-value">${currencySymbol}${parseFloat(monthlyReturn).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">My Share</span>
+                                    <span class="metric-value" style="color: #38e77b;">${ownershipPercent}%</span>
                                 </div>
                             </div>
                             
