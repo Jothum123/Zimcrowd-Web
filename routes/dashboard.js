@@ -57,7 +57,7 @@ const getDashboardOverview = async (req, res) => {
             supabase.from('profiles').select('*').eq('id', userId).single(),
             
             // Loans count
-            supabase.from('loans').select('*', { count: 'exact', head: true }).eq('borrower_id', userId),
+            supabase.from('loans').select('*', { count: 'exact', head: true }).eq('user_id', userId),
             
             // Investments count
             supabase.from('investments').select('*', { count: 'exact', head: true }).eq('investor_id', userId),
@@ -69,7 +69,7 @@ const getDashboardOverview = async (req, res) => {
             supabase.from('transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5),
             
             // Recent loans (last 3)
-            supabase.from('loans').select('*').eq('borrower_id', userId).order('created_at', { ascending: false }).limit(3)
+            supabase.from('loans').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(3)
         ]);
 
         // Check for critical errors
@@ -210,7 +210,7 @@ router.get('/loans', authenticateUser, async (req, res) => {
         const { count, error: countError } = await supabase
             .from('loans')
             .select('*', { count: 'exact', head: true })
-            .eq('borrower_id', userId);
+            .eq('user_id', userId);
 
         if (countError) throw countError;
 
@@ -218,7 +218,7 @@ router.get('/loans', authenticateUser, async (req, res) => {
         const { data: loans, error } = await supabase
             .from('loans')
             .select('*')
-            .eq('borrower_id', userId)
+            .eq('user_id', userId)
             .order('created_at', { ascending: false })
             .range(offset, offset + limit - 1);
 

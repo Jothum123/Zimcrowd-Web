@@ -503,7 +503,7 @@ router.get('/loan-distribution', authenticateUser, async (req, res) => {
         const { data: loans, error } = await supabase
             .from('loans')
             .select('status')
-            .eq('borrower_id', userId);
+            .eq('user_id', userId);
         
         if (error) throw error;
         
@@ -594,7 +594,7 @@ router.get('/overview', authenticateUser, async (req, res) => {
         const { data: loans } = await supabase
             .from('loans')
             .select('*')
-            .eq('borrower_id', userId);
+            .eq('user_id', userId);
         
         // Get user's investments
         const { data: investments } = await supabase

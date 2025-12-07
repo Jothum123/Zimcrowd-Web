@@ -30,39 +30,8 @@ const upload = multer({
     }
 });
 
-// Middleware to authenticate user
-// TODO: Replace with your actual JWT authentication
-const authenticateUser = async (req, res, next) => {
-    try {
-        const token = req.headers.authorization?.replace('Bearer ', '');
-        
-        if (!token) {
-            return res.status(401).json({
-                success: false,
-                message: 'Access token required'
-            });
-        }
-
-        // TODO: Verify JWT token and extract user ID
-        // For now, using a simple mock
-        // In production, use jsonwebtoken.verify()
-        const jwt = require('jsonwebtoken');
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
-        req.user = {
-            id: decoded.userId || decoded.sub,
-            email: decoded.email
-        };
-        
-        next();
-    } catch (error) {
-        console.error('Authentication error:', error);
-        return res.status(401).json({
-            success: false,
-            message: 'Authentication failed'
-        });
-    }
-};
+// Use universal authentication middleware that supports both Supabase and backend JWT
+const { authenticateUser } = require('../middleware/universal-auth');
 
 // ============================================
 // DOCUMENT UPLOAD ENDPOINTS

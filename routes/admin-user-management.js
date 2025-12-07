@@ -609,7 +609,7 @@ router.get('/users/:userId/status',
             const { data: activeLoans } = await supabase
                 .from('loans')
                 .select('*')
-                .eq('borrower_id', userId)
+                .eq('user_id', userId)
                 .in('status', ['active', 'late', 'defaulted']);
 
             const { data: directLoans } = await supabase

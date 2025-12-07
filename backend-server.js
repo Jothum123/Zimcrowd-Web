@@ -94,6 +94,8 @@ try {
     console.log('✅ Profile setup routes loaded');
     var storageRoutes = require('./routes/storage');
     console.log('✅ Storage routes loaded');
+    var accountStatusRoutes = require('./routes/account-status');
+    console.log('✅ Account status routes loaded');
     console.log('✅ All routes loaded successfully');
 } catch (error) {
     console.error('❌ Error loading routes:', error.message);
@@ -257,6 +259,8 @@ app.use('/api/storage', storageRoutes);
 console.log('✅ Storage routes registered');
 app.use('/api/wallet-credits', walletCreditsRoutes);
 console.log('✅ Wallet Credits routes registered');
+app.use('/api/account', accountStatusRoutes);
+console.log('✅ Account status routes registered');
 app.use('/api/kyc', kycOcrRoutes); // Alias for /api/kyc-ocr
 console.log('✅ KYC routes registered (alias for kyc-ocr)');
 

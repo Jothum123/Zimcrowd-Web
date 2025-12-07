@@ -989,7 +989,7 @@ router.get('/opportunities', authenticateUser, async (req, res) => {
         // Get loans that are pending and available for investment
         const { data: loans, error, count } = await supabase
             .from('loans')
-            .select('*, profiles!loans_borrower_id_fkey(first_name, last_name, email)', { count: 'exact' })
+            .select('*, profiles!user_id(first_name, last_name, email)', { count: 'exact' })
             .eq('status', 'pending')
             .order('created_at', { ascending: false })
             .range(offset, offset + limit - 1);
