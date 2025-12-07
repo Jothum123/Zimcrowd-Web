@@ -4305,6 +4305,58 @@
     <script src="js/onesignal-simple.js" defer></script>
 </head>
 <body>
+    <!-- LocalStorage Detection & Warning -->
+    <script>
+        (function() {
+            function testLocalStorage() {
+                try {
+                    const testKey = '__localStorage_test__';
+                    localStorage.setItem(testKey, 'test');
+                    localStorage.removeItem(testKey);
+                    return true;
+                } catch(e) {
+                    return false;
+                }
+            }
+            
+            if (!testLocalStorage()) {
+                // Show warning banner
+                const banner = document.createElement('div');
+                banner.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    background: linear-gradient(135deg, #ef4444, #dc2626);
+                    color: white;
+                    padding: 15px 20px;
+                    text-align: center;
+                    z-index: 99999;
+                    font-family: 'Space Grotesk', sans-serif;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                `;
+                banner.innerHTML = `
+                    <strong>⚠️ Browser Privacy Settings Detected</strong><br>
+                    <span style="font-size: 14px;">
+                        Your browser is blocking localStorage (Tracking Prevention). 
+                        This prevents the dashboard from working properly.
+                        <br><strong>Solution:</strong> Disable "Tracking Prevention" or "Prevent Cross-Site Tracking" for this site, or use Chrome/Firefox.
+                    </span>
+                    <button onclick="this.parentElement.remove()" style="margin-left: 15px; padding: 5px 15px; background: white; color: #dc2626; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        Dismiss
+                    </button>
+                `;
+                document.body.appendChild(banner);
+                
+                // Log to console
+                console.error('🚫 localStorage is blocked by browser privacy settings');
+                console.info('💡 To fix: Disable Tracking Prevention for this site in your browser settings');
+            } else {
+                console.log('✅ localStorage is accessible');
+            }
+        })();
+    </script>
+    
     <!-- Mobile Menu Toggle -->
     <button class="mobile-menu-toggle" id="mobileMenuToggle">
         <i class="fas fa-bars"></i>
@@ -16413,8 +16465,16 @@ How it works:
 
         // Secondary Market Functions
         function openSecondaryMarketModal(investmentId) {
-            // Get investment from localStorage
-            const userInvestments = JSON.parse(localStorage.getItem('userInvestments') || '[]');
+            // Get investment from localStorage with error handling
+            let userInvestments = [];
+            try {
+                userInvestments = JSON.parse(localStorage.getItem('userInvestments') || '[]');
+            } catch (e) {
+                console.error('Failed to access localStorage:', e);
+                alert('⚠️ Browser privacy settings are blocking data access. Please disable Tracking Prevention for this site.');
+                return;
+            }
+            
             const investment = userInvestments.find(inv => inv.id === investmentId);
             
             if (!investment) {
@@ -18196,8 +18256,16 @@ How it works:
 
         // View Investment Details
         async function viewInvestmentDetails(investmentId) {
-            // First check localStorage for mock data
-            const userInvestments = JSON.parse(localStorage.getItem('userInvestments') || '[]');
+            // First check localStorage for mock data with error handling
+            let userInvestments = [];
+            try {
+                userInvestments = JSON.parse(localStorage.getItem('userInvestments') || '[]');
+            } catch (e) {
+                console.error('Failed to access localStorage:', e);
+                alert('⚠️ Browser privacy settings are blocking data access. Please disable Tracking Prevention for this site.');
+                return;
+            }
+            
             const investment = userInvestments.find(inv => inv.id === investmentId);
             
             if (investment) {
