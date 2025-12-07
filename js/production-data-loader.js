@@ -349,12 +349,34 @@ const ProductionDataLoader = {
             // Update My Investments list
             if (myInvestments.success) {
                 const container = document.getElementById('portfolioGrid');
-                const investments = myInvestments.data || [];
+                let investments = myInvestments.data || [];
                 const pagination = myInvestments.pagination || {};
+                
+                // If no API investments, try to load from localStorage (mock data)
+                if (investments.length === 0) {
+                    try {
+                        const userInvestments = JSON.parse(localStorage.getItem('userInvestments') || '[]');
+                        if (userInvestments.length > 0) {
+                            investments = userInvestments;
+                            console.log('📦 Loading mock investments from localStorage:', investments.length);
+                        } else if (typeof MockMarketData !== 'undefined') {
+                            // Generate mock portfolio investments if MockMarketData is available
+                            investments = MockMarketData.generatePortfolioInvestments(6);
+                            console.log('🎭 Generated mock portfolio investments:', investments.length);
+                        }
+                    } catch (e) {
+                        console.log('⚠️ Could not load mock investments:', e);
+                    }
+                }
                 
                 if (container) {
                     if (investments.length > 0) {
-                        container.innerHTML = investments.map(inv => this.createInvestmentCard(inv)).join('');
+                        // Use the dashboard's updateInvestmentsList function if available
+                        if (typeof window.updateInvestmentsList === 'function') {
+                            window.updateInvestmentsList(investments);
+                        } else {
+                            container.innerHTML = investments.map(inv => this.createInvestmentCard(inv)).join('');
+                        }
                         console.log('✅ Investment cards updated:', investments.length);
                         
                         // Update pagination
