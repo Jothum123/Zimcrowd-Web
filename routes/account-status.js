@@ -1,7 +1,73 @@
 const express = require('express');
 const router = express.Router();
 const { supabase } = require('../utils/supabase-auth');
-const { authenticateUser, requireAdmin } = require('../middleware/auth');
+const { authenticateUser, authenticateAdmin } = require('../middleware/universal-auth');
+
+/**
+ * @route   GET /api/account/status
+ * @desc    Get current user's account status (alias for /current)
+ * @access  Private
+ */
+router.get('/status', authenticateUser, async (req, res) => {
+    try {
+        const { data: user, error } = await supabase
+            .from('users')
+            .select(`
+                id,
+                email,
+                full_name,
+                account_status,
+                account_flags,
+                status_reason,
+                status_changed_at,
+                last_activity_at,
+                kyc_status,
+                kyc_verified_at
+            `)
+            .eq('id', req.user.id)
+            .single();
+
+        if (error) throw error;
+
+        // Get active flags
+        const { data: flags } = await supabase
+            .from('account_flags')
+            .select('*')
+            .eq('user_id', req.user.id)
+            .eq('is_active', true)
+            .order('created_at', { ascending: false });
+
+        // Get active restrictions
+        const { data: restrictions } = await supabase
+            .from('account_restrictions')
+            .select('*')
+            .eq('user_id', req.user.id)
+            .eq('is_active', true);
+
+        // Get arrears if any
+        const { data: arrears } = await supabase
+            .from('arrears_tracking')
+            .select('*')
+            .eq('user_id', req.user.id)
+            .eq('status', 'active');
+
+        res.json({
+            success: true,
+            data: {
+                ...user,
+                active_flags: flags || [],
+                active_restrictions: restrictions || [],
+                arrears: arrears || []
+            }
+        });
+    } catch (error) {
+        console.error('Account status error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch account status'
+        });
+    }
+});
 
 /**
  * @route   GET /api/account-status/current
@@ -77,7 +143,7 @@ router.get('/current', authenticateUser, async (req, res) => {
  * @desc    Update account status (Admin only)
  * @access  Private/Admin
  */
-router.post('/update', [authenticateUser, requireAdmin], async (req, res) => {
+router.post('/update', authenticateAdmin, async (req, res) => {
     try {
         const { user_id, new_status, reason } = req.body;
 
@@ -164,7 +230,7 @@ router.post('/update', [authenticateUser, requireAdmin], async (req, res) => {
  * @desc    Flag an account (Admin or System)
  * @access  Private/Admin
  */
-router.post('/flag', [authenticateUser, requireAdmin], async (req, res) => {
+router.post('/flag', authenticateAdmin, async (req, res) => {
     try {
         const { user_id, flag_type, flag_category, severity, reason, details } = req.body;
 
@@ -241,7 +307,7 @@ router.post('/flag', [authenticateUser, requireAdmin], async (req, res) => {
  * @desc    Resolve an account flag
  * @access  Private/Admin
  */
-router.post('/resolve-flag/:flag_id', [authenticateUser, requireAdmin], async (req, res) => {
+router.post('/resolve-flag/:flag_id', authenticateAdmin, async (req, res) => {
     try {
         const { flag_id } = req.params;
         const { resolution_notes } = req.body;
@@ -293,7 +359,7 @@ router.post('/resolve-flag/:flag_id', [authenticateUser, requireAdmin], async (r
  * @desc    Get accounts in arrears (Admin only)
  * @access  Private/Admin
  */
-router.get('/arrears', [authenticateUser, requireAdmin], async (req, res) => {
+router.get('/arrears', authenticateAdmin, async (req, res) => {
     try {
         const { data: arrears, error } = await supabase
             .from('arrears_summary')
@@ -320,7 +386,7 @@ router.get('/arrears', [authenticateUser, requireAdmin], async (req, res) => {
  * @desc    Get account status statistics (Admin only)
  * @access  Private/Admin
  */
-router.get('/statistics', [authenticateUser, requireAdmin], async (req, res) => {
+router.get('/statistics', authenticateAdmin, async (req, res) => {
     try {
         // Get status summary
         const { data: statusSummary } = await supabase
@@ -380,7 +446,7 @@ router.get('/statistics', [authenticateUser, requireAdmin], async (req, res) => 
  * @desc    Add restriction to account
  * @access  Private/Admin
  */
-router.post('/restrict', [authenticateUser, requireAdmin], async (req, res) => {
+router.post('/restrict', authenticateAdmin, async (req, res) => {
     try {
         const { user_id, restriction_type, description, expires_at } = req.body;
 
@@ -438,7 +504,7 @@ router.post('/restrict', [authenticateUser, requireAdmin], async (req, res) => {
  * @desc    Remove restriction from account
  * @access  Private/Admin
  */
-router.post('/remove-restriction/:restriction_id', [authenticateUser, requireAdmin], async (req, res) => {
+router.post('/remove-restriction/:restriction_id', authenticateAdmin, async (req, res) => {
     try {
         const { restriction_id } = req.params;
         const { removal_reason } = req.body;
