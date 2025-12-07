@@ -371,32 +371,36 @@ const MockMarketData = {
 
             investments.push({
                 id: `inv_${Date.now()}_${i}`,
-                loanId: `loan_${Date.now()}_${i}`,
+                loan_id: `loan_${Date.now()}_${i}`, // Changed to snake_case to match renderer
+                investment_id: `inv_${Date.now()}_${i}`, // Duplicate for renderer compatibility
                 currency: currency,
-                borrower: borrower,
-                purpose: purpose,
+                borrower: borrower, // Keep full object for internal use
+                borrower_name: borrower.name, // For renderer
+                purpose: purpose.category, // For renderer
                 title: this.generateLoanTitle(purpose.category),
-                totalLoanAmount: totalLoanAmount,
-                myInvestment: myInvestment,
-                ownershipPercent: ((myInvestment / totalLoanAmount) * 100).toFixed(1),
-                interestRate: parseFloat(interestRate),
+                total_loan_amount: totalLoanAmount, // snake_case
+                amount: myInvestment, // For renderer (principal)
+                ownership_percent: ((myInvestment / totalLoanAmount) * 100).toFixed(1), // snake_case
+                interest_rate: parseFloat(interestRate), // snake_case
                 term: term,
-                monthsElapsed: monthsElapsed,
-                monthsRemaining: Math.max(0, term - monthsElapsed),
+                months_elapsed: monthsElapsed, // snake_case
+                months_remaining: Math.max(0, term - monthsElapsed), // snake_case
                 status: status,
-                nextPaymentDate: this.getNextPaymentDate(monthsElapsed),
-                nextPaymentAmount: (monthlyReturn + (myInvestment / term)).toFixed(2),
-                totalExpectedReturn: totalExpectedReturn.toFixed(2),
-                earnedSoFar: earnedSoFar.toFixed(2),
-                returnRate: ((earnedSoFar / myInvestment) * 100).toFixed(1),
-                riskLevel: this.calculateRiskLevel(borrower.zimScore),
-                investedAt: new Date(now - (monthsElapsed * 30 * 24 * 60 * 60 * 1000)).toISOString(),
-                canSellOnSecondary: status === 'active' && monthsElapsed >= 1,
-                secondaryMarketValue: this.calculateSecondaryValue(myInvestment, earnedSoFar, monthsRemaining = term - monthsElapsed, status)
+                next_payment_date: this.getNextPaymentDate(monthsElapsed), // snake_case
+                next_payment_amount: (monthlyReturn + (myInvestment / term)).toFixed(2), // snake_case
+                total_expected_return: totalExpectedReturn.toFixed(2), // snake_case
+                earned_so_far: earnedSoFar.toFixed(2), // snake_case
+                returns: earnedSoFar.toFixed(2), // For renderer
+                monthly_return: monthlyReturn.toFixed(2), // For renderer
+                return_rate: ((earnedSoFar / myInvestment) * 100).toFixed(1), // snake_case
+                risk_level: this.calculateRiskLevel(borrower.zimScore).level.toLowerCase(), // For renderer (string)
+                invested_at: new Date(now - (monthsElapsed * 30 * 24 * 60 * 60 * 1000)).toISOString(), // snake_case
+                can_sell_on_secondary: status === 'active' && monthsElapsed >= 1, // snake_case
+                secondary_market_value: this.calculateSecondaryValue(myInvestment, earnedSoFar, monthsRemaining = term - monthsElapsed, status) // snake_case
             });
         }
 
-        return investments.sort((a, b) => new Date(b.investedAt) - new Date(a.investedAt));
+        return investments.sort((a, b) => new Date(b.invested_at) - new Date(a.invested_at));
     },
 
     // Get next payment date
