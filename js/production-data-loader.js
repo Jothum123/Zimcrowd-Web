@@ -152,16 +152,20 @@ const ProductionDataLoader = {
      */
     async apiRequest(endpoint, options = {}, retryCount = 0) {
         const token = this.getAuthToken();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
         
         try {
             const response = await fetch(`${this.apiBase}${endpoint}`, {
                 ...options,
+                signal: controller.signal,
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                     ...options.headers
                 }
             });
+            clearTimeout(timeoutId);
 
             const data = await response.json();
             
@@ -188,7 +192,12 @@ const ProductionDataLoader = {
 
             return data;
         } catch (error) {
-            console.error(`API Request failed for ${endpoint}:`, error);
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+                console.warn(`⏱️ API Request timeout for ${endpoint}`);
+            } else {
+                console.error(`API Request failed for ${endpoint}:`, error);
+            }
             throw error;
         }
     },
