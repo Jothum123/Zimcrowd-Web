@@ -180,7 +180,8 @@ const MockMarketData = {
             const purpose = this.loanPurposes[Math.floor(Math.random() * this.loanPurposes.length)];
             const amount = Math.floor(Math.random() * 9500) + 500; // $500 - $10,000
             const term = [3, 6, 9, 12, 18, 24][Math.floor(Math.random() * 6)];
-            const interestRate = (Math.random() * 8 + 2).toFixed(1); // 2% - 10%
+            // MONTHLY interest rates: USD 0-10%, ZWG 0-15% (using 5-10% for USD loans)
+            const interestRate = (Math.random() * 5 + 5).toFixed(1); // 5% - 10% monthly
             const fundedPercent = Math.floor(Math.random() * 100);
             const daysLeft = Math.floor(Math.random() * 25) + 5;
             const lendersCount = Math.floor(fundedPercent / 15) + 1;
@@ -248,8 +249,9 @@ const MockMarketData = {
     },
 
     // Generate repayment schedule
-    generateRepaymentSchedule(principal, annualRate, termMonths) {
-        const monthlyRate = annualRate / 100 / 12;
+    // NOTE: Rate parameter is MONTHLY interest rate (not annual)
+    generateRepaymentSchedule(principal, monthlyInterestRate, termMonths) {
+        const monthlyRate = monthlyInterestRate / 100; // Convert percentage to decimal
         const monthlyPayment = principal * (monthlyRate * Math.pow(1 + monthlyRate, termMonths)) / (Math.pow(1 + monthlyRate, termMonths) - 1);
         const payments = [];
         let balance = principal;
@@ -327,12 +329,13 @@ const MockMarketData = {
             const totalLoanAmount = Math.floor(Math.random() * 8000) + 1000;
             const myInvestment = Math.floor(Math.random() * (totalLoanAmount * 0.4)) + 100;
             const term = [6, 9, 12, 18, 24][Math.floor(Math.random() * 5)];
-            const interestRate = (Math.random() * 6 + 3).toFixed(1);
+            // MONTHLY interest rate (5-10% for USD)
+            const interestRate = (Math.random() * 5 + 5).toFixed(1);
             const monthsElapsed = Math.floor(Math.random() * (term - 1)) + 1;
             const status = Math.random() > 0.15 ? 'active' : (Math.random() > 0.5 ? 'completed' : 'defaulted');
 
-            // Calculate returns
-            const monthlyReturn = (myInvestment * parseFloat(interestRate) / 100 / 12);
+            // Calculate returns using MONTHLY interest rate (not annual)
+            const monthlyReturn = (myInvestment * parseFloat(interestRate) / 100);
             const totalExpectedReturn = myInvestment + (monthlyReturn * term);
             const earnedSoFar = status === 'completed' ? totalExpectedReturn - myInvestment : monthlyReturn * monthsElapsed;
 
