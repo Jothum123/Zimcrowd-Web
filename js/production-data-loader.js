@@ -255,11 +255,21 @@ const ProductionDataLoader = {
             window.currentInvestmentPage = page;
             window.investmentPageLimit = limit;
             
-            const [portfolio, performance, myInvestments] = await Promise.all([
+            // Use allSettled to allow some requests to fail without breaking everything
+            const results = await Promise.allSettled([
                 this.apiRequest('/investments/portfolio'),
                 this.apiRequest('/investments/performance'),
                 this.apiRequest(`/investments/my-investments?page=${page}&limit=${limit}`)
             ]);
+            
+            const portfolio = results[0].status === 'fulfilled' ? results[0].value : { success: false };
+            const performance = results[1].status === 'fulfilled' ? results[1].value : { success: false };
+            const myInvestments = results[2].status === 'fulfilled' ? results[2].value : { success: false };
+            
+            // Log errors if any
+            if (results[0].status === 'rejected') console.error('Portfolio stats failed:', results[0].reason);
+            if (results[1].status === 'rejected') console.error('Performance stats failed:', results[1].reason);
+            if (results[2].status === 'rejected') console.error('My Investments list failed:', results[2].reason);
             
             // Update Portfolio Tab
             if (portfolio.success && portfolio.data) {
@@ -346,74 +356,77 @@ const ProductionDataLoader = {
                 console.log('✅ Performance stats updated');
             }
             
-            // Update My Investments list
-            if (myInvestments.success) {
-                const container = document.getElementById('portfolioGrid');
-                let investments = myInvestments.data || [];
-                const pagination = myInvestments.pagination || {};
-                
-                // If no API investments, try to load from localStorage (mock data)
-                if (investments.length === 0) {
-                    try {
-                        const userInvestments = JSON.parse(localStorage.getItem('userInvestments') || '[]');
-                        if (userInvestments.length > 0) {
-                            investments = userInvestments;
-                            console.log('📦 Loading mock investments from localStorage:', investments.length);
-                        } else if (typeof MockMarketData !== 'undefined') {
-                            // Check if we have cached mock portfolio investments (using v2 key to force refresh)
-                            let cachedMockInvestments = localStorage.getItem('mockPortfolioInvestments_v2');
-                            
-                            if (cachedMockInvestments) {
-                                investments = JSON.parse(cachedMockInvestments);
-                                console.log('📦 Loading cached mock portfolio investments:', investments.length);
-                            } else {
-                                // Generate and cache mock portfolio investments
-                                investments = MockMarketData.generatePortfolioInvestments(6);
-                                localStorage.setItem('mockPortfolioInvestments_v2', JSON.stringify(investments));
-                                console.log('🎭 Generated and cached mock portfolio investments:', investments.length);
-                            }
-                        }
-                    } catch (e) {
-                        console.log('⚠️ Could not load mock investments:', e);
-                    }
-                }
-                
-                if (container) {
-                    if (investments.length > 0) {
-                        // Use the dashboard's updateInvestmentsList function if available
-                        if (typeof window.updateInvestmentsList === 'function') {
-                            console.log('✅ Using global updateInvestmentsList function');
-                            window.updateInvestmentsList(investments);
-                        } else {
-                            console.log('⚠️ Global updateInvestmentsList not found, using internal renderer');
-                            container.innerHTML = investments.map(inv => this.createInvestmentRow(inv)).join('');
-                        }
-                        console.log('✅ Investment cards updated:', investments.length);
+            // Update My Investments list (Always try to render something, even mock data)
+            const container = document.getElementById('portfolioGrid');
+            let investments = [];
+            let pagination = {};
+            
+            if (myInvestments.success && myInvestments.data) {
+                investments = myInvestments.data;
+                pagination = myInvestments.pagination || {};
+            }
+            
+            // If no API investments, try to load from localStorage (mock data)
+            if (investments.length === 0) {
+                try {
+                    const userInvestments = JSON.parse(localStorage.getItem('userInvestments') || '[]');
+                    if (userInvestments.length > 0) {
+                        investments = userInvestments;
+                        console.log('📦 Loading mock investments from localStorage:', investments.length);
+                    } else if (typeof MockMarketData !== 'undefined') {
+                        // Check if we have cached mock portfolio investments (using v2 key to force refresh)
+                        let cachedMockInvestments = localStorage.getItem('mockPortfolioInvestments_v2');
                         
-                        // Update pagination
-                        this.updateInvestmentPagination(pagination);
-                    } else {
-                        container.innerHTML = `
-                            <tr>
-                                <td colspan="9" style="text-align: center; padding: 60px 20px;">
-                                    <div style="text-align: center; max-width: 500px; margin: 0 auto;">
-                                        <div style="width: 120px; height: 120px; background: linear-gradient(135deg, rgba(56, 231, 123, 0.2), rgba(59, 130, 246, 0.2)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px; box-shadow: 0 10px 40px rgba(56, 231, 123, 0.2);">
-                                            <i class="fas fa-chart-line" style="font-size: 48px; color: #38e77b;"></i>
-                                        </div>
-                                        <h3 style="margin: 0 0 15px 0; font-size: 28px; color: #fff;">No Investments Yet</h3>
-                                        <p style="color: #94a3b8; font-size: 18px; margin: 0 0 30px 0; line-height: 1.6;">Start investing in loans to build your portfolio and earn returns</p>
-                                        <button onclick="switchSection('overview')" class="btn-primary" style="padding: 14px 32px; font-size: 16px; display: inline-flex; align-items: center; gap: 10px;">
-                                            <i class="fas fa-search"></i> Browse Opportunities
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                        // Hide pagination if no investments
-                        const paginationEl = document.getElementById('portfolioPagination');
-                        if (paginationEl) paginationEl.style.display = 'none';
-                        console.log('ℹ️ No investments found');
+                        if (cachedMockInvestments) {
+                            investments = JSON.parse(cachedMockInvestments);
+                            console.log('📦 Loading cached mock portfolio investments:', investments.length);
+                        } else {
+                            // Generate and cache mock portfolio investments
+                            investments = MockMarketData.generatePortfolioInvestments(6);
+                            localStorage.setItem('mockPortfolioInvestments_v2', JSON.stringify(investments));
+                            console.log('🎭 Generated and cached mock portfolio investments:', investments.length);
+                        }
                     }
+                } catch (e) {
+                    console.log('⚠️ Could not load mock investments:', e);
+                }
+            }
+            
+            if (container) {
+                if (investments.length > 0) {
+                    // Use the dashboard's updateInvestmentsList function if available
+                    if (typeof window.updateInvestmentsList === 'function') {
+                        console.log('✅ Using global updateInvestmentsList function');
+                        window.updateInvestmentsList(investments);
+                    } else {
+                        console.log('⚠️ Global updateInvestmentsList not found, using internal renderer');
+                        container.innerHTML = investments.map(inv => this.createInvestmentRow(inv)).join('');
+                    }
+                    console.log('✅ Investment cards updated:', investments.length);
+                    
+                    // Update pagination
+                    this.updateInvestmentPagination(pagination);
+                } else {
+                    container.innerHTML = `
+                        <tr>
+                            <td colspan="9" style="text-align: center; padding: 60px 20px;">
+                                <div style="text-align: center; max-width: 500px; margin: 0 auto;">
+                                    <div style="width: 120px; height: 120px; background: linear-gradient(135deg, rgba(56, 231, 123, 0.2), rgba(59, 130, 246, 0.2)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px; box-shadow: 0 10px 40px rgba(56, 231, 123, 0.2);">
+                                        <i class="fas fa-chart-line" style="font-size: 48px; color: #38e77b;"></i>
+                                    </div>
+                                    <h3 style="margin: 0 0 15px 0; font-size: 28px; color: #fff;">No Investments Yet</h3>
+                                    <p style="color: #94a3b8; font-size: 18px; margin: 0 0 30px 0; line-height: 1.6;">Start investing in loans to build your portfolio and earn returns</p>
+                                    <button onclick="switchSection('overview')" class="btn-primary" style="padding: 14px 32px; font-size: 16px; display: inline-flex; align-items: center; gap: 10px;">
+                                        <i class="fas fa-search"></i> Browse Opportunities
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    // Hide pagination if no investments
+                    const paginationEl = document.getElementById('portfolioPagination');
+                    if (paginationEl) paginationEl.style.display = 'none';
+                    console.log('ℹ️ No investments found');
                 }
             }
             
