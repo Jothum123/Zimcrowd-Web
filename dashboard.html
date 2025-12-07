@@ -12237,16 +12237,22 @@ How it works:
             const starHtml = MockMarketData.generateStarRating(loan.borrower.rating, loan.borrower.zimScore);
             const riskColor = loan.riskLevel.color;
             
-            // Generate repayment schedule HTML
-            const scheduleHtml = loan.schedule.slice(0, 6).map(payment => `
+            // Generate repayment schedule HTML (align with mock-market-data.js structure)
+            const scheduleHtml = loan.schedule.slice(0, 8).map(payment => {
+                // Format due date
+                const dueDate = new Date(payment.dueDate);
+                const formattedDate = dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                
+                return `
                 <tr>
-                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">${payment.month}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">$${payment.payment}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">$${payment.principal}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">$${payment.interest}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">$${payment.balance}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #94a3b8;">${payment.installment}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #94a3b8; font-size: 12px;">${formattedDate}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; font-weight: 600;">$${parseFloat(payment.total).toLocaleString()}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #3b82f6;">$${parseFloat(payment.principal).toLocaleString()}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #f59e0b;">$${parseFloat(payment.interest).toLocaleString()}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #64748b;">$${parseFloat(payment.balance).toLocaleString()}</td>
                 </tr>
-            `).join('');
+            `}).join('');
 
             // Calculate default fees for initial display based on default investment amount
             const defAmount = Math.min(100, loan.maxInvestment);
@@ -12407,16 +12413,17 @@ How it works:
 
                             <!-- Repayment Schedule Preview -->
                             <div style="margin-bottom: 25px;">
-                                <h4 style="color: white; margin-bottom: 15px;"><i class="fas fa-calendar-alt" style="color: #38e77b; margin-right: 10px;"></i>Repayment Schedule (First 6 Months)</h4>
+                                <h4 style="color: white; margin-bottom: 15px;"><i class="fas fa-calendar-alt" style="color: #38e77b; margin-right: 10px;"></i>Repayment Schedule (First 8 Months)</h4>
                                 <div style="overflow-x: auto;">
                                     <table style="width: 100%; border-collapse: collapse; color: #e2e8f0; font-size: 14px;">
                                         <thead>
                                             <tr style="background: rgba(56, 231, 123, 0.1);">
-                                                <th style="padding: 12px; text-align: left;">Month</th>
-                                                <th style="padding: 12px; text-align: left;">Payment</th>
-                                                <th style="padding: 12px; text-align: left;">Principal</th>
-                                                <th style="padding: 12px; text-align: left;">Interest</th>
-                                                <th style="padding: 12px; text-align: left;">Balance</th>
+                                                <th style="padding: 12px; text-align: left; color: #94a3b8; font-size: 12px; font-weight: 600;">#</th>
+                                                <th style="padding: 12px; text-align: left; color: #94a3b8; font-size: 12px; font-weight: 600;">Due Date</th>
+                                                <th style="padding: 12px; text-align: left; color: #e2e8f0; font-size: 12px; font-weight: 600;">Payment</th>
+                                                <th style="padding: 12px; text-align: left; color: #3b82f6; font-size: 12px; font-weight: 600;">Principal</th>
+                                                <th style="padding: 12px; text-align: left; color: #f59e0b; font-size: 12px; font-weight: 600;">Interest</th>
+                                                <th style="padding: 12px; text-align: left; color: #64748b; font-size: 12px; font-weight: 600;">Balance</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -12424,6 +12431,9 @@ How it works:
                                         </tbody>
                                     </table>
                                 </div>
+                                <p style="color: #94a3b8; font-size: 12px; margin-top: 10px; font-style: italic;">
+                                    <i class="fas fa-info-circle"></i> Full ${loan.term}-month schedule available after investment
+                                </p>
                             </div>
 
                             <!-- Borrower Profile -->
