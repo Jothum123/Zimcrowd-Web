@@ -360,8 +360,8 @@ const ProductionDataLoader = {
                             investments = userInvestments;
                             console.log('📦 Loading mock investments from localStorage:', investments.length);
                         } else if (typeof MockMarketData !== 'undefined') {
-                            // Check if we have cached mock portfolio investments
-                            let cachedMockInvestments = localStorage.getItem('mockPortfolioInvestments');
+                            // Check if we have cached mock portfolio investments (using v2 key to force refresh)
+                            let cachedMockInvestments = localStorage.getItem('mockPortfolioInvestments_v2');
                             
                             if (cachedMockInvestments) {
                                 investments = JSON.parse(cachedMockInvestments);
@@ -369,7 +369,7 @@ const ProductionDataLoader = {
                             } else {
                                 // Generate and cache mock portfolio investments
                                 investments = MockMarketData.generatePortfolioInvestments(6);
-                                localStorage.setItem('mockPortfolioInvestments', JSON.stringify(investments));
+                                localStorage.setItem('mockPortfolioInvestments_v2', JSON.stringify(investments));
                                 console.log('🎭 Generated and cached mock portfolio investments:', investments.length);
                             }
                         }
