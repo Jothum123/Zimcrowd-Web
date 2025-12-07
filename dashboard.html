@@ -12450,8 +12450,12 @@ How it works:
                                         <input type="number" id="mockInvestAmount" min="${loan.minInvestment}" max="${loan.maxInvestment}" value="${Math.min(100, loan.maxInvestment)}" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(56, 231, 123, 0.3); background: rgba(0,0,0,0.3); color: white; font-size: 16px;">
                                     </div>
                                     <div style="text-align: center;">
+                                        <div style="color: #94a3b8; font-size: 12px;">Total to Pay</div>
+                                        <div style="color: #f59e0b; font-size: 18px; font-weight: bold;" id="mockTotalToPay">$${(defAmount + defTotalUpfront).toFixed(2)}</div>
+                                    </div>
+                                    <div style="text-align: center;">
                                         <div style="color: #94a3b8; font-size: 12px;">Expected Return</div>
-                                        <div style="color: #38e77b; font-size: 18px; font-weight: bold;" id="expectedReturn">$${(100 * (1 + loan.interestRate/100 * loan.term/12)).toFixed(2)}</div>
+                                        <div style="color: #38e77b; font-size: 18px; font-weight: bold;" id="expectedReturn">$${(defNetMonthly * loan.term).toFixed(2)}</div>
                                     </div>
                                     <div style="text-align: center;">
                                         <div style="color: #94a3b8; font-size: 12px;">Share</div>
@@ -12480,8 +12484,6 @@ How it works:
             if (amountInput) {
                 amountInput.addEventListener('input', function() {
                     const amount = parseFloat(this.value) || 0;
-                    const expectedReturn = amount * (1 + loan.interestRate/100 * loan.term/12);
-                    document.getElementById('expectedReturn').textContent = '$' + expectedReturn.toFixed(2);
                     
                     const share = (amount / loan.amount) * 100;
                     const shareEl = document.getElementById('mockInvestShare');
@@ -12501,6 +12503,10 @@ How it works:
                     document.getElementById('mockInsuranceFeeDisplay').textContent = '5.0% ($' + insuranceFee.toFixed(2) + ')';
                     document.getElementById('mockViewTotalUpfront').textContent = '$' + totalUpfront.toFixed(2);
                     
+                    // Update total to pay
+                    const totalToPay = amount + totalUpfront;
+                    document.getElementById('mockTotalToPay').textContent = '$' + totalToPay.toFixed(2);
+                    
                     // Update monthly return breakdown
                     const shareRatio = amount / loan.amount;
                     const grossMonthly = loan.monthlyPayment * shareRatio;
@@ -12514,6 +12520,10 @@ How it works:
                     if (grossEl) grossEl.textContent = '$' + grossMonthly.toFixed(2);
                     if (feeEl) feeEl.textContent = '-$' + portfolioFee.toFixed(2);
                     if (netEl) netEl.textContent = '$' + netMonthly.toFixed(2);
+                    
+                    // Update expected return based on net monthly (after portfolio fee)
+                    const totalExpectedReturn = netMonthly * loan.term;
+                    document.getElementById('expectedReturn').textContent = '$' + totalExpectedReturn.toFixed(2);
                 });
             }
 
@@ -12526,6 +12536,10 @@ How it works:
                     const insuranceFee = this.checked ? (amount * 0.05) : 0;
                     const total = baseUpfront + insuranceFee;
                     document.getElementById('mockViewTotalUpfront').textContent = '$' + total.toFixed(2);
+                    
+                    // Update total to pay
+                    const totalToPay = amount + total;
+                    document.getElementById('mockTotalToPay').textContent = '$' + totalToPay.toFixed(2);
                 });
             }
 
