@@ -15923,27 +15923,55 @@ How it works:
         function calculateInvestmentFees() {
             const investAmount = parseFloat(document.getElementById('investmentAmount')?.value) || 0;
             
-            // Lender fees - ACTUAL FEE STRUCTURE
-            const serviceFeePercent = 10; // 10% upfront
-            const insuranceFeePercent = 5; // 5% upfront
-            const collectionFeePercent = 5; // 5% of returns
+            // Lender fees - ACTUAL FEE STRUCTURE (Migration 008)
+            const platformFeePercent = 5; // 5% upfront
+            const processingFeePercent = 2; // 2% upfront
+            const investmentFeePercent = 0.5; // 0.5% upfront
+            const insuranceFeePercent = 5; // 5% upfront (Optional)
+            const dueDiligenceFixed = 3.00; // $3 fixed
+            const portfolioMgmtPercent = 2.5; // 2.5% monthly
             
-            // Upfront fees
-            const serviceFee = investAmount * (serviceFeePercent / 100);
+            // Upfront fees calculation
+            const platformFee = investAmount * (platformFeePercent / 100);
+            const processingFee = investAmount * (processingFeePercent / 100);
+            const investmentFee = investAmount * (investmentFeePercent / 100);
             const insuranceFee = investAmount * (insuranceFeePercent / 100);
-            const totalUpfrontFees = serviceFee + insuranceFee;
             
-            // Net investment after upfront fees
-            const netInvestment = investAmount - totalUpfrontFees;
+            // Total upfront to pay ON TOP of investment
+            const totalUpfrontFees = platformFee + processingFee + investmentFee + dueDiligenceFixed + insuranceFee;
+            const totalPayable = investAmount + totalUpfrontFees;
             
             // Update UI
-            document.getElementById('investRequestedAmount').textContent = `$${investAmount.toFixed(2)}`;
-            document.getElementById('investServiceFee').textContent = `-$${serviceFee.toFixed(2)}`;
-            document.getElementById('investInsuranceFee').textContent = `-$${insuranceFee.toFixed(2)}`;
-            document.getElementById('investTotalUpfrontFees').textContent = `-$${totalUpfrontFees.toFixed(2)}`;
-            document.getElementById('investNetAmount').textContent = `$${netInvestment.toFixed(2)}`;
-            document.getElementById('investNetAmountDuplicate').textContent = `$${netInvestment.toFixed(2)}`;
-            document.getElementById('investCollectionFeePercent').textContent = `${collectionFeePercent}%`;
+            if(document.getElementById('investRequestedAmount')) 
+                document.getElementById('investRequestedAmount').textContent = `$${investAmount.toFixed(2)}`;
+            
+            if(document.getElementById('investPlatformFee'))
+                document.getElementById('investPlatformFee').textContent = `+$${platformFee.toFixed(2)}`;
+                
+            if(document.getElementById('investProcessingFee'))
+                document.getElementById('investProcessingFee').textContent = `+$${processingFee.toFixed(2)}`;
+                
+            if(document.getElementById('investInvestmentFee'))
+                document.getElementById('investInvestmentFee').textContent = `+$${investmentFee.toFixed(2)}`;
+                
+            if(document.getElementById('investDueDiligenceFee'))
+                document.getElementById('investDueDiligenceFee').textContent = `+$${dueDiligenceFixed.toFixed(2)}`;
+                
+            if(document.getElementById('investInsuranceFee'))
+                document.getElementById('investInsuranceFee').textContent = `+$${insuranceFee.toFixed(2)}`;
+                
+            if(document.getElementById('investTotalUpfrontFees'))
+                document.getElementById('investTotalUpfrontFees').textContent = `+$${totalUpfrontFees.toFixed(2)}`;
+                
+            if(document.getElementById('investTotalPayable'))
+                document.getElementById('investTotalPayable').textContent = `$${totalPayable.toFixed(2)}`;
+                
+            // Principal Display
+            if(document.getElementById('investPrincipalAmount'))
+                document.getElementById('investPrincipalAmount').textContent = `$${investAmount.toFixed(2)}`;
+                
+            if(document.getElementById('investPortfolioFeePercent'))
+                document.getElementById('investPortfolioFeePercent').textContent = `${portfolioMgmtPercent}% / mo`;
         }
 
         async function submitInvestment() {
@@ -16068,8 +16096,8 @@ How it works:
                 
                 <!-- Net Investment Display -->
                 <div style="background: linear-gradient(135deg, rgba(56, 231, 123, 0.2), rgba(52, 211, 153, 0.1)); border: 2px solid #38e77b; border-radius: 12px; padding: 25px; text-align: center;">
-                    <p style="color: #94a3b8; font-size: 14px; margin-bottom: 8px;">Your Net Investment After Fees</p>
-                    <h2 id="investNetAmount" style="color: #38e77b; font-size: 36px; font-weight: 700; margin: 0;">$0.00</h2>
+                    <p style="color: #94a3b8; font-size: 14px; margin-bottom: 8px;">Principal Investment Amount</p>
+                    <h2 id="investPrincipalAmount" style="color: #38e77b; font-size: 36px; font-weight: 700; margin: 0;">$0.00</h2>
                     <p style="color: #64748b; font-size: 12px; margin-top: 8px;">This is the actual amount invested in the loan</p>
                 </div>
                 
@@ -16084,35 +16112,51 @@ How it works:
                         
                         <!-- Upfront Fees -->
                         <div style="background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px; margin-top: 5px;">
-                            <p style="color: #ef4444; font-weight: 600; margin-bottom: 8px;">Upfront Fees (Deducted Before Investment):</p>
+                            <p style="color: #ef4444; font-weight: 600; margin-bottom: 8px;">Upfront Fees (Added to Investment):</p>
+                            
                             <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <span style="color: #94a3b8;">Service Fee (10%):</span>
-                                <strong id="investServiceFee" style="color: #ef4444;">-$0.00</strong>
+                                <span style="color: #94a3b8;">Platform (5%):</span>
+                                <strong id="investPlatformFee" style="color: #ef4444;">+$0.00</strong>
                             </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span style="color: #94a3b8;">Processing (2%):</span>
+                                <strong id="investProcessingFee" style="color: #ef4444;">+$0.00</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span style="color: #94a3b8;">Investment (0.5%):</span>
+                                <strong id="investInvestmentFee" style="color: #ef4444;">+$0.00</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span style="color: #94a3b8;">Due Diligence:</span>
+                                <strong id="investDueDiligenceFee" style="color: #ef4444;">+$3.00</strong>
+                            </div>
+                            
+                            <div style="height: 1px; background: rgba(239, 68, 68, 0.2); margin: 8px 0;"></div>
+                            
                             <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #94a3b8;">Insurance Fee (5%):</span>
-                                <strong id="investInsuranceFee" style="color: #ef4444;">-$0.00</strong>
+                                <span style="color: #94a3b8;">Insurance (5%):</span>
+                                <strong id="investInsuranceFee" style="color: #ef4444;">+$0.00</strong>
                             </div>
                             <div style="border-top: 1px solid rgba(239, 68, 68, 0.3); padding-top: 8px; margin-top: 8px; display: flex; justify-content: space-between;">
                                 <span style="color: #e2e8f0; font-weight: 600;">Total Upfront Fees:</span>
-                                <strong id="investTotalUpfrontFees" style="color: #ef4444; font-size: 16px;">-$0.00</strong>
+                                <strong id="investTotalUpfrontFees" style="color: #ef4444; font-size: 16px;">+$0.00</strong>
                             </div>
                         </div>
                         
                         <div style="border-top: 1px solid rgba(56, 231, 123, 0.3); padding-top: 10px; margin-top: 5px; display: flex; justify-content: space-between;">
-                            <span style="color: #e2e8f0; font-weight: 600;">Net Investment:</span>
-                            <strong style="color: #38e77b; font-size: 18px;" id="investNetAmountDuplicate">$0.00</strong>
+                            <span style="color: #e2e8f0; font-weight: 600;">Total Payable:</span>
+                            <strong style="color: #38e77b; font-size: 18px;" id="investTotalPayable">$0.00</strong>
                         </div>
                         
                         <!-- Ongoing Fees -->
                         <div style="background: rgba(245, 158, 11, 0.1); padding: 10px; border-radius: 8px; margin-top: 10px;">
-                            <p style="color: #f59e0b; font-weight: 600; margin-bottom: 8px;">Ongoing Fees (Deducted from Monthly Returns):</p>
+                            <p style="color: #f59e0b; font-weight: 600; margin-bottom: 8px;">Ongoing Fees (Deducted from Returns):</p>
                             <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <span style="color: #94a3b8;">Collection Fee:</span>
-                                <strong id="investCollectionFeePercent" style="color: #f59e0b;">5% of monthly returns</strong>
+                                <span style="color: #94a3b8;">Portfolio Mgmt:</span>
+                                <strong id="investPortfolioFeePercent" style="color: #f59e0b;">2.5% / mo</strong>
                             </div>
                             <p style="color: #94a3b8; font-size: 12px; margin-top: 8px;">
-                                <i class="fas fa-info-circle"></i> This fee is deducted from each monthly payment you receive. It applies to the investment itself and continues even if sold on secondary market.
+                                <i class="fas fa-info-circle"></i> This fee is deducted from each monthly payment you receive.
                             </p>
                         </div>
                     </div>
