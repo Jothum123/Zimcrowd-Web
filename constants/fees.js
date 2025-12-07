@@ -10,30 +10,49 @@
 
 const BORROWER_FEES = {
     // Upfront Fees (deducted before disbursement)
-    SERVICE_FEE: {
-        rate: 0.10, // 10%
-        description: 'Loan processing, verification, and platform services',
+    PROCESSING_FEE: {
+        rate: 0.025, // 2.5%
+        max: 50.00,
+        description: 'Loan processing fee',
+        type: 'upfront',
+        appliesTo: ['p2p', 'direct']
+    },
+    
+    PLATFORM_FEE: {
+        rate: 0.05, // 5%
+        max: 100.00,
+        description: 'Platform service fee',
         type: 'upfront',
         appliesTo: ['p2p', 'direct']
     },
     
     INSURANCE_FEE: {
-        rate: 0.03, // 3%
+        rate: 0.025, // 2.5%
+        max: 50.00,
         description: 'Loan insurance coverage',
         type: 'upfront',
         appliesTo: ['p2p', 'direct']
     },
-    
-    // Ongoing Monthly Fees (added to monthly payment)
-    TENURE_FEE: {
-        rate: 0.01, // 1% of loan amount
-        description: 'Platform maintenance and support services',
-        type: 'monthly',
+
+    // Fixed Upfront Fees
+    DOCUMENT_VERIFICATION_FEE: {
+        amount: 2.00,
+        description: 'Document verification cost',
+        type: 'upfront_fixed',
+        appliesTo: ['p2p', 'direct']
+    },
+
+    CREDIT_SCORE_CHECK_FEE: {
+        amount: 5.00,
+        description: 'Credit score check cost',
+        type: 'upfront_fixed',
         appliesTo: ['p2p', 'direct']
     },
     
+    // Ongoing Monthly Fees (added to monthly payment)
     COLLECTION_FEE: {
         rate: 0.05, // 5% of monthly payment
+        max: 50.00,
         description: 'Payment collection costs',
         type: 'monthly',
         appliesTo: ['p2p', 'direct']
@@ -41,12 +60,22 @@ const BORROWER_FEES = {
     
     // Late Payment Fees
     LATE_FEE: {
-        rate: 0.10, // 10% total
+        rate: 0.10, // 10%
+        max: 200.00,
         platformShare: 0.05, // 5% to platform
         lenderShare: 0.05, // 5% to lender
-        minimumAmount: 50.00, // $50 minimum
+        minimumAmount: 50.00,
         gracePeriodHours: 24,
         description: 'Late payment penalty',
+        type: 'penalty',
+        appliesTo: ['p2p', 'direct']
+    },
+
+    // Early Settlement
+    EARLY_SETTLEMENT_FEE: {
+        rate: 0.005, // 0.5%
+        max: 10.00,
+        description: 'Early repayment fee',
         type: 'penalty',
         appliesTo: ['p2p', 'direct']
     }
@@ -59,21 +88,53 @@ const BORROWER_FEES = {
 const LENDER_PRIMARY_FEES = {
     // Upfront Fees (charged at investment)
     PLATFORM_FEE: {
-        rate: 0.10, // 10%
+        rate: 0.05, // 5%
+        max: 100.00,
         description: 'Platform fee on lended amount',
         type: 'upfront',
+        required: true
+    },
+
+    PROCESSING_FEE: {
+        rate: 0.02, // 2%
+        max: 40.00,
+        description: 'Processing fee',
+        type: 'upfront',
+        required: true
+    },
+
+    INVESTMENT_FEE: {
+        rate: 0.005, // 0.5%
+        max: 15.00,
+        description: 'Investment facilitation fee',
+        type: 'upfront',
+        required: true
+    },
+
+    DUE_DILIGENCE_FEE: {
+        amount: 3.00,
+        description: 'Due diligence cost',
+        type: 'upfront_fixed',
         required: true
     },
     
     INSURANCE_FEE: {
         rate: 0.05, // 5%
+        max: 100.00,
         description: 'Investment protection (optional)',
         type: 'upfront',
-        required: false,  // Optional - lender can opt out
+        required: false,
         optional: true
+    },
+
+    // Monthly Fees
+    PORTFOLIO_MANAGEMENT_FEE: {
+        rate: 0.025, // 2.5% monthly
+        max: 50.00,
+        description: 'Monthly portfolio management',
+        type: 'monthly',
+        required: true
     }
-    
-    // No ongoing monthly fees for lenders
 };
 
 // ============================================
@@ -82,11 +143,11 @@ const LENDER_PRIMARY_FEES = {
 
 const LENDER_SECONDARY_FEES = {
     DEAL_FEE: {
-        rate: 0.05, // 5%
-        description: 'One-time secondary market purchase fee',
+        rate: 0.015, // 1.5%
+        max: 100.00,
+        description: 'Secondary market purchase fee',
         type: 'upfront'
     }
-    // No ongoing fees on secondary market purchases
 };
 
 // ============================================
@@ -96,19 +157,22 @@ const LENDER_SECONDARY_FEES = {
 const PLATFORM_FEES = {
     WITHDRAWAL_FEE: {
         bank: {
-            rate: 0.03, // 3%
-            description: 'Bank withdrawal processing fee'
+            rate: 0.01, // 1%
+            max: 25.00,
+            description: 'Bank withdrawal fee'
         },
         mobile: {
-            rate: 0.05, // 5%
-            description: 'Mobile wallet withdrawal processing fee'
+            rate: 0.01, // 1%
+            max: 25.00,
+            description: 'Mobile wallet withdrawal fee'
         },
         type: 'transaction'
     },
     
     RECOVERY_FEE: {
-        rate: 0.30, // 30% of recovered amounts
-        description: 'Collection agency recovery fee',
+        rate: 0.10, // 10% of recovered amounts
+        max: 200.00,
+        description: 'Default recovery fee',
         type: 'contingency'
     },
     
@@ -227,17 +291,27 @@ const FEE_HELPERS = {
      * @returns {Object} Fee breakdown
      */
     calculateBorrowerUpfrontFees(loanAmount) {
-        const serviceFee = loanAmount * BORROWER_FEES.SERVICE_FEE.rate;
-        const insuranceFee = loanAmount * BORROWER_FEES.INSURANCE_FEE.rate;
-        const totalUpfront = serviceFee + insuranceFee;
+        // Percentage Fees
+        const processingFee = Math.min(loanAmount * BORROWER_FEES.PROCESSING_FEE.rate, BORROWER_FEES.PROCESSING_FEE.max);
+        const platformFee = Math.min(loanAmount * BORROWER_FEES.PLATFORM_FEE.rate, BORROWER_FEES.PLATFORM_FEE.max);
+        const insuranceFee = Math.min(loanAmount * BORROWER_FEES.INSURANCE_FEE.rate, BORROWER_FEES.INSURANCE_FEE.max);
+        
+        // Fixed Fees
+        const docFee = BORROWER_FEES.DOCUMENT_VERIFICATION_FEE.amount;
+        const creditCheckFee = BORROWER_FEES.CREDIT_SCORE_CHECK_FEE.amount;
+        
+        const totalUpfront = processingFee + platformFee + insuranceFee + docFee + creditCheckFee;
         const netAmountReceived = loanAmount - totalUpfront;
         
         return {
-            serviceFee: Math.round(serviceFee * 100) / 100,
+            processingFee: Math.round(processingFee * 100) / 100,
+            platformFee: Math.round(platformFee * 100) / 100,
             insuranceFee: Math.round(insuranceFee * 100) / 100,
+            documentVerificationFee: docFee,
+            creditScoreCheckFee: creditCheckFee,
             totalUpfront: Math.round(totalUpfront * 100) / 100,
             netAmountReceived: Math.round(netAmountReceived * 100) / 100,
-            netPercentage: 0.87 // 87% of requested amount
+            netPercentage: Math.round((netAmountReceived / loanAmount) * 100) / 100
         };
     },
     
@@ -248,15 +322,14 @@ const FEE_HELPERS = {
      * @returns {Object} Monthly fee breakdown
      */
     calculateBorrowerMonthlyFees(loanAmount, monthlyPayment) {
-        const tenureFee = loanAmount * BORROWER_FEES.TENURE_FEE.rate;
-        const paymentBeforeCollection = monthlyPayment + tenureFee;
-        const collectionFee = paymentBeforeCollection * BORROWER_FEES.COLLECTION_FEE.rate;
-        const totalMonthlyPayment = paymentBeforeCollection + collectionFee;
+        // Collection fee is on the installment amount
+        const collectionFee = Math.min(monthlyPayment * BORROWER_FEES.COLLECTION_FEE.rate, BORROWER_FEES.COLLECTION_FEE.max);
+        const totalMonthlyPayment = monthlyPayment + collectionFee;
         
         return {
-            tenureFee: Math.round(tenureFee * 100) / 100,
             collectionFee: Math.round(collectionFee * 100) / 100,
-            totalMonthlyFees: Math.round((tenureFee + collectionFee) * 100) / 100,
+            tenureFee: 0, // Removed in new structure
+            totalMonthlyFees: Math.round(collectionFee * 100) / 100,
             totalMonthlyPayment: Math.round(totalMonthlyPayment * 100) / 100
         };
     },
@@ -268,7 +341,7 @@ const FEE_HELPERS = {
      */
     calculateLateFee(paymentAmount) {
         const calculatedFee = paymentAmount * BORROWER_FEES.LATE_FEE.rate;
-        const lateFee = Math.max(calculatedFee, BORROWER_FEES.LATE_FEE.minimumAmount);
+        const lateFee = Math.min(Math.max(calculatedFee, BORROWER_FEES.LATE_FEE.minimumAmount), BORROWER_FEES.LATE_FEE.max);
         const platformShare = lateFee * 0.5;
         const lenderShare = lateFee * 0.5;
         
@@ -287,15 +360,27 @@ const FEE_HELPERS = {
      * @returns {Object} Fee breakdown
      */
     calculateLenderPrimaryUpfrontFees(investmentAmount, includeInsurance = false) {
-        const platformFee = investmentAmount * LENDER_PRIMARY_FEES.PLATFORM_FEE.rate;
+        // Percentage Fees
+        const platformFee = Math.min(investmentAmount * LENDER_PRIMARY_FEES.PLATFORM_FEE.rate, LENDER_PRIMARY_FEES.PLATFORM_FEE.max);
+        const processingFee = Math.min(investmentAmount * LENDER_PRIMARY_FEES.PROCESSING_FEE.rate, LENDER_PRIMARY_FEES.PROCESSING_FEE.max);
+        const investmentFee = Math.min(investmentAmount * LENDER_PRIMARY_FEES.INVESTMENT_FEE.rate, LENDER_PRIMARY_FEES.INVESTMENT_FEE.max);
+        
+        // Fixed Fees
+        const dueDiligenceFee = LENDER_PRIMARY_FEES.DUE_DILIGENCE_FEE.amount;
+        
+        // Optional Insurance
         const insuranceFee = includeInsurance 
-            ? investmentAmount * LENDER_PRIMARY_FEES.INSURANCE_FEE.rate 
+            ? Math.min(investmentAmount * LENDER_PRIMARY_FEES.INSURANCE_FEE.rate, LENDER_PRIMARY_FEES.INSURANCE_FEE.max)
             : 0;
-        const totalUpfront = platformFee + insuranceFee;
+            
+        const totalUpfront = platformFee + processingFee + investmentFee + dueDiligenceFee + insuranceFee;
         const totalInvestment = investmentAmount + totalUpfront;
         
         return {
             platformFee: Math.round(platformFee * 100) / 100,
+            processingFee: Math.round(processingFee * 100) / 100,
+            investmentFee: Math.round(investmentFee * 100) / 100,
+            dueDiligenceFee: dueDiligenceFee,
             insuranceFee: Math.round(insuranceFee * 100) / 100,
             insuranceOptedIn: includeInsurance,
             totalUpfront: Math.round(totalUpfront * 100) / 100,
@@ -304,16 +389,21 @@ const FEE_HELPERS = {
     },
     
     /**
-     * Calculate lender returns (no monthly fees)
+     * Calculate lender returns (with monthly management fee)
      * @param {number} monthlyYield - Gross monthly yield
+     * @param {number} investmentAmount - Original investment amount (for mgmt fee base)
      * @returns {Object} Return breakdown
      */
-    calculateLenderReturns(monthlyYield) {
-        // No monthly fees for lenders - they receive full yield
+    calculateLenderReturns(monthlyYield, investmentAmount) {
+        // Portfolio Management Fee
+        const mgmtFee = Math.min(investmentAmount * LENDER_PRIMARY_FEES.PORTFOLIO_MANAGEMENT_FEE.rate, LENDER_PRIMARY_FEES.PORTFOLIO_MANAGEMENT_FEE.max);
+        const netReturn = monthlyYield - mgmtFee;
+        
         return {
             grossYield: Math.round(monthlyYield * 100) / 100,
-            totalFees: 0,
-            netReturn: Math.round(monthlyYield * 100) / 100
+            managementFee: Math.round(mgmtFee * 100) / 100,
+            totalFees: Math.round(mgmtFee * 100) / 100,
+            netReturn: Math.round(netReturn * 100) / 100
         };
     },
     
@@ -323,7 +413,7 @@ const FEE_HELPERS = {
      * @returns {Object} Fee breakdown
      */
     calculateSecondaryMarketFee(purchaseAmount) {
-        const dealFee = purchaseAmount * LENDER_SECONDARY_FEES.DEAL_FEE.rate;
+        const dealFee = Math.min(purchaseAmount * LENDER_SECONDARY_FEES.DEAL_FEE.rate, LENDER_SECONDARY_FEES.DEAL_FEE.max);
         const totalCost = purchaseAmount + dealFee;
         
         return {
@@ -338,7 +428,7 @@ const FEE_HELPERS = {
      * @returns {Object} Fee breakdown
      */
     calculateRecoveryFee(recoveredAmount) {
-        const recoveryFee = recoveredAmount * PLATFORM_FEES.RECOVERY_FEE.rate;
+        const recoveryFee = Math.min(recoveredAmount * PLATFORM_FEES.RECOVERY_FEE.rate, PLATFORM_FEES.RECOVERY_FEE.max);
         const netToLender = recoveredAmount - recoveryFee;
         
         return {
@@ -358,7 +448,7 @@ const FEE_HELPERS = {
             ? PLATFORM_FEES.WITHDRAWAL_FEE.mobile 
             : PLATFORM_FEES.WITHDRAWAL_FEE.bank;
         
-        const withdrawalFee = withdrawalAmount * feeConfig.rate;
+        const withdrawalFee = Math.min(withdrawalAmount * feeConfig.rate, feeConfig.max);
         const netAmount = withdrawalAmount - withdrawalFee;
         
         return {
