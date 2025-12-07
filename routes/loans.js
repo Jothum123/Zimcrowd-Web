@@ -130,7 +130,7 @@ router.post('/request', authenticateUser, async (req, res) => {
         const { data: activeLoans, error: loansError } = await supabase
             .from('loans')
             .select('amount, monthly_payment, status')
-            .eq('borrower_id', userId)
+            .eq('user_id', userId)
             .in('status', ['active', 'pending']);
 
         const activeLoanCount = activeLoans?.length || 0;
@@ -330,7 +330,7 @@ router.post('/request', authenticateUser, async (req, res) => {
         const { data: loan, error: loanError} = await supabase
             .from('loans')
             .insert({
-                borrower_id: userId,
+                user_id: userId,
                 amount: amount,
                 purpose: purpose,
                 tenure_days: tenure_days,
