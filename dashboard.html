@@ -4585,6 +4585,23 @@
                         View All <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
+                
+                <!-- Currency Filter -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button onclick="filterPrimaryMarketByCurrency('all')" id="filter-all" style="padding: 10px 20px; border-radius: 8px; border: 2px solid #38e77b; background: linear-gradient(135deg, #38e77b, #22c55e); color: #0f172a; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                        <i class="fas fa-globe"></i> All Currencies
+                    </button>
+                    <button onclick="filterPrimaryMarketByCurrency('USD')" id="filter-USD" style="padding: 10px 20px; border-radius: 8px; border: 2px solid rgba(56, 231, 123, 0.3); background: rgba(56, 231, 123, 0.1); color: #38e77b; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                        <i class="fas fa-dollar-sign"></i> USD Only
+                    </button>
+                    <button onclick="filterPrimaryMarketByCurrency('ZWG')" id="filter-ZWG" style="padding: 10px 20px; border-radius: 8px; border: 2px solid rgba(56, 231, 123, 0.3); background: rgba(56, 231, 123, 0.1); color: #38e77b; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                        <i class="fas fa-coins"></i> ZWG Only
+                    </button>
+                    <div style="margin-left: auto; display: flex; align-items: center; gap: 8px; color: #94a3b8; font-size: 14px;">
+                        <span id="loan-count-display">Loading...</span>
+                    </div>
+                </div>
+
                 <div id="primaryMarketLoans" class="portfolio-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(450px, 1fr)); gap: 24px;">
                     <!-- Primary market loans will be loaded here -->
                     <div style="text-align: center; padding: 40px; grid-column: 1 / -1;">
@@ -12085,6 +12102,52 @@ How it works:
             }
         }
 
+        // Currency filter state
+        window.currentCurrencyFilter = 'all';
+        window.allMockLoans = []; // Store all loans for filtering
+
+        // Filter Primary Market by Currency
+        function filterPrimaryMarketByCurrency(currency) {
+            window.currentCurrencyFilter = currency;
+            
+            // Update button styles
+            ['all', 'USD', 'ZWG'].forEach(curr => {
+                const btn = document.getElementById(`filter-${curr}`);
+                if (btn) {
+                    if (curr === currency) {
+                        btn.style.background = 'linear-gradient(135deg, #38e77b, #22c55e)';
+                        btn.style.color = '#0f172a';
+                        btn.style.borderColor = '#38e77b';
+                    } else {
+                        btn.style.background = 'rgba(56, 231, 123, 0.1)';
+                        btn.style.color = '#38e77b';
+                        btn.style.borderColor = 'rgba(56, 231, 123, 0.3)';
+                    }
+                }
+            });
+            
+            // Filter and display loans
+            const filteredLoans = currency === 'all' 
+                ? window.allMockLoans 
+                : window.allMockLoans.filter(loan => loan.currency === currency);
+            
+            window.currentMockLoans = filteredLoans;
+            renderPrimaryMarketLoans(filteredLoans);
+            
+            // Update count display
+            const countDisplay = document.getElementById('loan-count-display');
+            if (countDisplay) {
+                const usdCount = window.allMockLoans.filter(l => l.currency === 'USD').length;
+                const zwgCount = window.allMockLoans.filter(l => l.currency === 'ZWG').length;
+                
+                if (currency === 'all') {
+                    countDisplay.textContent = `Showing ${filteredLoans.length} loans (${usdCount} USD, ${zwgCount} ZWG)`;
+                } else {
+                    countDisplay.textContent = `Showing ${filteredLoans.length} ${currency} loans`;
+                }
+            }
+        }
+
         // Load Mock Primary Market Loans (when API has no data)
         function loadMockPrimaryMarketLoans() {
             if (typeof MockMarketData === 'undefined') {
@@ -12092,12 +12155,41 @@ How it works:
                 return;
             }
             
-            const mockLoans = MockMarketData.generatePrimaryMarketLoans(6);
-            window.currentMockLoans = mockLoans; // Store globally for modal access
+            // Generate more loans to have good distribution
+            const mockLoans = MockMarketData.generatePrimaryMarketLoans(12);
+            window.allMockLoans = mockLoans; // Store all loans
+            
+            // Apply current filter
+            const filteredLoans = window.currentCurrencyFilter === 'all'
+                ? mockLoans
+                : mockLoans.filter(loan => loan.currency === window.currentCurrencyFilter);
+            
+            window.currentMockLoans = filteredLoans.slice(0, 6); // Show first 6 for dashboard
+            renderPrimaryMarketLoans(window.currentMockLoans);
+            
+            // Update loan count
+            filterPrimaryMarketByCurrency(window.currentCurrencyFilter);
+        }
+
+        // Render Primary Market Loans
+        function renderPrimaryMarketLoans(loans) {
             const container = document.getElementById('primaryMarketLoans');
             if (!container) return;
             
-            container.innerHTML = mockLoans.map((loan, index) => {
+            if (!loans || loans.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: rgba(15, 23, 42, 0.5); border-radius: 12px;">
+                        <i class="fas fa-search" style="font-size: 48px; color: #64748b; margin-bottom: 20px;"></i>
+                        <h3 style="color: #94a3b8; margin-bottom: 10px;">No Loans Found</h3>
+                        <p style="color: #64748b;">Try changing the currency filter</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = loans.map((loan, index) => {
+                const currencySymbol = loan.currency === 'USD' ? '$' : 'ZWG';
+                const currencyColor = loan.currency === 'USD' ? '#38e77b' : '#f59e0b';
                 const riskColor = loan.riskLevel.color;
                 const riskLabel = loan.riskLevel.level.toUpperCase();
                 const starHtml = MockMarketData.generateStarRating(loan.borrower.rating, loan.borrower.zimScore);
@@ -12203,13 +12295,16 @@ How it works:
                             <!-- Row 1: Requested -->
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div style="color: #94a3b8; font-size: 13px; font-weight: 500;">Requested</div>
-                                <div style="color: #f1f5f9; font-size: 16px; font-weight: 700;">$${loan.amount.toLocaleString()}</div>
+                                <div style="color: ${currencyColor}; font-size: 16px; font-weight: 700;">
+                                    <span style="background: rgba(56, 231, 123, 0.1); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; color: ${currencyColor}; margin-right: 6px;">${loan.currency}</span>
+                                    ${currencySymbol}${loan.amount.toLocaleString()}
+                                </div>
                             </div>
 
                             <!-- Row 2: Interest -->
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div style="color: #94a3b8; font-size: 13px; font-weight: 500;">Monthly Interest</div>
-                                <div style="color: #f1f5f9; font-size: 15px; font-weight: 600;">$${Math.round(loan.amount * (loan.interestRate/100))} <span style="color: #3b82f6; font-size: 12px; font-weight: 600;">(${loan.interestRate}%/mo)</span></div>
+                                <div style="color: #f1f5f9; font-size: 15px; font-weight: 600;">${currencySymbol}${Math.round(loan.amount * (loan.interestRate/100)).toLocaleString()} <span style="color: #3b82f6; font-size: 12px; font-weight: 600;">(${loan.interestRate}%/mo)</span></div>
                             </div>
 
                             <!-- Row 3: Due in -->
@@ -12236,6 +12331,8 @@ How it works:
 
             const starHtml = MockMarketData.generateStarRating(loan.borrower.rating, loan.borrower.zimScore);
             const riskColor = loan.riskLevel.color;
+            const currencySymbol = loan.currency === 'USD' ? '$' : 'ZWG';
+            const currencyColor = loan.currency === 'USD' ? '#38e77b' : '#f59e0b';
             
             // Generate repayment schedule HTML (align with mock-market-data.js structure)
             const scheduleHtml = loan.schedule.slice(0, 8).map(payment => {
@@ -12247,10 +12344,10 @@ How it works:
                 <tr>
                     <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #94a3b8;">${payment.installment}</td>
                     <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #94a3b8; font-size: 12px;">${formattedDate}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; font-weight: 600;">$${parseFloat(payment.total).toLocaleString()}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #3b82f6;">$${parseFloat(payment.principal).toLocaleString()}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #f59e0b;">$${parseFloat(payment.interest).toLocaleString()}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #64748b;">$${parseFloat(payment.balance).toLocaleString()}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; font-weight: 600;">${currencySymbol}${parseFloat(payment.total).toLocaleString()}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #3b82f6;">${currencySymbol}${parseFloat(payment.principal).toLocaleString()}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #f59e0b;">${currencySymbol}${parseFloat(payment.interest).toLocaleString()}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #64748b;">${currencySymbol}${parseFloat(payment.balance).toLocaleString()}</td>
                 </tr>
             `}).join('');
 
@@ -12309,7 +12406,10 @@ How it works:
                             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
                                 <div style="background: rgba(56, 231, 123, 0.1); padding: 15px; border-radius: 12px; text-align: center;">
                                     <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">Loan Amount</div>
-                                    <div style="color: #38e77b; font-size: 20px; font-weight: bold;">$${loan.amount.toLocaleString()}</div>
+                                    <div style="color: ${currencyColor}; font-size: 20px; font-weight: bold;">
+                                        <span style="font-size: 12px; background: rgba(56, 231, 123, 0.2); padding: 2px 6px; border-radius: 4px; margin-right: 4px;">${loan.currency}</span>
+                                        ${currencySymbol}${loan.amount.toLocaleString()}
+                                    </div>
                                 </div>
                                 <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 12px; text-align: center;">
                                     <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">Interest Rate</div>
@@ -12321,7 +12421,7 @@ How it works:
                                 </div>
                                 <div style="background: rgba(139, 92, 246, 0.1); padding: 15px; border-radius: 12px; text-align: center;">
                                     <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">Borrower Payment</div>
-                                    <div style="color: #8b5cf6; font-size: 20px; font-weight: bold;">$${loan.monthlyPayment}<span style="font-size: 12px; color: #94a3b8;">/mo</span></div>
+                                    <div style="color: #8b5cf6; font-size: 20px; font-weight: bold;">${currencySymbol}${loan.monthlyPayment}<span style="font-size: 12px; color: #94a3b8;">/mo</span></div>
                                 </div>
                             </div>
 
@@ -12335,23 +12435,23 @@ How it works:
                                         
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                                             <span style="color: #94a3b8; font-size: 12px;">Platform (5%)</span>
-                                            <span id="mockPlatformFee" style="color: #e2e8f0; font-size: 12px;">$${defPlatformFee.toFixed(2)}</span>
+                                            <span id="mockPlatformFee" style="color: #e2e8f0; font-size: 12px;">${currencySymbol}${defPlatformFee.toFixed(2)}</span>
                                         </div>
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                                             <span style="color: #94a3b8; font-size: 12px;">Processing (2%)</span>
-                                            <span id="mockProcessingFee" style="color: #e2e8f0; font-size: 12px;">$${defProcessingFee.toFixed(2)}</span>
+                                            <span id="mockProcessingFee" style="color: #e2e8f0; font-size: 12px;">${currencySymbol}${defProcessingFee.toFixed(2)}</span>
                                         </div>
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                                             <span style="color: #94a3b8; font-size: 12px;">Investment (0.5%)</span>
-                                            <span id="mockInvestmentFee" style="color: #e2e8f0; font-size: 12px;">$${defInvestmentFee.toFixed(2)}</span>
+                                            <span id="mockInvestmentFee" style="color: #e2e8f0; font-size: 12px;">${currencySymbol}${defInvestmentFee.toFixed(2)}</span>
                                         </div>
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                                             <span style="color: #94a3b8; font-size: 12px;">Due Diligence</span>
-                                            <span style="color: #e2e8f0; font-size: 12px;">$3.00</span>
+                                            <span style="color: #e2e8f0; font-size: 12px;">${currencySymbol}3.00</span>
                                         </div>
                                         <div style="display: flex; justify-content: space-between; margin-top: 8px; font-weight: 600; color: #38e77b;">
                                             <span style="font-size: 12px;">Total Upfront</span>
-                                            <span style="font-size: 12px;" id="mockViewTotalUpfront">$${defTotalUpfront.toFixed(2)}</span>
+                                            <span style="font-size: 12px;" id="mockViewTotalUpfront">${currencySymbol}${defTotalUpfront.toFixed(2)}</span>
                                         </div>
                                     </div>
 
@@ -12363,7 +12463,7 @@ How it works:
                                             <label style="color: #94a3b8; font-size: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
                                                 <input type="checkbox" id="mockViewInsuranceCheck" style="accent-color: #38e77b;"> Insurance (Opt)
                                             </label>
-                                            <span id="mockInsuranceFeeDisplay" style="color: #e2e8f0; font-size: 12px;">5.0% ($${defInsuranceFee.toFixed(2)})</span>
+                                            <span id="mockInsuranceFeeDisplay" style="color: #e2e8f0; font-size: 12px;">5.0% (${currencySymbol}${defInsuranceFee.toFixed(2)})</span>
                                         </div>
                                         <div style="margin-bottom: 8px; font-size: 10px; color: #38e77b; font-style: italic;">
                                             <i class="fas fa-shield-alt"></i> Highly Recommended: Protects 90% of principal
@@ -12375,17 +12475,17 @@ How it works:
                                             
                                             <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
                                                 <span style="color: #94a3b8; font-size: 11px;">Gross Monthly:</span>
-                                                <strong id="mockGrossMonthly" style="color: #e2e8f0; font-size: 11px;">$${defGrossMonthly.toFixed(2)}</strong>
+                                                <strong id="mockGrossMonthly" style="color: #e2e8f0; font-size: 11px;">${currencySymbol}${defGrossMonthly.toFixed(2)}</strong>
                                             </div>
                                             
                                             <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
                                                 <span style="color: #94a3b8; font-size: 11px;">Portfolio Mgmt (0.5%):</span>
-                                                <strong id="mockPortfolioFee" style="color: #f59e0b; font-size: 11px;">-$${defPortfolioFee.toFixed(2)}</strong>
+                                                <strong id="mockPortfolioFee" style="color: #f59e0b; font-size: 11px;">-${currencySymbol}${defPortfolioFee.toFixed(2)}</strong>
                                             </div>
                                             
                                             <div style="border-top: 1px solid rgba(245, 158, 11, 0.3); padding-top: 4px; margin-top: 4px; display: flex; justify-content: space-between;">
                                                 <span style="color: #e2e8f0; font-size: 11px; font-weight: 600;">Net Monthly:</span>
-                                                <strong id="mockNetMonthly" style="color: #38e77b; font-size: 11px;">$${defNetMonthly.toFixed(2)}</strong>
+                                                <strong id="mockNetMonthly" style="color: #38e77b; font-size: 11px;">${currencySymbol}${defNetMonthly.toFixed(2)}</strong>
                                             </div>
                                             
                                             <p style="color: #94a3b8; font-size: 9px; margin-top: 6px; margin-bottom: 0; font-style: italic;">
@@ -12406,8 +12506,8 @@ How it works:
                                     <div style="width: ${loan.fundedPercent}%; height: 100%; background: linear-gradient(90deg, #38e77b, #22c55e); border-radius: 6px;"></div>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; margin-top: 10px; color: #94a3b8; font-size: 14px;">
-                                    <span>$${loan.fundedAmount.toLocaleString()} raised</span>
-                                    <span>$${(loan.amount - loan.fundedAmount).toLocaleString()} remaining</span>
+                                    <span>${currencySymbol}${loan.fundedAmount.toLocaleString()} raised</span>
+                                    <span>${currencySymbol}${(loan.amount - loan.fundedAmount).toLocaleString()} remaining</span>
                                 </div>
                             </div>
 
@@ -12465,15 +12565,15 @@ How it works:
                                     </div>
                                     <div style="text-align: center;">
                                         <div style="color: #94a3b8; font-size: 12px;">Total to Pay</div>
-                                        <div style="color: #f59e0b; font-size: 18px; font-weight: bold;" id="mockTotalToPay">$${(defAmount + defTotalUpfront).toFixed(2)}</div>
+                                        <div style="color: #f59e0b; font-size: 18px; font-weight: bold;" id="mockTotalToPay">${currencySymbol}${(defAmount + defTotalUpfront).toFixed(2)}</div>
                                     </div>
                                     <div style="text-align: center;">
                                         <div style="color: #94a3b8; font-size: 12px;">Total Received</div>
-                                        <div style="color: #64748b; font-size: 18px; font-weight: bold;" id="mockTotalReceived">$${defTotalReceived.toFixed(2)}</div>
+                                        <div style="color: #64748b; font-size: 18px; font-weight: bold;" id="mockTotalReceived">${currencySymbol}${defTotalReceived.toFixed(2)}</div>
                                     </div>
                                     <div style="text-align: center;">
                                         <div style="color: #94a3b8; font-size: 12px;">Net Profit</div>
-                                        <div style="color: #38e77b; font-size: 18px; font-weight: bold;" id="mockNetProfit">$${defNetProfit.toFixed(2)}</div>
+                                        <div style="color: #38e77b; font-size: 18px; font-weight: bold;" id="mockNetProfit">${currencySymbol}${defNetProfit.toFixed(2)}</div>
                                     </div>
                                     <div style="text-align: center;">
                                         <div style="color: #94a3b8; font-size: 12px;">Share</div>
@@ -12483,7 +12583,7 @@ How it works:
                                         <i class="fas fa-check"></i> Confirm Investment
                                     </button>
                                 </div>
-                                <p style="color: #94a3b8; font-size: 12px; margin-top: 10px;">Min: $${loan.minInvestment} • Max: $${loan.maxInvestment.toLocaleString()} (remaining amount)</p>
+                                <p style="color: #94a3b8; font-size: 12px; margin-top: 10px;">Min: ${currencySymbol}${loan.minInvestment} • Max: ${currencySymbol}${loan.maxInvestment.toLocaleString()} (remaining amount)</p>
                                 <div style="background: rgba(56, 231, 123, 0.1); padding: 10px; border-radius: 8px; margin-top: 10px; border-left: 3px solid #38e77b;">
                                     <p style="color: #38e77b; font-size: 11px; margin: 0; font-weight: 600;"><i class="fas fa-info-circle"></i> High Returns: ${loan.interestRate}% monthly interest (${(loan.interestRate * 12).toFixed(0)}% annual equivalent)</p>
                                 </div>
@@ -12518,15 +12618,15 @@ How it works:
                     const insuranceChecked = document.getElementById('mockViewInsuranceCheck')?.checked || false;
                     const totalUpfront = platformFee + processingFee + investmentFee + 3 + (insuranceChecked ? insuranceFee : 0);
                     
-                    document.getElementById('mockPlatformFee').textContent = '$' + platformFee.toFixed(2);
-                    document.getElementById('mockProcessingFee').textContent = '$' + processingFee.toFixed(2);
-                    document.getElementById('mockInvestmentFee').textContent = '$' + investmentFee.toFixed(2);
-                    document.getElementById('mockInsuranceFeeDisplay').textContent = '5.0% ($' + insuranceFee.toFixed(2) + ')';
-                    document.getElementById('mockViewTotalUpfront').textContent = '$' + totalUpfront.toFixed(2);
+                    document.getElementById('mockPlatformFee').textContent = currencySymbol + platformFee.toFixed(2);
+                    document.getElementById('mockProcessingFee').textContent = currencySymbol + processingFee.toFixed(2);
+                    document.getElementById('mockInvestmentFee').textContent = currencySymbol + investmentFee.toFixed(2);
+                    document.getElementById('mockInsuranceFeeDisplay').textContent = '5.0% (' + currencySymbol + insuranceFee.toFixed(2) + ')';
+                    document.getElementById('mockViewTotalUpfront').textContent = currencySymbol + totalUpfront.toFixed(2);
                     
                     // Update total to pay
                     const totalToPay = amount + totalUpfront;
-                    document.getElementById('mockTotalToPay').textContent = '$' + totalToPay.toFixed(2);
+                    document.getElementById('mockTotalToPay').textContent = currencySymbol + totalToPay.toFixed(2);
                     
                     // Update monthly return breakdown
                     const shareRatio = amount / loan.amount;
@@ -12538,16 +12638,16 @@ How it works:
                     const feeEl = document.getElementById('mockPortfolioFee');
                     const netEl = document.getElementById('mockNetMonthly');
                     
-                    if (grossEl) grossEl.textContent = '$' + grossMonthly.toFixed(2);
-                    if (feeEl) feeEl.textContent = '-$' + portfolioFee.toFixed(2);
-                    if (netEl) netEl.textContent = '$' + netMonthly.toFixed(2);
+                    if (grossEl) grossEl.textContent = currencySymbol + grossMonthly.toFixed(2);
+                    if (feeEl) feeEl.textContent = '-' + currencySymbol + portfolioFee.toFixed(2);
+                    if (netEl) netEl.textContent = currencySymbol + netMonthly.toFixed(2);
                     
                     // Update total received and net profit
                     const totalReceived = netMonthly * loan.term;
                     const netProfit = totalReceived - amount - totalUpfront;
                     
-                    document.getElementById('mockTotalReceived').textContent = '$' + totalReceived.toFixed(2);
-                    document.getElementById('mockNetProfit').textContent = '$' + netProfit.toFixed(2);
+                    document.getElementById('mockTotalReceived').textContent = currencySymbol + totalReceived.toFixed(2);
+                    document.getElementById('mockNetProfit').textContent = currencySymbol + netProfit.toFixed(2);
                 });
             }
 
@@ -12559,11 +12659,11 @@ How it works:
                     const baseUpfront = amount * 0.075 + 3; // Platform(5%) + Processing(2%) + Inv(0.5%) + DueDil($3)
                     const insuranceFee = this.checked ? (amount * 0.05) : 0;
                     const total = baseUpfront + insuranceFee;
-                    document.getElementById('mockViewTotalUpfront').textContent = '$' + total.toFixed(2);
+                    document.getElementById('mockViewTotalUpfront').textContent = currencySymbol + total.toFixed(2);
                     
                     // Update total to pay
                     const totalToPay = amount + total;
-                    document.getElementById('mockTotalToPay').textContent = '$' + totalToPay.toFixed(2);
+                    document.getElementById('mockTotalToPay').textContent = currencySymbol + totalToPay.toFixed(2);
                     
                     // Update net profit (since upfront fees changed)
                     const shareRatio = amount / loan.amount;
@@ -12572,7 +12672,7 @@ How it works:
                     const netMonthly = grossMonthly - portfolioFee;
                     const totalReceived = netMonthly * loan.term;
                     const netProfit = totalReceived - amount - total;
-                    document.getElementById('mockNetProfit').textContent = '$' + netProfit.toFixed(2);
+                    document.getElementById('mockNetProfit').textContent = currencySymbol + netProfit.toFixed(2);
                 });
             }
 
@@ -12594,12 +12694,15 @@ How it works:
             const amount = parseFloat(document.getElementById('mockInvestAmount').value) || 0;
             const includeInsurance = document.getElementById('mockViewInsuranceCheck')?.checked || false;
             
+            // Determine currency symbol
+            const currencySymbol = loan.currency === 'USD' ? '$' : 'Z$';
+            
             if (amount < loan.minInvestment) {
-                alert('Minimum investment is $' + loan.minInvestment);
+                alert('Minimum investment is ' + currencySymbol + loan.minInvestment);
                 return;
             }
             if (amount > loan.maxInvestment) {
-                alert('Maximum investment is $' + loan.maxInvestment.toLocaleString());
+                alert('Maximum investment is ' + currencySymbol + loan.maxInvestment.toLocaleString());
                 return;
             }
 
@@ -12652,7 +12755,7 @@ How it works:
             loan.maxInvestment = loan.amount - loan.fundedAmount;
             
             // Show success message
-            alert(`✅ Investment Confirmed!\n\nAmount: $${amount.toFixed(2)}\nUpfront Fees: $${upfrontFees.toFixed(2)}\nTotal Paid: $${totalPaid.toFixed(2)}\n\nExpected Return: $${totalReceived.toFixed(2)}\nNet Profit: $${expectedReturn.toFixed(2)}\n\nYour investment has been added to your portfolio!`);
+            alert(`✅ Investment Confirmed!\n\nAmount: ${currencySymbol}${amount.toFixed(2)}\nUpfront Fees: ${currencySymbol}${upfrontFees.toFixed(2)}\nTotal Paid: ${currencySymbol}${totalPaid.toFixed(2)}\n\nExpected Return: ${currencySymbol}${totalReceived.toFixed(2)}\nNet Profit: ${currencySymbol}${expectedReturn.toFixed(2)}\n\nYour investment has been added to your portfolio!`);
             
             // Close modal
             closeMockLoanDetailModal();

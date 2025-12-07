@@ -178,10 +178,23 @@ const MockMarketData = {
         for (let i = 0; i < count; i++) {
             const borrower = this.borrowers[Math.floor(Math.random() * this.borrowers.length)];
             const purpose = this.loanPurposes[Math.floor(Math.random() * this.loanPurposes.length)];
-            const amount = Math.floor(Math.random() * 9500) + 500; // $500 - $10,000
+            
+            // Randomly assign currency: 60% USD, 40% ZWG
+            const currency = Math.random() > 0.4 ? 'USD' : 'ZWG';
+            
+            // Amount based on currency
+            const amount = currency === 'USD' 
+                ? Math.floor(Math.random() * 9500) + 500  // USD: $500 - $10,000
+                : Math.floor(Math.random() * 95000) + 5000; // ZWG: 5,000 - 100,000
+            
             const term = [3, 6, 9, 12, 18, 24][Math.floor(Math.random() * 6)];
-            // MONTHLY interest rates: USD 0-10%, ZWG 0-15% (using 5-10% for USD loans)
-            const interestRate = (Math.random() * 5 + 5).toFixed(1); // 5% - 10% monthly
+            
+            // MONTHLY interest rates based on currency
+            // USD: 5-10% monthly, ZWG: 7-15% monthly
+            const interestRate = currency === 'USD'
+                ? (Math.random() * 5 + 5).toFixed(1)  // 5% - 10%
+                : (Math.random() * 8 + 7).toFixed(1); // 7% - 15%
+            
             const fundedPercent = Math.floor(Math.random() * 100);
             const daysLeft = Math.floor(Math.random() * 25) + 5;
             const lendersCount = Math.floor(fundedPercent / 15) + 1;
@@ -191,6 +204,7 @@ const MockMarketData = {
 
             loans.push({
                 id: `loan_${Date.now()}_${i}`,
+                currency: currency,
                 borrower: borrower,
                 purpose: purpose,
                 title: this.generateLoanTitle(purpose.category),
