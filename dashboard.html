@@ -13090,14 +13090,68 @@ How it works:
                 // Determine currency symbol
                 const currencySymbol = inv.currency === 'USD' ? '$' : 'Z$';
                 
-                const initial = (inv.borrower_name || 'U').charAt(0).toUpperCase();
+                const initial = (inv.borrower_name || inv.borrower?.name || 'U').charAt(0).toUpperCase();
                 const riskClass = inv.risk_rating === 'low' ? 'low' : inv.risk_rating === 'high' ? 'high' : 'medium';
                 const progress = inv.progress_percentage || 0;
                 const returns = inv.returns_amount || 0;
                 const returnsPercent = inv.returns_percentage || 0;
                 const returnsClass = returns >= 0 ? 'returns-positive' : 'returns-negative';
+                const borrowerName = inv.borrower_name || inv.borrower?.name || 'Anonymous';
+                const loanPurpose = inv.loan_purpose || inv.purpose?.category || 'Loan';
+                const zimscore = inv.zimscore || inv.borrower?.zimscore || 3.5;
+                const principalAmount = inv.amount || inv.myInvestment || 0;
+                const monthlyReturn = inv.monthly_return || (inv.myInvestment * (inv.interestRate / 100)) || 0;
                 
-                return `<div class="portfolio-card"><div class="card-header"><div class="borrower-info"><div class="borrower-avatar">${initial}</div><div class="borrower-details"><div class="borrower-name">${inv.borrower_name || 'Anonymous'}</div><div class="borrower-purpose">${inv.loan_purpose || 'Loan'}</div><span class="risk-badge ${riskClass}">${generateStarRating(inv.zimscore || 3.5)}</span></div></div></div><div class="card-body"><div class="card-metrics"><div class="metric-item"><span class="metric-label">Principal</span><span class="metric-value">${currencySymbol}${parseFloat(inv.amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div><div class="metric-item"><span class="metric-label">Returns</span><span class="metric-value ${returnsClass}">+${currencySymbol}${parseFloat(returns).toLocaleString('en-US', {minimumFractionDigits: 2})} (${returnsPercent.toFixed(1)}%)</span></div><div class="metric-item"><span class="metric-label">Monthly Return</span><span class="metric-value">${currencySymbol}${parseFloat(inv.monthly_return || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div></div><div class="card-progress"><div class="progress-info"><span>Progress</span><span>${progress}%</span></div><div class="progress-bar"><div class="progress-fill" style="width: ${progress}%"></div></div></div><div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);"><button onclick="openSecondaryMarketModal('${inv.id}')" class="btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;"><i class="fas fa-store"></i> Sell on Secondary Market</button></div></div></div>`;
+                return `
+                    <div class="portfolio-card">
+                        <div class="card-header">
+                            <div class="borrower-info">
+                                <div class="borrower-avatar">${initial}</div>
+                                <div class="borrower-details">
+                                    <div class="borrower-name">${borrowerName}</div>
+                                    <div class="borrower-purpose">${loanPurpose}</div>
+                                    <span class="risk-badge ${riskClass}">${generateStarRating(zimscore)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="card-metrics">
+                                <div class="metric-item">
+                                    <span class="metric-label">Principal</span>
+                                    <span class="metric-value">${currencySymbol}${parseFloat(principalAmount).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Returns</span>
+                                    <span class="metric-value ${returnsClass}">+${currencySymbol}${parseFloat(returns).toLocaleString('en-US', {minimumFractionDigits: 2})} (${returnsPercent.toFixed(1)}%)</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Monthly Return</span>
+                                    <span class="metric-value">${currencySymbol}${parseFloat(monthlyReturn).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="card-progress">
+                                <div class="progress-info">
+                                    <span>Progress</span>
+                                    <span>${progress}%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${progress}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="card-actions" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <button onclick="viewInvestmentDetails('${inv.id}')" class="btn-secondary" style="padding: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px;">
+                                    <i class="fas fa-eye"></i> View Details
+                                </button>
+                                <button onclick="openSecondaryMarketModal('${inv.id}')" class="btn-primary" style="padding: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; background: #3b82f6;">
+                                    <i class="fas fa-store"></i> Sell
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
             }).join('');
         }
 
@@ -18142,6 +18196,17 @@ How it works:
 
         // View Investment Details
         async function viewInvestmentDetails(investmentId) {
+            // First check localStorage for mock data
+            const userInvestments = JSON.parse(localStorage.getItem('userInvestments') || '[]');
+            const investment = userInvestments.find(inv => inv.id === investmentId);
+            
+            if (investment) {
+                // Show mock investment details
+                showInvestmentDetailsModal(investment);
+                return;
+            }
+            
+            // Fall back to API
             try {
                 const token = localStorage.getItem('authToken');
                 const response = await fetch(`${API_BASE_URL}/api/investments/${investmentId}`, {
@@ -18169,10 +18234,20 @@ How it works:
             modal.className = 'modal-overlay';
             modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px;';
             
-            const principal = parseFloat(investment.amount || 0);
-            const returns = parseFloat(investment.returns || 0);
+            // Handle both API and mock data structures
+            const currencySymbol = investment.currency === 'USD' ? '$' : 'Z$';
+            const borrowerName = investment.borrower_name || investment.borrower?.name || 'Anonymous';
+            const loanPurpose = investment.purpose || investment.loan_purpose || investment.purpose?.category || investment.title || 'Personal Loan';
+            const principal = parseFloat(investment.amount || investment.myInvestment || 0);
+            const returns = parseFloat(investment.returns || investment.earnedSoFar || 0);
             const returnPercent = principal > 0 ? ((returns / principal) * 100).toFixed(1) : 0;
-            const progress = parseFloat(investment.progress || 0);
+            const progress = parseFloat(investment.progress || investment.progress_percentage || 0);
+            const monthlyReturn = parseFloat(investment.monthly_return || (investment.myInvestment * (investment.interestRate / 100)) || 0);
+            const interestRate = parseFloat(investment.interest_rate || investment.interestRate || 0);
+            const riskLevel = investment.risk_level || investment.risk_rating || 'medium';
+            const status = investment.status || 'Active';
+            const totalLoan = parseFloat(investment.totalLoanAmount || investment.total_amount || principal);
+            const term = investment.term || 12;
             
             modal.innerHTML = `
                 <div style="background: #1e293b; border-radius: 16px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 30px; position: relative;">
@@ -18185,22 +18260,22 @@ How it works:
                     <div style="background: #0f172a; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
                         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
                             <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #38e77b, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: white;">
-                                ${investment.borrower_name ? investment.borrower_name[0].toUpperCase() : 'B'}
+                                ${borrowerName[0].toUpperCase()}
                             </div>
                             <div>
-                                <h3 style="margin: 0 0 5px 0;">${investment.borrower_name || 'Anonymous'}</h3>
-                                <p style="margin: 0; color: #94a3b8;">${investment.purpose || 'Personal Loan'}</p>
+                                <h3 style="margin: 0 0 5px 0;">${borrowerName}</h3>
+                                <p style="margin: 0; color: #94a3b8;">${loanPurpose}</p>
                             </div>
                         </div>
                         
                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
                             <div>
                                 <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Principal Amount</p>
-                                <p style="margin: 0; font-size: 24px; font-weight: 700; color: #38e77b;">$${principal.toFixed(2)}</p>
+                                <p style="margin: 0; font-size: 24px; font-weight: 700; color: #38e77b;">${currencySymbol}${principal.toFixed(2)}</p>
                             </div>
                             <div>
                                 <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Total Returns</p>
-                                <p style="margin: 0; font-size: 24px; font-weight: 700; color: #3b82f6;">+$${returns.toFixed(2)}</p>
+                                <p style="margin: 0; font-size: 24px; font-weight: 700; color: #3b82f6;">+${currencySymbol}${returns.toFixed(2)}</p>
                             </div>
                             <div>
                                 <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Return Rate</p>
@@ -18208,13 +18283,43 @@ How it works:
                             </div>
                             <div>
                                 <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Monthly Return</p>
-                                <p style="margin: 0; font-size: 20px; font-weight: 700;">$${parseFloat(investment.monthly_return || 0).toFixed(2)}</p>
+                                <p style="margin: 0; font-size: 20px; font-weight: 700;">${currencySymbol}${monthlyReturn.toFixed(2)}</p>
                             </div>
                         </div>
                     </div>
                     
                     <div style="background: #0f172a; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                        <h3 style="margin: 0 0 15px 0;">Loan Progress</h3>
+                        <h3 style="margin: 0 0 15px 0;">Loan Information</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                            <div>
+                                <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Total Loan</p>
+                                <p style="margin: 0; font-weight: 600;">${currencySymbol}${totalLoan.toLocaleString()}</p>
+                            </div>
+                            <div>
+                                <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">My Share</p>
+                                <p style="margin: 0; font-weight: 600;">${totalLoan > 0 ? ((principal / totalLoan) * 100).toFixed(1) : 0}%</p>
+                            </div>
+                            <div>
+                                <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Interest Rate</p>
+                                <p style="margin: 0; font-weight: 600;">${interestRate.toFixed(1)}% /mo</p>
+                            </div>
+                            <div>
+                                <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Loan Term</p>
+                                <p style="margin: 0; font-weight: 600;">${term} months</p>
+                            </div>
+                            <div>
+                                <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Risk Level</p>
+                                <p style="margin: 0; font-weight: 600; text-transform: capitalize;">${riskLevel}</p>
+                            </div>
+                            <div>
+                                <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Status</p>
+                                <p style="margin: 0; font-weight: 600; text-transform: capitalize; color: #38e77b;">${status}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #0f172a; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <h3 style="margin: 0 0 15px 0;">Repayment Progress</h3>
                         <div style="margin-bottom: 10px;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                                 <span style="color: #94a3b8;">Progress</span>
@@ -18224,42 +18329,14 @@ How it works:
                                 <div style="background: linear-gradient(90deg, #38e77b, #3b82f6); height: 100%; width: ${progress}%; transition: width 0.3s;"></div>
                             </div>
                         </div>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px;">
-                            <div>
-                                <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Start Date</p>
-                                <p style="margin: 0;">${investment.start_date ? new Date(investment.start_date).toLocaleDateString() : 'N/A'}</p>
-                            </div>
-                            <div>
-                                <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">End Date</p>
-                                <p style="margin: 0;">${investment.end_date ? new Date(investment.end_date).toLocaleDateString() : 'N/A'}</p>
-                            </div>
-                            <div>
-                                <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Interest Rate</p>
-                                <p style="margin: 0;">${parseFloat(investment.interest_rate || 0).toFixed(1)}% APR</p>
-                            </div>
-                            <div>
-                                <p style="color: #94a3b8; margin: 0 0 5px 0; font-size: 14px;">Risk Level</p>
-                                <p style="margin: 0; text-transform: capitalize;">${investment.risk_level || 'Medium'}</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div style="background: #0f172a; padding: 20px; border-radius: 12px;">
-                        <h3 style="margin: 0 0 15px 0;">Investment Status</h3>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="padding: 8px 16px; background: rgba(56, 231, 123, 0.1); color: #38e77b; border-radius: 8px; font-weight: 600; text-transform: capitalize;">
-                                ${investment.status || 'Active'}
-                            </span>
-                            <span style="color: #94a3b8;">Last updated: ${investment.updated_at ? new Date(investment.updated_at).toLocaleDateString() : 'N/A'}</span>
-                        </div>
                     </div>
                     
                     <div style="display: flex; gap: 10px; margin-top: 20px;">
                         <button onclick="this.closest('.modal-overlay').remove()" class="btn-secondary" style="flex: 1;">
                             Close
                         </button>
-                        <button onclick="autoInvestSimilar('${investment.loan_id}', '${investment.risk_level}', ${investment.interest_rate}); this.closest('.modal-overlay').remove();" class="btn-primary" style="flex: 1;">
-                            <i class="fas fa-robot"></i> Auto-Invest Similar
+                        <button onclick="openSecondaryMarketModal('${investment.id}'); this.closest('.modal-overlay').remove();" class="btn-primary" style="flex: 1; background: #3b82f6;">
+                            <i class="fas fa-store"></i> Sell Investment
                         </button>
                     </div>
                 </div>
