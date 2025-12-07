@@ -12248,6 +12248,13 @@ How it works:
                 </tr>
             `).join('');
 
+            // Calculate default monthly breakdown for initial display
+            const defAmount = Math.min(100, loan.maxInvestment);
+            const defShare = defAmount / loan.amount;
+            const defGrossMonthly = loan.monthlyPayment * defShare;
+            const defPortfolioFee = defGrossMonthly * 0.025;
+            const defNetMonthly = defGrossMonthly - defPortfolioFee;
+
             const modalHtml = `
                 <div id="mockLoanDetailModal" class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;">
                     <div class="modal-content" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 20px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; border: 1px solid rgba(56, 231, 123, 0.2);">
@@ -12341,9 +12348,29 @@ How it works:
                                         <div style="margin-bottom: 8px; font-size: 10px; color: #38e77b; font-style: italic;">
                                             <i class="fas fa-shield-alt"></i> Highly Recommended: Protects 90% of principal
                                         </div>
-                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                                            <span style="color: #94a3b8; font-size: 12px;">Portfolio Mgmt</span>
-                                            <span style="color: #e2e8f0; font-size: 12px;">2.5% / mo</span>
+                                        
+                                        <!-- Portfolio Mgmt Breakdown -->
+                                        <div style="background: rgba(245, 158, 11, 0.05); padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px solid rgba(245, 158, 11, 0.2);">
+                                            <div style="color: #f59e0b; font-size: 12px; font-weight: 600; margin-bottom: 6px;">Monthly Return Breakdown:</div>
+                                            
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                                                <span style="color: #94a3b8; font-size: 11px;">Gross Monthly:</span>
+                                                <strong id="mockGrossMonthly" style="color: #e2e8f0; font-size: 11px;">$${defGrossMonthly.toFixed(2)}</strong>
+                                            </div>
+                                            
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                                                <span style="color: #94a3b8; font-size: 11px;">Portfolio Mgmt (2.5%):</span>
+                                                <strong id="mockPortfolioFee" style="color: #f59e0b; font-size: 11px;">-$${defPortfolioFee.toFixed(2)}</strong>
+                                            </div>
+                                            
+                                            <div style="border-top: 1px solid rgba(245, 158, 11, 0.3); padding-top: 4px; margin-top: 4px; display: flex; justify-content: space-between;">
+                                                <span style="color: #e2e8f0; font-size: 11px; font-weight: 600;">Net Monthly:</span>
+                                                <strong id="mockNetMonthly" style="color: #38e77b; font-size: 11px;">$${defNetMonthly.toFixed(2)}</strong>
+                                            </div>
+                                            
+                                            <p style="color: #94a3b8; font-size: 9px; margin-top: 6px; margin-bottom: 0; font-style: italic;">
+                                                <i class="fas fa-info-circle"></i> Fee deducted from monthly returns
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -12449,6 +12476,20 @@ How it works:
                     const share = (amount / loan.amount) * 100;
                     const shareEl = document.getElementById('mockInvestShare');
                     if (shareEl) shareEl.textContent = share.toFixed(2) + '%';
+                    
+                    // Update monthly return breakdown
+                    const shareRatio = amount / loan.amount;
+                    const grossMonthly = loan.monthlyPayment * shareRatio;
+                    const portfolioFee = grossMonthly * 0.025;
+                    const netMonthly = grossMonthly - portfolioFee;
+                    
+                    const grossEl = document.getElementById('mockGrossMonthly');
+                    const feeEl = document.getElementById('mockPortfolioFee');
+                    const netEl = document.getElementById('mockNetMonthly');
+                    
+                    if (grossEl) grossEl.textContent = '$' + grossMonthly.toFixed(2);
+                    if (feeEl) feeEl.textContent = '-$' + portfolioFee.toFixed(2);
+                    if (netEl) netEl.textContent = '$' + netMonthly.toFixed(2);
                 });
             }
 
