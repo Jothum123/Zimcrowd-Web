@@ -12298,6 +12298,18 @@ How it works:
                                 </div>
                             </div>
 
+                            <!-- Fees & Charges -->
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px;">
+                                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.1);">
+                                    <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">Lender Platform Fee</div>
+                                    <div style="color: #e2e8f0; font-size: 16px; font-weight: 600;">1.0% <span style="font-size: 12px; font-weight: 400; color: #94a3b8;">($${(loan.amount * 0.01).toLocaleString()})</span></div>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.1);">
+                                    <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">Insurance & Admin</div>
+                                    <div style="color: #e2e8f0; font-size: 16px; font-weight: 600;">0.5% <span style="font-size: 12px; font-weight: 400; color: #94a3b8;">($${(loan.amount * 0.005).toLocaleString()})</span></div>
+                                </div>
+                            </div>
+
                             <!-- Funding Progress -->
                             <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin-bottom: 25px;">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
