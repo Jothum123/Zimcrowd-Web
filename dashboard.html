@@ -12120,9 +12120,9 @@ How it works:
                 
                 // Loan history badge and status logic
                 const isFirstLoan = loan.borrower.totalLoans === 1 && loan.borrower.repaidOnTime === 0;
-                // Assume default if repayment rate is low (e.g. < 80% and not first loan)
+                // Relaxed defaulter logic: Only if repayment < 50% or ZimScore < 40 (Severe default)
                 const repaymentRate = loan.borrower.totalLoans > 0 ? (loan.borrower.repaidOnTime / loan.borrower.totalLoans) : 1;
-                const isDefaulter = !isFirstLoan && repaymentRate < 0.8;
+                const isDefaulter = !isFirstLoan && (repaymentRate < 0.5 || loan.borrower.zimScore < 40);
 
                 let starDisplayHtml = '';
                 let historyText = '';
