@@ -12324,7 +12324,7 @@ How it works:
                                         </div>
                                         <div style="display: flex; justify-content: space-between; margin-top: 8px; font-weight: 600; color: #38e77b;">
                                             <span style="font-size: 12px;">Total Upfront</span>
-                                            <span style="font-size: 12px;">$${(loan.amount * 0.075 + 3).toLocaleString()}</span>
+                                            <span style="font-size: 12px;" id="mockViewTotalUpfront">$${(loan.amount * 0.075 + 3).toLocaleString()}</span>
                                         </div>
                                     </div>
 
@@ -12332,10 +12332,16 @@ How it works:
                                     <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.1);">
                                         <div style="color: #e2e8f0; font-size: 14px; font-weight: 600; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Other Charges</div>
                                         
-                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                                            <span style="color: #94a3b8; font-size: 12px;">Insurance (Opt)</span>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; align-items: center;">
+                                            <label style="color: #94a3b8; font-size: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                                <input type="checkbox" id="mockViewInsuranceCheck" style="accent-color: #38e77b;"> Insurance (Opt)
+                                            </label>
                                             <span style="color: #e2e8f0; font-size: 12px;">5.0% ($${(loan.amount * 0.05).toLocaleString()})</span>
                                         </div>
+                                        <div style="margin-bottom: 8px; font-size: 10px; color: #38e77b; font-style: italic;">
+                                            <i class="fas fa-shield-alt"></i> Highly Recommended: Protects 90% of principal
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                                             <span style="color: #94a3b8; font-size: 12px;">Portfolio Mgmt</span>
                                             <span style="color: #e2e8f0; font-size: 12px;">2.5% / mo</span>
@@ -12444,6 +12450,17 @@ How it works:
                     const amount = parseFloat(this.value) || 0;
                     const expectedReturn = amount * (1 + loan.interestRate/100 * loan.term/12);
                     document.getElementById('expectedReturn').textContent = '$' + expectedReturn.toFixed(2);
+                });
+            }
+
+            // Add Insurance Checkbox listener for Breakdown
+            const insuranceCheck = document.getElementById('mockViewInsuranceCheck');
+            if (insuranceCheck) {
+                insuranceCheck.addEventListener('change', function() {
+                    const baseUpfront = loan.amount * 0.075 + 3; // Platform(5%) + Processing(2%) + Inv(0.5%) + DueDil($3)
+                    const insuranceFee = this.checked ? (loan.amount * 0.05) : 0;
+                    const total = baseUpfront + insuranceFee;
+                    document.getElementById('mockViewTotalUpfront').textContent = '$' + total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 });
             }
 
