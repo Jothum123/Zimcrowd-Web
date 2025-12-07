@@ -12125,66 +12125,86 @@ How it works:
                     : `<span style="background: rgba(56, 231, 123, 0.2); color: #38e77b; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">${loan.borrower.repaidOnTime}/${loan.borrower.totalLoans} REPAID</span>`;
                 
                 return `
-                    <div class="portfolio-card" style="cursor: pointer; padding: 16px;" onclick="openMockLoanDetailModal(${index})">
+                    <div class="portfolio-card" style="cursor: pointer; padding: 20px; min-height: 340px; display: flex; flex-direction: column; background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%); border: 1px solid rgba(56, 231, 123, 0.15); transition: all 0.3s ease;" 
+                         onclick="openMockLoanDetailModal(${index})"
+                         onmouseover="this.style.borderColor='rgba(56, 231, 123, 0.4)'; this.style.transform='translateY(-4px)'"
+                         onmouseout="this.style.borderColor='rgba(56, 231, 123, 0.15)'; this.style.transform='translateY(0)'">
+                        
                         <!-- Header: Avatar + Name + History Badge -->
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                            <div style="display: flex; gap: 12px; align-items: center;">
-                                <div class="borrower-avatar" style="background: linear-gradient(135deg, ${loan.purpose.color}, ${loan.purpose.color}dd); width: 45px; height: 45px; font-size: 16px;">${loan.borrower.initials}</div>
-                                <div>
-                                    <div style="color: white; font-weight: 600; font-size: 15px;">${displayName}</div>
-                                    <div style="display: flex; align-items: center; gap: 6px; margin-top: 3px;">
-                                        <span style="font-size: 11px;">${starHtml}</span>
-                                        <span style="color: ${riskColor}; font-size: 11px; font-weight: 500;">${loan.riskLevel.level}</span>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                            <div style="display: flex; gap: 14px; align-items: center; flex: 1;">
+                                <div class="borrower-avatar" style="background: linear-gradient(135deg, ${loan.purpose.color}, ${loan.purpose.color}dd); width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">${loan.borrower.initials}</div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="color: white; font-weight: 700; font-size: 16px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${displayName}</div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 12px;">${starHtml}</span>
+                                        <span style="color: ${riskColor}; font-size: 11px; font-weight: 600; text-transform: uppercase;">${loan.riskLevel.level}</span>
                                     </div>
                                 </div>
                             </div>
-                            ${loanHistoryBadge}
-                        </div>
-
-                        <!-- Loan Request Info -->
-                        <div style="background: rgba(255,255,255,0.03); border-radius: 10px; padding: 12px; margin-bottom: 12px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <span style="color: #94a3b8; font-size: 12px;">Requested</span>
-                                <span style="color: #38e77b; font-size: 18px; font-weight: bold;">$${loan.amount.toLocaleString()}</span>
-                            </div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
-                                <div>
-                                    <span style="color: #64748b;">Interest:</span>
-                                    <span style="color: #e2e8f0; font-weight: 500;"> ${loan.interestRate}%/mo</span>
-                                </div>
-                                <div>
-                                    <span style="color: #64748b;">Term:</span>
-                                    <span style="color: #e2e8f0; font-weight: 500;"> ${loan.term}mo</span>
-                                </div>
+                            <div style="margin-left: 8px;">
+                                ${loanHistoryBadge}
                             </div>
                         </div>
 
-                        <!-- Dates & Reason -->
-                        <div style="font-size: 11px; color: #94a3b8; margin-bottom: 12px;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                                <span><i class="fas fa-calendar-alt" style="color: #38e77b; margin-right: 4px;"></i>Start: ${formatDate(startDate)}</span>
-                                <span>End: ${formatDate(endDate)}</span>
+                        <!-- Loan Request Amount - Prominent -->
+                        <div style="background: linear-gradient(135deg, rgba(56, 231, 123, 0.15), rgba(34, 197, 94, 0.1)); border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid rgba(56, 231, 123, 0.2);">
+                            <div style="color: #94a3b8; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Loan Amount</div>
+                            <div style="color: #38e77b; font-size: 28px; font-weight: 800; line-height: 1;">$${loan.amount.toLocaleString()}</div>
+                        </div>
+
+                        <!-- Loan Terms Grid -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                            <div style="background: rgba(59, 130, 246, 0.1); border-radius: 10px; padding: 12px; border: 1px solid rgba(59, 130, 246, 0.2);">
+                                <div style="color: #94a3b8; font-size: 10px; font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">Interest</div>
+                                <div style="color: #3b82f6; font-size: 18px; font-weight: 700;">${loan.interestRate}%<span style="font-size: 12px; color: #94a3b8;">/mo</span></div>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px;">
-                                <i class="fas ${loan.purpose.icon}" style="color: ${loan.purpose.color};"></i>
-                                <span style="color: #e2e8f0;">Reason: <strong>${loan.purpose.category}</strong></span>
+                            <div style="background: rgba(245, 158, 11, 0.1); border-radius: 10px; padding: 12px; border: 1px solid rgba(245, 158, 11, 0.2);">
+                                <div style="color: #94a3b8; font-size: 10px; font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">Term</div>
+                                <div style="color: #f59e0b; font-size: 18px; font-weight: 700;">${loan.term}<span style="font-size: 12px; color: #94a3b8;"> months</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Loan Period -->
+                        <div style="background: rgba(139, 92, 246, 0.08); border-radius: 10px; padding: 12px; margin-bottom: 16px; border: 1px solid rgba(139, 92, 246, 0.15);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 8px;">
+                                <div>
+                                    <i class="fas fa-calendar-check" style="color: #8b5cf6; margin-right: 6px;"></i>
+                                    <span style="color: #94a3b8;">Start:</span>
+                                    <span style="color: #e2e8f0; font-weight: 600; margin-left: 4px;">${formatDate(startDate)}</span>
+                                </div>
+                                <div>
+                                    <span style="color: #94a3b8;">End:</span>
+                                    <span style="color: #e2e8f0; font-weight: 600; margin-left: 4px;">${formatDate(endDate)}</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; padding-top: 8px; border-top: 1px solid rgba(139, 92, 246, 0.15);">
+                                <i class="fas ${loan.purpose.icon}" style="color: ${loan.purpose.color}; font-size: 14px;"></i>
+                                <span style="color: #94a3b8; font-size: 11px;">Purpose:</span>
+                                <span style="color: white; font-weight: 600; font-size: 12px;">${loan.purpose.category}</span>
                             </div>
                         </div>
 
                         <!-- Funding Progress -->
-                        <div style="margin-bottom: 12px;">
-                            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
-                                <span style="color: #94a3b8;">Funded (${loan.lendersCount} lenders)</span>
-                                <span style="color: #38e77b; font-weight: 600;">${loan.fundedPercent}%</span>
+                        <div style="margin-bottom: 16px; flex-grow: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="color: #94a3b8; font-size: 11px; font-weight: 600;">
+                                    <i class="fas fa-users" style="color: #38e77b; margin-right: 4px;"></i>
+                                    ${loan.lendersCount} Lenders
+                                </span>
+                                <span style="color: #38e77b; font-weight: 700; font-size: 14px;">${loan.fundedPercent}%</span>
                             </div>
-                            <div style="background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; overflow: hidden;">
-                                <div style="width: ${loan.fundedPercent}%; height: 100%; background: ${riskColor}; border-radius: 3px;"></div>
+                            <div style="background: rgba(255,255,255,0.08); height: 8px; border-radius: 4px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);">
+                                <div style="width: ${loan.fundedPercent}%; height: 100%; background: linear-gradient(90deg, ${riskColor}, ${riskColor}dd); border-radius: 4px; transition: width 0.3s ease;"></div>
                             </div>
                         </div>
 
                         <!-- Invest Button -->
-                        <button class="btn-primary" style="width: 100%; padding: 10px; font-size: 13px;" onclick="event.stopPropagation(); openMockLoanDetailModal(${index})">
-                            <i class="fas fa-hand-holding-usd"></i> View Details & Invest
+                        <button class="btn-primary" style="width: 100%; padding: 14px; font-size: 14px; font-weight: 700; background: linear-gradient(135deg, #38e77b, #22c55e); color: #0f172a; border: none; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(56, 231, 123, 0.3);" 
+                                onclick="event.stopPropagation(); openMockLoanDetailModal(${index})"
+                                onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 6px 16px rgba(56, 231, 123, 0.4)'"
+                                onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 12px rgba(56, 231, 123, 0.3)'">
+                            <i class="fas fa-hand-holding-usd" style="margin-right: 8px;"></i>View Details & Invest
                         </button>
                     </div>
                 `;
