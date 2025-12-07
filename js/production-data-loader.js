@@ -360,9 +360,18 @@ const ProductionDataLoader = {
                             investments = userInvestments;
                             console.log('📦 Loading mock investments from localStorage:', investments.length);
                         } else if (typeof MockMarketData !== 'undefined') {
-                            // Generate mock portfolio investments if MockMarketData is available
-                            investments = MockMarketData.generatePortfolioInvestments(6);
-                            console.log('🎭 Generated mock portfolio investments:', investments.length);
+                            // Check if we have cached mock portfolio investments
+                            let cachedMockInvestments = localStorage.getItem('mockPortfolioInvestments');
+                            
+                            if (cachedMockInvestments) {
+                                investments = JSON.parse(cachedMockInvestments);
+                                console.log('📦 Loading cached mock portfolio investments:', investments.length);
+                            } else {
+                                // Generate and cache mock portfolio investments
+                                investments = MockMarketData.generatePortfolioInvestments(6);
+                                localStorage.setItem('mockPortfolioInvestments', JSON.stringify(investments));
+                                console.log('🎭 Generated and cached mock portfolio investments:', investments.length);
+                            }
                         }
                     } catch (e) {
                         console.log('⚠️ Could not load mock investments:', e);
