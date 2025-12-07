@@ -7,11 +7,15 @@
 /* PORTFOLIO GRID */
 /* ============================================ */
 
-#portfolioGrid {
+/* #portfolioGrid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
     gap: 25px;
     margin-top: 20px;
+} */
+
+#portfolioGrid {
+    display: table-row-group;
 }
 
 /* ============================================ */
@@ -840,32 +844,147 @@
 /* RESPONSIVE STYLES */
 /* ============================================ */
 
-@media (max-width: 768px) {
-    #portfolioGrid {
-        grid-template-columns: 1fr;
-    }
 
-    .investment-summary-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+/* ============================================ */
+/* INVESTMENT TABLE STYLES */
+/* ============================================ */
 
-    .details-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+.investments-table-wrapper {
+    background: #1e293b;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: 20px;
+}
 
-    .investment-header-info {
-        flex-direction: column;
-        text-align: center;
-    }
+.investments-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: white;
+}
 
-    .payment-item {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
-    }
+.investments-table th {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 15px 20px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 500;
+    color: #94a3b8;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
 
-    .payment-breakdown {
-        flex-direction: column;
-        gap: 5px;
+.investments-table td {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    vertical-align: middle;
+    font-size: 14px;
+}
+
+.investments-table tr:last-child td {
+    border-bottom: none;
+}
+
+.investments-table tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Borrower Column */
+.table-borrower {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.table-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #334155;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.table-borrower-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.table-borrower-name {
+    font-weight: 600;
+    color: white;
+    margin-bottom: 2px;
+}
+
+.table-rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+}
+
+.table-rating i {
+    font-size: 10px;
+}
+
+.table-rating span {
+    margin-left: 2px;
+}
+
+/* Other Columns */
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.status-badge.repaying {
+    color: #38e77b;
+    background: rgba(56, 231, 123, 0.1);
+}
+
+.status-badge.completed {
+    color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.status-badge.defaulted {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.btn-details {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(56, 231, 123, 0.1);
+    color: #38e77b;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-details:hover {
+    background: #38e77b;
+    color: #0f172a;
+    transform: scale(1.1);
+}
+
+@media (max-width: 1024px) {
+    .investments-table-wrapper {
+        overflow-x: auto;
+    }
+    
+    .investments-table {
+        min-width: 900px;
     }
 }

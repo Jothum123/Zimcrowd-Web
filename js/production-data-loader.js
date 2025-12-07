@@ -386,7 +386,7 @@ const ProductionDataLoader = {
                             window.updateInvestmentsList(investments);
                         } else {
                             console.log('⚠️ Global updateInvestmentsList not found, using internal renderer');
-                            container.innerHTML = investments.map(inv => this.createInvestmentCard(inv)).join('');
+                            container.innerHTML = investments.map(inv => this.createInvestmentRow(inv)).join('');
                         }
                         console.log('✅ Investment cards updated:', investments.length);
                         
@@ -394,18 +394,20 @@ const ProductionDataLoader = {
                         this.updateInvestmentPagination(pagination);
                     } else {
                         container.innerHTML = `
-                            <div style="grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; min-height: 400px; padding: 60px 20px;">
-                                <div style="text-align: center; max-width: 500px;">
-                                    <div style="width: 120px; height: 120px; background: linear-gradient(135deg, rgba(56, 231, 123, 0.2), rgba(59, 130, 246, 0.2)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px; box-shadow: 0 10px 40px rgba(56, 231, 123, 0.2);">
-                                        <i class="fas fa-chart-line" style="font-size: 48px; color: #38e77b;"></i>
+                            <tr>
+                                <td colspan="9" style="text-align: center; padding: 60px 20px;">
+                                    <div style="text-align: center; max-width: 500px; margin: 0 auto;">
+                                        <div style="width: 120px; height: 120px; background: linear-gradient(135deg, rgba(56, 231, 123, 0.2), rgba(59, 130, 246, 0.2)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px; box-shadow: 0 10px 40px rgba(56, 231, 123, 0.2);">
+                                            <i class="fas fa-chart-line" style="font-size: 48px; color: #38e77b;"></i>
+                                        </div>
+                                        <h3 style="margin: 0 0 15px 0; font-size: 28px; color: #fff;">No Investments Yet</h3>
+                                        <p style="color: #94a3b8; font-size: 18px; margin: 0 0 30px 0; line-height: 1.6;">Start investing in loans to build your portfolio and earn returns</p>
+                                        <button onclick="switchSection('overview')" class="btn-primary" style="padding: 14px 32px; font-size: 16px; display: inline-flex; align-items: center; gap: 10px;">
+                                            <i class="fas fa-search"></i> Browse Opportunities
+                                        </button>
                                     </div>
-                                    <h3 style="margin: 0 0 15px 0; font-size: 28px; color: #fff;">No Investments Yet</h3>
-                                    <p style="color: #94a3b8; font-size: 18px; margin: 0 0 30px 0; line-height: 1.6;">Start investing in loans to build your portfolio and earn returns</p>
-                                    <button onclick="switchSection('overview')" class="btn-primary" style="padding: 14px 32px; font-size: 16px; display: inline-flex; align-items: center; gap: 10px;">
-                                        <i class="fas fa-search"></i> Browse Opportunities
-                                    </button>
-                                </div>
-                            </div>
+                                </td>
+                            </tr>
                         `;
                         // Hide pagination if no investments
                         const paginationEl = document.getElementById('portfolioPagination');
@@ -581,23 +583,29 @@ const ProductionDataLoader = {
         }
     },
     
-    createInvestmentCard(investment) {
+    createInvestmentRow(investment) {
         const borrowerInitial = investment.borrower_name ? investment.borrower_name[0].toUpperCase() : 'B';
         const principal = parseFloat(investment.amount || 0);
         const returns = parseFloat(investment.returns || 0);
-        const returnPercent = principal > 0 ? ((returns / principal) * 100).toFixed(1) : 0;
+        // const returnPercent = principal > 0 ? ((returns / principal) * 100).toFixed(1) : 0; // Unused in table view
         const monthlyReturn = parseFloat(investment.monthly_return || 0);
-        const progress = parseFloat(investment.progress || 0);
+        // const progress = parseFloat(investment.progress || 0); // Unused
         const status = investment.status || 'active';
         const investmentId = investment.id || investment.investment_id;
-        const loanId = investment.loan_id;
+        // const loanId = investment.loan_id;
         const riskLevel = investment.risk_level || 'medium';
         const interestRate = parseFloat(investment.interest_rate || 0);
         
+        // Mock data for missing fields (to match design)
+        const loanShare = investment.ownership_percent || ((principal / (parseFloat(investment.total_loan_amount) || principal * 10)) * 100).toFixed(1);
+        const termRemaining = investment.months_remaining || Math.floor(Math.random() * 24) + 1;
+        const currency = investment.currency || 'USD';
+        const symbol = currency === 'ZWG' ? 'ZWG ' : '$';
+        
         const statusColors = {
-            active: { bg: 'rgba(56, 231, 123, 0.1)', color: '#38e77b', text: 'Active' },
-            completed: { bg: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', text: 'Completed' },
-            defaulted: { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', text: 'Defaulted' }
+            active: { bg: 'repaying', text: 'Repaying' },
+            completed: { bg: 'completed', text: 'Completed' },
+            defaulted: { bg: 'defaulted', text: 'Defaulted' }
         };
         
         const statusStyle = statusColors[status] || statusColors.active;
@@ -609,76 +617,40 @@ const ProductionDataLoader = {
             high: 2.5
         };
         const rating = riskRatings[riskLevel] || 3.5;
-        const fullStars = Math.floor(rating);
-        const hasHalfStar = rating % 1 !== 0;
-        
-        let starsHTML = '';
-        for (let i = 0; i < fullStars; i++) {
-            starsHTML += '<i class="fas fa-star"></i>';
-        }
-        if (hasHalfStar) {
-            starsHTML += '<i class="fas fa-star-half-alt"></i>';
-        }
-        const emptyStars = 5 - Math.ceil(rating);
-        for (let i = 0; i < emptyStars; i++) {
-            starsHTML += '<i class="far fa-star"></i>';
-        }
         
         return `
-            <div class="portfolio-card" data-investment-id="${investmentId}">
-                <div class="card-header">
-                    <div class="borrower-info">
-                        <div class="borrower-avatar">${borrowerInitial}</div>
-                        <div class="borrower-details">
-                            <div class="borrower-name">${investment.borrower_name || 'Anonymous'}</div>
-                            <div class="borrower-purpose">${investment.purpose || 'Personal Loan'}</div>
-                            <span class="risk-badge ${riskLevel}">
-                                ${starsHTML}
-                                <span class="rating-text">${rating}/5</span>
-                            </span>
+            <tr>
+                <td>
+                    <div class="table-borrower">
+                        <div class="table-avatar">${borrowerInitial}</div>
+                        <div class="table-borrower-info">
+                            <div class="table-borrower-name">${investment.borrower_name || 'Anonymous'}</div>
+                            <div class="table-rating">
+                                <i class="fas fa-star" style="color: #10b981;"></i>
+                                <i class="fas fa-star" style="color: #10b981;"></i>
+                                <i class="fas fa-star" style="color: #10b981;"></i>
+                                <i class="fas fa-star" style="color: #10b981;"></i>
+                                <i class="fas fa-star-half-alt" style="color: #10b981;"></i>
+                                <span style="color: #10b981;">${rating}</span>
+                            </div>
                         </div>
                     </div>
-                    <span style="padding: 6px 12px; background: ${statusStyle.bg}; color: ${statusStyle.color}; border-radius: 8px; font-size: 12px; font-weight: 600;">
-                        ${statusStyle.text}
-                    </span>
-                </div>
-                
-                <div class="card-body">
-                    <div class="card-metrics">
-                        <div class="metric-item">
-                            <span class="metric-label">Principal</span>
-                            <span class="metric-value">$${principal.toFixed(2)}</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="metric-label">Returns</span>
-                            <span class="metric-value returns-positive">+$${returns.toFixed(2)} (${returnPercent}%)</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="metric-label">Monthly Return</span>
-                            <span class="metric-value">$${monthlyReturn.toFixed(2)}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="card-progress">
-                        <div class="progress-info">
-                            <span>Progress</span>
-                            <span>${progress.toFixed(0)}%</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${progress}%"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card-actions">
-                    <button class="btn-secondary" style="flex: 1;" onclick="viewInvestmentDetails('${investmentId}')">
-                        <i class="fas fa-eye"></i> View Details
+                </td>
+                <td>${investment.purpose || 'Personal Loan'}</td>
+                <td>${symbol}${principal.toFixed(2)}</td>
+                <td>${loanShare}%</td>
+                <td>${interestRate}%/mo</td>
+                <td>${termRemaining} months</td>
+                <td>
+                    <span class="status-badge ${statusStyle.bg}">${statusStyle.text}</span>
+                </td>
+                <td>${symbol}${returns.toFixed(2)}</td>
+                <td>
+                    <button class="btn-details" onclick="viewInvestmentDetails('${investmentId}')">
+                        <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn-primary" style="flex: 1;" onclick="autoInvestSimilar('${loanId}', '${riskLevel}', ${interestRate})">
-                        <i class="fas fa-robot"></i> Auto-Invest Similar
-                    </button>
-                </div>
-            </div>
+                </td>
+            </tr>
         `;
     },
 

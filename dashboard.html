@@ -5142,7 +5142,7 @@
             <!-- Your Investment Portfolio -->
             <div class="investments-table-container">
                 <div class="table-header">
-                    <h3>Your Investment Portfolio</h3>
+                    <h3>Your Active Investments</h3>
                     <div class="table-stats">
                         <span class="stat-item">
                             <i class="fas fa-chart-line"></i>
@@ -5159,14 +5159,33 @@
                     </div>
                 </div>
 
-                <div id="portfolioGrid" class="portfolio-cards">
-                    <!-- Investment cards will be loaded by production-data-loader.js -->
-                    <div class="portfolio-card" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: rgba(15, 23, 42, 0.5);">
-                        <div style="display: inline-block;">
-                            <div class="spinner" style="width: 50px; height: 50px; border: 4px solid rgba(56, 231, 123, 0.1); border-top-color: #38e77b; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
-                            <p style="color: #94a3b8; font-size: 16px;">Loading your investments...</p>
-                        </div>
-                    </div>
+                <div class="investments-table-wrapper">
+                    <table class="investments-table">
+                        <thead>
+                            <tr>
+                                <th>Borrower</th>
+                                <th>Category</th>
+                                <th>Invested Amount</th>
+                                <th>Loan Share %</th>
+                                <th>Interest Rate</th>
+                                <th>Term Remaining</th>
+                                <th>Status</th>
+                                <th>Earned Interest</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolioGrid">
+                            <!-- Investment rows will be loaded by production-data-loader.js -->
+                            <tr>
+                                <td colspan="9" style="text-align: center; padding: 60px 20px;">
+                                    <div style="display: inline-block;">
+                                        <div class="spinner" style="width: 50px; height: 50px; border: 4px solid rgba(56, 231, 123, 0.1); border-top-color: #38e77b; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                                        <p style="color: #94a3b8; font-size: 16px;">Loading your investments...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
 
                 <!-- Pagination for Investment Portfolio -->
