@@ -12102,56 +12102,90 @@ How it works:
                 const riskLabel = loan.riskLevel.level.toUpperCase();
                 const starHtml = MockMarketData.generateStarRating(loan.borrower.rating, loan.borrower.zimScore);
                 
+                // Format borrower name as "FirstName L." (e.g., "Tendai N.")
+                const nameParts = loan.borrower.name.split(' ');
+                const displayName = nameParts.length > 1 ? `${nameParts[0]} ${nameParts[1][0]}.` : nameParts[0];
+                
+                // Calculate loan dates
+                const startDate = new Date();
+                startDate.setMonth(startDate.getMonth() + 1);
+                startDate.setDate(1);
+                const endDate = new Date(startDate);
+                endDate.setMonth(endDate.getMonth() + loan.term);
+                endDate.setDate(0); // Last day of previous month
+                
+                const formatDate = (date) => {
+                    return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
+                };
+                
+                // Loan history badge
+                const isFirstLoan = loan.borrower.totalLoans === 1 && loan.borrower.repaidOnTime === 0;
+                const loanHistoryBadge = isFirstLoan 
+                    ? '<span style="background: rgba(139, 92, 246, 0.2); color: #a78bfa; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">FIRST LOAN</span>'
+                    : `<span style="background: rgba(56, 231, 123, 0.2); color: #38e77b; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">${loan.borrower.repaidOnTime}/${loan.borrower.totalLoans} REPAID</span>`;
+                
                 return `
-                    <div class="portfolio-card" style="cursor: pointer;" onclick="openMockLoanDetailModal(${index})">
-                        <div class="card-header">
-                            <div class="borrower-info">
-                                <div class="borrower-avatar" style="background: linear-gradient(135deg, ${loan.purpose.color}, ${loan.purpose.color}dd);">${loan.borrower.initials}</div>
-                                <div class="borrower-details">
-                                    <div class="borrower-name">${loan.borrower.name}</div>
-                                    <div class="borrower-purpose">${loan.purpose.category}</div>
-                                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-                                        <span style="font-size: 12px;">${starHtml}</span>
-                                        <span class="risk-badge" style="background: rgba(${riskColor === '#10b981' ? '16, 185, 129' : riskColor === '#3b82f6' ? '59, 130, 246' : riskColor === '#f59e0b' ? '245, 158, 11' : riskColor === '#6b7280' ? '107, 114, 128' : '239, 68, 68'}, 0.1); color: ${riskColor}; font-size: 10px; padding: 2px 6px;">
-                                            ${riskLabel}
-                                        </span>
+                    <div class="portfolio-card" style="cursor: pointer; padding: 16px;" onclick="openMockLoanDetailModal(${index})">
+                        <!-- Header: Avatar + Name + History Badge -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <div class="borrower-avatar" style="background: linear-gradient(135deg, ${loan.purpose.color}, ${loan.purpose.color}dd); width: 45px; height: 45px; font-size: 16px;">${loan.borrower.initials}</div>
+                                <div>
+                                    <div style="color: white; font-weight: 600; font-size: 15px;">${displayName}</div>
+                                    <div style="display: flex; align-items: center; gap: 6px; margin-top: 3px;">
+                                        <span style="font-size: 11px;">${starHtml}</span>
+                                        <span style="color: ${riskColor}; font-size: 11px; font-weight: 500;">${loan.riskLevel.level}</span>
                                     </div>
                                 </div>
                             </div>
+                            ${loanHistoryBadge}
                         </div>
 
-                        <div class="card-body">
-                            <div class="card-metrics">
-                                <div class="metric-item">
-                                    <span class="metric-label">Loan Amount</span>
-                                    <span class="metric-value">$${loan.amount.toLocaleString()}</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label">Interest Rate</span>
-                                    <span class="metric-value returns-positive">${loan.interestRate.toFixed(1)}%</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label">Term</span>
-                                    <span class="metric-value">${loan.term} months</span>
-                                </div>
+                        <!-- Loan Request Info -->
+                        <div style="background: rgba(255,255,255,0.03); border-radius: 10px; padding: 12px; margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="color: #94a3b8; font-size: 12px;">Requested</span>
+                                <span style="color: #38e77b; font-size: 18px; font-weight: bold;">$${loan.amount.toLocaleString()}</span>
                             </div>
-
-                            <div class="card-progress">
-                                <div class="progress-info">
-                                    <span>Funded (${loan.lendersCount} lenders)</span>
-                                    <span>${loan.fundedPercent}%</span>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
+                                <div>
+                                    <span style="color: #64748b;">Interest:</span>
+                                    <span style="color: #e2e8f0; font-weight: 500;"> ${loan.interestRate}%/mo</span>
                                 </div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: ${loan.fundedPercent}%; background: ${riskColor};"></div>
+                                <div>
+                                    <span style="color: #64748b;">Term:</span>
+                                    <span style="color: #e2e8f0; font-weight: 500;"> ${loan.term}mo</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="card-actions">
-                            <button class="btn-primary" style="width: 100%; padding: 10px;" onclick="event.stopPropagation(); openMockLoanDetailModal(${index})">
-                                <i class="fas fa-hand-holding-usd"></i> Invest Now
-                            </button>
+                        <!-- Dates & Reason -->
+                        <div style="font-size: 11px; color: #94a3b8; margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span><i class="fas fa-calendar-alt" style="color: #38e77b; margin-right: 4px;"></i>Start: ${formatDate(startDate)}</span>
+                                <span>End: ${formatDate(endDate)}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px;">
+                                <i class="fas ${loan.purpose.icon}" style="color: ${loan.purpose.color};"></i>
+                                <span style="color: #e2e8f0;">Reason: <strong>${loan.purpose.category}</strong></span>
+                            </div>
                         </div>
+
+                        <!-- Funding Progress -->
+                        <div style="margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+                                <span style="color: #94a3b8;">Funded (${loan.lendersCount} lenders)</span>
+                                <span style="color: #38e77b; font-weight: 600;">${loan.fundedPercent}%</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; overflow: hidden;">
+                                <div style="width: ${loan.fundedPercent}%; height: 100%; background: ${riskColor}; border-radius: 3px;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Invest Button -->
+                        <button class="btn-primary" style="width: 100%; padding: 10px; font-size: 13px;" onclick="event.stopPropagation(); openMockLoanDetailModal(${index})">
+                            <i class="fas fa-hand-holding-usd"></i> View Details & Invest
+                        </button>
                     </div>
                 `;
             }).join('');
