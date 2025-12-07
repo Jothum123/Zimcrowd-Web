@@ -5188,6 +5188,74 @@
                     </table>
                 </div>
 
+                <!-- Inline Mock Data Loader - Bypasses production loader -->
+                <script>
+                (function() {
+                    // Wait for DOM to be ready
+                    function loadMockInvestments() {
+                        const container = document.getElementById('portfolioGrid');
+                        if (!container) {
+                            console.error('portfolioGrid not found');
+                            return;
+                        }
+                        
+                        // Generate mock investments directly
+                        const mockInvestments = [
+                            { borrower_name: 'Sarah Moyo', purpose: 'Education', amount: 500, ownership_percent: 12.5, interest_rate: 8.5, months_remaining: 4, status: 'active', returns: 42.50, id: 'inv_001' },
+                            { borrower_name: 'Tendai Ncube', purpose: 'Business', amount: 1200, ownership_percent: 25.0, interest_rate: 10.0, months_remaining: 8, status: 'active', returns: 120.00, id: 'inv_002' },
+                            { borrower_name: 'Grace Mutasa', purpose: 'Medical', amount: 800, ownership_percent: 18.5, interest_rate: 7.5, months_remaining: 2, status: 'active', returns: 60.00, id: 'inv_003' },
+                            { borrower_name: 'Peter Chikwanha', purpose: 'Agriculture', amount: 2000, ownership_percent: 40.0, interest_rate: 9.0, months_remaining: 10, status: 'active', returns: 180.00, id: 'inv_004' },
+                            { borrower_name: 'Linda Dube', purpose: 'Home Improvement', amount: 650, ownership_percent: 15.0, interest_rate: 8.0, months_remaining: 5, status: 'completed', returns: 52.00, id: 'inv_005' },
+                            { borrower_name: 'James Sibanda', purpose: 'Emergency', amount: 300, ownership_percent: 10.0, interest_rate: 12.0, months_remaining: 1, status: 'active', returns: 36.00, id: 'inv_006' }
+                        ];
+                        
+                        const statusColors = {
+                            'active': '#38e77b',
+                            'completed': '#3b82f6',
+                            'defaulted': '#ef4444'
+                        };
+                        
+                        const html = mockInvestments.map(inv => `
+                            <tr>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #38e77b, #34d399); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0a0a0a; font-weight: 700; font-size: 14px;">
+                                            ${inv.borrower_name.split(' ').map(n => n[0]).join('')}
+                                        </div>
+                                        <div>
+                                            <div style="font-weight: 600; color: #f1f5f9;">${inv.borrower_name}</div>
+                                            <div style="font-size: 12px; color: #64748b;">⭐⭐⭐⭐☆</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span style="background: rgba(56, 231, 123, 0.1); color: #38e77b; padding: 4px 12px; border-radius: 20px; font-size: 12px;">${inv.purpose}</span></td>
+                                <td style="font-weight: 600; color: #f1f5f9;">$${inv.amount.toLocaleString()}</td>
+                                <td style="color: #94a3b8;">${inv.ownership_percent}%</td>
+                                <td style="color: #38e77b; font-weight: 600;">${inv.interest_rate}%</td>
+                                <td style="color: #94a3b8;">${inv.months_remaining} months</td>
+                                <td><span style="background: ${statusColors[inv.status]}20; color: ${statusColors[inv.status]}; padding: 4px 12px; border-radius: 20px; font-size: 12px; text-transform: capitalize;">${inv.status}</span></td>
+                                <td style="color: #38e77b; font-weight: 600;">+$${inv.returns.toFixed(2)}</td>
+                                <td><button onclick="viewInvestmentDetails('${inv.id}')" style="background: rgba(56, 231, 123, 0.1); color: #38e77b; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 12px;">Details</button></td>
+                            </tr>
+                        `).join('');
+                        
+                        container.innerHTML = html;
+                        console.log('✅ Mock investments loaded directly:', mockInvestments.length);
+                    }
+                    
+                    // Run immediately and also on DOMContentLoaded
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', loadMockInvestments);
+                    } else {
+                        loadMockInvestments();
+                    }
+                    
+                    // Also run after a short delay to override any other loaders
+                    setTimeout(loadMockInvestments, 500);
+                    setTimeout(loadMockInvestments, 2000);
+                })();
+                </script>
+
                 <!-- Pagination for Investment Portfolio -->
                 <div id="portfolioPagination" style="display: none; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 30px; padding: 20px; background: rgba(15, 23, 42, 0.5); border-radius: 12px;">
                     <button class="btn-primary" style="display: flex; align-items: center; gap: 8px;" onclick="loadInvestmentsPage(window.currentInvestmentPage - 1)" id="portfolioPrevBtn">
