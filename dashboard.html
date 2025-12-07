@@ -9730,6 +9730,9 @@ How it works:
             }
             
             container.innerHTML = listings.map(listing => {
+                // Determine currency symbol
+                const currencySymbol = listing.currency === 'USD' ? '$' : 'Z$';
+                
                 const discount = listing.discount_percentage || 0;
                 const discountColor = discount > 0 ? '#38e77b' : '#94a3b8';
                 const remainingValue = listing.remaining_principal || listing.asking_price || 0;
@@ -9753,15 +9756,15 @@ How it works:
                             <div class="card-metrics">
                                 <div class="metric-item">
                                     <span class="metric-label">Asking Price</span>
-                                    <span class="metric-value">$${parseFloat(listing.asking_price || 0).toLocaleString()}</span>
+                                    <span class="metric-value">${currencySymbol}${parseFloat(listing.asking_price || 0).toLocaleString()}</span>
                                 </div>
                                 <div class="metric-item">
                                     <span class="metric-label">Original Value</span>
-                                    <span class="metric-value">$${parseFloat(listing.original_investment || listing.asking_price || 0).toLocaleString()}</span>
+                                    <span class="metric-value">${currencySymbol}${parseFloat(listing.original_investment || listing.asking_price || 0).toLocaleString()}</span>
                                 </div>
                                 <div class="metric-item">
                                     <span class="metric-label">Interest Rate</span>
-                                    <span class="metric-value returns-positive">${parseFloat(listing.interest_rate || 0).toFixed(1)}% APR</span>
+                                    <span class="metric-value returns-positive">${parseFloat(listing.interest_rate || 0).toFixed(1)}% monthly</span>
                                 </div>
                             </div>
 
@@ -12780,16 +12783,24 @@ How it works:
         // Load Secondary Market Loans
         async function loadSecondaryMarketLoans() {
             try {
+                // Try to get from API first
                 const response = await window.ZimCrowdAPI.getSecondaryMarketLoans(1, 6);
                 
-                if (response.success && response.data && response.data.listings) {
+                if (response.success && response.data && response.data.listings && response.data.listings.length > 0) {
                     updateSecondaryMarketUI(response.data.listings);
-                } else {
-                    showMarketError('secondaryMarketLoans', 'No trading opportunities available');
+                    return;
                 }
             } catch (error) {
-                console.error('Failed to load secondary market:', error);
-                showMarketError('secondaryMarketLoans', 'Failed to load opportunities');
+                console.log('API not available, using mock data');
+            }
+            
+            // Fall back to mock listings from localStorage
+            const secondaryListings = JSON.parse(localStorage.getItem('secondaryMarketListings') || '[]');
+            
+            if (secondaryListings.length > 0) {
+                updateSecondaryMarketUI(secondaryListings);
+            } else {
+                showMarketError('secondaryMarketLoans', 'No trading opportunities available');
             }
         }
 
@@ -16345,8 +16356,70 @@ How it works:
 
         // Secondary Market Functions
         function openSecondaryMarketModal(investmentId) {
+            // Get investment from localStorage
+            const userInvestments = JSON.parse(localStorage.getItem('userInvestments') || '[]');
+            const investment = userInvestments.find(inv => inv.id === investmentId);
+            
+            if (!investment) {
+                alert('Investment not found');
+                return;
+            }
+            
+            // Determine currency symbol
+            const currencySymbol = investment.currency === 'USD' ? '$' : 'Z$';
+            
+            // Calculate suggested pricing
+            const remainingValue = investment.myInvestment;
+            const earnedSoFar = parseFloat(investment.earnedSoFar || 0);
+            const suggestedPrice = (remainingValue + earnedSoFar).toFixed(2);
+            const originalInvestment = investment.myInvestment;
+            
+            // Update modal
             document.getElementById('secondaryMarketModal').style.display = 'flex';
             document.getElementById('sellInvestmentId').value = investmentId;
+            
+            // Update the info section with investment details
+            const infoSection = document.querySelector('#secondaryMarketModal .card-body');
+            if (infoSection) {
+                infoSection.innerHTML = `
+                    <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="color: #3b82f6; margin-bottom: 15px;">Investment Details</h4>
+                        <div style="display: grid; gap: 10px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #94a3b8;">Loan Purpose:</span>
+                                <strong style="color: #e2e8f0;">${investment.purpose?.category || investment.title || 'Investment'}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #94a3b8;">Original Investment:</span>
+                                <strong style="color: #e2e8f0;">${currencySymbol}${originalInvestment.toLocaleString()}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #94a3b8;">Earned So Far:</span>
+                                <strong style="color: #38e77b;">${currencySymbol}${earnedSoFar.toFixed(2)}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #94a3b8;">Interest Rate:</span>
+                                <strong style="color: #e2e8f0;">${investment.interestRate}% monthly</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #94a3b8;">Remaining Term:</span>
+                                <strong style="color: #e2e8f0;">${investment.monthsRemaining || investment.term} months</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
+                                <span style="color: #f59e0b; font-weight: 600;">Suggested Price:</span>
+                                <strong style="color: #f59e0b; font-size: 18px;">${currencySymbol}${suggestedPrice}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 20px;">
+                        <p style="color: #94a3b8; margin: 0;">Sell your investment to other investors on the secondary market. Set your asking price and optional discount to attract buyers.</p>
+                    </div>
+                `;
+            }
+            
+            // Set suggested price in the input
+            document.getElementById('askingPrice').value = suggestedPrice;
+            document.getElementById('discountPercent').value = '';
         }
 
         function closeSecondaryMarketModal() {
@@ -16363,23 +16436,60 @@ How it works:
                 return;
             }
             
-            try {
-                const response = await window.ZimCrowdAPI.listSecondaryMarket({
-                    investment_id: investmentId,
-                    asking_price: askingPrice,
-                    discount_percent: discount
-                });
-                
-                if (response.success) {
-                    alert('Investment listed on secondary market successfully!');
-                    closeSecondaryMarketModal();
-                    loadInvestmentsData(); // Refresh investments
-                } else {
-                    alert('Failed to list investment: ' + (response.message || 'Unknown error'));
-                }
-            } catch (error) {
-                console.error('Secondary market error:', error);
-                alert('Failed to list investment');
+            // Get user investments from localStorage
+            const userInvestments = JSON.parse(localStorage.getItem('userInvestments') || '[]');
+            const investment = userInvestments.find(inv => inv.id === investmentId);
+            
+            if (!investment) {
+                alert('Investment not found');
+                return;
+            }
+            
+            // Determine currency symbol
+            const currencySymbol = investment.currency === 'USD' ? '$' : 'Z$';
+            
+            // Create secondary market listing
+            const listing = {
+                id: `listing_${Date.now()}`,
+                investment_id: investmentId,
+                seller_name: 'You',
+                loan_purpose: investment.purpose?.category || investment.title || 'Investment',
+                borrower_name: investment.borrower?.name || 'Anonymous',
+                asking_price: askingPrice,
+                original_investment: investment.myInvestment,
+                discount_percentage: discount,
+                interest_rate: investment.interestRate,
+                term: investment.term,
+                remaining_term: investment.monthsRemaining || investment.term,
+                currency: investment.currency,
+                listed_at: new Date().toISOString(),
+                status: 'active',
+                earned_so_far: parseFloat(investment.earnedSoFar || 0),
+                remaining_principal: investment.myInvestment,
+                risk_level: investment.riskLevel
+            };
+            
+            // Save to secondary market listings
+            const secondaryListings = JSON.parse(localStorage.getItem('secondaryMarketListings') || '[]');
+            secondaryListings.unshift(listing);
+            localStorage.setItem('secondaryMarketListings', JSON.stringify(secondaryListings));
+            
+            // Remove from user investments (mark as listed)
+            const updatedInvestments = userInvestments.filter(inv => inv.id !== investmentId);
+            localStorage.setItem('userInvestments', JSON.stringify(updatedInvestments));
+            
+            // Show success message
+            alert(`✅ Investment Listed Successfully!\n\nAsking Price: ${currencySymbol}${askingPrice.toFixed(2)}${discount > 0 ? `\nDiscount: ${discount}%` : ''}\n\nYour investment is now listed on the secondary market!`);
+            
+            // Close modal and refresh
+            closeSecondaryMarketModal();
+            
+            // Reload secondary market
+            loadSecondaryMarketLoans();
+            
+            // If portfolioManager exists, reload investments
+            if (window.portfolioManager) {
+                window.portfolioManager.loadInvestments();
             }
         }
     </script>
@@ -16968,8 +17078,11 @@ How it works:
             <input type="hidden" id="sellInvestmentId">
             
             <div style="display: grid; gap: 20px;">
-                <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 20px;">
-                    <p style="color: #94a3b8; margin-bottom: 10px;">Sell your investment to other investors on the secondary market. Set your asking price and optional discount to attract buyers.</p>
+                <!-- Investment details will be injected here dynamically -->
+                <div class="card-body">
+                    <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 20px;">
+                        <p style="color: #94a3b8; margin: 0;">Sell your investment to other investors on the secondary market. Set your asking price and optional discount to attract buyers.</p>
+                    </div>
                 </div>
                 
                 <div>
