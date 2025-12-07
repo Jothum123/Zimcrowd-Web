@@ -12727,6 +12727,7 @@ How it works:
             const investment = {
                 id: `inv_${Date.now()}`,
                 loanId: loan.id,
+                currency: loan.currency,
                 borrower: loan.borrower,
                 purpose: loan.purpose,
                 title: loan.title,
@@ -13072,6 +13073,9 @@ How it works:
             if (!container || !investments || investments.length === 0) return;
             
             container.innerHTML = investments.map(inv => {
+                // Determine currency symbol
+                const currencySymbol = inv.currency === 'USD' ? '$' : 'Z$';
+                
                 const initial = (inv.borrower_name || 'U').charAt(0).toUpperCase();
                 const riskClass = inv.risk_rating === 'low' ? 'low' : inv.risk_rating === 'high' ? 'high' : 'medium';
                 const progress = inv.progress_percentage || 0;
@@ -13079,7 +13083,7 @@ How it works:
                 const returnsPercent = inv.returns_percentage || 0;
                 const returnsClass = returns >= 0 ? 'returns-positive' : 'returns-negative';
                 
-                return `<div class="portfolio-card"><div class="card-header"><div class="borrower-info"><div class="borrower-avatar">${initial}</div><div class="borrower-details"><div class="borrower-name">${inv.borrower_name || 'Anonymous'}</div><div class="borrower-purpose">${inv.loan_purpose || 'Loan'}</div><span class="risk-badge ${riskClass}">${generateStarRating(inv.zimscore || 3.5)}</span></div></div></div><div class="card-body"><div class="card-metrics"><div class="metric-item"><span class="metric-label">Principal</span><span class="metric-value">$${parseFloat(inv.amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div><div class="metric-item"><span class="metric-label">Returns</span><span class="metric-value ${returnsClass}">+$${parseFloat(returns).toLocaleString('en-US', {minimumFractionDigits: 2})} (${returnsPercent.toFixed(1)}%)</span></div><div class="metric-item"><span class="metric-label">Monthly Return</span><span class="metric-value">$${parseFloat(inv.monthly_return || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div></div><div class="card-progress"><div class="progress-info"><span>Progress</span><span>${progress}%</span></div><div class="progress-bar"><div class="progress-fill" style="width: ${progress}%"></div></div></div><div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);"><button onclick="openSecondaryMarketModal('${inv.id}')" class="btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;"><i class="fas fa-store"></i> Sell on Secondary Market</button></div></div></div>`;
+                return `<div class="portfolio-card"><div class="card-header"><div class="borrower-info"><div class="borrower-avatar">${initial}</div><div class="borrower-details"><div class="borrower-name">${inv.borrower_name || 'Anonymous'}</div><div class="borrower-purpose">${inv.loan_purpose || 'Loan'}</div><span class="risk-badge ${riskClass}">${generateStarRating(inv.zimscore || 3.5)}</span></div></div></div><div class="card-body"><div class="card-metrics"><div class="metric-item"><span class="metric-label">Principal</span><span class="metric-value">${currencySymbol}${parseFloat(inv.amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div><div class="metric-item"><span class="metric-label">Returns</span><span class="metric-value ${returnsClass}">+${currencySymbol}${parseFloat(returns).toLocaleString('en-US', {minimumFractionDigits: 2})} (${returnsPercent.toFixed(1)}%)</span></div><div class="metric-item"><span class="metric-label">Monthly Return</span><span class="metric-value">${currencySymbol}${parseFloat(inv.monthly_return || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div></div><div class="card-progress"><div class="progress-info"><span>Progress</span><span>${progress}%</span></div><div class="progress-bar"><div class="progress-fill" style="width: ${progress}%"></div></div></div><div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);"><button onclick="openSecondaryMarketModal('${inv.id}')" class="btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;"><i class="fas fa-store"></i> Sell on Secondary Market</button></div></div></div>`;
             }).join('');
         }
 

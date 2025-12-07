@@ -340,11 +340,27 @@ const MockMarketData = {
         for (let i = 0; i < count; i++) {
             const borrower = this.borrowers[Math.floor(Math.random() * this.borrowers.length)];
             const purpose = this.loanPurposes[Math.floor(Math.random() * this.loanPurposes.length)];
-            const totalLoanAmount = Math.floor(Math.random() * 8000) + 1000;
-            const myInvestment = Math.floor(Math.random() * (totalLoanAmount * 0.4)) + 100;
+            
+            // Randomly assign currency: 60% USD, 40% ZWG
+            const currency = Math.random() > 0.4 ? 'USD' : 'ZWG';
+            
+            // Amount based on currency
+            const totalLoanAmount = currency === 'USD' 
+                ? Math.floor(Math.random() * 8000) + 1000  // USD: $1,000 - $9,000
+                : Math.floor(Math.random() * 80000) + 10000; // ZWG: 10,000 - 90,000
+            
+            const myInvestment = currency === 'USD'
+                ? Math.floor(Math.random() * (totalLoanAmount * 0.4)) + 100  // USD: min $100
+                : Math.floor(Math.random() * (totalLoanAmount * 0.4)) + 1000; // ZWG: min 1,000
+            
             const term = [6, 9, 12, 18, 24][Math.floor(Math.random() * 5)];
-            // MONTHLY interest rate (5-10% for USD)
-            const interestRate = (Math.random() * 5 + 5).toFixed(1);
+            
+            // MONTHLY interest rates based on currency
+            // USD: 5-10% monthly, ZWG: 7-15% monthly
+            const interestRate = currency === 'USD'
+                ? (Math.random() * 5 + 5).toFixed(1)  // 5% - 10%
+                : (Math.random() * 8 + 7).toFixed(1); // 7% - 15%
+            
             const monthsElapsed = Math.floor(Math.random() * (term - 1)) + 1;
             const status = Math.random() > 0.15 ? 'active' : (Math.random() > 0.5 ? 'completed' : 'defaulted');
 
@@ -356,6 +372,7 @@ const MockMarketData = {
             investments.push({
                 id: `inv_${Date.now()}_${i}`,
                 loanId: `loan_${Date.now()}_${i}`,
+                currency: currency,
                 borrower: borrower,
                 purpose: purpose,
                 title: this.generateLoanTitle(purpose.category),
