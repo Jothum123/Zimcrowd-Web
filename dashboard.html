@@ -13135,7 +13135,7 @@ How it works:
         }
 
         function updateInvestmentsList(investments) {
-            const container = document.getElementById('portfolioCardsContainer');
+            const container = document.getElementById('portfolioGrid');
             if (!container || !investments || investments.length === 0) return;
             
             container.innerHTML = investments.map(inv => {
@@ -19058,6 +19058,7 @@ How it works:
     <!-- Portfolio Investments with Mock Data -->
     <link rel="stylesheet" href="css/portfolio-investments.css">
     <script src="js/mock-market-data.js"></script>
-    <script src="js/portfolio-investments.js"></script>
+    <!-- portfolio-investments.js disabled - using production-data-loader instead -->
+    <!-- <script src="js/portfolio-investments.js"></script> -->
 </body>
 </html>

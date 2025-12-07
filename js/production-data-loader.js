@@ -348,7 +348,7 @@ const ProductionDataLoader = {
             
             // Update My Investments list
             if (myInvestments.success) {
-                const container = document.getElementById('portfolioCardsContainer');
+                const container = document.getElementById('portfolioGrid');
                 const investments = myInvestments.data || [];
                 const pagination = myInvestments.pagination || {};
                 
