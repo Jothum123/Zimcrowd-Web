@@ -12558,7 +12558,9 @@ How it works:
                             <!-- Investment Section -->
                             <div style="background: linear-gradient(135deg, rgba(56, 231, 123, 0.1), rgba(34, 197, 94, 0.05)); padding: 20px; border-radius: 12px; border: 1px solid rgba(56, 231, 123, 0.3);">
                                 <h4 style="color: white; margin-bottom: 15px;"><i class="fas fa-hand-holding-usd" style="color: #38e77b; margin-right: 10px;"></i>Make an Investment</h4>
-                                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                                
+                                <!-- Row 1: Input and Metrics -->
+                                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
                                     <div style="flex: 1; min-width: 200px;">
                                         <label style="color: #94a3b8; font-size: 12px; display: block; margin-bottom: 5px;">Investment Amount ($)</label>
                                         <input type="number" id="mockInvestAmount" min="${loan.minInvestment}" max="${loan.maxInvestment}" value="${Math.min(100, loan.maxInvestment)}" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(56, 231, 123, 0.3); background: rgba(0,0,0,0.3); color: white; font-size: 16px;">
@@ -12575,14 +12577,19 @@ How it works:
                                         <div style="color: #94a3b8; font-size: 12px;">Net Profit</div>
                                         <div style="color: #38e77b; font-size: 18px; font-weight: bold;" id="mockNetProfit">${currencySymbol}${defNetProfit.toFixed(2)}</div>
                                     </div>
-                                    <div style="text-align: center;">
-                                        <div style="color: #94a3b8; font-size: 12px;">Share</div>
+                                </div>
+                                
+                                <!-- Row 2: Share and Button -->
+                                <div style="display: flex; gap: 15px; align-items: center; justify-content: space-between;">
+                                    <div style="background: rgba(56, 231, 123, 0.1); padding: 10px 20px; border-radius: 8px; border: 1px solid rgba(56, 231, 123, 0.3);">
+                                        <div style="color: #94a3b8; font-size: 12px;">Your Share</div>
                                         <div style="color: #38e77b; font-size: 18px; font-weight: bold;" id="mockInvestShare">${((Math.min(100, loan.maxInvestment) / loan.amount) * 100).toFixed(2)}%</div>
                                     </div>
-                                    <button onclick="confirmMockInvestment(${index})" style="background: linear-gradient(135deg, #38e77b, #22c55e); color: #0f172a; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px;">
+                                    <button onclick="confirmMockInvestment(${index})" style="background: linear-gradient(135deg, #38e77b, #22c55e); color: #0f172a; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; white-space: nowrap;">
                                         <i class="fas fa-check"></i> Confirm Investment
                                     </button>
                                 </div>
+                                
                                 <p style="color: #94a3b8; font-size: 12px; margin-top: 10px;">Min: ${currencySymbol}${loan.minInvestment} • Max: ${currencySymbol}${loan.maxInvestment.toLocaleString()} (remaining amount)</p>
                                 <div style="background: rgba(56, 231, 123, 0.1); padding: 10px; border-radius: 8px; margin-top: 10px; border-left: 3px solid #38e77b;">
                                     <p style="color: #38e77b; font-size: 11px; margin: 0; font-weight: 600;"><i class="fas fa-info-circle"></i> High Returns: ${loan.interestRate}% monthly interest (${(loan.interestRate * 12).toFixed(0)}% annual equivalent)</p>
