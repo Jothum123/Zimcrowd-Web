@@ -12782,8 +12782,17 @@ How it works:
 
         // Load Secondary Market Loans
         async function loadSecondaryMarketLoans() {
+            // First, check localStorage for mock listings (prioritize for testing)
+            const secondaryListings = JSON.parse(localStorage.getItem('secondaryMarketListings') || '[]');
+            
+            if (secondaryListings.length > 0) {
+                console.log('Loading secondary market from localStorage:', secondaryListings.length, 'listings');
+                updateSecondaryMarketUI(secondaryListings);
+                return;
+            }
+            
+            // If no mock listings, try API
             try {
-                // Try to get from API first
                 const response = await window.ZimCrowdAPI.getSecondaryMarketLoans(1, 6);
                 
                 if (response.success && response.data && response.data.listings && response.data.listings.length > 0) {
@@ -12794,14 +12803,8 @@ How it works:
                 console.log('API not available, using mock data');
             }
             
-            // Fall back to mock listings from localStorage
-            const secondaryListings = JSON.parse(localStorage.getItem('secondaryMarketListings') || '[]');
-            
-            if (secondaryListings.length > 0) {
-                updateSecondaryMarketUI(secondaryListings);
-            } else {
-                showMarketError('secondaryMarketLoans', 'No trading opportunities available');
-            }
+            // No listings found
+            showMarketError('secondaryMarketLoans', 'No trading opportunities available');
         }
 
         // Load loans data for loans section
@@ -16486,6 +16489,24 @@ How it works:
             
             // Reload secondary market
             loadSecondaryMarketLoans();
+            
+            // Reload portfolio investments from localStorage
+            const userInvs = JSON.parse(localStorage.getItem('userInvestments') || '[]');
+            if (userInvs.length > 0) {
+                updateInvestmentsList(userInvs);
+            } else {
+                // Show empty state
+                const container = document.getElementById('portfolioCardsContainer');
+                if (container) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px; grid-column: 1 / -1;">
+                            <i class="fas fa-inbox" style="font-size: 64px; color: #334155; margin-bottom: 20px;"></i>
+                            <h3 style="color: #94a3b8; margin-bottom: 10px;">No Active Investments</h3>
+                            <p style="color: #64748b;">Start investing in loans to build your portfolio!</p>
+                        </div>
+                    `;
+                }
+            }
             
             // If portfolioManager exists, reload investments
             if (window.portfolioManager) {
