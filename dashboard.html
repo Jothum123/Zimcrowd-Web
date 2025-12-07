@@ -12592,6 +12592,7 @@ How it works:
         function confirmMockInvestment(index) {
             const loan = window.currentMockLoans[index];
             const amount = parseFloat(document.getElementById('mockInvestAmount').value) || 0;
+            const includeInsurance = document.getElementById('mockViewInsuranceCheck')?.checked || false;
             
             if (amount < loan.minInvestment) {
                 alert('Minimum investment is $' + loan.minInvestment);
@@ -12602,9 +12603,67 @@ How it works:
                 return;
             }
 
-            // Show success message (mock)
-            alert(`Investment of $${amount.toFixed(2)} in "${loan.title}" confirmed!\n\nExpected return: $${(amount * (1 + loan.interestRate/100 * loan.term/12)).toFixed(2)}\n\nNote: This is a demo. In production, this would process through the payment system.`);
+            // Calculate fees
+            const upfrontFees = (amount * 0.075) + 3 + (includeInsurance ? amount * 0.05 : 0);
+            const totalPaid = amount + upfrontFees;
+            const shareRatio = amount / loan.amount;
+            const grossMonthly = loan.monthlyPayment * shareRatio;
+            const portfolioFee = grossMonthly * 0.005;
+            const netMonthly = grossMonthly - portfolioFee;
+            const totalReceived = netMonthly * loan.term;
+            const expectedReturn = totalReceived - totalPaid;
+
+            // Create portfolio investment object
+            const investment = {
+                id: `inv_${Date.now()}`,
+                loanId: loan.id,
+                borrower: loan.borrower,
+                purpose: loan.purpose,
+                title: loan.title,
+                totalLoanAmount: loan.amount,
+                myInvestment: amount,
+                ownershipPercent: ((amount / loan.amount) * 100).toFixed(1),
+                interestRate: loan.interestRate,
+                term: loan.term,
+                monthsElapsed: 0,
+                monthsRemaining: loan.term,
+                status: 'active',
+                nextPaymentDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                nextPaymentAmount: netMonthly.toFixed(2),
+                totalExpectedReturn: totalReceived.toFixed(2),
+                earnedSoFar: '0.00',
+                returnRate: '0.0',
+                riskLevel: loan.riskLevel,
+                investedAt: new Date().toISOString(),
+                canSellOnSecondary: false,
+                secondaryMarketValue: (amount * 1.02).toFixed(2),
+                upfrontFees: upfrontFees.toFixed(2),
+                includeInsurance: includeInsurance
+            };
+
+            // Save to localStorage
+            const existingInvestments = JSON.parse(localStorage.getItem('userInvestments') || '[]');
+            existingInvestments.unshift(investment); // Add to beginning
+            localStorage.setItem('userInvestments', JSON.stringify(existingInvestments));
+
+            // Update loan funding
+            loan.fundedAmount += amount;
+            loan.fundedPercent = Math.floor((loan.fundedAmount / loan.amount) * 100);
+            loan.maxInvestment = loan.amount - loan.fundedAmount;
+            
+            // Show success message
+            alert(`✅ Investment Confirmed!\n\nAmount: $${amount.toFixed(2)}\nUpfront Fees: $${upfrontFees.toFixed(2)}\nTotal Paid: $${totalPaid.toFixed(2)}\n\nExpected Return: $${totalReceived.toFixed(2)}\nNet Profit: $${expectedReturn.toFixed(2)}\n\nYour investment has been added to your portfolio!`);
+            
+            // Close modal
             closeMockLoanDetailModal();
+            
+            // Reload portfolio if on dashboard
+            if (window.portfolioManager) {
+                window.portfolioManager.loadInvestments();
+            }
+            
+            // Reload primary market to show updated funding
+            loadMockPrimaryMarketLoans();
         }
 
         // Load Secondary Market Loans

@@ -13,13 +13,30 @@ class PortfolioInvestmentsManager {
     }
 
     init() {
-        // Load mock portfolio data
-        this.investments = MockMarketData.generatePortfolioInvestments(12);
+        // Load investments
+        this.loadInvestments();
         
         // Render portfolio
         this.renderPortfolio();
         this.updatePortfolioStats();
         this.setupEventListeners();
+    }
+
+    loadInvestments() {
+        // Load user investments from localStorage
+        const userInvestments = JSON.parse(localStorage.getItem('userInvestments') || '[]');
+        
+        // Load mock portfolio data
+        const mockInvestments = MockMarketData.generatePortfolioInvestments(8);
+        
+        // Merge: user investments first, then mock investments
+        this.investments = [...userInvestments, ...mockInvestments];
+        
+        // Re-render if already initialized
+        if (this.investments.length > 0) {
+            this.renderPortfolio();
+            this.updatePortfolioStats();
+        }
     }
 
     setupEventListeners() {
@@ -533,13 +550,18 @@ class PortfolioInvestmentsManager {
             btn.classList.toggle('active', btn.dataset.portfolioTab === tab);
         });
 
+        // Reload all investments
+        const userInvestments = JSON.parse(localStorage.getItem('userInvestments') || '[]');
+        const mockInvestments = MockMarketData.generatePortfolioInvestments(8);
+        const allInvestments = [...userInvestments, ...mockInvestments];
+
         // Filter investments based on tab
         if (tab === 'all') {
-            this.investments = MockMarketData.generatePortfolioInvestments(12);
+            this.investments = allInvestments;
         } else if (tab === 'active') {
-            this.investments = MockMarketData.generatePortfolioInvestments(12).filter(inv => inv.status === 'active');
+            this.investments = allInvestments.filter(inv => inv.status === 'active');
         } else if (tab === 'completed') {
-            this.investments = MockMarketData.generatePortfolioInvestments(12).filter(inv => inv.status === 'completed');
+            this.investments = allInvestments.filter(inv => inv.status === 'completed');
         }
 
         this.currentPage = 1;
@@ -553,6 +575,6 @@ let portfolioManager;
 document.addEventListener('DOMContentLoaded', () => {
     // Only initialize on dashboard page
     if (document.getElementById('portfolioGrid') || document.getElementById('investments-section')) {
-        portfolioManager = new PortfolioInvestmentsManager();
+        window.portfolioManager = new PortfolioInvestmentsManager();
     }
 });
