@@ -15922,6 +15922,7 @@ How it works:
 
         function calculateInvestmentFees() {
             const investAmount = parseFloat(document.getElementById('investmentAmount')?.value) || 0;
+            const includeInsurance = document.getElementById('includeInsurance')?.checked || false;
             
             // Lender fees - ACTUAL FEE STRUCTURE (Migration 008)
             const platformFeePercent = 5; // 5% upfront
@@ -15935,7 +15936,7 @@ How it works:
             const platformFee = investAmount * (platformFeePercent / 100);
             const processingFee = investAmount * (processingFeePercent / 100);
             const investmentFee = investAmount * (investmentFeePercent / 100);
-            const insuranceFee = investAmount * (insuranceFeePercent / 100);
+            const insuranceFee = includeInsurance ? investAmount * (insuranceFeePercent / 100) : 0;
             
             // Total upfront to pay ON TOP of investment
             const totalUpfrontFees = platformFee + processingFee + investmentFee + dueDiligenceFixed + insuranceFee;
@@ -16133,10 +16134,21 @@ How it works:
                             
                             <div style="height: 1px; background: rgba(239, 68, 68, 0.2); margin: 8px 0;"></div>
                             
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #94a3b8;">Insurance (5%):</span>
-                                <strong id="investInsuranceFee" style="color: #ef4444;">+$0.00</strong>
+                            <!-- Optional Insurance with Checkbox -->
+                            <div style="background: rgba(56, 231, 123, 0.05); padding: 8px; border-radius: 6px; border: 1px dashed rgba(56, 231, 123, 0.3); margin-bottom: 8px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #e2e8f0; font-size: 13px;">
+                                        <input type="checkbox" id="includeInsurance" onchange="calculateInvestmentFees()" style="accent-color: #38e77b; width: 16px; height: 16px;">
+                                        Add Insurance Protection (5%)
+                                    </label>
+                                    <strong id="investInsuranceFee" style="color: #38e77b;">+$0.00</strong>
+                                </div>
+                                <p style="color: #94a3b8; font-size: 11px; margin: 0; line-height: 1.4;">
+                                    <i class="fas fa-shield-alt" style="color: #38e77b; margin-right: 4px;"></i>
+                                    <strong>Highly Recommended:</strong> Protects 90% of your principal if the borrower defaults. Without insurance, your capital is at significant risk.
+                                </p>
                             </div>
+
                             <div style="border-top: 1px solid rgba(239, 68, 68, 0.3); padding-top: 8px; margin-top: 8px; display: flex; justify-content: space-between;">
                                 <span style="color: #e2e8f0; font-weight: 600;">Total Upfront Fees:</span>
                                 <strong id="investTotalUpfrontFees" style="color: #ef4444; font-size: 16px;">+$0.00</strong>
