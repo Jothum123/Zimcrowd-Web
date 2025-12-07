@@ -12262,7 +12262,7 @@ How it works:
             
             // Monthly return breakdown
             const defGrossMonthly = loan.monthlyPayment * defShare;
-            const defPortfolioFee = defGrossMonthly * 0.025;
+            const defPortfolioFee = defGrossMonthly * 0.005;
             const defNetMonthly = defGrossMonthly - defPortfolioFee;
 
             const modalHtml = `
@@ -12369,7 +12369,7 @@ How it works:
                                             </div>
                                             
                                             <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                                                <span style="color: #94a3b8; font-size: 11px;">Portfolio Mgmt (2.5%):</span>
+                                                <span style="color: #94a3b8; font-size: 11px;">Portfolio Mgmt (0.5%):</span>
                                                 <strong id="mockPortfolioFee" style="color: #f59e0b; font-size: 11px;">-$${defPortfolioFee.toFixed(2)}</strong>
                                             </div>
                                             
@@ -12513,7 +12513,7 @@ How it works:
                     // Update monthly return breakdown
                     const shareRatio = amount / loan.amount;
                     const grossMonthly = loan.monthlyPayment * shareRatio;
-                    const portfolioFee = grossMonthly * 0.025;
+                    const portfolioFee = grossMonthly * 0.005;
                     const netMonthly = grossMonthly - portfolioFee;
                     
                     const grossEl = document.getElementById('mockGrossMonthly');
@@ -16029,7 +16029,7 @@ How it works:
             const investmentFeePercent = 0.5; // 0.5% upfront
             const insuranceFeePercent = 5; // 5% upfront (Optional)
             const dueDiligenceFixed = 3.00; // $3 fixed
-            const portfolioMgmtPercent = 2.5; // 2.5% monthly
+            const portfolioMgmtPercent = 0.5; // 0.5% monthly (6% annually)
             
             // Upfront fees calculation
             const platformFee = investAmount * (platformFeePercent / 100);
@@ -16301,7 +16301,7 @@ How it works:
                             </div>
                             
                             <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <span style="color: #94a3b8;">Portfolio Mgmt (2.5%):</span>
+                                <span style="color: #94a3b8;">Portfolio Mgmt (0.5%):</span>
                                 <strong id="investPortfolioFeeAmount" style="color: #f59e0b;">-$0.00</strong>
                             </div>
                             
@@ -16311,7 +16311,7 @@ How it works:
                             </div>
                             
                             <p style="color: #94a3b8; font-size: 11px; margin-top: 8px; font-style: italic;">
-                                <i class="fas fa-info-circle"></i> The 2.5% fee is automatically deducted from each monthly payment.
+                                <i class="fas fa-info-circle"></i> The 0.5% monthly fee (6% annually) is automatically deducted from each payment.
                             </p>
                         </div>
                     </div>
