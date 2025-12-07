@@ -12248,9 +12248,19 @@ How it works:
                 </tr>
             `).join('');
 
-            // Calculate default monthly breakdown for initial display
+            // Calculate default fees for initial display based on default investment amount
             const defAmount = Math.min(100, loan.maxInvestment);
             const defShare = defAmount / loan.amount;
+            
+            // Upfront fees based on investment amount
+            const defPlatformFee = defAmount * 0.05;
+            const defProcessingFee = defAmount * 0.02;
+            const defInvestmentFee = defAmount * 0.005;
+            const defDueDiligence = 3.00;
+            const defInsuranceFee = defAmount * 0.05;
+            const defTotalUpfront = defPlatformFee + defProcessingFee + defInvestmentFee + defDueDiligence;
+            
+            // Monthly return breakdown
             const defGrossMonthly = loan.monthlyPayment * defShare;
             const defPortfolioFee = defGrossMonthly * 0.025;
             const defNetMonthly = defGrossMonthly - defPortfolioFee;
@@ -12315,15 +12325,15 @@ How it works:
                                         
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                                             <span style="color: #94a3b8; font-size: 12px;">Platform (5%)</span>
-                                            <span style="color: #e2e8f0; font-size: 12px;">$${(loan.amount * 0.05).toLocaleString()}</span>
+                                            <span id="mockPlatformFee" style="color: #e2e8f0; font-size: 12px;">$${defPlatformFee.toFixed(2)}</span>
                                         </div>
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                                             <span style="color: #94a3b8; font-size: 12px;">Processing (2%)</span>
-                                            <span style="color: #e2e8f0; font-size: 12px;">$${(loan.amount * 0.02).toLocaleString()}</span>
+                                            <span id="mockProcessingFee" style="color: #e2e8f0; font-size: 12px;">$${defProcessingFee.toFixed(2)}</span>
                                         </div>
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                                             <span style="color: #94a3b8; font-size: 12px;">Investment (0.5%)</span>
-                                            <span style="color: #e2e8f0; font-size: 12px;">$${(loan.amount * 0.005).toLocaleString()}</span>
+                                            <span id="mockInvestmentFee" style="color: #e2e8f0; font-size: 12px;">$${defInvestmentFee.toFixed(2)}</span>
                                         </div>
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                                             <span style="color: #94a3b8; font-size: 12px;">Due Diligence</span>
@@ -12331,7 +12341,7 @@ How it works:
                                         </div>
                                         <div style="display: flex; justify-content: space-between; margin-top: 8px; font-weight: 600; color: #38e77b;">
                                             <span style="font-size: 12px;">Total Upfront</span>
-                                            <span style="font-size: 12px;" id="mockViewTotalUpfront">$${(loan.amount * 0.075 + 3).toLocaleString()}</span>
+                                            <span style="font-size: 12px;" id="mockViewTotalUpfront">$${defTotalUpfront.toFixed(2)}</span>
                                         </div>
                                     </div>
 
@@ -12343,7 +12353,7 @@ How it works:
                                             <label style="color: #94a3b8; font-size: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
                                                 <input type="checkbox" id="mockViewInsuranceCheck" style="accent-color: #38e77b;"> Insurance (Opt)
                                             </label>
-                                            <span style="color: #e2e8f0; font-size: 12px;">5.0% ($${(loan.amount * 0.05).toLocaleString()})</span>
+                                            <span id="mockInsuranceFeeDisplay" style="color: #e2e8f0; font-size: 12px;">5.0% ($${defInsuranceFee.toFixed(2)})</span>
                                         </div>
                                         <div style="margin-bottom: 8px; font-size: 10px; color: #38e77b; font-style: italic;">
                                             <i class="fas fa-shield-alt"></i> Highly Recommended: Protects 90% of principal
@@ -12477,6 +12487,20 @@ How it works:
                     const shareEl = document.getElementById('mockInvestShare');
                     if (shareEl) shareEl.textContent = share.toFixed(2) + '%';
                     
+                    // Update upfront fees based on investment amount
+                    const platformFee = amount * 0.05;
+                    const processingFee = amount * 0.02;
+                    const investmentFee = amount * 0.005;
+                    const insuranceFee = amount * 0.05;
+                    const insuranceChecked = document.getElementById('mockViewInsuranceCheck')?.checked || false;
+                    const totalUpfront = platformFee + processingFee + investmentFee + 3 + (insuranceChecked ? insuranceFee : 0);
+                    
+                    document.getElementById('mockPlatformFee').textContent = '$' + platformFee.toFixed(2);
+                    document.getElementById('mockProcessingFee').textContent = '$' + processingFee.toFixed(2);
+                    document.getElementById('mockInvestmentFee').textContent = '$' + investmentFee.toFixed(2);
+                    document.getElementById('mockInsuranceFeeDisplay').textContent = '5.0% ($' + insuranceFee.toFixed(2) + ')';
+                    document.getElementById('mockViewTotalUpfront').textContent = '$' + totalUpfront.toFixed(2);
+                    
                     // Update monthly return breakdown
                     const shareRatio = amount / loan.amount;
                     const grossMonthly = loan.monthlyPayment * shareRatio;
@@ -12497,10 +12521,11 @@ How it works:
             const insuranceCheck = document.getElementById('mockViewInsuranceCheck');
             if (insuranceCheck) {
                 insuranceCheck.addEventListener('change', function() {
-                    const baseUpfront = loan.amount * 0.075 + 3; // Platform(5%) + Processing(2%) + Inv(0.5%) + DueDil($3)
-                    const insuranceFee = this.checked ? (loan.amount * 0.05) : 0;
+                    const amount = parseFloat(document.getElementById('mockInvestAmount')?.value) || defAmount;
+                    const baseUpfront = amount * 0.075 + 3; // Platform(5%) + Processing(2%) + Inv(0.5%) + DueDil($3)
+                    const insuranceFee = this.checked ? (amount * 0.05) : 0;
                     const total = baseUpfront + insuranceFee;
-                    document.getElementById('mockViewTotalUpfront').textContent = '$' + total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    document.getElementById('mockViewTotalUpfront').textContent = '$' + total.toFixed(2);
                 });
             }
 
