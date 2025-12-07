@@ -12264,6 +12264,10 @@ How it works:
             const defGrossMonthly = loan.monthlyPayment * defShare;
             const defPortfolioFee = defGrossMonthly * 0.005;
             const defNetMonthly = defGrossMonthly - defPortfolioFee;
+            
+            // Calculate total received and net profit
+            const defTotalReceived = defNetMonthly * loan.term;
+            const defNetProfit = defTotalReceived - defAmount - defTotalUpfront;
 
             const modalHtml = `
                 <div id="mockLoanDetailModal" class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;">
@@ -12454,8 +12458,12 @@ How it works:
                                         <div style="color: #f59e0b; font-size: 18px; font-weight: bold;" id="mockTotalToPay">$${(defAmount + defTotalUpfront).toFixed(2)}</div>
                                     </div>
                                     <div style="text-align: center;">
-                                        <div style="color: #94a3b8; font-size: 12px;">Expected Return</div>
-                                        <div style="color: #38e77b; font-size: 18px; font-weight: bold;" id="expectedReturn">$${(defNetMonthly * loan.term).toFixed(2)}</div>
+                                        <div style="color: #94a3b8; font-size: 12px;">Total Received</div>
+                                        <div style="color: #64748b; font-size: 18px; font-weight: bold;" id="mockTotalReceived">$${defTotalReceived.toFixed(2)}</div>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div style="color: #94a3b8; font-size: 12px;">Net Profit</div>
+                                        <div style="color: #38e77b; font-size: 18px; font-weight: bold;" id="mockNetProfit">$${defNetProfit.toFixed(2)}</div>
                                     </div>
                                     <div style="text-align: center;">
                                         <div style="color: #94a3b8; font-size: 12px;">Share</div>
@@ -12524,9 +12532,12 @@ How it works:
                     if (feeEl) feeEl.textContent = '-$' + portfolioFee.toFixed(2);
                     if (netEl) netEl.textContent = '$' + netMonthly.toFixed(2);
                     
-                    // Update expected return based on net monthly (after portfolio fee)
-                    const totalExpectedReturn = netMonthly * loan.term;
-                    document.getElementById('expectedReturn').textContent = '$' + totalExpectedReturn.toFixed(2);
+                    // Update total received and net profit
+                    const totalReceived = netMonthly * loan.term;
+                    const netProfit = totalReceived - amount - totalUpfront;
+                    
+                    document.getElementById('mockTotalReceived').textContent = '$' + totalReceived.toFixed(2);
+                    document.getElementById('mockNetProfit').textContent = '$' + netProfit.toFixed(2);
                 });
             }
 
@@ -12543,6 +12554,15 @@ How it works:
                     // Update total to pay
                     const totalToPay = amount + total;
                     document.getElementById('mockTotalToPay').textContent = '$' + totalToPay.toFixed(2);
+                    
+                    // Update net profit (since upfront fees changed)
+                    const shareRatio = amount / loan.amount;
+                    const grossMonthly = loan.monthlyPayment * shareRatio;
+                    const portfolioFee = grossMonthly * 0.005;
+                    const netMonthly = grossMonthly - portfolioFee;
+                    const totalReceived = netMonthly * loan.term;
+                    const netProfit = totalReceived - amount - total;
+                    document.getElementById('mockNetProfit').textContent = '$' + netProfit.toFixed(2);
                 });
             }
 
