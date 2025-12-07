@@ -12416,6 +12416,10 @@ How it works:
                                         <div style="color: #94a3b8; font-size: 12px;">Expected Return</div>
                                         <div style="color: #38e77b; font-size: 18px; font-weight: bold;" id="expectedReturn">$${(100 * (1 + loan.interestRate/100 * loan.term/12)).toFixed(2)}</div>
                                     </div>
+                                    <div style="text-align: center;">
+                                        <div style="color: #94a3b8; font-size: 12px;">Share</div>
+                                        <div style="color: #38e77b; font-size: 18px; font-weight: bold;" id="mockInvestShare">${((Math.min(100, loan.maxInvestment) / loan.amount) * 100).toFixed(2)}%</div>
+                                    </div>
                                     <button onclick="confirmMockInvestment(${index})" style="background: linear-gradient(135deg, #38e77b, #22c55e); color: #0f172a; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px;">
                                         <i class="fas fa-check"></i> Confirm Investment
                                     </button>
@@ -12441,6 +12445,10 @@ How it works:
                     const amount = parseFloat(this.value) || 0;
                     const expectedReturn = amount * (1 + loan.interestRate/100 * loan.term/12);
                     document.getElementById('expectedReturn').textContent = '$' + expectedReturn.toFixed(2);
+                    
+                    const share = (amount / loan.amount) * 100;
+                    const shareEl = document.getElementById('mockInvestShare');
+                    if (shareEl) shareEl.textContent = share.toFixed(2) + '%';
                 });
             }
 
@@ -15950,9 +15958,17 @@ How it works:
             const totalUpfrontFees = platformFee + processingFee + investmentFee + dueDiligenceFixed + insuranceFee;
             const totalPayable = investAmount + totalUpfrontFees;
             
+            // Calculate Share
+            const loanAmountText = document.getElementById('investLoanAmount')?.textContent || '$0';
+            const loanTotal = parseFloat(loanAmountText.replace(/[^0-9.-]+/g,"")) || 1;
+            const sharePercent = (investAmount / loanTotal) * 100;
+            
             // Update UI
             if(document.getElementById('investRequestedAmount')) 
                 document.getElementById('investRequestedAmount').textContent = `$${investAmount.toFixed(2)}`;
+            
+            if(document.getElementById('investSharePercent'))
+                document.getElementById('investSharePercent').textContent = `Share of Loan: ${sharePercent.toFixed(2)}%`;
             
             if(document.getElementById('investPlatformFee'))
                 document.getElementById('investPlatformFee').textContent = `+$${platformFee.toFixed(2)}`;
@@ -16107,6 +16123,7 @@ How it works:
                 <div style="background: linear-gradient(135deg, rgba(56, 231, 123, 0.2), rgba(52, 211, 153, 0.1)); border: 2px solid #38e77b; border-radius: 12px; padding: 25px; text-align: center;">
                     <p style="color: #94a3b8; font-size: 14px; margin-bottom: 8px;">Principal Investment Amount</p>
                     <h2 id="investPrincipalAmount" style="color: #38e77b; font-size: 36px; font-weight: 700; margin: 0;">$0.00</h2>
+                    <div id="investSharePercent" style="color: #38e77b; font-size: 14px; font-weight: 600; margin-top: 5px;">Share of Loan: 0.00%</div>
                     <p style="color: #64748b; font-size: 12px; margin-top: 8px;">This is the actual amount invested in the loan</p>
                 </div>
                 
