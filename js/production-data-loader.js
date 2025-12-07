@@ -382,8 +382,10 @@ const ProductionDataLoader = {
                     if (investments.length > 0) {
                         // Use the dashboard's updateInvestmentsList function if available
                         if (typeof window.updateInvestmentsList === 'function') {
+                            console.log('✅ Using global updateInvestmentsList function');
                             window.updateInvestmentsList(investments);
                         } else {
+                            console.log('⚠️ Global updateInvestmentsList not found, using internal renderer');
                             container.innerHTML = investments.map(inv => this.createInvestmentCard(inv)).join('');
                         }
                         console.log('✅ Investment cards updated:', investments.length);
