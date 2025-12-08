@@ -6013,22 +6013,39 @@
                         total_payments: 2,
                         payments_made: 1,
                         borrower_location: 'Masvingo, Zimbabwe',
+                        borrower_occupation: 'Mechanic',
+                        risk_level: 'Medium'
+                    }
+                };
 
-// Prevent jQuery or other libraries from intercepting clicks
-document.addEventListener('click', function(e) {
-    if (e.target.onclick && e.target.onclick.toString().includes('viewInvestmentDetails')) {
-        console.log('🎯 Investment details click detected');
-    }
-});
+                // Prevent jQuery or other libraries from intercepting clicks
+                document.addEventListener('click', function(e) {
+                    if (e.target.onclick && e.target.onclick.toString().includes('viewInvestmentDetails')) {
+                        console.log('🎯 Investment details click detected');
+                    }
+                });
 
-// Global error handler to catch any remaining API errors
-window.addEventListener('error', function(e) {
-    if (e.message && e.message.includes('api/investments')) {
-        console.log('🚫 Caught API error, redirecting to local data');
-        e.preventDefault();
-        return true;
-    }
-});
+                // Global error handler to catch any remaining API errors
+                window.addEventListener('error', function(e) {
+                    if (e.message && e.message.includes('api/investments')) {
+                        console.log('🚫 Caught API error, redirecting to local data');
+                        e.preventDefault();
+                        return true;
+                    }
+                });
+
+                // Function to view investment details
+                window.viewInvestmentDetails = function(investmentId) {
+                    const investment = investmentDetails[investmentId];
+                    if (!investment) {
+                        console.error('Investment not found:', investmentId);
+                        return;
+                    }
+
+                    const modal = document.createElement('div');
+                    modal.className = 'modal-overlay';
+                    modal.innerHTML = `
+                        <div class="modal-container" style="max-width: 900px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(56, 231, 123, 0.2); border-radius: 16px; color: #f1f5f9;">
                             <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
                                 <h2 style="margin: 0; color: #38e77b;">Investment Details</h2>
                                 <button onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer;">×</button>
@@ -6078,43 +6095,41 @@ window.addEventListener('error', function(e) {
                                                         font-size: 11px; 
                                                         font-weight: 700;
                                                         border: 2px solid #0f172a;
-                                                        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
                                                     ">
                                                         ${investment.zimscore}
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <div style="font-weight: 600; font-size: 18px; color: #f1f5f9;">${investment.borrower_name}</div>
-                                                    <div style="color: #94a3b8; margin-bottom: 4px;">${investment.borrower_occupation}</div>
-                                                    <div style="font-size: 12px; color: #64748b;">⭐⭐⭐⭐☆ • ${investment.zimscore >= 800 ? 'Excellent' : investment.zimscore >= 700 ? 'Good' : 'Fair'} Credit</div>
+                                                    <div style="font-weight: 700; font-size: 18px; margin-bottom: 4px;">${investment.borrower_name}</div>
+                                                    <div style="color: #94a3b8; margin-bottom: 8px;">${investment.borrower_occupation}</div>
+                                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                                        <div style="color: #f59e0b;">
+                                                            ${'★'.repeat(Math.floor(investment.borrower_rating))}${'☆'.repeat(5 - Math.floor(investment.borrower_rating))}
+                                                        </div>
+                                                        <span style="color: #94a3b8; font-size: 14px;">(${investment.borrower_rating})</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div style="margin-bottom: 12px;"><strong>Rating:</strong> ${'⭐'.repeat(Math.floor(investment.borrower_rating))} (${investment.borrower_rating}/5)</div>
-                                            <div style="margin-bottom: 12px;"><strong>ZimScore:</strong> ${investment.zimscore}</div>
-                                            <div><strong>Location:</strong> ${investment.borrower_location}</div>
+                                            <div style="margin-bottom: 12px;"><strong>Location:</strong> ${investment.borrower_location}</div>
+                                            <div><strong>ZimScore:</strong> <span style="color: ${investment.zimscore >= 800 ? '#22c55e' : investment.zimscore >= 700 ? '#f59e0b' : '#ef4444'}">${investment.zimscore}</span></div>
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-                                    <div>
-                                        <h3 style="color: #38e77b; margin-bottom: 16px;">Your Investment</h3>
-                                        <div style="background: rgba(0, 0, 0, 0.3); padding: 16px; border-radius: 12px;">
-                                            <div style="margin-bottom: 12px;"><strong>Invested Amount:</strong> $${investment.amount.toLocaleString()}</div>
-                                            <div style="margin-bottom: 12px;"><strong>Ownership:</strong> ${investment.ownership_percent}%</div>
-                                            <div style="margin-bottom: 12px;"><strong>Returns Earned:</strong> <span style="color: #22c55e;">+$${investment.returns.toFixed(2)}</span></div>
-                                            <div style="margin-bottom: 12px;"><strong>Investment Date:</strong> ${new Date(investment.investment_date).toLocaleDateString()}</div>
-                                            <div><strong>Status:</strong> <span style="color: ${investment.status === 'active' ? '#22c55e' : '#3b82f6'}; text-transform: capitalize;">${investment.status}</span></div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h3 style="color: #38e77b; margin-bottom: 16px;">Payment Schedule</h3>
-                                        <div style="background: rgba(0, 0, 0, 0.3); padding: 16px; border-radius: 12px;">
-                                            <div style="margin-bottom: 12px;"><strong>Total Payments:</strong> ${investment.total_payments}</div>
-                                            <div style="margin-bottom: 12px;"><strong>Payments Made:</strong> ${investment.payments_made}</div>
-                                            <div style="margin-bottom: 12px;"><strong>Remaining:</strong> ${investment.months_remaining} months</div>
-                                            <div style="margin-bottom: 12px;"><strong>Next Payment:</strong> ${new Date(investment.next_payment).toLocaleDateString()}</div>
-                                            <div><strong>Maturity Date:</strong> ${new Date(investment.maturity_date).toLocaleDateString()}</div>
+                                <div style="margin-bottom: 24px;">
+                                    <h3 style="color: #38e77b; margin-bottom: 16px;">Your Investment</h3>
+                                    <div style="background: rgba(0, 0, 0, 0.3); padding: 16px; border-radius: 12px;">
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                            <div>
+                                                <div style="margin-bottom: 12px;"><strong>Investment Amount:</strong> $${investment.amount.toLocaleString()}</div>
+                                                <div style="margin-bottom: 12px;"><strong>Ownership:</strong> ${investment.ownership_percent}%</div>
+                                                <div><strong>Expected Returns:</strong> <span style="color: #22c55e;">$${investment.returns.toFixed(2)}</span></div>
+                                            </div>
+                                            <div>
+                                                <div style="margin-bottom: 12px;"><strong>Investment Date:</strong> ${new Date(investment.investment_date).toLocaleDateString()}</div>
+                                                <div style="margin-bottom: 12px;"><strong>Next Payment:</strong> ${new Date(investment.next_payment).toLocaleDateString()}</div>
+                                                <div><strong>Maturity Date:</strong> ${new Date(investment.maturity_date).toLocaleDateString()}</div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -6138,10 +6153,10 @@ window.addEventListener('error', function(e) {
                     `;
 
                     document.body.appendChild(modal);
-                }
+                };
 
-                // Sell to Secondary Market Modal
-                window.sellToSecondaryMarket = function(investmentId, currentValue, borrowerName) {
+                // Function to sell to secondary market
+                function sellToSecondaryMarket(investmentId, currentValue, borrowerName) {
                     console.log('🔄 Sell to Secondary Market called:', { investmentId, currentValue, borrowerName });
                     
                     // Prevent any potential event issues
@@ -13033,6 +13048,23 @@ How it works:
             }
         }
 
+        // Load Mock Primary Market Loans
+        function loadMockPrimaryMarketLoans() {
+            // Check if MockMarketData is available
+            if (typeof MockMarketData !== 'undefined' && MockMarketData.generatePrimaryMarketLoans) {
+                const mockLoans = MockMarketData.generatePrimaryMarketLoans(12);
+                window.allMockLoans = mockLoans;
+                window.currentMockLoans = mockLoans;
+                renderPrimaryMarketLoans(mockLoans);
+                console.log('✅ Loaded mock primary market loans:', mockLoans.length);
+            } else {
+                console.warn('⚠️ MockMarketData not available, using empty loan list');
+                window.allMockLoans = [];
+                window.currentMockLoans = [];
+                renderPrimaryMarketLoans([]);
+            }
+        }
+
         // Currency filter state
         window.currentCurrencyFilter = 'all';
         window.allMockLoans = []; // Store all loans for filtering
@@ -13076,23 +13108,18 @@ How it works:
                 } else {
                     countDisplay.textContent = `Showing ${filteredLoans.length} ${currency} loans`;
                 }
+            }
+        }
 
-        let starDisplayHtml = '';
-        let historyText = '';
-
-        if (isFirstLoan) {
-            // Gray stars with zero fill
-            starDisplayHtml = Array(5).fill('<i class="far fa-star" style="color: #64748b;"></i>').join('');
-            historyText = 'First Loan';
-        } else if (isDefaulter) {
-            // Red stars: 1 filled, 4 empty
-            starDisplayHtml = '<i class="fas fa-star" style="color: #ef4444;"></i>' + 
-                              Array(4).fill('<i class="far fa-star" style="color: #ef4444;"></i>').join('');
-            historyText = `${loan.borrower.repaidOnTime}/${loan.borrower.totalLoans} loans repaid`;
-        } else {
-            // Standard star rating
-            starDisplayHtml = '';
-            historyText = `${loan.borrower.repaidOnTime} loans repaid`;
+        // Render Primary Market Loans
+        function renderPrimaryMarketLoans(loans) {
+            const container = document.getElementById('primary-market-loans-container');
+            if (!container) return;
+            
+            // Check if no loans to display
+            if (loans.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px; color: #64748b;">
                         <i class="fas fa-search" style="font-size: 48px; color: #64748b; margin-bottom: 20px;"></i>
                         <h3 style="color: #94a3b8; margin-bottom: 10px;">No Loans Found</h3>
                         <p style="color: #64748b;">Try changing the currency filter</p>
