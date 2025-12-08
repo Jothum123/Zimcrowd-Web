@@ -5192,7 +5192,16 @@
                 <script>
                 (function() {
                     // FORCE OVERRIDE ALL OTHER INVESTMENT RENDERERS
+                    let lastLayoutTime = 0;
+                    const LAYOUT_THROTTLE = 2000; // Only run every 2 seconds max
+                    
                     function forceTableLayout() {
+                        const now = Date.now();
+                        if (now - lastLayoutTime < LAYOUT_THROTTLE) {
+                            return; // Skip if called too recently
+                        }
+                        lastLayoutTime = now;
+                        
                         console.log('🔧 Force overriding investment cards with table layout...');
                         
                         // Find all possible containers that might have messy cards
@@ -5387,20 +5396,87 @@
                 // Global debugging and API override
                 window.INVESTMENT_DEBUG = true;
                 
+                // Define viewInvestmentDetails function FIRST to ensure it's always available
+                window.viewInvestmentDetails = function(investmentId) {
+                    console.log('🔍 Opening investment details for:', investmentId);
+                    
+                    // Prevent any potential API calls
+                    if (typeof event !== 'undefined' && event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    
+                    // Check if we have the investment details data
+                    if (typeof investmentDetails === 'undefined') {
+                        console.error('❌ Investment details data not loaded yet');
+                        if (window.ToastNotifications) {
+                            window.ToastNotifications.error(
+                                'Data Not Ready',
+                                'Investment details are still loading. Please try again in a moment.',
+                                { actions: [{ text: 'Retry', onclick: `showInvestmentModal('${investmentId}')` }] }
+                            );
+                        } else {
+                            alert('Investment details are still loading. Please try again in a moment.');
+                        }
+                        return;
+                    }
+                    
+                    const investment = investmentDetails[investmentId];
+                    if (!investment) {
+                        console.error('❌ Investment not found:', investmentId);
+                        if (window.ToastNotifications) {
+                            window.ToastNotifications.error(
+                                'Investment Not Found',
+                                `Cannot find investment ${investmentId}`,
+                                { actions: [{ text: 'Refresh', onclick: 'location.reload()' }] }
+                            );
+                        } else {
+                            alert('Investment details not available for ID: ' + investmentId);
+                        }
+                        return;
+                    }
+                    
+                    console.log('✅ Found investment data:', investment.borrower_name);
+                    
+                    // Create and show the modal (implementation will be added later in the script)
+                    if (typeof showInvestmentModal === 'function') {
+                        showInvestmentModal(investment);
+                    } else {
+                        // Fallback - will be replaced when full modal function is loaded
+                        console.log('📋 Investment Details:', investment);
+                        if (window.ToastNotifications) {
+                            window.ToastNotifications.info(
+                                'Investment Details',
+                                `${investment.borrower_name} - $${investment.amount} at ${investment.interest_rate}% interest`
+                            );
+                        }
+                    }
+                };
+                
+                console.log('✅ viewInvestmentDetails function registered globally');
+                
                 // Override fetch globally to block investment API calls
                 const originalFetch = window.fetch;
                 window.fetch = function(url, options) {
                     if (typeof url === 'string' && url.includes('/api/investments/')) {
                         console.log('🚫 BLOCKED API call:', url);
-                        const investmentId = url.split('/api/investments/')[1];
-                        console.log('🔄 Redirecting to local data for:', investmentId);
                         
-                        // Call our local function instead
-                        setTimeout(() => {
-                            if (window.viewInvestmentDetails) {
-                                window.viewInvestmentDetails(investmentId);
-                            }
-                        }, 0);
+                        // Only redirect individual investment detail calls (not portfolio/performance)
+                        if (url.match(/\/api\/investments\/inv_\d+$/)) {
+                            const investmentId = url.split('/api/investments/')[1];
+                            console.log('🔄 Redirecting to local investment details for:', investmentId);
+                            
+                            // Call our local function instead
+                            setTimeout(() => {
+                                if (window.viewInvestmentDetails) {
+                                    window.viewInvestmentDetails(investmentId);
+                                } else {
+                                    console.warn('⚠️ viewInvestmentDetails function not available');
+                                }
+                            }, 0);
+                        } else {
+                            console.log('🚫 Blocking non-individual investment API call');
+                        }
                         
                         return Promise.reject(new Error('API call blocked - using local data'));
                     }
@@ -5625,50 +5701,22 @@
                         total_payments: 2,
                         payments_made: 1,
                         borrower_location: 'Masvingo, Zimbabwe',
-                        borrower_occupation: 'Mechanic',
-                        risk_level: 'High'
-                    }
-                };
 
-                // View Investment Details Modal - Pure frontend function with no API calls
-                window.viewInvestmentDetails = function(investmentId) {
-                    console.log('🔍 Opening investment details for:', investmentId);
-                    
-                    // Prevent any potential API calls
-                    if (typeof event !== 'undefined' && event) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                    
-                    const investment = investmentDetails[investmentId];
-                    if (!investment) {
-                        console.error('❌ Investment not found:', investmentId);
-                        console.log('📋 Available investments:', Object.keys(investmentDetails));
-                        
-                        // Use toast notification instead of browser alert
-                        if (window.ToastNotifications) {
-                            window.ToastNotifications.error(
-                                'Investment Not Found', 
-                                `Investment details not available for ID: ${investmentId}`,
-                                { 
-                                    persistent: false,
-                                    actions: [
-                                        { text: 'Refresh', onclick: 'location.reload()' }
-                                    ]
-                                }
-                            );
-                        } else {
-                            alert('Investment details not available for ID: ' + investmentId);
-                        }
-                        return;
-                    }
-                    
-                    console.log('✅ Found investment data:', investment.borrower_name);
+// Prevent jQuery or other libraries from intercepting clicks
+document.addEventListener('click', function(e) {
+    if (e.target.onclick && e.target.onclick.toString().includes('viewInvestmentDetails')) {
+        console.log('🎯 Investment details click detected');
+    }
+});
 
-                    const modal = document.createElement('div');
-                    modal.className = 'modal-overlay';
-                    modal.innerHTML = `
-                        <div class="modal-container" style="max-width: 800px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(56, 231, 123, 0.2); border-radius: 16px; color: #f1f5f9;">
+// Global error handler to catch any remaining API errors
+window.addEventListener('error', function(e) {
+    if (e.message && e.message.includes('api/investments')) {
+        console.log('🚫 Caught API error, redirecting to local data');
+        e.preventDefault();
+        return true;
+    }
+});
                             <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
                                 <h2 style="margin: 0; color: #38e77b;">Investment Details</h2>
                                 <button onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer;">×</button>
