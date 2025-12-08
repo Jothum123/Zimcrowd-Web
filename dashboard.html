@@ -13989,11 +13989,20 @@ How it works:
             }).join('');
         }
 
-        // Load investments data - DISABLED to prevent API calls
+        // Load investments data - Using mock data
         async function loadInvestmentsData() {
-            console.log('🚫 loadInvestmentsData disabled - using local mock data instead');
-            // This function has been disabled to prevent API calls
-            // All investment data is now handled by local mock data
+            console.log('📊 Loading mock investments data...');
+            
+            // Load mock portfolio investments
+            if (typeof MockMarketData !== 'undefined' && MockMarketData.generatePortfolioInvestments) {
+                const mockInvestments = MockMarketData.generatePortfolioInvestments(6);
+                console.log('✅ Generated mock investments:', mockInvestments.length);
+                
+                // Display investments in the portfolio
+                displayPortfolioInvestments(mockInvestments);
+            } else {
+                console.warn('⚠️ MockMarketData not available for investments');
+            }
             return;
             
             /* ORIGINAL FUNCTION DISABLED:
@@ -14014,6 +14023,78 @@ How it works:
                 console.error('Failed to load investments:', error);
             }
             */
+        }
+
+        // Display Portfolio Investments (Mock Data)
+        function displayPortfolioInvestments(investments) {
+            const container = document.getElementById('portfolioGrid');
+            if (!container) {
+                console.warn('⚠️ Portfolio grid container not found');
+                return;
+            }
+
+            if (!investments || investments.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #64748b;">
+                        <i class="fas fa-chart-line" style="font-size: 48px; color: #64748b; margin-bottom: 20px;"></i>
+                        <h3 style="color: #94a3b8; margin-bottom: 10px;">No Investments Yet</h3>
+                        <p style="color: #64748b;">Start investing in loans to build your portfolio and earn returns</p>
+                        <button onclick="showSection('primary-market')" style="margin-top: 20px; padding: 12px 24px; background: linear-gradient(135deg, #38e77b, #22c55e); color: #0f172a; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                            <i class="fas fa-search"></i> Browse Opportunities
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = investments.map(inv => {
+                const statusColor = inv.status === 'active' ? '#38e77b' : inv.status === 'completed' ? '#3b82f6' : '#f59e0b';
+                const statusLabel = inv.status.charAt(0).toUpperCase() + inv.status.slice(1);
+                
+                return `
+                    <div class="portfolio-card" style="background: #1e293b; border-radius: 16px; padding: 24px; border: 1px solid rgba(148, 163, 184, 0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                            <div>
+                                <h3 style="color: #f1f5f9; margin-bottom: 8px; font-size: 18px;">${inv.borrower_name}</h3>
+                                <p style="color: #94a3b8; font-size: 14px;">${inv.purpose}</p>
+                            </div>
+                            <span style="padding: 4px 12px; background: rgba(${statusColor === '#38e77b' ? '56, 231, 123' : statusColor === '#3b82f6' ? '59, 130, 246' : '245, 158, 11'}, 0.1); color: ${statusColor}; border-radius: 12px; font-size: 12px; font-weight: 600;">${statusLabel}</span>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                            <div>
+                                <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Investment</p>
+                                <p style="color: #f1f5f9; font-size: 16px; font-weight: 600;">$${inv.amount.toLocaleString()}</p>
+                            </div>
+                            <div>
+                                <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Returns</p>
+                                <p style="color: #38e77b; font-size: 16px; font-weight: 600;">$${inv.returns.toFixed(2)}</p>
+                            </div>
+                            <div>
+                                <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Interest Rate</p>
+                                <p style="color: #f1f5f9; font-size: 14px; font-weight: 600;">${inv.interest_rate}%</p>
+                            </div>
+                            <div>
+                                <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Remaining</p>
+                                <p style="color: #f1f5f9; font-size: 14px; font-weight: 600;">${inv.months_remaining} months</p>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="viewInvestmentDetails('${inv.id}')" style="flex: 1; padding: 10px; background: rgba(56, 231, 123, 0.1); color: #38e77b; border: 1px solid rgba(56, 231, 123, 0.3); border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                <i class="fas fa-eye"></i> View Details
+                            </button>
+                            ${inv.status === 'active' ? `
+                            <button onclick="sellToSecondaryMarket('${inv.id}', ${inv.amount}, '${inv.borrower_name}')" style="flex: 1; padding: 10px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                <i class="fas fa-handshake"></i> Sell
+                            </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            console.log('✅ Displayed', investments.length, 'portfolio investments');
         }
 
         function updateInvestmentPortfolio(data) {
