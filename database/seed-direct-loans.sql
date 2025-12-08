@@ -23,11 +23,11 @@ BEGIN
 END $$;
 
 -- =====================================================
--- DROP EXISTING TABLES (uncomment to completely reset)
+-- DROP EXISTING TABLES (to ensure clean creation)
 -- =====================================================
--- DROP TABLE IF EXISTS direct_loan_repayments CASCADE;
--- DROP TABLE IF EXISTS direct_loan_offers CASCADE;
--- DROP TABLE IF EXISTS direct_loans CASCADE;
+DROP TABLE IF EXISTS direct_loan_repayments CASCADE;
+DROP TABLE IF EXISTS direct_loan_offers CASCADE;
+DROP TABLE IF EXISTS direct_loans CASCADE;
 
 -- =====================================================
 -- DIRECT LOANS TABLE
