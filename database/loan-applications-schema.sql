@@ -102,12 +102,12 @@ CREATE TABLE IF NOT EXISTS loan_applications (
 );
 
 -- Add post_registration_completed column to profiles if not exists
-ALTER TABLE profiles 
-ADD COLUMN IF NOT EXISTS post_registration_completed BOOLEAN DEFAULT false;
-
--- Add application_id to primary_market_loans to link approved applications
-ALTER TABLE primary_market_loans 
-ADD COLUMN IF NOT EXISTS application_id UUID REFERENCES loan_applications(id);
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'profiles') THEN
+        ALTER TABLE profiles ADD COLUMN IF NOT EXISTS post_registration_completed BOOLEAN DEFAULT false;
+    END IF;
+END $$;
 
 -- Create admin_notifications table for loan application alerts
 CREATE TABLE IF NOT EXISTS admin_notifications (
