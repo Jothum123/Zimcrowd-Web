@@ -8,45 +8,32 @@
 -- This file depends on tables created in that schema
 -- =====================================================
 
--- First, let's create some test borrower profiles if they don't exist
--- These will be linked to the loans
+-- =====================================================
+-- IMPORTANT: Supabase doesn't allow direct auth.users inserts
+-- We'll seed primary_market_loans WITHOUT borrower_id for testing
+-- =====================================================
 
--- Insert test users for borrowers (if not exists)
-INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, created_at, updated_at)
-SELECT 
-    gen_random_uuid(),
-    email,
-    crypt('TestPassword123!', gen_salt('bf')),
-    NOW(),
-    NOW() - (random() * interval '365 days'),
-    NOW()
-FROM (VALUES 
-    ('sarah.moyo@example.com'),
-    ('tendai.ndlovu@example.com'),
-    ('grace.chikwanha@example.com'),
-    ('peter.mlambo@example.com'),
-    ('nyasha.chirwa@example.com'),
-    ('tatenda.mugabe@example.com'),
-    ('rumbidzai.ncube@example.com'),
-    ('farai.dube@example.com'),
-    ('chipo.mutasa@example.com'),
-    ('blessing.moyo@example.com'),
-    ('tapiwa.zhou@example.com'),
-    ('rudo.mapfumo@example.com')
-) AS t(email)
-WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE auth.users.email = t.email)
-ON CONFLICT DO NOTHING;
+-- Add columns to profiles if not exists (for existing users)
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'profiles') THEN
+        ALTER TABLE profiles ADD COLUMN IF NOT EXISTS employment_type VARCHAR(50) DEFAULT 'private';
+        ALTER TABLE profiles ADD COLUMN IF NOT EXISTS post_registration_completed BOOLEAN DEFAULT false;
+        ALTER TABLE profiles ADD COLUMN IF NOT EXISTS zim_score INTEGER DEFAULT 50;
+        ALTER TABLE profiles ADD COLUMN IF NOT EXISTS verified BOOLEAN DEFAULT false;
+        ALTER TABLE profiles ADD COLUMN IF NOT EXISTS occupation VARCHAR(100);
+        ALTER TABLE profiles ADD COLUMN IF NOT EXISTS location VARCHAR(100);
+    END IF;
+END $$;
 
--- Add columns if not exists
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS employment_type VARCHAR(50) DEFAULT 'private';
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS post_registration_completed BOOLEAN DEFAULT false;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS zim_score INTEGER DEFAULT 50;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS verified BOOLEAN DEFAULT false;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS occupation VARCHAR(100);
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS location VARCHAR(100);
+-- =====================================================
+-- SKIP PROFILE SEEDING - Supabase manages auth.users
+-- Profiles are created when users register
+-- =====================================================
 
--- Create profiles for borrowers with employment_type
--- Using first_name and last_name instead of full_name
+-- The following profile insert is commented out because it depends on auth.users
+-- which cannot be directly inserted in Supabase
+/*
 INSERT INTO profiles (id, email, first_name, last_name, phone, occupation, location, zim_score, verified, employment_type, post_registration_completed, created_at)
 SELECT 
     u.id,
@@ -170,6 +157,7 @@ ON CONFLICT (id) DO UPDATE SET
     verified = EXCLUDED.verified,
     employment_type = EXCLUDED.employment_type,
     post_registration_completed = EXCLUDED.post_registration_completed;
+*/
 
 -- =====================================================
 -- PRIMARY MARKET LOANS (Available for Investment)
@@ -220,47 +208,29 @@ CREATE TABLE IF NOT EXISTS investments (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Insert Primary Market Loans
+-- Insert Primary Market Loans (without borrower_id for testing)
+-- borrower_id is NULL for mock data - will be populated when real users apply
 INSERT INTO primary_market_loans (
-    borrower_id, title, purpose, purpose_description, amount, currency, 
+    title, purpose, purpose_description, amount, currency, 
     interest_rate, term_months, risk_level, funded_amount, funding_progress, 
     lenders_count, min_investment, status, funding_deadline
 )
-SELECT 
-    p.id,
-    loan.title,
-    loan.purpose,
-    loan.description,
-    loan.amount,
-    loan.currency,
-    loan.interest_rate,
-    loan.term_months,
-    loan.risk_level,
-    loan.funded_amount,
-    loan.funding_progress,
-    loan.lenders_count,
-    loan.min_investment,
-    loan.status,
-    NOW() + interval '30 days'
-FROM profiles p
-CROSS JOIN (VALUES
+VALUES
     -- USD Loans
-    ('sarah.moyo@example.com', 'Business Expansion Loan', 'Business', 'Expanding my retail shop with new inventory and equipment', 800.00, 'USD', 12.5, 12, 'Low', 520.00, 65.0, 8, 25.00, 'funding'),
-    ('tendai.ndlovu@example.com', 'Tech Equipment Purchase', 'Business', 'Purchasing new computers and software for freelance work', 1200.00, 'USD', 10.0, 18, 'Low', 840.00, 70.0, 12, 50.00, 'funding'),
-    ('grace.chikwanha@example.com', 'Education Funding', 'Education', 'Masters degree tuition fees for career advancement', 2500.00, 'USD', 8.5, 24, 'Very Low', 2000.00, 80.0, 25, 25.00, 'funding'),
-    ('peter.mlambo@example.com', 'Agricultural Investment', 'Agriculture', 'Seeds, fertilizers and irrigation equipment for farming season', 1500.00, 'USD', 15.0, 12, 'Medium', 450.00, 30.0, 6, 25.00, 'funding'),
-    ('nyasha.chirwa@example.com', 'Medical Equipment', 'Medical', 'Purchasing medical supplies for private practice', 3000.00, 'USD', 9.0, 24, 'Very Low', 2700.00, 90.0, 35, 50.00, 'funding'),
-    ('tatenda.mugabe@example.com', 'Startup Capital', 'Business', 'Initial capital for tech startup development', 5000.00, 'USD', 11.0, 36, 'Low', 1500.00, 30.0, 15, 100.00, 'funding'),
+    ('Business Expansion Loan', 'Business', 'Expanding retail shop with new inventory and equipment', 800.00, 'USD', 12.5, 12, 'Low', 520.00, 65.0, 8, 25.00, 'funding', NOW() + interval '30 days'),
+    ('Tech Equipment Purchase', 'Business', 'Purchasing new computers and software for freelance work', 1200.00, 'USD', 10.0, 18, 'Low', 840.00, 70.0, 12, 50.00, 'funding', NOW() + interval '30 days'),
+    ('Education Funding', 'Education', 'Masters degree tuition fees for career advancement', 2500.00, 'USD', 8.5, 24, 'Very Low', 2000.00, 80.0, 25, 25.00, 'funding', NOW() + interval '30 days'),
+    ('Agricultural Investment', 'Agriculture', 'Seeds, fertilizers and irrigation equipment for farming season', 1500.00, 'USD', 15.0, 12, 'Medium', 450.00, 30.0, 6, 25.00, 'funding', NOW() + interval '30 days'),
+    ('Medical Equipment', 'Medical', 'Purchasing medical supplies for private practice', 3000.00, 'USD', 9.0, 24, 'Very Low', 2700.00, 90.0, 35, 50.00, 'funding', NOW() + interval '30 days'),
+    ('Startup Capital', 'Business', 'Initial capital for tech startup development', 5000.00, 'USD', 11.0, 36, 'Low', 1500.00, 30.0, 15, 100.00, 'funding', NOW() + interval '30 days'),
     -- ZWG Loans
-    ('rumbidzai.ncube@example.com', 'Home Improvement', 'Home', 'Renovating kitchen and bathroom facilities', 15000.00, 'ZWG', 18.0, 12, 'Low', 9000.00, 60.0, 10, 500.00, 'funding'),
-    ('farai.dube@example.com', 'Workshop Equipment', 'Business', 'New tools and equipment for auto repair workshop', 25000.00, 'ZWG', 22.0, 18, 'High', 5000.00, 20.0, 4, 1000.00, 'funding'),
-    ('tapiwa.zhou@example.com', 'Tourism Business', 'Business', 'Tour guide equipment and marketing for Victoria Falls tours', 35000.00, 'ZWG', 16.0, 24, 'Low', 28000.00, 80.0, 18, 1000.00, 'funding'),
-    ('rudo.mapfumo@example.com', 'Emergency Medical', 'Medical', 'Urgent medical treatment and recovery expenses', 8000.00, 'ZWG', 20.0, 6, 'Medium', 6400.00, 80.0, 12, 500.00, 'funding'),
+    ('Home Improvement', 'Home', 'Renovating kitchen and bathroom facilities', 15000.00, 'ZWG', 18.0, 12, 'Low', 9000.00, 60.0, 10, 500.00, 'funding', NOW() + interval '30 days'),
+    ('Workshop Equipment', 'Business', 'New tools and equipment for auto repair workshop', 25000.00, 'ZWG', 22.0, 18, 'High', 5000.00, 20.0, 4, 1000.00, 'funding', NOW() + interval '30 days'),
+    ('Tourism Business', 'Business', 'Tour guide equipment and marketing for Victoria Falls tours', 35000.00, 'ZWG', 16.0, 24, 'Low', 28000.00, 80.0, 18, 1000.00, 'funding', NOW() + interval '30 days'),
+    ('Emergency Medical', 'Medical', 'Urgent medical treatment and recovery expenses', 8000.00, 'ZWG', 20.0, 6, 'Medium', 6400.00, 80.0, 12, 500.00, 'funding', NOW() + interval '30 days'),
     -- More USD Loans
-    ('sarah.moyo@example.com', 'Inventory Restocking', 'Business', 'Restocking popular items for holiday season', 600.00, 'USD', 14.0, 6, 'Low', 300.00, 50.0, 5, 25.00, 'funding'),
-    ('grace.chikwanha@example.com', 'School Supplies', 'Education', 'Educational materials and teaching resources', 400.00, 'USD', 10.0, 6, 'Very Low', 360.00, 90.0, 8, 25.00, 'funding')
-) AS loan(email, title, purpose, description, amount, currency, interest_rate, term_months, risk_level, funded_amount, funding_progress, lenders_count, min_investment, status)
-WHERE p.email = loan.email
+    ('Inventory Restocking', 'Business', 'Restocking popular items for holiday season', 600.00, 'USD', 14.0, 6, 'Low', 300.00, 50.0, 5, 25.00, 'funding', NOW() + interval '30 days'),
+    ('School Supplies', 'Education', 'Educational materials and teaching resources', 400.00, 'USD', 10.0, 6, 'Very Low', 360.00, 90.0, 8, 25.00, 'funding', NOW() + interval '30 days')
 ON CONFLICT DO NOTHING;
 
 -- =====================================================
