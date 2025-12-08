@@ -13927,7 +13927,7 @@ How it works:
             }
         }
 
-        // Display Portfolio Investments (Mock Data)
+        // Display Portfolio Investments with arrears highlighting and sell eligibility
         function displayPortfolioInvestments(investments) {
             const container = document.getElementById('portfolioGrid');
             if (!container) {
@@ -13952,35 +13952,108 @@ How it works:
             }
 
             container.innerHTML = investments.map(inv => {
-                const statusColor = inv.status === 'active' ? '#38e77b' : inv.status === 'completed' ? '#3b82f6' : '#f59e0b';
-                const statusLabel = inv.status.charAt(0).toUpperCase() + inv.status.slice(1);
+                // Handle both API and mock data formats
+                const borrowerName = inv.borrower?.name || inv.borrower_name || 'Borrower';
+                const purpose = inv.loan?.purpose || inv.purpose || 'Loan';
+                const amount = inv.amount || 0;
+                const actualReturn = inv.actualReturn || inv.returns || 0;
+                const interestRate = inv.interestRate || inv.interest_rate || 0;
+                const monthsRemaining = inv.monthsRemaining || inv.months_remaining || 0;
+                const monthlyExpectedReturn = inv.monthlyExpectedReturn || (inv.expectedReturn / (inv.totalPayments || 12));
+                const paymentsReceived = inv.paymentsReceived || inv.payments_received || 0;
+                const isInArrears = inv.isInArrears || false;
+                const missedPayments = inv.missedPayments || 0;
+                const canSell = inv.canSell || false;
+                const monthsUntilSellable = inv.monthsUntilSellable || Math.max(0, 3 - paymentsReceived);
+                
+                // Status colors
+                let statusColor = '#38e77b';
+                let statusLabel = 'Active';
+                let borderColor = 'rgba(148, 163, 184, 0.1)';
+                
+                if (isInArrears) {
+                    statusColor = '#ef4444';
+                    statusLabel = 'In Arrears';
+                    borderColor = 'rgba(239, 68, 68, 0.3)';
+                } else if (inv.status === 'completed') {
+                    statusColor = '#3b82f6';
+                    statusLabel = 'Completed';
+                } else if (inv.status === 'for_sale') {
+                    statusColor = '#f59e0b';
+                    statusLabel = 'For Sale';
+                }
+                
+                // Arrears warning
+                const arrearsWarning = isInArrears ? `
+                    <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px; color: #ef4444;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span style="font-weight: 600;">${missedPayments} Missed Payment${missedPayments > 1 ? 's' : ''}</span>
+                        </div>
+                        <p style="color: #fca5a5; font-size: 12px; margin: 4px 0 0 0;">Expected return delayed. Cannot sell until payments resume.</p>
+                    </div>
+                ` : '';
+                
+                // Sell button logic
+                let sellButton = '';
+                if (inv.status === 'active' && !isInArrears) {
+                    if (canSell) {
+                        sellButton = `
+                            <button onclick="openSellModal('${inv.id}', ${amount}, '${borrowerName}', ${actualReturn})" style="flex: 1; padding: 10px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                <i class="fas fa-handshake"></i> Sell
+                            </button>
+                        `;
+                    } else {
+                        sellButton = `
+                            <button disabled style="flex: 1; padding: 10px; background: rgba(100, 116, 139, 0.1); color: #64748b; border: 1px solid rgba(100, 116, 139, 0.3); border-radius: 8px; cursor: not-allowed; font-weight: 600;" title="Need ${monthsUntilSellable} more payment${monthsUntilSellable > 1 ? 's' : ''} to sell">
+                                <i class="fas fa-lock"></i> ${monthsUntilSellable}mo to sell
+                            </button>
+                        `;
+                    }
+                } else if (isInArrears) {
+                    sellButton = `
+                        <button disabled style="flex: 1; padding: 10px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; cursor: not-allowed; font-weight: 600;" title="Cannot sell - loan in arrears">
+                            <i class="fas fa-ban"></i> Cannot Sell
+                        </button>
+                    `;
+                }
                 
                 return `
-                    <div class="portfolio-card" style="background: #1e293b; border-radius: 16px; padding: 24px; border: 1px solid rgba(148, 163, 184, 0.1);">
+                    <div class="portfolio-card" style="background: #1e293b; border-radius: 16px; padding: 24px; border: 1px solid ${borderColor}; ${isInArrears ? 'box-shadow: 0 0 20px rgba(239, 68, 68, 0.1);' : ''}">
                         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
                             <div>
-                                <h3 style="color: #f1f5f9; margin-bottom: 8px; font-size: 18px;">${inv.borrower_name}</h3>
-                                <p style="color: #94a3b8; font-size: 14px;">${inv.purpose}</p>
+                                <h3 style="color: #f1f5f9; margin-bottom: 8px; font-size: 18px;">${borrowerName}</h3>
+                                <p style="color: #94a3b8; font-size: 14px;">${purpose}</p>
                             </div>
-                            <span style="padding: 4px 12px; background: rgba(${statusColor === '#38e77b' ? '56, 231, 123' : statusColor === '#3b82f6' ? '59, 130, 246' : '245, 158, 11'}, 0.1); color: ${statusColor}; border-radius: 12px; font-size: 12px; font-weight: 600;">${statusLabel}</span>
+                            <span style="padding: 4px 12px; background: rgba(${statusColor === '#38e77b' ? '56, 231, 123' : statusColor === '#3b82f6' ? '59, 130, 246' : statusColor === '#ef4444' ? '239, 68, 68' : '245, 158, 11'}, 0.1); color: ${statusColor}; border-radius: 12px; font-size: 12px; font-weight: 600;">${statusLabel}</span>
                         </div>
+                        
+                        ${arrearsWarning}
                         
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
                             <div>
                                 <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Investment</p>
-                                <p style="color: #f1f5f9; font-size: 16px; font-weight: 600;">$${inv.amount.toLocaleString()}</p>
+                                <p style="color: #f1f5f9; font-size: 16px; font-weight: 600;">$${parseFloat(amount).toLocaleString()}</p>
                             </div>
                             <div>
-                                <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Returns</p>
-                                <p style="color: #38e77b; font-size: 16px; font-weight: 600;">$${inv.returns.toFixed(2)}</p>
+                                <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Total Returns</p>
+                                <p style="color: #38e77b; font-size: 16px; font-weight: 600;">$${parseFloat(actualReturn).toFixed(2)}</p>
+                            </div>
+                            <div>
+                                <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Monthly Return</p>
+                                <p style="color: ${isInArrears ? '#ef4444' : '#f1f5f9'}; font-size: 14px; font-weight: 600;">$${parseFloat(monthlyExpectedReturn).toFixed(2)}/mo</p>
+                            </div>
+                            <div>
+                                <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Payments</p>
+                                <p style="color: #f1f5f9; font-size: 14px; font-weight: 600;">${paymentsReceived}/${inv.totalPayments || inv.total_payments || 12}</p>
                             </div>
                             <div>
                                 <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Interest Rate</p>
-                                <p style="color: #f1f5f9; font-size: 14px; font-weight: 600;">${inv.interest_rate}%</p>
+                                <p style="color: #f1f5f9; font-size: 14px; font-weight: 600;">${interestRate}%</p>
                             </div>
                             <div>
                                 <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Remaining</p>
-                                <p style="color: #f1f5f9; font-size: 14px; font-weight: 600;">${inv.months_remaining} months</p>
+                                <p style="color: #f1f5f9; font-size: 14px; font-weight: 600;">${monthsRemaining} months</p>
                             </div>
                         </div>
                         
@@ -13988,17 +14061,112 @@ How it works:
                             <button onclick="viewInvestmentDetails('${inv.id}')" style="flex: 1; padding: 10px; background: rgba(56, 231, 123, 0.1); color: #38e77b; border: 1px solid rgba(56, 231, 123, 0.3); border-radius: 8px; cursor: pointer; font-weight: 600;">
                                 <i class="fas fa-eye"></i> View Details
                             </button>
-                            ${inv.status === 'active' ? `
-                            <button onclick="sellToSecondaryMarket('${inv.id}', ${inv.amount}, '${inv.borrower_name}')" style="flex: 1; padding: 10px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; cursor: pointer; font-weight: 600;">
-                                <i class="fas fa-handshake"></i> Sell
-                            </button>
-                            ` : ''}
+                            ${sellButton}
                         </div>
                     </div>
                 `;
             }).join('');
             
             console.log('✅ Displayed', investments.length, 'portfolio investments');
+        }
+        
+        // Open sell modal for investment
+        function openSellModal(investmentId, amount, borrowerName, currentReturns) {
+            const existingModal = document.getElementById('sellInvestmentModal');
+            if (existingModal) existingModal.remove();
+            
+            const remainingValue = parseFloat(amount) + parseFloat(currentReturns) * 0.5; // Estimate remaining value
+            const platformFee = remainingValue * 0.02;
+            
+            const modalHtml = `
+                <div id="sellInvestmentModal" class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 20px; max-width: 500px; width: 100%; padding: 32px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                            <h2 style="color: #f1f5f9; margin: 0;">Sell Investment</h2>
+                            <button onclick="document.getElementById('sellInvestmentModal').remove();" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 20px;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div style="background: rgba(59, 130, 246, 0.1); padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+                            <p style="color: #94a3b8; margin: 0 0 8px 0;">Investment in</p>
+                            <p style="color: #f1f5f9; font-size: 18px; font-weight: 600; margin: 0;">${borrowerName}</p>
+                            <p style="color: #3b82f6; font-size: 14px; margin: 8px 0 0 0;">Original: $${parseFloat(amount).toLocaleString()}</p>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="color: #94a3b8; font-size: 14px; display: block; margin-bottom: 8px;">Asking Price</label>
+                            <input type="number" id="sellAskingPrice" value="${remainingValue.toFixed(2)}" step="0.01" min="1" style="width: 100%; padding: 14px; background: #0f172a; border: 1px solid #334155; border-radius: 10px; color: #f1f5f9; font-size: 16px;" onchange="updateSellFees()">
+                        </div>
+                        
+                        <div style="background: rgba(100, 116, 139, 0.1); padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="color: #94a3b8;">Platform Fee (2%)</span>
+                                <span id="sellPlatformFee" style="color: #f59e0b;">-$${platformFee.toFixed(2)}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding-top: 8px; border-top: 1px solid #334155;">
+                                <span style="color: #f1f5f9; font-weight: 600;">You Receive</span>
+                                <span id="sellNetProceeds" style="color: #38e77b; font-weight: 600;">$${(remainingValue - platformFee).toFixed(2)}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px;">
+                            <button onclick="document.getElementById('sellInvestmentModal').remove();" style="flex: 1; padding: 14px; background: transparent; color: #94a3b8; border: 1px solid #334155; border-radius: 10px; cursor: pointer; font-weight: 600;">
+                                Cancel
+                            </button>
+                            <button onclick="confirmSellInvestment('${investmentId}')" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;">
+                                <i class="fas fa-check"></i> List for Sale
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+        
+        // Update sell fees when price changes
+        function updateSellFees() {
+            const askingPrice = parseFloat(document.getElementById('sellAskingPrice').value) || 0;
+            const platformFee = askingPrice * 0.02;
+            const netProceeds = askingPrice - platformFee;
+            
+            document.getElementById('sellPlatformFee').textContent = `-$${platformFee.toFixed(2)}`;
+            document.getElementById('sellNetProceeds').textContent = `$${netProceeds.toFixed(2)}`;
+        }
+        
+        // Confirm and submit sell listing
+        async function confirmSellInvestment(investmentId) {
+            const askingPrice = parseFloat(document.getElementById('sellAskingPrice').value);
+            
+            if (!askingPrice || askingPrice <= 0) {
+                showNotification('error', 'Invalid Price', 'Please enter a valid asking price');
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                const response = await fetch(`/api/market/investments/${investmentId}/sell`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ askingPrice: askingPrice })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('sellInvestmentModal').remove();
+                    showNotification('success', 'Listed for Sale', 'Your investment has been listed on the secondary market');
+                    loadInvestmentsData(); // Refresh portfolio
+                } else {
+                    showNotification('error', 'Listing Failed', result.message || 'Could not list investment for sale');
+                }
+            } catch (error) {
+                console.error('Sell error:', error);
+                showNotification('error', 'Error', 'Failed to list investment for sale');
+            }
         }
 
         function updateInvestmentPortfolio(data) {

@@ -385,40 +385,63 @@ router.get('/investments', authenticateUser, async (req, res) => {
         // Calculate portfolio stats
         const stats = calculatePortfolioStats(investments || []);
 
-        // Transform investments
-        const transformedInvestments = (investments || []).map(inv => ({
-            id: inv.id,
-            amount: parseFloat(inv.amount),
-            currency: inv.currency,
-            ownershipPercent: parseFloat(inv.ownership_percent),
-            interestRate: parseFloat(inv.interest_rate),
-            expectedReturn: parseFloat(inv.expected_return),
-            actualReturn: parseFloat(inv.actual_return || 0),
-            status: inv.status,
-            investedAt: inv.invested_at,
-            maturityDate: inv.maturity_date,
-            nextPaymentDate: inv.next_payment_date,
-            paymentsReceived: inv.payments_received,
-            totalPayments: inv.total_payments,
-            monthsRemaining: calculateMonthsRemaining(inv.maturity_date),
-            loan: inv.loan ? {
-                id: inv.loan.id,
-                title: inv.loan.title,
-                purpose: inv.loan.purpose,
-                totalAmount: parseFloat(inv.loan.amount),
-                status: inv.loan.status
-            } : null,
-            borrower: inv.borrower ? {
-                id: inv.borrower.id,
-                name: inv.borrower.full_name,
-                initials: getInitials(inv.borrower.full_name),
-                occupation: inv.borrower.occupation,
-                location: inv.borrower.location,
-                zimScore: inv.borrower.zim_score,
-                rating: getStarRating(inv.borrower.zim_score),
-                verified: inv.borrower.verified
-            } : null
-        }));
+        // Transform investments with arrears and sell eligibility
+        const transformedInvestments = (investments || []).map(inv => {
+            // Calculate monthly expected return
+            const monthlyExpectedReturn = parseFloat(inv.expected_return) / (inv.total_payments || 1);
+            
+            // Check if any payments are missed (in arrears)
+            const monthsSinceInvestment = Math.floor((Date.now() - new Date(inv.invested_at || inv.created_at)) / (30 * 24 * 60 * 60 * 1000));
+            const expectedPayments = Math.min(monthsSinceInvestment, inv.total_payments || 0);
+            const missedPayments = Math.max(0, expectedPayments - (inv.payments_received || 0));
+            const isInArrears = missedPayments > 0;
+            
+            // Check if eligible to sell (3+ months of successful payments, not in arrears)
+            const canSell = (inv.payments_received || 0) >= 3 && !isInArrears && inv.status === 'active';
+            
+            return {
+                id: inv.id,
+                amount: parseFloat(inv.amount),
+                currency: inv.currency,
+                ownershipPercent: parseFloat(inv.ownership_percent),
+                interestRate: parseFloat(inv.interest_rate),
+                expectedReturn: parseFloat(inv.expected_return),
+                actualReturn: parseFloat(inv.actual_return || 0),
+                monthlyExpectedReturn: monthlyExpectedReturn,
+                status: inv.status,
+                investedAt: inv.invested_at || inv.created_at,
+                maturityDate: inv.maturity_date,
+                nextPaymentDate: inv.next_payment_date,
+                paymentsReceived: inv.payments_received || 0,
+                totalPayments: inv.total_payments || 0,
+                monthsRemaining: calculateMonthsRemaining(inv.maturity_date),
+                // Arrears tracking
+                missedPayments: missedPayments,
+                isInArrears: isInArrears,
+                arrearsAmount: isInArrears ? missedPayments * monthlyExpectedReturn : 0,
+                // Sell eligibility
+                canSell: canSell,
+                sellEligibilityReason: !canSell ? getSellEligibilityReason(inv, missedPayments) : null,
+                monthsUntilSellable: Math.max(0, 3 - (inv.payments_received || 0)),
+                loan: inv.loan ? {
+                    id: inv.loan.id,
+                    title: inv.loan.title,
+                    purpose: inv.loan.purpose,
+                    totalAmount: parseFloat(inv.loan.amount),
+                    status: inv.loan.status
+                } : null,
+                borrower: inv.borrower ? {
+                    id: inv.borrower.id,
+                    name: inv.borrower.full_name,
+                    initials: getInitials(inv.borrower.full_name),
+                    occupation: inv.borrower.occupation,
+                    location: inv.borrower.location,
+                    zimScore: inv.borrower.zim_score,
+                    rating: getStarRating(inv.borrower.zim_score),
+                    verified: inv.borrower.verified
+                } : null
+            };
+        });
 
         res.json({
             success: true,
@@ -508,9 +531,27 @@ router.get('/investments/:id', authenticateUser, async (req, res) => {
             });
         }
 
+        // Calculate monthly expected return
+        const monthlyExpectedReturn = parseFloat(investment.expected_return) / investment.total_payments;
+        
+        // Check if any payments are missed (in arrears)
+        const expectedPayments = Math.floor((Date.now() - new Date(investment.invested_at)) / (30 * 24 * 60 * 60 * 1000));
+        const missedPayments = Math.max(0, expectedPayments - (investment.payments_received || 0));
+        const isInArrears = missedPayments > 0;
+        
+        // Check if eligible to sell (3+ months of successful payments, not in arrears)
+        const canSell = (investment.payments_received || 0) >= 3 && !isInArrears && investment.status === 'active';
+        
         res.json({
             success: true,
-            data: investment
+            data: {
+                ...investment,
+                monthlyExpectedReturn: monthlyExpectedReturn,
+                missedPayments: missedPayments,
+                isInArrears: isInArrears,
+                canSell: canSell,
+                sellEligibilityReason: !canSell ? getSellEligibilityReason(investment, missedPayments) : null
+            }
         });
 
     } catch (error) {
@@ -521,6 +562,410 @@ router.get('/investments/:id', authenticateUser, async (req, res) => {
         });
     }
 });
+
+/**
+ * @route   POST /api/market/investments/:id/sell
+ * @desc    List investment for sale on secondary market
+ * @access  Private
+ */
+router.post('/investments/:id/sell', authenticateUser, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { askingPrice, discountPercent } = req.body;
+        const userId = req.user.id;
+
+        // Get the investment
+        const { data: investment, error: fetchError } = await supabase
+            .from('investments')
+            .select('*')
+            .eq('id', id)
+            .eq('investor_id', userId)
+            .eq('status', 'active')
+            .single();
+
+        if (fetchError || !investment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Active investment not found'
+            });
+        }
+
+        // Check eligibility - must have 3+ months of successful payments
+        if ((investment.payments_received || 0) < 3) {
+            return res.status(400).json({
+                success: false,
+                message: 'Investment must have at least 3 months of successful payments before selling',
+                paymentsReceived: investment.payments_received || 0,
+                paymentsRequired: 3
+            });
+        }
+
+        // Check if in arrears
+        const expectedPayments = Math.floor((Date.now() - new Date(investment.invested_at)) / (30 * 24 * 60 * 60 * 1000));
+        const missedPayments = Math.max(0, expectedPayments - (investment.payments_received || 0));
+        
+        if (missedPayments > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Investments in arrears cannot be sold on the market',
+                missedPayments: missedPayments
+            });
+        }
+
+        // Calculate remaining value
+        const remainingPrincipal = parseFloat(investment.amount) * ((investment.total_payments - investment.payments_received) / investment.total_payments);
+        const remainingExpectedReturn = parseFloat(investment.expected_return) - parseFloat(investment.actual_return || 0);
+        const remainingValue = remainingPrincipal + remainingExpectedReturn;
+
+        // Calculate asking price
+        let finalAskingPrice = askingPrice;
+        if (!askingPrice && discountPercent) {
+            finalAskingPrice = remainingValue * (1 - discountPercent / 100);
+        } else if (!askingPrice) {
+            finalAskingPrice = remainingValue; // Default to remaining value
+        }
+
+        // Platform fee (2%)
+        const platformFee = finalAskingPrice * 0.02;
+        const netProceeds = finalAskingPrice - platformFee;
+
+        // Create secondary market listing
+        const { data: listing, error: listingError } = await supabase
+            .from('secondary_market_listings')
+            .insert({
+                investment_id: id,
+                seller_id: userId,
+                loan_id: investment.loan_id,
+                original_amount: investment.amount,
+                remaining_principal: remainingPrincipal,
+                remaining_expected_return: remainingExpectedReturn,
+                asking_price: finalAskingPrice,
+                platform_fee: platformFee,
+                net_proceeds: netProceeds,
+                currency: investment.currency,
+                payments_received: investment.payments_received,
+                payments_remaining: investment.total_payments - investment.payments_received,
+                interest_rate: investment.interest_rate,
+                status: 'listed',
+                listed_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+        if (listingError) {
+            console.error('Listing error:', listingError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to create listing'
+            });
+        }
+
+        // Update investment status
+        await supabase
+            .from('investments')
+            .update({ 
+                status: 'for_sale',
+                listing_id: listing.id
+            })
+            .eq('id', id);
+
+        console.log(`📢 Investment ${id} listed for sale at ${investment.currency} ${finalAskingPrice}`);
+
+        res.json({
+            success: true,
+            message: 'Investment listed for sale on secondary market',
+            data: {
+                listingId: listing.id,
+                askingPrice: finalAskingPrice,
+                platformFee: platformFee,
+                netProceeds: netProceeds,
+                remainingValue: remainingValue
+            }
+        });
+
+    } catch (error) {
+        console.error('Sell investment error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to list investment for sale'
+        });
+    }
+});
+
+/**
+ * @route   DELETE /api/market/investments/:id/sell
+ * @desc    Cancel secondary market listing
+ * @access  Private
+ */
+router.delete('/investments/:id/sell', authenticateUser, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        // Get the investment
+        const { data: investment, error: fetchError } = await supabase
+            .from('investments')
+            .select('*')
+            .eq('id', id)
+            .eq('investor_id', userId)
+            .eq('status', 'for_sale')
+            .single();
+
+        if (fetchError || !investment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Listed investment not found'
+            });
+        }
+
+        // Remove listing
+        if (investment.listing_id) {
+            await supabase
+                .from('secondary_market_listings')
+                .update({ status: 'cancelled' })
+                .eq('id', investment.listing_id);
+        }
+
+        // Update investment status back to active
+        await supabase
+            .from('investments')
+            .update({ 
+                status: 'active',
+                listing_id: null
+            })
+            .eq('id', id);
+
+        res.json({
+            success: true,
+            message: 'Listing cancelled successfully'
+        });
+
+    } catch (error) {
+        console.error('Cancel listing error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to cancel listing'
+        });
+    }
+});
+
+/**
+ * @route   GET /api/market/secondary
+ * @desc    Get secondary market listings
+ * @access  Public
+ */
+router.get('/secondary', async (req, res) => {
+    try {
+        const { page = 1, limit = 20, currency } = req.query;
+        const offset = (page - 1) * limit;
+
+        let query = supabase
+            .from('secondary_market_listings')
+            .select(`
+                *,
+                investment:investments!investment_id (
+                    loan:primary_market_loans!loan_id (
+                        title,
+                        purpose,
+                        risk_level,
+                        borrower_id
+                    )
+                ),
+                seller:profiles!seller_id (
+                    full_name,
+                    verified
+                )
+            `, { count: 'exact' })
+            .eq('status', 'listed')
+            .order('listed_at', { ascending: false });
+
+        if (currency) {
+            query = query.eq('currency', currency);
+        }
+
+        query = query.range(offset, offset + parseInt(limit) - 1);
+
+        const { data: listings, error, count } = await query;
+
+        if (error) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to fetch listings'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: {
+                listings: listings || [],
+                pagination: {
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    total: count || 0,
+                    totalPages: Math.ceil((count || 0) / limit)
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Secondary market error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+});
+
+/**
+ * @route   POST /api/market/secondary/:id/buy
+ * @desc    Buy investment from secondary market
+ * @access  Private
+ */
+router.post('/secondary/:id/buy', authenticateUser, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const buyerId = req.user.id;
+
+        // Get the listing
+        const { data: listing, error: fetchError } = await supabase
+            .from('secondary_market_listings')
+            .select('*')
+            .eq('id', id)
+            .eq('status', 'listed')
+            .single();
+
+        if (fetchError || !listing) {
+            return res.status(404).json({
+                success: false,
+                message: 'Listing not found or already sold'
+            });
+        }
+
+        // Can't buy own listing
+        if (listing.seller_id === buyerId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot buy your own listing'
+            });
+        }
+
+        // Get original investment
+        const { data: originalInvestment, error: invError } = await supabase
+            .from('investments')
+            .select('*')
+            .eq('id', listing.investment_id)
+            .single();
+
+        if (invError || !originalInvestment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Original investment not found'
+            });
+        }
+
+        // Create new investment for buyer
+        const { data: newInvestment, error: createError } = await supabase
+            .from('investments')
+            .insert({
+                investor_id: buyerId,
+                loan_id: originalInvestment.loan_id,
+                borrower_id: originalInvestment.borrower_id,
+                amount: listing.remaining_principal,
+                currency: listing.currency,
+                ownership_percent: originalInvestment.ownership_percent,
+                interest_rate: listing.interest_rate,
+                expected_return: listing.remaining_expected_return,
+                actual_return: 0,
+                status: 'active',
+                maturity_date: originalInvestment.maturity_date,
+                next_payment_date: originalInvestment.next_payment_date,
+                payments_received: 0,
+                total_payments: listing.payments_remaining,
+                purchased_from_secondary: true,
+                purchase_price: listing.asking_price,
+                original_investment_id: listing.investment_id
+            })
+            .select()
+            .single();
+
+        if (createError) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to create investment'
+            });
+        }
+
+        // Update original investment to sold
+        await supabase
+            .from('investments')
+            .update({ 
+                status: 'sold',
+                sold_to: buyerId,
+                sold_at: new Date().toISOString(),
+                sale_price: listing.asking_price
+            })
+            .eq('id', listing.investment_id);
+
+        // Update listing to sold
+        await supabase
+            .from('secondary_market_listings')
+            .update({ 
+                status: 'sold',
+                buyer_id: buyerId,
+                sold_at: new Date().toISOString()
+            })
+            .eq('id', id);
+
+        // Notify seller
+        await supabase
+            .from('notifications')
+            .insert({
+                user_id: listing.seller_id,
+                type: 'investment_sold',
+                title: 'Investment Sold!',
+                message: `Your investment has been sold for ${listing.currency} ${listing.asking_price.toFixed(2)}. Net proceeds: ${listing.currency} ${listing.net_proceeds.toFixed(2)}`,
+                data: {
+                    listing_id: id,
+                    amount: listing.asking_price,
+                    net_proceeds: listing.net_proceeds
+                },
+                read: false
+            });
+
+        console.log(`💰 Secondary market sale: Listing ${id} sold to ${buyerId}`);
+
+        res.json({
+            success: true,
+            message: 'Investment purchased successfully',
+            data: {
+                investmentId: newInvestment.id,
+                purchasePrice: listing.asking_price,
+                expectedReturn: listing.remaining_expected_return
+            }
+        });
+
+    } catch (error) {
+        console.error('Buy investment error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to purchase investment'
+        });
+    }
+});
+
+// Helper function to get sell eligibility reason
+function getSellEligibilityReason(investment, missedPayments) {
+    if (investment.status !== 'active') {
+        return 'Only active investments can be sold';
+    }
+    if ((investment.payments_received || 0) < 3) {
+        return `Need ${3 - (investment.payments_received || 0)} more successful payments before selling`;
+    }
+    if (missedPayments > 0) {
+        return `Investment is in arrears (${missedPayments} missed payments)`;
+    }
+    return null;
+}
 
 // =====================================================
 // HELPER FUNCTIONS

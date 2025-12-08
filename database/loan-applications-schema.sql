@@ -253,6 +253,84 @@ TO authenticated
 USING (auth.uid() = user_id);
 
 -- =====================================================
+-- SECONDARY MARKET LISTINGS TABLE
+-- =====================================================
+
+-- Create secondary_market_listings table for selling investments
+CREATE TABLE IF NOT EXISTS secondary_market_listings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    investment_id UUID REFERENCES investments(id) NOT NULL,
+    seller_id UUID REFERENCES auth.users(id) NOT NULL,
+    loan_id UUID REFERENCES primary_market_loans(id),
+    buyer_id UUID REFERENCES auth.users(id),
+    
+    -- Original Investment Details
+    original_amount DECIMAL(12,2) NOT NULL,
+    remaining_principal DECIMAL(12,2) NOT NULL,
+    remaining_expected_return DECIMAL(12,2),
+    
+    -- Pricing
+    asking_price DECIMAL(12,2) NOT NULL,
+    platform_fee DECIMAL(12,2),
+    net_proceeds DECIMAL(12,2),
+    currency VARCHAR(3) DEFAULT 'USD',
+    
+    -- Payment History
+    payments_received INTEGER DEFAULT 0,
+    payments_remaining INTEGER DEFAULT 0,
+    interest_rate DECIMAL(5,2),
+    
+    -- Status
+    status VARCHAR(20) DEFAULT 'listed', -- listed, sold, cancelled
+    listed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    sold_at TIMESTAMP WITH TIME ZONE,
+    
+    -- Timestamps
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    CONSTRAINT valid_listing_status CHECK (status IN ('listed', 'sold', 'cancelled'))
+);
+
+-- Add indexes for secondary market
+CREATE INDEX IF NOT EXISTS idx_secondary_listings_seller ON secondary_market_listings(seller_id);
+CREATE INDEX IF NOT EXISTS idx_secondary_listings_status ON secondary_market_listings(status);
+CREATE INDEX IF NOT EXISTS idx_secondary_listings_investment ON secondary_market_listings(investment_id);
+
+-- Enable RLS
+ALTER TABLE secondary_market_listings ENABLE ROW LEVEL SECURITY;
+
+-- Anyone can view listed investments
+CREATE POLICY "Anyone can view listed investments" 
+ON secondary_market_listings FOR SELECT 
+USING (status = 'listed' OR seller_id = auth.uid() OR buyer_id = auth.uid());
+
+-- Sellers can create listings
+CREATE POLICY "Sellers can create listings" 
+ON secondary_market_listings FOR INSERT 
+TO authenticated 
+WITH CHECK (auth.uid() = seller_id);
+
+-- =====================================================
+-- UPDATE INVESTMENTS TABLE FOR SECONDARY MARKET
+-- =====================================================
+
+-- Add columns to investments table for secondary market
+ALTER TABLE investments 
+ADD COLUMN IF NOT EXISTS listing_id UUID REFERENCES secondary_market_listings(id),
+ADD COLUMN IF NOT EXISTS sold_to UUID REFERENCES auth.users(id),
+ADD COLUMN IF NOT EXISTS sold_at TIMESTAMP WITH TIME ZONE,
+ADD COLUMN IF NOT EXISTS sale_price DECIMAL(12,2),
+ADD COLUMN IF NOT EXISTS purchased_from_secondary BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS purchase_price DECIMAL(12,2),
+ADD COLUMN IF NOT EXISTS original_investment_id UUID REFERENCES investments(id);
+
+-- Update status constraint to include new statuses
+ALTER TABLE investments DROP CONSTRAINT IF EXISTS valid_investment_status;
+ALTER TABLE investments ADD CONSTRAINT valid_investment_status 
+CHECK (status IN ('active', 'completed', 'for_sale', 'sold', 'defaulted'));
+
+-- =====================================================
 -- FUNCTION: Increment ZimScore
 -- =====================================================
 
