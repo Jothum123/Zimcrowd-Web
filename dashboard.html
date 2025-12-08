@@ -5171,7 +5171,7 @@
                                 <th>Term Remaining</th>
                                 <th>Status</th>
                                 <th>Earned Interest</th>
-                                <th>Details</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="portfolioGrid">
@@ -5264,7 +5264,16 @@
                                 <td style="padding: 16px; color: #94a3b8;">${inv.months_remaining} months</td>
                                 <td style="padding: 16px;"><span style="background: ${statusColors[inv.status]}20; color: ${statusColors[inv.status]}; padding: 4px 12px; border-radius: 20px; font-size: 12px; text-transform: capitalize;">${inv.status}</span></td>
                                 <td style="padding: 16px; color: #38e77b; font-weight: 600;">+$${inv.returns.toFixed(2)}</td>
-                                <td style="padding: 16px;"><button onclick="viewInvestmentDetails('${inv.id}')" style="background: rgba(56, 231, 123, 0.1); color: #38e77b; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 12px;">Details</button></td>
+                                <td style="padding: 16px;">
+                                    <div style="display: flex; gap: 8px;">
+                                        <button onclick="viewInvestmentDetails('${inv.id}')" style="background: rgba(56, 231, 123, 0.1); color: #38e77b; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px;">
+                                            <i class="fas fa-info-circle"></i> Details
+                                        </button>
+                                        <button onclick="sellToSecondaryMarket('${inv.id}', ${inv.amount}, '${inv.borrower_name}')" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px;">
+                                            <i class="fas fa-exchange-alt"></i> Sell
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                         `).join('');
                         
@@ -5315,6 +5324,308 @@
                     });
                     observer.observe(document.body, { subtree: true, attributes: true });
                 })();
+                </script>
+
+                <!-- Investment Modal Functions -->
+                <script>
+                // Mock investment data for modals (expanded details)
+                const investmentDetails = {
+                    'inv_001': {
+                        borrower_name: 'Sarah Moyo',
+                        purpose: 'Education',
+                        amount: 500,
+                        ownership_percent: 12.5,
+                        interest_rate: 8.5,
+                        months_remaining: 4,
+                        status: 'active',
+                        returns: 42.50,
+                        loan_title: 'University Tuition Fee Support',
+                        borrower_rating: 4.2,
+                        zimscore: 785,
+                        loan_amount: 4000,
+                        funded_amount: 3200,
+                        investment_date: '2024-09-15',
+                        maturity_date: '2025-01-15',
+                        next_payment: '2024-12-15',
+                        total_payments: 8,
+                        payments_made: 4,
+                        borrower_location: 'Harare, Zimbabwe',
+                        borrower_occupation: 'Student',
+                        risk_level: 'Low'
+                    },
+                    'inv_002': {
+                        borrower_name: 'Tendai Ncube',
+                        purpose: 'Business',
+                        amount: 1200,
+                        ownership_percent: 25.0,
+                        interest_rate: 10.0,
+                        months_remaining: 8,
+                        status: 'active',
+                        returns: 120.00,
+                        loan_title: 'Small Business Expansion',
+                        borrower_rating: 4.5,
+                        zimscore: 820,
+                        loan_amount: 4800,
+                        funded_amount: 4800,
+                        investment_date: '2024-07-20',
+                        maturity_date: '2025-03-20',
+                        next_payment: '2024-12-20',
+                        total_payments: 8,
+                        payments_made: 4,
+                        borrower_location: 'Bulawayo, Zimbabwe',
+                        borrower_occupation: 'Shop Owner',
+                        risk_level: 'Medium'
+                    }
+                    // Add more as needed...
+                };
+
+                // View Investment Details Modal
+                function viewInvestmentDetails(investmentId) {
+                    const investment = investmentDetails[investmentId];
+                    if (!investment) {
+                        alert('Investment details not available');
+                        return;
+                    }
+
+                    const modal = document.createElement('div');
+                    modal.className = 'modal-overlay';
+                    modal.innerHTML = `
+                        <div class="modal-container" style="max-width: 800px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(56, 231, 123, 0.2); border-radius: 16px; color: #f1f5f9;">
+                            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                <h2 style="margin: 0; color: #38e77b;">Investment Details</h2>
+                                <button onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer;">×</button>
+                            </div>
+                            <div class="modal-body" style="padding: 24px;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                                    <div>
+                                        <h3 style="color: #38e77b; margin-bottom: 16px;">Loan Information</h3>
+                                        <div style="background: rgba(0, 0, 0, 0.3); padding: 16px; border-radius: 12px;">
+                                            <div style="margin-bottom: 12px;"><strong>Title:</strong> ${investment.loan_title}</div>
+                                            <div style="margin-bottom: 12px;"><strong>Purpose:</strong> ${investment.purpose}</div>
+                                            <div style="margin-bottom: 12px;"><strong>Total Loan Amount:</strong> $${investment.loan_amount.toLocaleString()}</div>
+                                            <div style="margin-bottom: 12px;"><strong>Funded Amount:</strong> $${investment.funded_amount.toLocaleString()}</div>
+                                            <div style="margin-bottom: 12px;"><strong>Interest Rate:</strong> ${investment.interest_rate}%</div>
+                                            <div><strong>Risk Level:</strong> <span style="color: ${investment.risk_level === 'Low' ? '#22c55e' : investment.risk_level === 'Medium' ? '#f59e0b' : '#ef4444'}">${investment.risk_level}</span></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 style="color: #38e77b; margin-bottom: 16px;">Borrower Profile</h3>
+                                        <div style="background: rgba(0, 0, 0, 0.3); padding: 16px; border-radius: 12px;">
+                                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                                                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #38e77b, #34d399); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0a0a0a; font-weight: 700; font-size: 18px;">
+                                                    ${investment.borrower_name.split(' ').map(n => n[0]).join('')}
+                                                </div>
+                                                <div>
+                                                    <div style="font-weight: 600; font-size: 18px;">${investment.borrower_name}</div>
+                                                    <div style="color: #94a3b8;">${investment.borrower_occupation}</div>
+                                                </div>
+                                            </div>
+                                            <div style="margin-bottom: 12px;"><strong>Rating:</strong> ${'⭐'.repeat(Math.floor(investment.borrower_rating))} (${investment.borrower_rating}/5)</div>
+                                            <div style="margin-bottom: 12px;"><strong>ZimScore:</strong> ${investment.zimscore}</div>
+                                            <div><strong>Location:</strong> ${investment.borrower_location}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                                    <div>
+                                        <h3 style="color: #38e77b; margin-bottom: 16px;">Your Investment</h3>
+                                        <div style="background: rgba(0, 0, 0, 0.3); padding: 16px; border-radius: 12px;">
+                                            <div style="margin-bottom: 12px;"><strong>Invested Amount:</strong> $${investment.amount.toLocaleString()}</div>
+                                            <div style="margin-bottom: 12px;"><strong>Ownership:</strong> ${investment.ownership_percent}%</div>
+                                            <div style="margin-bottom: 12px;"><strong>Returns Earned:</strong> <span style="color: #22c55e;">+$${investment.returns.toFixed(2)}</span></div>
+                                            <div style="margin-bottom: 12px;"><strong>Investment Date:</strong> ${new Date(investment.investment_date).toLocaleDateString()}</div>
+                                            <div><strong>Status:</strong> <span style="color: ${investment.status === 'active' ? '#22c55e' : '#3b82f6'}; text-transform: capitalize;">${investment.status}</span></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 style="color: #38e77b; margin-bottom: 16px;">Payment Schedule</h3>
+                                        <div style="background: rgba(0, 0, 0, 0.3); padding: 16px; border-radius: 12px;">
+                                            <div style="margin-bottom: 12px;"><strong>Total Payments:</strong> ${investment.total_payments}</div>
+                                            <div style="margin-bottom: 12px;"><strong>Payments Made:</strong> ${investment.payments_made}</div>
+                                            <div style="margin-bottom: 12px;"><strong>Remaining:</strong> ${investment.months_remaining} months</div>
+                                            <div style="margin-bottom: 12px;"><strong>Next Payment:</strong> ${new Date(investment.next_payment).toLocaleDateString()}</div>
+                                            <div><strong>Maturity Date:</strong> ${new Date(investment.maturity_date).toLocaleDateString()}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    modal.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0, 0, 0, 0.8);
+                        backdrop-filter: blur(5px);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 10000;
+                        padding: 20px;
+                    `;
+
+                    document.body.appendChild(modal);
+                }
+
+                // Sell to Secondary Market Modal
+                function sellToSecondaryMarket(investmentId, currentValue, borrowerName) {
+                    const investment = investmentDetails[investmentId];
+                    const marketValue = currentValue + (Math.random() * 50 - 25); // Slight market fluctuation
+                    const platformFee = currentValue * 0.025; // 2.5% platform fee
+
+                    const modal = document.createElement('div');
+                    modal.className = 'modal-overlay';
+                    modal.innerHTML = `
+                        <div class="modal-container" style="max-width: 600px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 16px; color: #f1f5f9;">
+                            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                <h2 style="margin: 0; color: #3b82f6;">Sell to Secondary Market</h2>
+                                <button onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer;">×</button>
+                            </div>
+                            <div class="modal-body" style="padding: 24px;">
+                                <div style="background: rgba(59, 130, 246, 0.1); padding: 16px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #3b82f6;">
+                                    <h4 style="margin: 0 0 8px 0; color: #3b82f6;">Investment Summary</h4>
+                                    <div><strong>Borrower:</strong> ${borrowerName}</div>
+                                    <div><strong>Your Investment:</strong> $${currentValue.toLocaleString()}</div>
+                                    <div><strong>Current Market Value:</strong> $${marketValue.toFixed(2)}</div>
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Selling Price (USD)</label>
+                                    <input type="number" id="sellingPrice_${investmentId}" value="${marketValue.toFixed(2)}" min="1" step="0.01" 
+                                           style="width: 100%; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(0, 0, 0, 0.3); color: #f1f5f9;">
+                                    <small style="color: #94a3b8;">Recommended: $${marketValue.toFixed(2)} (Current market value)</small>
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Reason for Selling (Optional)</label>
+                                    <textarea id="sellReason_${investmentId}" placeholder="e.g., Need liquidity, portfolio rebalancing..." 
+                                             style="width: 100%; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(0, 0, 0, 0.3); color: #f1f5f9; min-height: 80px; resize: vertical;"></textarea>
+                                </div>
+
+                                <div style="background: rgba(0, 0, 0, 0.3); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
+                                    <h4 style="margin: 0 0 12px 0;">Transaction Summary</h4>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                        <span>Selling Price:</span>
+                                        <span id="summaryPrice_${investmentId}">$${marketValue.toFixed(2)}</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                        <span>Platform Fee (2.5%):</span>
+                                        <span style="color: #ef4444;" id="summaryFee_${investmentId}">-$${platformFee.toFixed(2)}</span>
+                                    </div>
+                                    <hr style="border: none; border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 12px 0;">
+                                    <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 16px;">
+                                        <span>Net Amount:</span>
+                                        <span style="color: #22c55e;" id="summaryNet_${investmentId}">$${(marketValue - platformFee).toFixed(2)}</span>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; gap: 12px;">
+                                    <button onclick="this.closest('.modal-overlay').remove()" 
+                                           style="flex: 1; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: transparent; color: #94a3b8; cursor: pointer;">
+                                        Cancel
+                                    </button>
+                                    <button onclick="processSell('${investmentId}')" 
+                                           style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: #3b82f6; color: white; cursor: pointer; font-weight: 600;">
+                                        <i class="fas fa-handshake"></i> List for Sale
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    modal.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0, 0, 0, 0.8);
+                        backdrop-filter: blur(5px);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 10000;
+                        padding: 20px;
+                    `;
+
+                    document.body.appendChild(modal);
+
+                    // Add real-time calculation
+                    const priceInput = document.getElementById(`sellingPrice_${investmentId}`);
+                    priceInput.addEventListener('input', function() {
+                        const price = parseFloat(this.value) || 0;
+                        const fee = price * 0.025;
+                        const net = price - fee;
+                        
+                        document.getElementById(`summaryPrice_${investmentId}`).textContent = `$${price.toFixed(2)}`;
+                        document.getElementById(`summaryFee_${investmentId}`).textContent = `-$${fee.toFixed(2)}`;
+                        document.getElementById(`summaryNet_${investmentId}`).textContent = `$${net.toFixed(2)}`;
+                    });
+                }
+
+                // Process Sell Function
+                function processSell(investmentId) {
+                    const priceInput = document.getElementById(`sellingPrice_${investmentId}`);
+                    const reasonInput = document.getElementById(`sellReason_${investmentId}`);
+                    
+                    const price = parseFloat(priceInput.value);
+                    const reason = reasonInput.value.trim();
+                    
+                    if (!price || price < 1) {
+                        alert('Please enter a valid selling price');
+                        return;
+                    }
+                    
+                    // Simulate API call
+                    const button = event.target;
+                    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                    button.disabled = true;
+                    
+                    setTimeout(() => {
+                        // Close modal
+                        document.querySelector('.modal-overlay').remove();
+                        
+                        // Show success message
+                        showSuccessMessage(`Investment listed successfully for $${price.toFixed(2)}! It will appear on the secondary market within 24 hours.`);
+                        
+                        // Optionally remove or mark the investment as "Listed for Sale"
+                        // This would typically refresh the investments table
+                        
+                    }, 2000);
+                }
+
+                // Success Message Function
+                function showSuccessMessage(message) {
+                    const notification = document.createElement('div');
+                    notification.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: rgba(34, 197, 94, 0.9);
+                        color: white;
+                        padding: 16px 24px;
+                        border-radius: 8px;
+                        z-index: 10001;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                        max-width: 400px;
+                    `;
+                    notification.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-check-circle" style="font-size: 20px;"></i>
+                            <span>${message}</span>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(notification);
+                    
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 5000);
+                }
                 </script>
 
                 <!-- Pagination for Investment Portfolio -->
