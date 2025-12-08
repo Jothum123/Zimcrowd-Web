@@ -112,7 +112,7 @@ END $$;
 -- Create admin_notifications table for loan application alerts
 CREATE TABLE IF NOT EXISTS admin_notifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    type VARCHAR(50) NOT NULL,
+    notification_type VARCHAR(50) NOT NULL,
     title VARCHAR(255) NOT NULL,
     message TEXT,
     data JSONB,
@@ -128,7 +128,7 @@ CREATE INDEX IF NOT EXISTS idx_loan_applications_user ON loan_applications(user_
 CREATE INDEX IF NOT EXISTS idx_loan_applications_status ON loan_applications(status);
 CREATE INDEX IF NOT EXISTS idx_loan_applications_submitted ON loan_applications(submitted_at);
 CREATE INDEX IF NOT EXISTS idx_admin_notifications_read ON admin_notifications(is_read);
-CREATE INDEX IF NOT EXISTS idx_admin_notifications_type ON admin_notifications(type);
+CREATE INDEX IF NOT EXISTS idx_admin_notifications_type ON admin_notifications(notification_type);
 
 -- =====================================================
 -- ROW LEVEL SECURITY
