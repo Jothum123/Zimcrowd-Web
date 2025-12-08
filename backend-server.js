@@ -98,6 +98,8 @@ try {
     console.log('✅ Account status routes loaded');
     var marketApiRoutes = require('./routes/market-api');
     console.log('✅ Market API routes loaded');
+    var loanApplicationsRoutes = require('./routes/loan-applications');
+    console.log('✅ Loan Applications routes loaded');
     console.log('✅ All routes loaded successfully');
 } catch (error) {
     console.error('❌ Error loading routes:', error.message);
@@ -265,6 +267,8 @@ app.use('/api/account', accountStatusRoutes);
 console.log('✅ Account status routes registered');
 app.use('/api/market', marketApiRoutes);
 console.log('✅ Market API routes registered at /api/market');
+app.use('/api/loan-applications', loanApplicationsRoutes);
+console.log('✅ Loan Applications routes registered at /api/loan-applications');
 app.use('/api/kyc', kycOcrRoutes); // Alias for /api/kyc-ocr
 console.log('✅ KYC routes registered (alias for kyc-ocr)');
 

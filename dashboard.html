@@ -4931,35 +4931,11 @@
             </div>
 
             <div id="applications-tab" class="tab-content" data-loan-container="pending">
-                <div class="loan-card">
-                    <div class="loan-header">
-                        <div>
-                            <h4>Car Loan Application</h4>
-                            <span class="loan-status" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">Under Review</span>
-                            <span class="risk-badge medium">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="far fa-star"></i>
-                                <span class="rating-text">4.0/5</span>
-                            </span>
-                        </div>
-                        <div class="loan-amount">$8,000</div>
-                    </div>
-                    <div class="loan-details">
-                        <div class="detail-row">
-                            <span>Application Date</span>
-                            <strong>Nov 25, 2024</strong>
-                        </div>
-                        <div class="detail-row">
-                            <span>Estimated Rate</span>
-                            <strong>7.2%</strong>
-                        </div>
-                        <div class="detail-row">
-                            <span>Status</span>
-                            <strong>Document Review</strong>
-                        </div>
+                <!-- Applications will be loaded dynamically -->
+                <div id="applicationsContainer">
+                    <div style="text-align: center; padding: 40px; color: #64748b;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 16px;"></i>
+                        <p>Loading applications...</p>
                     </div>
                 </div>
             </div>
@@ -13670,6 +13646,163 @@ How it works:
             // Add active class to selected tab
             event.target.classList.add('active');
             document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Load applications when switching to applications tab
+            if (tabName === 'applications') {
+                loadLoanApplications();
+            }
+        }
+        
+        // Load Loan Applications from API
+        async function loadLoanApplications() {
+            const container = document.getElementById('applicationsContainer');
+            if (!container) return;
+            
+            try {
+                const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                const response = await fetch('/api/loan-applications/my-applications', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const result = await response.json();
+                
+                if (result.success && result.data.applications) {
+                    renderLoanApplications(result.data.applications);
+                    // Update tab count
+                    document.getElementById('pendingLoansTabCount').textContent = result.data.applications.length;
+                } else {
+                    container.innerHTML = renderNoApplications();
+                }
+            } catch (error) {
+                console.error('Error loading applications:', error);
+                container.innerHTML = renderNoApplications();
+            }
+        }
+        
+        // Render loan applications
+        function renderLoanApplications(applications) {
+            const container = document.getElementById('applicationsContainer');
+            if (!applications || applications.length === 0) {
+                container.innerHTML = renderNoApplications();
+                return;
+            }
+            
+            container.innerHTML = applications.map(app => {
+                const statusColors = {
+                    'pending': { bg: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b', icon: 'fa-clock', text: 'Under Review' },
+                    'approved': { bg: 'rgba(56, 231, 123, 0.2)', color: '#38e77b', icon: 'fa-check-circle', text: 'Approved' },
+                    'rejected': { bg: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', icon: 'fa-times-circle', text: 'Rejected' }
+                };
+                const status = statusColors[app.status] || statusColors.pending;
+                const date = new Date(app.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                
+                let rejectionHtml = '';
+                if (app.status === 'rejected' && app.rejection_reason) {
+                    rejectionHtml = `
+                        <div style="margin-top: 15px; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 10px; border-left: 4px solid #ef4444;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i>
+                                <strong style="color: #ef4444;">Rejection Reason</strong>
+                            </div>
+                            <p style="color: #94a3b8; margin: 0;">${app.rejection_reason}</p>
+                            ${app.can_resubmit ? `
+                                <div style="margin-top: 12px; display: flex; gap: 10px;">
+                                    <button onclick="resubmitApplication('${app.id}')" style="padding: 8px 16px; background: linear-gradient(135deg, #38e77b, #22c55e); color: #0f172a; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px;">
+                                        <i class="fas fa-redo"></i> Resubmit Application
+                                    </button>
+                                    <button onclick="openLoanRequestModal()" style="padding: 8px 16px; background: transparent; color: #38e77b; border: 1px solid #38e77b; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px;">
+                                        <i class="fas fa-plus"></i> New Application
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+                
+                return `
+                    <div class="loan-card" style="margin-bottom: 15px;">
+                        <div class="loan-header">
+                            <div>
+                                <h4>${app.purpose} Loan</h4>
+                                <span class="loan-status" style="background: ${status.bg}; color: ${status.color};">
+                                    <i class="fas ${status.icon}"></i> ${status.text}
+                                </span>
+                            </div>
+                            <div class="loan-amount">${app.currency} ${parseFloat(app.amount).toLocaleString()}</div>
+                        </div>
+                        <div class="loan-details">
+                            <div class="detail-row">
+                                <span>Application Date</span>
+                                <strong>${date}</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Interest Rate</span>
+                                <strong>${app.interest_rate}%</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Term</span>
+                                <strong>${app.term_months} months</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Risk Level</span>
+                                <strong>${app.risk_level}</strong>
+                            </div>
+                        </div>
+                        ${rejectionHtml}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Render no applications message
+        function renderNoApplications() {
+            return `
+                <div style="text-align: center; padding: 60px 20px; color: #64748b;">
+                    <div style="width: 80px; height: 80px; background: rgba(56, 231, 123, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+                        <i class="fas fa-file-alt" style="font-size: 36px; color: #38e77b;"></i>
+                    </div>
+                    <h3 style="color: #f1f5f9; margin-bottom: 12px;">No Loan Applications</h3>
+                    <p style="color: #94a3b8; margin-bottom: 24px;">You haven't submitted any loan applications yet.</p>
+                    <button onclick="openLoanRequestModal()" style="padding: 14px 28px; background: linear-gradient(135deg, #38e77b, #22c55e); color: #0f172a; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                        <i class="fas fa-plus"></i> Apply for a Loan
+                    </button>
+                </div>
+            `;
+        }
+        
+        // Resubmit a rejected application
+        async function resubmitApplication(applicationId) {
+            try {
+                const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                const response = await fetch(`/api/loan-applications/${applicationId}/resubmit`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    if (window.ToastNotifications) {
+                        window.ToastNotifications.success('Application Resubmitted', 'Your loan application has been resubmitted for review.');
+                    } else {
+                        alert('Application resubmitted successfully!');
+                    }
+                    loadLoanApplications(); // Refresh the list
+                } else {
+                    if (window.ToastNotifications) {
+                        window.ToastNotifications.error('Resubmit Failed', result.message || 'Could not resubmit application.');
+                    } else {
+                        alert('Failed to resubmit: ' + (result.message || 'Unknown error'));
+                    }
+                }
+            } catch (error) {
+                console.error('Resubmit error:', error);
+                alert('Error resubmitting application');
+            }
         }
 
         // Load Wallet Data
@@ -16406,6 +16539,32 @@ How it works:
         // Loan Request Modal Functions
         async function openLoanRequestModal() {
             const modal = document.getElementById('loanRequestModal');
+            
+            // First check if user has completed post-registration
+            try {
+                const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                const response = await fetch('/api/loan-applications/check-eligibility', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const result = await response.json();
+                
+                if (!result.success || !result.data.canApply) {
+                    // Show post-registration required message
+                    showPostRegistrationRequired();
+                    return;
+                }
+                
+                // Store employment type for rating display
+                window.userEmploymentType = result.data.employmentType;
+                window.userStartingRating = result.data.startingRating;
+                
+            } catch (error) {
+                console.warn('Could not check eligibility, proceeding with modal:', error);
+            }
+            
             modal.style.display = 'flex';
             
             // Configure loan terms based on employment type
@@ -16424,6 +16583,35 @@ How it works:
                 // Use fallback calculation if API fails
                 await calculateLocalEligibility();
             }
+        }
+        
+        // Show post-registration required modal
+        function showPostRegistrationRequired() {
+            const existingModal = document.getElementById('postRegRequiredModal');
+            if (existingModal) existingModal.remove();
+            
+            const modalHtml = `
+                <div id="postRegRequiredModal" class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 20px; max-width: 500px; width: 100%; padding: 40px; text-align: center; border: 1px solid rgba(56, 231, 123, 0.2);">
+                        <div style="width: 80px; height: 80px; background: rgba(245, 158, 11, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+                            <i class="fas fa-user-edit" style="font-size: 36px; color: #f59e0b;"></i>
+                        </div>
+                        <h2 style="color: #f1f5f9; margin-bottom: 16px;">Complete Your Profile First</h2>
+                        <p style="color: #94a3b8; margin-bottom: 24px; line-height: 1.6;">
+                            To apply for a loan, you need to complete your profile setup. This helps us verify your identity and determine your loan eligibility.
+                        </p>
+                        <div style="display: flex; gap: 12px; justify-content: center;">
+                            <button onclick="document.getElementById('postRegRequiredModal').remove();" style="padding: 12px 24px; background: transparent; color: #94a3b8; border: 1px solid #334155; border-radius: 10px; cursor: pointer;">
+                                Cancel
+                            </button>
+                            <button onclick="window.location.href='post-registration.html';" style="padding: 12px 24px; background: linear-gradient(135deg, #38e77b, #22c55e); color: #0f172a; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                                <i class="fas fa-arrow-right"></i> Complete Profile
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
         }
 
         async function fetchLoanEligibility() {
@@ -16985,86 +17173,144 @@ How it works:
         }
 
         async function submitLoanRequest() {
-            // Get cold start data for validation
-            const coldStartData = JSON.parse(localStorage.getItem('coldStartRating') || '{}');
-            
             const loanData = {
                 amount: parseFloat(document.getElementById('loanAmount')?.value),
-                term: parseInt(document.getElementById('loanTerm')?.value),
-                rate: parseFloat(document.getElementById('loanRate')?.value),
+                term_months: parseInt(document.getElementById('loanTerm')?.value),
+                interest_rate: parseFloat(document.getElementById('loanRate')?.value),
                 purpose: document.getElementById('loanPurpose')?.value,
-                description: document.getElementById('loanDescription')?.value,
-                agreed_to_fees: document.getElementById('agreeToFees')?.checked,
-                agreed_to_terms: document.getElementById('agreeToTerms')?.checked,
-                e_signature: document.getElementById('eSignature')?.value,
-                // Admin review workflow
-                status: 'pending_admin_review',
-                has_cold_start: coldStartData.has_cold_start || false,
-                cold_start_limit: coldStartData.cold_start_limit || 0,
-                employment_type: coldStartData.employment_type || 'private'
+                purpose_description: document.getElementById('loanDescription')?.value,
+                currency: document.getElementById('loanCurrency')?.value || 'USD'
             };
             
-            if (!loanData.amount || !loanData.term || !loanData.purpose) {
-                alert('Please fill in all required fields');
+            const agreedToFees = document.getElementById('agreeToFees')?.checked;
+            const agreedToTerms = document.getElementById('agreeToTerms')?.checked;
+            const eSignature = document.getElementById('eSignature')?.value;
+            
+            if (!loanData.amount || !loanData.term_months || !loanData.purpose) {
+                showNotification('error', 'Missing Fields', 'Please fill in all required fields');
                 return;
             }
             
-            // Employment-based loan term validation
-            const employmentType = (coldStartData.employment_type || 'private').toLowerCase();
-            const maxTermMonths = LOAN_TERM_LIMITS[employmentType] || LOAN_TERM_LIMITS.private;
-            
-            if (loanData.term > maxTermMonths) {
-                alert(`Loan term limit: ${employmentType} employees can select up to ${maxTermMonths} months. You selected ${loanData.term} months.`);
-                return;
-            }
-            console.log(`🏛️ Loan term validation passed: ${loanData.term} months ≤ ${maxTermMonths} months limit for ${employmentType}`);
-            
-            // Cold start validation
-            if (coldStartData.has_cold_start && coldStartData.cold_start_limit > 0) {
-                if (loanData.amount > coldStartData.cold_start_limit) {
-                    alert(`Cold start limit: Maximum loan amount is $${coldStartData.cold_start_limit}. Your requested amount is $${loanData.amount.toFixed(2)}.`);
-                    return;
-                }
-                console.log(`🧊 Cold start validation passed: Requested $${loanData.amount} ≤ Limit $${coldStartData.cold_start_limit}`);
-            }
-            
-            if (!loanData.agreed_to_fees) {
-                alert('Please agree to the platform fees to continue');
+            if (loanData.amount < 25) {
+                showNotification('error', 'Invalid Amount', 'Minimum loan amount is $25');
                 return;
             }
             
-            if (!loanData.agreed_to_terms) {
-                alert('Please read and agree to the Terms & Conditions and Loan Agreement');
+            if (!agreedToFees) {
+                showNotification('error', 'Agreement Required', 'Please agree to the platform fees to continue');
                 return;
             }
             
-            if (!loanData.e_signature || loanData.e_signature.trim().length < 2) {
-                alert('Please provide your electronic signature (full name)');
+            if (!agreedToTerms) {
+                showNotification('error', 'Agreement Required', 'Please read and agree to the Terms & Conditions');
                 return;
+            }
+            
+            if (!eSignature || eSignature.trim().length < 2) {
+                showNotification('error', 'Signature Required', 'Please provide your electronic signature (full name)');
+                return;
+            }
+            
+            // Disable submit button
+            const submitBtn = document.getElementById('submitLoanBtn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
             }
             
             try {
-                const response = await window.ZimCrowdAPI.createLoanRequest(loanData);
-                if (response.success) {
-                    const statusMessage = coldStartData.has_cold_start ? 
-                        `Loan request submitted for admin review! Amount: $${loanData.amount.toFixed(2)} (Cold start limit: $${coldStartData.cold_start_limit}). After approval, it will appear in the primary market.` :
-                        `Loan request submitted for admin review! Amount: $${loanData.amount.toFixed(2)}. After approval, it will appear in the primary market.`;
-                    
-                    alert(statusMessage);
+                const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                const response = await fetch('/api/loan-applications/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(loanData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
                     closeLoanRequestModal();
+                    
+                    // Show success message
+                    showApplicationSubmittedModal(loanData.amount, loanData.currency);
+                    
                     // Reset form
                     document.getElementById('loanAmount').value = '';
                     document.getElementById('loanDescription').value = '';
                     document.getElementById('agreeToFees').checked = false;
                     document.getElementById('agreeToTerms').checked = false;
                     document.getElementById('eSignature').value = '';
-                    loadLoansData(); // Refresh loans
+                    
+                    // Refresh applications list
+                    loadLoanApplications();
                 } else {
-                    alert('Failed to submit loan request: ' + (response.message || 'Unknown error'));
+                    // Handle specific error codes
+                    if (result.code === 'POST_REGISTRATION_REQUIRED') {
+                        closeLoanRequestModal();
+                        showPostRegistrationRequired();
+                    } else {
+                        showNotification('error', 'Submission Failed', result.message || 'Failed to submit loan application');
+                    }
                 }
             } catch (error) {
                 console.error('Loan request error:', error);
-                alert('Failed to submit loan request');
+                showNotification('error', 'Error', 'Failed to submit loan request. Please try again.');
+            } finally {
+                // Re-enable submit button
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Loan Request';
+                }
+            }
+        }
+        
+        // Show application submitted success modal
+        function showApplicationSubmittedModal(amount, currency) {
+            const existingModal = document.getElementById('applicationSubmittedModal');
+            if (existingModal) existingModal.remove();
+            
+            const modalHtml = `
+                <div id="applicationSubmittedModal" class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 20px; max-width: 500px; width: 100%; padding: 40px; text-align: center; border: 1px solid rgba(56, 231, 123, 0.3);">
+                        <div style="width: 80px; height: 80px; background: rgba(56, 231, 123, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+                            <i class="fas fa-check-circle" style="font-size: 40px; color: #38e77b;"></i>
+                        </div>
+                        <h2 style="color: #f1f5f9; margin-bottom: 16px;">Application Submitted!</h2>
+                        <p style="color: #94a3b8; margin-bottom: 8px; font-size: 18px;">
+                            <strong style="color: #38e77b;">${currency} ${parseFloat(amount).toLocaleString()}</strong>
+                        </p>
+                        <p style="color: #94a3b8; margin-bottom: 24px; line-height: 1.6;">
+                            Your loan application has been submitted for admin review. Once approved, it will be posted to the Primary Market for lenders to fund.
+                        </p>
+                        <div style="background: rgba(56, 231, 123, 0.1); padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+                            <div style="display: flex; align-items: center; gap: 10px; justify-content: center;">
+                                <i class="fas fa-clock" style="color: #f59e0b;"></i>
+                                <span style="color: #94a3b8;">Estimated review time: <strong style="color: #f1f5f9;">24-48 hours</strong></span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px; justify-content: center;">
+                            <button onclick="document.getElementById('applicationSubmittedModal').remove(); showSection('loans'); switchLoanTab('applications');" style="padding: 12px 24px; background: linear-gradient(135deg, #38e77b, #22c55e); color: #0f172a; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                                View My Applications
+                            </button>
+                            <button onclick="document.getElementById('applicationSubmittedModal').remove();" style="padding: 12px 24px; background: transparent; color: #94a3b8; border: 1px solid #334155; border-radius: 10px; cursor: pointer;">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+        
+        // Helper notification function
+        function showNotification(type, title, message) {
+            if (window.ToastNotifications) {
+                window.ToastNotifications[type](title, message);
+            } else {
+                alert(`${title}: ${message}`);
             }
         }
 
