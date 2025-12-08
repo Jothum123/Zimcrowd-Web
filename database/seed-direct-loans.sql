@@ -4,12 +4,23 @@
 -- =====================================================
 
 -- =====================================================
--- DROP EXISTING POLICIES (to avoid conflicts on re-run)
+-- DROP EXISTING POLICIES (only if tables exist)
 -- =====================================================
-DROP POLICY IF EXISTS "Users can view own direct loans" ON direct_loans;
-DROP POLICY IF EXISTS "Users can view own offers" ON direct_loan_offers;
-DROP POLICY IF EXISTS "Users can create offers" ON direct_loan_offers;
-DROP POLICY IF EXISTS "Users can view own repayments" ON direct_loan_repayments;
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'direct_loans') THEN
+        DROP POLICY IF EXISTS "Users can view own direct loans" ON direct_loans;
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'direct_loan_offers') THEN
+        DROP POLICY IF EXISTS "Users can view own offers" ON direct_loan_offers;
+        DROP POLICY IF EXISTS "Users can create offers" ON direct_loan_offers;
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'direct_loan_repayments') THEN
+        DROP POLICY IF EXISTS "Users can view own repayments" ON direct_loan_repayments;
+    END IF;
+END $$;
 
 -- =====================================================
 -- DROP EXISTING TABLES (uncomment to completely reset)

@@ -7,17 +7,39 @@
 -- =====================================================
 
 -- =====================================================
--- DROP EXISTING POLICIES (to avoid conflicts on re-run)
+-- DROP EXISTING POLICIES (only if tables exist)
 -- =====================================================
-DROP POLICY IF EXISTS "Users can view own applications" ON loan_applications;
-DROP POLICY IF EXISTS "Users can create applications" ON loan_applications;
-DROP POLICY IF EXISTS "Primary market loans are viewable by everyone" ON primary_market_loans;
-DROP POLICY IF EXISTS "Authenticated users can create investments" ON investments;
-DROP POLICY IF EXISTS "Users can view own investments" ON investments;
-DROP POLICY IF EXISTS "Users can update own investments" ON investments;
-DROP POLICY IF EXISTS "Users can view own loans" ON loans;
-DROP POLICY IF EXISTS "Anyone can view listed investments" ON secondary_market_listings;
-DROP POLICY IF EXISTS "Sellers can create listings" ON secondary_market_listings;
+DO $$ 
+BEGIN
+    -- Drop policies on loan_applications if table exists
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'loan_applications') THEN
+        DROP POLICY IF EXISTS "Users can view own applications" ON loan_applications;
+        DROP POLICY IF EXISTS "Users can create applications" ON loan_applications;
+    END IF;
+    
+    -- Drop policies on primary_market_loans if table exists
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'primary_market_loans') THEN
+        DROP POLICY IF EXISTS "Primary market loans are viewable by everyone" ON primary_market_loans;
+    END IF;
+    
+    -- Drop policies on investments if table exists
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'investments') THEN
+        DROP POLICY IF EXISTS "Authenticated users can create investments" ON investments;
+        DROP POLICY IF EXISTS "Users can view own investments" ON investments;
+        DROP POLICY IF EXISTS "Users can update own investments" ON investments;
+    END IF;
+    
+    -- Drop policies on loans if table exists
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'loans') THEN
+        DROP POLICY IF EXISTS "Users can view own loans" ON loans;
+    END IF;
+    
+    -- Drop policies on secondary_market_listings if table exists
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'secondary_market_listings') THEN
+        DROP POLICY IF EXISTS "Anyone can view listed investments" ON secondary_market_listings;
+        DROP POLICY IF EXISTS "Sellers can create listings" ON secondary_market_listings;
+    END IF;
+END $$;
 
 -- =====================================================
 -- DROP EXISTING TABLES (in reverse dependency order)
