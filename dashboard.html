@@ -5471,6 +5471,7 @@
                 console.log('📋 Global functions registered:', {
                     viewInvestmentDetails: typeof window.viewInvestmentDetails,
                     sellToSecondaryMarket: typeof window.sellToSecondaryMarket,
+                    processSell: typeof window.processSell,
                     investmentDetails: typeof investmentDetails
                 });
                 
@@ -5781,7 +5782,31 @@
 
                 // Sell to Secondary Market Modal
                 window.sellToSecondaryMarket = function(investmentId, currentValue, borrowerName) {
+                    console.log('🔄 Sell to Secondary Market called:', { investmentId, currentValue, borrowerName });
+                    
+                    // Prevent any potential event issues
+                    if (typeof event !== 'undefined' && event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    
                     const investment = investmentDetails[investmentId];
+                    if (!investment) {
+                        console.error('❌ Investment not found for selling:', investmentId);
+                        if (window.ToastNotifications) {
+                            window.ToastNotifications.error(
+                                'Investment Not Found',
+                                `Cannot find investment ${investmentId} for selling`,
+                                { actions: [{ text: 'Refresh', onclick: 'location.reload()' }] }
+                            );
+                        } else {
+                            alert('Investment not found for selling');
+                        }
+                        return;
+                    }
+                    
+                    console.log('✅ Found investment for selling:', investment.borrower_name);
+                    
                     const marketValue = currentValue + (Math.random() * 50 - 25); // Slight market fluctuation
                     const platformFee = currentValue * 0.025; // 2.5% platform fee
 
@@ -5875,33 +5900,52 @@
                     });
                 }
 
-                // Process Sell Function
-                function processSell(investmentId) {
+                // Process Sell Function - Global
+                window.processSell = function(investmentId) {
+                    console.log('💰 Processing sell for investment:', investmentId);
+                    
                     const priceInput = document.getElementById(`sellingPrice_${investmentId}`);
                     const reasonInput = document.getElementById(`sellReason_${investmentId}`);
                     
-                    const price = parseFloat(priceInput.value);
-                    const reason = reasonInput.value.trim();
-                    
-                    if (!price || price < 1) {
-                        alert('Please enter a valid selling price');
+                    if (!priceInput) {
+                        console.error('❌ Price input not found for:', investmentId);
+                        if (window.ToastNotifications) {
+                            window.ToastNotifications.error('Error', 'Price input field not found');
+                        } else {
+                            alert('Price input field not found');
+                        }
                         return;
                     }
                     
+                    const price = parseFloat(priceInput.value);
+                    const reason = reasonInput ? reasonInput.value.trim() : '';
+                    
+                    if (!price || price < 1) {
+                        if (window.ToastNotifications) {
+                            window.ToastNotifications.warning('Invalid Price', 'Please enter a valid selling price (minimum $1)');
+                        } else {
+                            alert('Please enter a valid selling price');
+                        }
+                        return;
+                    }
+                    
+                    console.log('✅ Processing sale:', { investmentId, price, reason });
+                    
                     // Simulate API call
                     const button = event.target;
+                    const originalHTML = button.innerHTML;
                     button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
                     button.disabled = true;
                     
                     setTimeout(() => {
                         // Close modal
-                        document.querySelector('.modal-overlay').remove();
+                        const modal = document.querySelector('.modal-overlay');
+                        if (modal) modal.remove();
                         
                         // Show success message
                         showSuccessMessage(`Investment listed successfully for $${price.toFixed(2)}! It will appear on the secondary market within 24 hours.`);
                         
-                        // Optionally remove or mark the investment as "Listed for Sale"
-                        // This would typically refresh the investments table
+                        console.log('🎉 Investment sale processed successfully');
                         
                     }, 2000);
                 }
