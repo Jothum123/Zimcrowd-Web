@@ -195,6 +195,95 @@ LIMIT 5;
 */
 
 -- =====================================================
+-- PRIMARY MARKET LOANS TABLE
+-- Must be created before loans and secondary_market_listings
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS primary_market_loans (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    borrower_id UUID REFERENCES auth.users(id),
+    application_id UUID REFERENCES loan_applications(id),
+    title VARCHAR(255) NOT NULL,
+    purpose VARCHAR(100) NOT NULL,
+    purpose_description TEXT,
+    amount DECIMAL(12,2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'USD',
+    interest_rate DECIMAL(5,2) NOT NULL,
+    term_months INTEGER NOT NULL,
+    risk_level VARCHAR(20) NOT NULL,
+    funded_amount DECIMAL(12,2) DEFAULT 0,
+    funding_progress DECIMAL(5,2) DEFAULT 0,
+    lenders_count INTEGER DEFAULT 0,
+    min_investment DECIMAL(10,2) DEFAULT 25,
+    status VARCHAR(20) DEFAULT 'funding', -- funding, funded, active, completed, defaulted
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    funding_deadline TIMESTAMP WITH TIME ZONE,
+    funded_at TIMESTAMP WITH TIME ZONE,
+    CONSTRAINT valid_market_loan_status CHECK (status IN ('funding', 'funded', 'active', 'completed', 'defaulted', 'cancelled'))
+);
+
+-- Indexes for primary market loans
+CREATE INDEX IF NOT EXISTS idx_primary_market_loans_status ON primary_market_loans(status);
+CREATE INDEX IF NOT EXISTS idx_primary_market_loans_currency ON primary_market_loans(currency);
+CREATE INDEX IF NOT EXISTS idx_primary_market_loans_borrower ON primary_market_loans(borrower_id);
+
+-- =====================================================
+-- INVESTMENTS TABLE
+-- Must be created before secondary_market_listings
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS investments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    investor_id UUID REFERENCES auth.users(id) NOT NULL,
+    loan_id UUID REFERENCES primary_market_loans(id),
+    borrower_id UUID REFERENCES auth.users(id),
+    amount DECIMAL(12,2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'USD',
+    ownership_percent DECIMAL(5,2),
+    interest_rate DECIMAL(5,2),
+    expected_return DECIMAL(12,2),
+    actual_return DECIMAL(12,2) DEFAULT 0,
+    status VARCHAR(20) DEFAULT 'active', -- active, completed, defaulted, for_sale, sold
+    invested_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    maturity_date TIMESTAMP WITH TIME ZONE,
+    next_payment_date TIMESTAMP WITH TIME ZONE,
+    payments_received INTEGER DEFAULT 0,
+    total_payments INTEGER,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Indexes for investments
+CREATE INDEX IF NOT EXISTS idx_investments_investor ON investments(investor_id);
+CREATE INDEX IF NOT EXISTS idx_investments_loan ON investments(loan_id);
+CREATE INDEX IF NOT EXISTS idx_investments_status ON investments(status);
+
+-- RLS for primary_market_loans
+ALTER TABLE primary_market_loans ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Primary market loans are viewable by everyone" 
+ON primary_market_loans FOR SELECT 
+USING (true);
+
+-- RLS for investments
+ALTER TABLE investments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Authenticated users can create investments" 
+ON investments FOR INSERT 
+TO authenticated 
+WITH CHECK (auth.uid() = investor_id);
+
+CREATE POLICY "Users can view own investments" 
+ON investments FOR SELECT 
+TO authenticated 
+USING (auth.uid() = investor_id);
+
+CREATE POLICY "Users can update own investments" 
+ON investments FOR UPDATE 
+TO authenticated 
+USING (auth.uid() = investor_id);
+
+-- =====================================================
 -- LOANS TABLE (Active and Completed Borrower Loans)
 -- =====================================================
 
