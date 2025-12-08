@@ -13076,40 +13076,23 @@ How it works:
                 } else {
                     countDisplay.textContent = `Showing ${filteredLoans.length} ${currency} loans`;
                 }
-            }
-        }
 
-        // Load Mock Primary Market Loans (when API has no data)
-        function loadMockPrimaryMarketLoans() {
-            if (typeof MockMarketData === 'undefined') {
-                showMarketError('primaryMarketLoans', 'No investment opportunities available');
-                return;
-            }
-            
-            // Generate more loans to have good distribution
-            const mockLoans = MockMarketData.generatePrimaryMarketLoans(12);
-            window.allMockLoans = mockLoans; // Store all loans
-            
-            // Apply current filter
-            const filteredLoans = window.currentCurrencyFilter === 'all'
-                ? mockLoans
-                : mockLoans.filter(loan => loan.currency === window.currentCurrencyFilter);
-            
-            window.currentMockLoans = filteredLoans.slice(0, 6); // Show first 6 for dashboard
-            renderPrimaryMarketLoans(window.currentMockLoans);
-            
-            // Update loan count
-            filterPrimaryMarketByCurrency(window.currentCurrencyFilter);
-        }
+        let starDisplayHtml = '';
+        let historyText = '';
 
-        // Render Primary Market Loans
-        function renderPrimaryMarketLoans(loans) {
-            const container = document.getElementById('primaryMarketLoans');
-            if (!container) return;
-            
-            if (!loans || loans.length === 0) {
-                container.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: rgba(15, 23, 42, 0.5); border-radius: 12px;">
+        if (isFirstLoan) {
+            // Gray stars with zero fill
+            starDisplayHtml = Array(5).fill('<i class="far fa-star" style="color: #64748b;"></i>').join('');
+            historyText = 'First Loan';
+        } else if (isDefaulter) {
+            // Red stars: 1 filled, 4 empty
+            starDisplayHtml = '<i class="fas fa-star" style="color: #ef4444;"></i>' + 
+                              Array(4).fill('<i class="far fa-star" style="color: #ef4444;"></i>').join('');
+            historyText = `${loan.borrower.repaidOnTime}/${loan.borrower.totalLoans} loans repaid`;
+        } else {
+            // Standard star rating
+            starDisplayHtml = '';
+            historyText = `${loan.borrower.repaidOnTime} loans repaid`;
                         <i class="fas fa-search" style="font-size: 48px; color: #64748b; margin-bottom: 20px;"></i>
                         <h3 style="color: #94a3b8; margin-bottom: 10px;">No Loans Found</h3>
                         <p style="color: #64748b;">Try changing the currency filter</p>
@@ -13123,7 +13106,7 @@ How it works:
                 const currencyColor = loan.currency === 'USD' ? '#38e77b' : '#f59e0b';
                 const riskColor = loan.riskLevel.color;
                 const riskLabel = loan.riskLevel.level.toUpperCase();
-                const starHtml = MockMarketData.generateStarRating(loan.borrower.rating, loan.borrower.zimScore);
+                const starHtml = '★★★★☆'; // Simple fallback stars
                 
                 // Format borrower name as "FirstName L." (e.g., "Tendai N.")
                 const nameParts = loan.borrower.name.split(' ');
@@ -13161,7 +13144,7 @@ How it works:
                     historyText = `${loan.borrower.repaidOnTime}/${loan.borrower.totalLoans} loans repaid`;
                 } else {
                     // Standard star rating
-                    starDisplayHtml = MockMarketData.generateStarRating(loan.borrower.rating, loan.borrower.zimScore);
+                    starDisplayHtml = '★★★★☆'; // Simple fallback stars
                     historyText = `${loan.borrower.repaidOnTime} loans repaid`;
                 }
                 
@@ -13260,7 +13243,7 @@ How it works:
             const loan = window.currentMockLoans[index];
             if (!loan) return;
 
-            const starHtml = MockMarketData.generateStarRating(loan.borrower.rating, loan.borrower.zimScore);
+            const starHtml = '★★★★☆'; // Simple fallback stars
             const riskColor = loan.riskLevel.color;
             const currencySymbol = loan.currency === 'USD' ? '$' : 'ZWG';
             const currencyColor = loan.currency === 'USD' ? '#38e77b' : '#f59e0b';
@@ -19946,10 +19929,7 @@ How it works:
     <script src="js/test-notifications.js"></script>
     <script src="js/document-management.js"></script>
     
-    <!-- Portfolio Investments with Mock Data -->
-    <link rel="stylesheet" href="css/portfolio-investments.css">
-    <script src="js/mock-market-data.js"></script>
-    <!-- portfolio-investments.js disabled - using production-data-loader instead -->
-    <!-- <script src="js/portfolio-investments.js"></script> -->
+    <!-- Toast Notifications -->
+    <script src="js/toast-notifications.js"></script>
 </body>
 </html>
