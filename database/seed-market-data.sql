@@ -208,6 +208,9 @@ CREATE TABLE IF NOT EXISTS investments (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Clear existing seed data to prevent duplicates
+DELETE FROM primary_market_loans WHERE borrower_id IS NULL;
+
 -- Insert Primary Market Loans (without borrower_id for testing)
 -- borrower_id is NULL for mock data - will be populated when real users apply
 INSERT INTO primary_market_loans (
