@@ -5228,14 +5228,14 @@
                             return;
                         }
                         
-                        // Generate clean mock investments
+                        // Enhanced mock investments with ZimScores
                         const mockInvestments = [
-                            { borrower_name: 'Sarah Moyo', purpose: 'Education', amount: 500, ownership_percent: 12.5, interest_rate: 8.5, months_remaining: 4, status: 'active', returns: 42.50, id: 'inv_001' },
-                            { borrower_name: 'Tendai Ncube', purpose: 'Business', amount: 1200, ownership_percent: 25.0, interest_rate: 10.0, months_remaining: 8, status: 'active', returns: 120.00, id: 'inv_002' },
-                            { borrower_name: 'Grace Mutasa', purpose: 'Medical', amount: 800, ownership_percent: 18.5, interest_rate: 7.5, months_remaining: 2, status: 'active', returns: 60.00, id: 'inv_003' },
-                            { borrower_name: 'Peter Chikwanha', purpose: 'Agriculture', amount: 2000, ownership_percent: 40.0, interest_rate: 9.0, months_remaining: 10, status: 'active', returns: 180.00, id: 'inv_004' },
-                            { borrower_name: 'Linda Dube', purpose: 'Home Improvement', amount: 650, ownership_percent: 15.0, interest_rate: 8.0, months_remaining: 5, status: 'completed', returns: 52.00, id: 'inv_005' },
-                            { borrower_name: 'James Sibanda', purpose: 'Emergency', amount: 300, ownership_percent: 10.0, interest_rate: 12.0, months_remaining: 1, status: 'active', returns: 36.00, id: 'inv_006' }
+                            { borrower_name: 'Sarah Moyo', purpose: 'Education', amount: 500, ownership_percent: 12.5, interest_rate: 8.5, months_remaining: 4, status: 'active', returns: 42.50, id: 'inv_001', zimscore: 785, avatar_color: '#3b82f6' },
+                            { borrower_name: 'Tendai Ncube', purpose: 'Business', amount: 1200, ownership_percent: 25.0, interest_rate: 10.0, months_remaining: 8, status: 'active', returns: 120.00, id: 'inv_002', zimscore: 820, avatar_color: '#f59e0b' },
+                            { borrower_name: 'Grace Mutasa', purpose: 'Medical', amount: 800, ownership_percent: 18.5, interest_rate: 7.5, months_remaining: 2, status: 'active', returns: 60.00, id: 'inv_003', zimscore: 692, avatar_color: '#10b981' },
+                            { borrower_name: 'Peter Chikwanha', purpose: 'Agriculture', amount: 2000, ownership_percent: 40.0, interest_rate: 9.0, months_remaining: 10, status: 'active', returns: 180.00, id: 'inv_004', zimscore: 756, avatar_color: '#8b5cf6' },
+                            { borrower_name: 'Linda Dube', purpose: 'Home Improvement', amount: 650, ownership_percent: 15.0, interest_rate: 8.0, months_remaining: 5, status: 'completed', returns: 52.00, id: 'inv_005', zimscore: 845, avatar_color: '#06b6d4' },
+                            { borrower_name: 'James Sibanda', purpose: 'Emergency', amount: 300, ownership_percent: 10.0, interest_rate: 12.0, months_remaining: 1, status: 'active', returns: 36.00, id: 'inv_006', zimscore: 638, avatar_color: '#ef4444' }
                         ];
                         
                         const statusColors = {
@@ -5248,12 +5248,42 @@
                             <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                                 <td style="padding: 16px;">
                                     <div style="display: flex; align-items: center; gap: 12px;">
-                                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #38e77b, #34d399); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0a0a0a; font-weight: 700; font-size: 14px;">
-                                            ${inv.borrower_name.split(' ').map(n => n[0]).join('')}
+                                        <div style="position: relative; width: 50px; height: 50px;">
+                                            <div style="
+                                                width: 50px; 
+                                                height: 50px; 
+                                                background: ${inv.avatar_color}; 
+                                                border-radius: 50%; 
+                                                display: flex; 
+                                                align-items: center; 
+                                                justify-content: center; 
+                                                color: white; 
+                                                font-weight: 700; 
+                                                font-size: 18px;
+                                                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                                                border: 3px solid rgba(255, 255, 255, 0.1);
+                                            ">
+                                                ${inv.borrower_name.split(' ').map(n => n[0]).join('')}
+                                            </div>
+                                            <div style="
+                                                position: absolute; 
+                                                bottom: -2px; 
+                                                right: -2px; 
+                                                background: ${inv.zimscore >= 800 ? '#22c55e' : inv.zimscore >= 700 ? '#f59e0b' : '#ef4444'}; 
+                                                color: white; 
+                                                border-radius: 12px; 
+                                                padding: 2px 6px; 
+                                                font-size: 10px; 
+                                                font-weight: 600;
+                                                border: 2px solid #0f172a;
+                                                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+                                            ">
+                                                ${inv.zimscore}
+                                            </div>
                                         </div>
                                         <div>
-                                            <div style="font-weight: 600; color: #f1f5f9;">${inv.borrower_name}</div>
-                                            <div style="font-size: 12px; color: #64748b;">⭐⭐⭐⭐☆</div>
+                                            <div style="font-weight: 600; color: #f1f5f9; font-size: 14px;">${inv.borrower_name}</div>
+                                            <div style="font-size: 12px; color: #64748b;">⭐⭐⭐⭐☆ • ${inv.zimscore >= 800 ? 'Excellent' : inv.zimscore >= 700 ? 'Good' : 'Fair'}</div>
                                         </div>
                                     </div>
                                 </td>
@@ -5342,6 +5372,7 @@
                         loan_title: 'University Tuition Fee Support',
                         borrower_rating: 4.2,
                         zimscore: 785,
+                        avatar_color: '#3b82f6',
                         loan_amount: 4000,
                         funded_amount: 3200,
                         investment_date: '2024-09-15',
@@ -5365,6 +5396,7 @@
                         loan_title: 'Small Business Expansion',
                         borrower_rating: 4.5,
                         zimscore: 820,
+                        avatar_color: '#f59e0b',
                         loan_amount: 4800,
                         funded_amount: 4800,
                         investment_date: '2024-07-20',
@@ -5374,6 +5406,30 @@
                         payments_made: 4,
                         borrower_location: 'Bulawayo, Zimbabwe',
                         borrower_occupation: 'Shop Owner',
+                        risk_level: 'Medium'
+                    },
+                    'inv_003': {
+                        borrower_name: 'Grace Mutasa',
+                        purpose: 'Medical',
+                        amount: 800,
+                        ownership_percent: 18.5,
+                        interest_rate: 7.5,
+                        months_remaining: 2,
+                        status: 'active',
+                        returns: 60.00,
+                        loan_title: 'Medical Treatment Support',
+                        borrower_rating: 3.8,
+                        zimscore: 692,
+                        avatar_color: '#10b981',
+                        loan_amount: 4320,
+                        funded_amount: 4100,
+                        investment_date: '2024-10-01',
+                        maturity_date: '2024-12-31',
+                        next_payment: '2024-12-01',
+                        total_payments: 3,
+                        payments_made: 1,
+                        borrower_location: 'Mutare, Zimbabwe',
+                        borrower_occupation: 'Nurse',
                         risk_level: 'Medium'
                     }
                     // Add more as needed...
@@ -5411,13 +5467,44 @@
                                     <div>
                                         <h3 style="color: #38e77b; margin-bottom: 16px;">Borrower Profile</h3>
                                         <div style="background: rgba(0, 0, 0, 0.3); padding: 16px; border-radius: 12px;">
-                                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                                                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #38e77b, #34d399); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0a0a0a; font-weight: 700; font-size: 18px;">
-                                                    ${investment.borrower_name.split(' ').map(n => n[0]).join('')}
+                                            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+                                                <div style="position: relative; width: 60px; height: 60px;">
+                                                    <div style="
+                                                        width: 60px; 
+                                                        height: 60px; 
+                                                        background: ${investment.avatar_color}; 
+                                                        border-radius: 50%; 
+                                                        display: flex; 
+                                                        align-items: center; 
+                                                        justify-content: center; 
+                                                        color: white; 
+                                                        font-weight: 700; 
+                                                        font-size: 22px;
+                                                        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+                                                        border: 3px solid rgba(255, 255, 255, 0.2);
+                                                    ">
+                                                        ${investment.borrower_name.split(' ').map(n => n[0]).join('')}
+                                                    </div>
+                                                    <div style="
+                                                        position: absolute; 
+                                                        bottom: -3px; 
+                                                        right: -3px; 
+                                                        background: ${investment.zimscore >= 800 ? '#22c55e' : investment.zimscore >= 700 ? '#f59e0b' : '#ef4444'}; 
+                                                        color: white; 
+                                                        border-radius: 14px; 
+                                                        padding: 3px 8px; 
+                                                        font-size: 11px; 
+                                                        font-weight: 700;
+                                                        border: 2px solid #0f172a;
+                                                        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+                                                    ">
+                                                        ${investment.zimscore}
+                                                    </div>
                                                 </div>
                                                 <div>
-                                                    <div style="font-weight: 600; font-size: 18px;">${investment.borrower_name}</div>
-                                                    <div style="color: #94a3b8;">${investment.borrower_occupation}</div>
+                                                    <div style="font-weight: 600; font-size: 18px; color: #f1f5f9;">${investment.borrower_name}</div>
+                                                    <div style="color: #94a3b8; margin-bottom: 4px;">${investment.borrower_occupation}</div>
+                                                    <div style="font-size: 12px; color: #64748b;">⭐⭐⭐⭐☆ • ${investment.zimscore >= 800 ? 'Excellent' : investment.zimscore >= 700 ? 'Good' : 'Fair'} Credit</div>
                                                 </div>
                                             </div>
                                             <div style="margin-bottom: 12px;"><strong>Rating:</strong> ${'⭐'.repeat(Math.floor(investment.borrower_rating))} (${investment.borrower_rating}/5)</div>
