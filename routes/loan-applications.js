@@ -130,7 +130,7 @@ router.post('/submit', authenticateUser, [
         await supabase
             .from('admin_notifications')
             .insert({
-                type: 'loan_application',
+                notification_type: 'loan_application',
                 title: 'New Loan Application',
                 message: `${profile.full_name} has submitted a loan application for ${currency} ${amount}`,
                 data: {
@@ -140,7 +140,7 @@ router.post('/submit', authenticateUser, [
                     currency: currency,
                     purpose: purpose
                 },
-                read: false
+                is_read: false
             });
 
         console.log(`✅ Loan application ${application.id} submitted successfully`);
@@ -331,18 +331,18 @@ router.get('/check-eligibility', authenticateUser, async (req, res) => {
         let startingRating = 3; // Default rating
         let startingZimScore = 50; // Default ZimScore
 
-        if (profile.employment_type === 'government') {
-            startingRating = 4; // Government employees get better starting rating
-            startingZimScore = 65; // Higher starting ZimScore
-        } else if (profile.employment_type === 'private_formal') {
+        if (profile.employment_type === 'civil_servant') {
+            startingRating = 4; // Civil servants get better starting rating
+            startingZimScore = 70; // Higher starting ZimScore
+        } else if (profile.employment_type === 'private') {
             startingRating = 3;
-            startingZimScore = 55;
-        } else if (profile.employment_type === 'self_employed') {
+            startingZimScore = 60;
+        } else if (profile.employment_type === 'self_employed' || profile.employment_type === 'informal') {
             startingRating = 3;
             startingZimScore = 50;
         } else {
             startingRating = 2;
-            startingZimScore = 45;
+            startingZimScore = 40;
         }
 
         const canApply = profile.post_registration_completed === true;
@@ -522,14 +522,14 @@ router.post('/admin/:id/approve', authenticateUser, async (req, res) => {
             .from('notifications')
             .insert({
                 user_id: application.user_id,
-                type: 'loan_approved',
+                notification_type: 'loan_approved',
                 title: 'Loan Application Approved!',
                 message: `Your loan application for ${application.currency} ${application.amount} has been approved and posted to the Primary Market for funding.`,
                 data: {
                     application_id: id,
                     market_loan_id: marketLoan.id
                 },
-                read: false
+                is_read: false
             });
 
         console.log(`✅ Loan application ${id} approved by admin ${adminCheck.full_name}`);
@@ -617,7 +617,7 @@ router.post('/admin/:id/reject', authenticateUser, async (req, res) => {
             .from('notifications')
             .insert({
                 user_id: application.user_id,
-                type: 'loan_rejected',
+                notification_type: 'loan_rejected',
                 title: 'Loan Application Update',
                 message: `Your loan application for ${application.currency} ${application.amount} was not approved. Reason: ${reason}. You can resubmit with modifications.`,
                 data: {
@@ -625,7 +625,7 @@ router.post('/admin/:id/reject', authenticateUser, async (req, res) => {
                     reason: reason,
                     can_resubmit: true
                 },
-                read: false
+                is_read: false
             });
 
         console.log(`❌ Loan application ${id} rejected by admin ${adminCheck.full_name}: ${reason}`);
