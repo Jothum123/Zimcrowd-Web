@@ -9140,23 +9140,7 @@ How it works:
             }
         }
 
-        async function loadInvestmentsData() {
-            console.log('🚫 loadInvestmentsData (overview) disabled - using local mock data instead');
-            // This function has been disabled to prevent API calls
-            return;
-            
-            /* ORIGINAL FUNCTION DISABLED:
-            try {
-                const response = await window.ZimCrowdAPI.getInvestments();
-                if (response.success) {
-                    // Update investments UI with real data
-                    console.log('Investments data loaded:', response.data);
-                }
-            } catch (error) {
-                console.error('Error loading investments:', error);
-            }
-            */
-        }
+        // loadInvestmentsData function moved to investments section (line ~13772)
 
         async function loadWalletData() {
             try {
@@ -12440,80 +12424,32 @@ How it works:
             }
         }
 
-        // Load dashboard overview data
+        // Load dashboard overview data - Using mock data for demonstration
         async function loadDashboardOverview() {
-            try {
-                console.log('🔄 Loading dashboard data...');
-                
-                // Log dashboard access
-                if (window.ActivityLogger && window.ActivityLogger.isInitialized) {
+            console.log('🔄 Loading dashboard data (mock mode)...');
+            
+            // Log dashboard access
+            if (window.ActivityLogger && window.ActivityLogger.isInitialized) {
+                try {
                     await window.ActivityLogger.logPageView({
                         section: 'dashboard_overview',
                         load_time: Date.now()
                     });
+                } catch (e) {
+                    console.warn('Activity logging failed:', e);
                 }
-                
-                // Load complete dashboard overview
-                const dashboardResponse = await window.ZimCrowdAPI.getDashboardOverview();
-                console.log('📊 Dashboard response:', dashboardResponse);
-                
-                if (dashboardResponse.success && dashboardResponse.data) {
-                    updateDashboardWithRealData(dashboardResponse.data);
-                } else {
-                    console.warn('⚠️ Dashboard API failed, using fallback data');
-                    // Keep existing mock data as fallback
-                }
-
-                // Load wallet balance separately for detailed info
-                try {
-                    const walletResponse = await window.ZimCrowdAPI.getWalletBalance();
-                    updateWalletBalance(walletResponse);
-                } catch (walletError) {
-                    console.warn('⚠️ Wallet balance API failed:', walletError);
-                }
-
-                // Load recent loans
-                try {
-                    const loansResponse = await window.ZimCrowdAPI.getLoans(1, 3);
-                    updateLoansOverview(loansResponse);
-                } catch (loansError) {
-                    console.warn('⚠️ Loans API failed:', loansError);
-                }
-
-                // Load recent investments - DISABLED to prevent API calls
-                console.log('🚫 Investments API call disabled in dashboard overview');
-                // API call disabled - using local mock data instead
-                /*
-                try {
-                    const investmentsResponse = await window.ZimCrowdAPI.getInvestments(1, 3);
-                    updateInvestmentsOverview(investmentsResponse);
-                } catch (investmentsError) {
-                    console.warn('⚠️ Investments API failed:', investmentsError);
-                }
-                */
-
-                // Load primary market opportunities
-                loadPrimaryMarketLoans();
-
-                // Load secondary market opportunities
-                loadSecondaryMarketLoans();
-
-                console.log('✅ Dashboard data loading complete');
-
-            } catch (error) {
-                console.error('❌ Failed to load dashboard data:', error);
-                
-                // Log error for admin monitoring
-                if (window.ActivityLogger && window.ActivityLogger.isInitialized) {
-                    await window.ActivityLogger.logError({
-                        message: error.message,
-                        context: 'dashboard_data_loading',
-                        stack: error.stack
-                    });
-                }
-                
-                // Keep existing mock data if API fails
             }
+            
+            // ALWAYS load mock data for primary market and secondary market
+            console.log('📊 Loading mock data for dashboard...');
+            
+            // Load primary market opportunities (mock data)
+            loadPrimaryMarketLoans();
+
+            // Load secondary market opportunities (mock data)
+            loadSecondaryMarketLoans();
+
+            console.log('✅ Dashboard mock data loading complete');
         }
 
         // Update dashboard with real data from API
@@ -12809,22 +12745,11 @@ How it works:
             }
         }
 
-        // Load Primary Market Loans
+        // Load Primary Market Loans - Using mock data directly
         async function loadPrimaryMarketLoans() {
-            try {
-                const response = await window.ZimCrowdAPI.getPrimaryMarketLoans(1, 6);
-                
-                if (response.success && response.data && response.data.loans && response.data.loans.length > 0) {
-                    updatePrimaryMarketUI(response.data.loans);
-                } else {
-                    // Use mock data when no real loans available
-                    loadMockPrimaryMarketLoans();
-                }
-            } catch (error) {
-                console.error('Failed to load primary market:', error);
-                // Use mock data on error
-                loadMockPrimaryMarketLoans();
-            }
+            console.log('📊 Loading primary market loans (mock data)...');
+            // Always use mock data for demonstration
+            loadMockPrimaryMarketLoans();
         }
 
         // Load Mock Primary Market Loans
