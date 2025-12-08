@@ -38,30 +38,33 @@ class DirectLoanService {
             ZWG: { min: 675, max: 40000 }
         };
         
-        // DTNI Configuration by employment type (multi-currency)
-        // NO COLD START in Direct Lending - uses DTNI for affordability
-        this.DTNI_CONFIG = {
-            government: { 
-                ratio: 0.40,  // 40% of net income
+        // EMPLOYMENT-BASED LOAN LIMITS (NO DTNI)
+        // Simple limits based on employment type and verification status
+        this.EMPLOYMENT_LIMITS = {
+            civil_servant: { 
                 maxTenureMonths: 24, 
-                maxLoan: { USD: 3000, ZWG: 40000 }
+                maxLoan: { USD: 3000, ZWG: 81000 }  // ~$3000 at 27 ZWG/USD
             },
             private: { 
-                ratio: 0.33,  // 33% of net income
                 maxTenureMonths: 12, 
-                maxLoan: { USD: 1000, ZWG: 27000 }
-            },
-            business: { 
-                ratio: 0.30,  // 30% of net income
-                maxTenureMonths: 12, 
-                maxLoan: { USD: 1000, ZWG: 27000 }
+                maxLoan: { USD: 1000, ZWG: 27000 }  // ~$1000 at 27 ZWG/USD
             },
             informal: { 
-                ratio: 0.25,  // 25% of net income
+                maxTenureMonths: 6, 
+                maxLoan: { USD: 500, ZWG: 13500 }   // ~$500 at 27 ZWG/USD
+            },
+            self_employed: { 
                 maxTenureMonths: 6, 
                 maxLoan: { USD: 500, ZWG: 13500 }
+            },
+            unemployed: { 
+                maxTenureMonths: 0, 
+                maxLoan: { USD: 0, ZWG: 0 }
             }
         };
+        
+        // Legacy DTNI_CONFIG for backward compatibility (maps to new structure)
+        this.DTNI_CONFIG = this.EMPLOYMENT_LIMITS;
         
         // LATE FEES (100% to ZimCrowd)
         this.LATE_FEE = {
@@ -77,8 +80,8 @@ class DirectLoanService {
         
         // Required documents by employment type
         this.REQUIRED_DOCUMENTS_BY_TYPE = {
-            // Government & Private employees - same requirements
-            government: [
+            // Civil servants - formal employment requirements
+            civil_servant: [
                 { type: 'national_id', name: 'National ID (Front & Back)', required: true },
                 { type: 'selfie', name: 'Selfie Photo', required: true },
                 { type: 'payslip', name: 'Payslip', required: true },
@@ -86,6 +89,7 @@ class DirectLoanService {
                 { type: 'proof_of_residence', name: 'Proof of Residence', required: true },
                 { type: 'employment_contract', name: 'Employment Contract / Confirmation Letter', required: true }
             ],
+            // Private employees - same as civil servants
             private: [
                 { type: 'national_id', name: 'National ID (Front & Back)', required: true },
                 { type: 'selfie', name: 'Selfie Photo', required: true },
@@ -153,41 +157,37 @@ class DirectLoanService {
     }
 
     /**
-     * Get loan limits based on employment type
+     * Get loan limits based on employment type (NO DTNI)
+     * Simple employment-based limits:
+     * - Civil Servant: $3000 max, 24 months
+     * - Private: $1000 max, 12 months
+     * - Informal/Self-Employed: $500 max, 6 months
      * @param {string} employmentType - Employment type
-     * @param {boolean} isColdStart - Whether user is in cold start period
+     * @param {boolean} isVerified - Whether user profile is verified
      * @returns {Object} Loan limits configuration
      */
-    getLoanLimits(employmentType, isColdStart = true) {
+    getLoanLimits(employmentType, isVerified = false) {
         const type = employmentType?.toLowerCase() || 'private';
-        const config = this.DTNI_CONFIG[type] || this.DTNI_CONFIG.private;
+        const config = this.EMPLOYMENT_LIMITS[type] || this.EMPLOYMENT_LIMITS.private;
         
-        let maxLoan;
-        let coldStartActive;
-        
-        if (type === 'government') {
-            // Government: NO cold start - full DTNI-based limit
-            maxLoan = config.maxLoan;
-            coldStartActive = false;
-        } else if (isColdStart && config.coldStartCap) {
-            // Other types: Apply cold start cap
-            maxLoan = config.coldStartCap;
-            coldStartActive = true;
-        } else {
-            // After cold start: Full limit
-            maxLoan = config.maxLoan;
-            coldStartActive = false;
+        // If not verified, no loan allowed
+        if (!isVerified) {
+            return {
+                minLoan: { USD: 0, ZWG: 0 },
+                maxLoan: { USD: 0, ZWG: 0 },
+                maxTenureMonths: 0,
+                employmentType: type,
+                verified: false,
+                deniedReason: 'Please complete your profile in Settings to apply for a loan.'
+            };
         }
         
         return {
-            minLoan: this.MIN_LOAN_AMOUNT,
-            maxLoan: maxLoan,
-            maxLoanAfterColdStart: config.maxLoan,
-            coldStartCap: config.coldStartCap,
-            coldStartActive: coldStartActive,
-            dtniRatio: config.ratio,
+            minLoan: this.LOAN_LIMITS,
+            maxLoan: config.maxLoan,
             maxTenureMonths: config.maxTenureMonths,
-            employmentType: type
+            employmentType: type,
+            verified: true
         };
     }
 
@@ -681,16 +681,27 @@ class DirectLoanService {
     }
     
     /**
-     * Get max loan for employment type and currency
-     * @param {string} employmentType - Employment type
+     * Get max loan for employment type and currency (NO DTNI)
+     * @param {string} employmentType - Employment type (civil_servant, private, informal, self_employed)
      * @param {string} currency - USD or ZWG
      * @returns {number} Max loan amount
      */
     getMaxLoanForType(employmentType, currency = 'USD') {
         const type = employmentType?.toLowerCase() || 'private';
-        const config = this.DTNI_CONFIG[type] || this.DTNI_CONFIG.private;
+        const config = this.EMPLOYMENT_LIMITS[type] || this.EMPLOYMENT_LIMITS.private;
         const curr = this.SUPPORTED_CURRENCIES.includes(currency) ? currency : this.DEFAULT_CURRENCY;
         return config.maxLoan[curr] || this.LOAN_LIMITS[curr].max;
+    }
+    
+    /**
+     * Get max term for employment type
+     * @param {string} employmentType - Employment type
+     * @returns {number} Max term in months
+     */
+    getMaxTermForType(employmentType) {
+        const type = employmentType?.toLowerCase() || 'private';
+        const config = this.EMPLOYMENT_LIMITS[type] || this.EMPLOYMENT_LIMITS.private;
+        return config.maxTenureMonths;
     }
     
     /**

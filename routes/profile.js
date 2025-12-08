@@ -211,12 +211,24 @@ router.get('/', authenticateUser, async (req, res) => {
 
         const completedFields = requiredFields.filter(field => profile[field] !== null && profile[field] !== '');
         const completionPercentage = Math.round((completedFields.length / requiredFields.length) * 100);
+        
+        // Determine verification status for loan eligibility
+        const isVerified = profile.post_registration_completed || 
+                          profile.verified || 
+                          completionPercentage >= 80;
+        
+        // Normalize employment type for loan limits
+        const employmentType = (profile.employment_type || profile.employment_status || 'private').toLowerCase();
 
         res.json({
             success: true,
             data: {
                 ...profile,
-                profile_completion: completionPercentage
+                profile_completion: completionPercentage,
+                // Loan eligibility fields
+                employment_type: employmentType,
+                verified: isVerified,
+                post_registration_completed: profile.post_registration_completed || false
             }
         });
     } catch (error) {

@@ -32,8 +32,12 @@ FROM (VALUES
 WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE auth.users.email = t.email)
 ON CONFLICT DO NOTHING;
 
--- Create profiles for borrowers
-INSERT INTO profiles (id, email, full_name, phone_number, occupation, location, zim_score, verified, created_at)
+-- Add employment_type column if not exists
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS employment_type VARCHAR(50) DEFAULT 'private';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS post_registration_completed BOOLEAN DEFAULT false;
+
+-- Create profiles for borrowers with employment_type
+INSERT INTO profiles (id, email, full_name, phone_number, occupation, location, zim_score, verified, employment_type, post_registration_completed, created_at)
 SELECT 
     u.id,
     u.email,
@@ -104,6 +108,29 @@ SELECT
         WHEN 'blessing.moyo@example.com' THEN false
         ELSE true
     END,
+    -- Employment type based on occupation
+    CASE u.email
+        WHEN 'grace.chikwanha@example.com' THEN 'civil_servant'  -- Teacher
+        WHEN 'nyasha.chirwa@example.com' THEN 'civil_servant'    -- Nurse
+        WHEN 'rudo.mapfumo@example.com' THEN 'civil_servant'     -- Healthcare Worker
+        WHEN 'tendai.ndlovu@example.com' THEN 'private'          -- IT Professional
+        WHEN 'tatenda.mugabe@example.com' THEN 'private'         -- Software Developer
+        WHEN 'rumbidzai.ncube@example.com' THEN 'private'        -- Accountant
+        WHEN 'sarah.moyo@example.com' THEN 'self_employed'       -- Small Business Owner
+        WHEN 'tapiwa.zhou@example.com' THEN 'self_employed'      -- Entrepreneur
+        WHEN 'peter.mlambo@example.com' THEN 'informal'          -- Farmer
+        WHEN 'farai.dube@example.com' THEN 'informal'            -- Mechanic
+        WHEN 'chipo.mutasa@example.com' THEN 'informal'          -- Market Vendor
+        WHEN 'blessing.moyo@example.com' THEN 'unemployed'       -- Student
+        ELSE 'private'
+    END,
+    -- Post registration completed (verified users)
+    CASE u.email
+        WHEN 'farai.dube@example.com' THEN false
+        WHEN 'chipo.mutasa@example.com' THEN false
+        WHEN 'blessing.moyo@example.com' THEN false
+        ELSE true
+    END,
     NOW() - (random() * interval '365 days')
 FROM auth.users u
 WHERE u.email LIKE '%@example.com'
@@ -112,7 +139,9 @@ ON CONFLICT (id) DO UPDATE SET
     occupation = EXCLUDED.occupation,
     location = EXCLUDED.location,
     zim_score = EXCLUDED.zim_score,
-    verified = EXCLUDED.verified;
+    verified = EXCLUDED.verified,
+    employment_type = EXCLUDED.employment_type,
+    post_registration_completed = EXCLUDED.post_registration_completed;
 
 -- =====================================================
 -- PRIMARY MARKET LOANS (Available for Investment)

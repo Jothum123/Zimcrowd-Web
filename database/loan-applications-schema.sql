@@ -110,14 +110,16 @@ WITH CHECK (auth.uid() = user_id);
 -- =====================================================
 
 -- Function to calculate starting ZimScore based on employment type
+-- Updated to use civil_servant instead of government
 CREATE OR REPLACE FUNCTION calculate_starting_zimscore(employment_type TEXT)
 RETURNS INTEGER AS $$
 BEGIN
     CASE employment_type
-        WHEN 'government' THEN RETURN 65; -- Government employees get higher starting score
-        WHEN 'private_formal' THEN RETURN 55;
-        WHEN 'self_employed' THEN RETURN 50;
-        WHEN 'informal' THEN RETURN 45;
+        WHEN 'civil_servant' THEN RETURN 70; -- Civil servants get highest starting score
+        WHEN 'private' THEN RETURN 60;       -- Private employees
+        WHEN 'informal' THEN RETURN 50;      -- Informal sector
+        WHEN 'self_employed' THEN RETURN 50; -- Self-employed
+        WHEN 'unemployed' THEN RETURN 40;    -- Unemployed (not eligible for loans)
         ELSE RETURN 50;
     END CASE;
 END;
