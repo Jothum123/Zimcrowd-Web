@@ -16746,17 +16746,15 @@ How it works:
         // No DTNI - Simple employment-based limits
         // =====================================================
         const DIRECT_LOAN_LIMITS = {
-            government: { maxAmount: 3000, maxTerm: 24 },  // Verified government employees
-            civil_servant: { maxAmount: 3000, maxTerm: 24 },
-            private: { maxAmount: 1000, maxTerm: 12 },     // Verified private employees
-            informal: { maxAmount: 500, maxTerm: 6 },      // Informal sector
+            civil_servant: { maxAmount: 3000, maxTerm: 24 },  // Verified civil servants
+            private: { maxAmount: 1000, maxTerm: 12 },        // Verified private employees
+            informal: { maxAmount: 500, maxTerm: 6 },         // Informal sector
             self_employed: { maxAmount: 500, maxTerm: 6 },
-            unemployed: { maxAmount: 0, maxTerm: 0 }       // Not eligible
+            unemployed: { maxAmount: 0, maxTerm: 0 }          // Not eligible
         };
         
         // Term limits by employment type (in months)
         const LOAN_TERM_LIMITS = {
-            government: 24,
             civil_servant: 24,
             private: 12,
             informal: 6,
@@ -16766,8 +16764,8 @@ How it works:
         
         // Legacy LOAN_LIMIT_CAPS for backward compatibility
         const LOAN_LIMIT_CAPS = {
-            verified: { government: 3000, private: 1000, informal: 500 },
-            coldStart: { government: 3000, private: 1000, informal: 500 }
+            verified: { civil_servant: 3000, private: 1000, informal: 500 },
+            coldStart: { civil_servant: 3000, private: 1000, informal: 500 }
         };
 
         // Loan Request Modal State
@@ -16960,7 +16958,7 @@ How it works:
                     
                     // Calculate ZimScore based on employment type
                     let zimScore = 50;
-                    if (employmentType === 'government' || employmentType === 'civil_servant') {
+                    if (employmentType === 'civil_servant') {
                         zimScore += 20;
                     } else if (employmentType === 'private') {
                         zimScore += 10;
@@ -17063,8 +17061,8 @@ How it works:
             
             // Calculate ZimScore based on employment type and verification
             let zimScore = 50; // Base score
-            if (employmentType === 'government' || employmentType === 'civil_servant') {
-                zimScore += 20; // Government employees get higher score
+            if (employmentType === 'civil_servant') {
+                zimScore += 20; // Civil servants get higher score
             } else if (employmentType === 'private') {
                 zimScore += 10; // Private employees
             }
@@ -17110,7 +17108,7 @@ How it works:
                         <p style="color: #38e77b; font-weight: 600; margin-bottom: 12px;">Loan Limits by Employment:</p>
                         <div style="display: grid; gap: 8px; color: #94a3b8; font-size: 14px;">
                             <div style="display: flex; justify-content: space-between;">
-                                <span>🏛️ Government Employee</span>
+                                <span>🏛️ Civil Servant</span>
                                 <span style="color: #f1f5f9;">$3,000 (24 months)</span>
                             </div>
                             <div style="display: flex; justify-content: space-between;">
@@ -17167,14 +17165,13 @@ How it works:
             const coldStartBadge = document.getElementById('coldStartBadge');
             if (coldStartBadge) {
                 const empLabels = {
-                    government: 'GOV VERIFIED',
-                    civil_servant: 'GOV VERIFIED',
+                    civil_servant: 'CIVIL SERVANT',
                     private: 'PRIVATE VERIFIED',
                     informal: 'INFORMAL',
                     self_employed: 'SELF-EMPLOYED'
                 };
                 coldStartBadge.textContent = empLabels[data.employmentType] || 'VERIFIED';
-                coldStartBadge.style.background = data.employmentType === 'government' || data.employmentType === 'civil_servant' 
+                coldStartBadge.style.background = data.employmentType === 'civil_servant' 
                     ? '#3b82f6' : '#38e77b';
                 coldStartBadge.style.display = 'block';
             }
@@ -17183,7 +17180,6 @@ How it works:
             const empTypeEl = document.getElementById('employmentType');
             if (empTypeEl) {
                 const empNames = {
-                    government: 'Government Employee',
                     civil_servant: 'Civil Servant',
                     private: 'Private Employee',
                     informal: 'Informal Sector',
@@ -17195,11 +17191,18 @@ How it works:
             // Update loan limit info (simplified - no DTNI)
             const limitInfoEl = document.getElementById('dtniBreakdown');
             if (limitInfoEl) {
+                const empDisplayName = {
+                    civil_servant: 'Civil Servant',
+                    private: 'Private Employee',
+                    informal: 'Informal Sector',
+                    self_employed: 'Self-Employed'
+                }[data.employmentType] || data.employmentType;
+                
                 limitInfoEl.innerHTML = `
                     <div style="padding: 16px; background: rgba(56, 231, 123, 0.05); border-radius: 12px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
                             <span style="color: #94a3b8;">Employment Type</span>
-                            <span style="color: #f1f5f9; font-weight: 600;">${data.employmentType === 'government' ? 'Government' : data.employmentType.charAt(0).toUpperCase() + data.employmentType.slice(1)}</span>
+                            <span style="color: #f1f5f9; font-weight: 600;">${empDisplayName}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
                             <span style="color: #94a3b8;">Maximum Loan Amount</span>
