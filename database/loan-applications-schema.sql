@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS admin_notifications (
     title VARCHAR(255) NOT NULL,
     message TEXT,
     data JSONB,
-    read BOOLEAN DEFAULT false,
+    is_read BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
