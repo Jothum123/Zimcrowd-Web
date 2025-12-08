@@ -8943,6 +8943,11 @@ How it works:
         }
 
         async function loadInvestmentsData() {
+            console.log('🚫 loadInvestmentsData (overview) disabled - using local mock data instead');
+            // This function has been disabled to prevent API calls
+            return;
+            
+            /* ORIGINAL FUNCTION DISABLED:
             try {
                 const response = await window.ZimCrowdAPI.getInvestments();
                 if (response.success) {
@@ -8952,6 +8957,7 @@ How it works:
             } catch (error) {
                 console.error('Error loading investments:', error);
             }
+            */
         }
 
         async function loadWalletData() {
@@ -12276,13 +12282,17 @@ How it works:
                     console.warn('⚠️ Loans API failed:', loansError);
                 }
 
-                // Load recent investments
+                // Load recent investments - DISABLED to prevent API calls
+                console.log('🚫 Investments API call disabled in dashboard overview');
+                // API call disabled - using local mock data instead
+                /*
                 try {
                     const investmentsResponse = await window.ZimCrowdAPI.getInvestments(1, 3);
                     updateInvestmentsOverview(investmentsResponse);
                 } catch (investmentsError) {
                     console.warn('⚠️ Investments API failed:', investmentsError);
                 }
+                */
 
                 // Load primary market opportunities
                 loadPrimaryMarketLoans();
@@ -13565,8 +13575,14 @@ How it works:
             }).join('');
         }
 
-        // Load investments data
+        // Load investments data - DISABLED to prevent API calls
         async function loadInvestmentsData() {
+            console.log('🚫 loadInvestmentsData disabled - using local mock data instead');
+            // This function has been disabled to prevent API calls
+            // All investment data is now handled by local mock data
+            return;
+            
+            /* ORIGINAL FUNCTION DISABLED:
             try {
                 const portfolioResponse = await window.ZimCrowdAPI.getInvestmentPortfolio();
                 if (portfolioResponse.success) {
@@ -13583,6 +13599,7 @@ How it works:
             } catch (error) {
                 console.error('Failed to load investments:', error);
             }
+            */
         }
 
         function updateInvestmentPortfolio(data) {
@@ -18742,46 +18759,28 @@ How it works:
             }
         }
 
-        // View Investment Details
+        // View Investment Details - COMPLETELY LOCAL VERSION (No API calls)
         async function viewInvestmentDetails(investmentId) {
-            // First check localStorage for mock data with error handling
-            let userInvestments = [];
-            try {
-                userInvestments = JSON.parse(localStorage.getItem('userInvestments') || '[]');
-            } catch (e) {
-                console.error('Failed to access localStorage:', e);
-                alert('⚠️ Browser privacy settings are blocking data access. Please disable Tracking Prevention for this site.');
-                return;
+            console.log('🔍 Loading investment details for:', investmentId);
+            
+            // Block this function and redirect to our main implementation
+            if (window.viewInvestmentDetails && window.viewInvestmentDetails !== arguments.callee) {
+                console.log('🔄 Redirecting to main viewInvestmentDetails function');
+                return window.viewInvestmentDetails(investmentId);
             }
             
-            const investment = userInvestments.find(inv => inv.id === investmentId);
-            
-            if (investment) {
-                // Show mock investment details
-                showInvestmentDetailsModal(investment);
-                return;
-            }
-            
-            // Fall back to API
-            try {
-                const token = localStorage.getItem('authToken');
-                const response = await fetch(`${API_BASE_URL}/api/investments/${investmentId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
+            // If the main function isn't available, show error with toast
+            console.error('❌ Main viewInvestmentDetails function not available');
+            if (window.ToastNotifications) {
+                window.ToastNotifications.error(
+                    'Function Not Available',
+                    'Investment details viewer is not properly loaded. Please refresh the page.',
+                    { 
+                        actions: [{ text: 'Refresh', onclick: 'location.reload()' }]
                     }
-                });
-                
-                const result = await response.json();
-                
-                if (result.success && result.data) {
-                    showInvestmentDetailsModal(result.data);
-                } else {
-                    alert('Failed to load investment details');
-                }
-            } catch (error) {
-                console.error('Error loading investment details:', error);
-                alert('Error loading investment details');
+                );
+            } else {
+                alert('Investment details viewer not available. Please refresh the page.');
             }
         }
 
