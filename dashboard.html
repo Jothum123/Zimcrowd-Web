@@ -5358,6 +5358,21 @@
 
                 <!-- Investment Modal Functions -->
                 <script>
+                // Global debugging and API override
+                window.INVESTMENT_DEBUG = true;
+                
+                // Override any potential API investment fetch functions
+                window.fetchInvestmentDetails = function(id) {
+                    console.log('🚫 Blocked API call for investment:', id);
+                    return Promise.resolve(null);
+                };
+                
+                // Prevent jQuery or other libraries from intercepting clicks
+                document.addEventListener('click', function(e) {
+                    if (e.target.onclick && e.target.onclick.toString().includes('viewInvestmentDetails')) {
+                        console.log('🎯 Investment details click detected');
+                    }
+                });
                 // Mock investment data for modals (expanded details)
                 const investmentDetails = {
                     'inv_001': {
@@ -5431,17 +5446,97 @@
                         borrower_location: 'Mutare, Zimbabwe',
                         borrower_occupation: 'Nurse',
                         risk_level: 'Medium'
+                    },
+                    'inv_004': {
+                        borrower_name: 'Peter Chikwanha',
+                        purpose: 'Agriculture',
+                        amount: 2000,
+                        ownership_percent: 40.0,
+                        interest_rate: 9.0,
+                        months_remaining: 10,
+                        status: 'active',
+                        returns: 180.00,
+                        loan_title: 'Farm Equipment Purchase',
+                        borrower_rating: 4.1,
+                        zimscore: 756,
+                        avatar_color: '#8b5cf6',
+                        loan_amount: 5000,
+                        funded_amount: 5000,
+                        investment_date: '2024-06-10',
+                        maturity_date: '2025-04-10',
+                        next_payment: '2024-12-10',
+                        total_payments: 10,
+                        payments_made: 6,
+                        borrower_location: 'Chinhoyi, Zimbabwe',
+                        borrower_occupation: 'Farmer',
+                        risk_level: 'Medium'
+                    },
+                    'inv_005': {
+                        borrower_name: 'Linda Dube',
+                        purpose: 'Home Improvement',
+                        amount: 650,
+                        ownership_percent: 15.0,
+                        interest_rate: 8.0,
+                        months_remaining: 5,
+                        status: 'completed',
+                        returns: 52.00,
+                        loan_title: 'Kitchen Renovation Project',
+                        borrower_rating: 4.7,
+                        zimscore: 845,
+                        avatar_color: '#06b6d4',
+                        loan_amount: 4300,
+                        funded_amount: 4300,
+                        investment_date: '2024-05-01',
+                        maturity_date: '2025-01-01',
+                        next_payment: '2024-12-01',
+                        total_payments: 8,
+                        payments_made: 3,
+                        borrower_location: 'Gweru, Zimbabwe',
+                        borrower_occupation: 'Teacher',
+                        risk_level: 'Low'
+                    },
+                    'inv_006': {
+                        borrower_name: 'James Sibanda',
+                        purpose: 'Emergency',
+                        amount: 300,
+                        ownership_percent: 10.0,
+                        interest_rate: 12.0,
+                        months_remaining: 1,
+                        status: 'active',
+                        returns: 36.00,
+                        loan_title: 'Emergency Car Repair',
+                        borrower_rating: 3.2,
+                        zimscore: 638,
+                        avatar_color: '#ef4444',
+                        loan_amount: 3000,
+                        funded_amount: 2800,
+                        investment_date: '2024-11-01',
+                        maturity_date: '2024-12-31',
+                        next_payment: '2024-12-31',
+                        total_payments: 2,
+                        payments_made: 1,
+                        borrower_location: 'Masvingo, Zimbabwe',
+                        borrower_occupation: 'Mechanic',
+                        risk_level: 'High'
                     }
-                    // Add more as needed...
                 };
 
-                // View Investment Details Modal
+                // View Investment Details Modal - Pure frontend function with no API calls
                 function viewInvestmentDetails(investmentId) {
+                    console.log('🔍 Opening investment details for:', investmentId);
+                    
+                    // Prevent any potential API calls
+                    event?.preventDefault();
+                    event?.stopPropagation();
+                    
                     const investment = investmentDetails[investmentId];
                     if (!investment) {
-                        alert('Investment details not available');
+                        console.error('❌ Investment not found:', investmentId);
+                        alert('Investment details not available for ID: ' + investmentId);
                         return;
                     }
+                    
+                    console.log('✅ Found investment data:', investment.borrower_name);
 
                     const modal = document.createElement('div');
                     modal.className = 'modal-overlay';
