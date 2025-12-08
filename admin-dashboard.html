@@ -1169,6 +1169,14 @@
                 </div>
 
                 <div class="nav-item">
+                    <div class="nav-link" onclick="showSection('loan-applications')">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span>Loan Applications</span>
+                        <span class="nav-badge alert" id="pendingApplicationsCount">0</span>
+                    </div>
+                </div>
+
+                <div class="nav-item">
                     <div class="nav-link" onclick="showSection('loans')">
                         <i class="fas fa-hand-holding-usd"></i>
                         <span>Loans</span>
@@ -1353,6 +1361,51 @@
                         <div id="accountsContent">
                             <div class="loading-spinner"></div>
                             <p style="text-align: center; color: #718096; margin-top: 16px;">Loading accounts...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loan Applications Section -->
+            <section id="loan-applications-section" class="dashboard-section">
+                <div class="stats-grid">
+                    <div class="stat-card warning">
+                        <div class="stat-value" id="pendingAppsCount">0</div>
+                        <div class="stat-label">Pending Review</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-value" id="approvedAppsCount">0</div>
+                        <div class="stat-label">Approved Today</div>
+                    </div>
+                    <div class="stat-card danger">
+                        <div class="stat-value" id="rejectedAppsCount">0</div>
+                        <div class="stat-label">Rejected Today</div>
+                    </div>
+                    <div class="stat-card primary">
+                        <div class="stat-value" id="totalAppsAmount">$0</div>
+                        <div class="stat-label">Total Requested</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Loan Application Review Queue</h3>
+                        <div>
+                            <select id="appStatusFilter" class="form-select" style="width: 150px; display: inline-block; margin-right: 10px;" onchange="loadLoanApplications()">
+                                <option value="pending">Pending</option>
+                                <option value="all">All</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="loadLoanApplications()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="loanApplicationsContent">
+                            <div class="loading-spinner"></div>
+                            <p style="text-align: center; color: #718096; margin-top: 16px;">Loading applications...</p>
                         </div>
                     </div>
                 </div>
@@ -4686,6 +4739,331 @@
         function toggleMobileMenu() {
             document.getElementById('sidebar').classList.toggle('active');
         }
+
+        // =====================================================
+        // LOAN APPLICATIONS FUNCTIONS
+        // =====================================================
+
+        async function loadLoanApplications() {
+            const container = document.getElementById('loanApplicationsContent');
+            const statusFilter = document.getElementById('appStatusFilter')?.value || 'pending';
+            
+            container.innerHTML = `
+                <div class="loading-spinner"></div>
+                <p style="text-align: center; color: #718096; margin-top: 16px;">Loading applications...</p>
+            `;
+
+            try {
+                const endpoint = statusFilter === 'pending' 
+                    ? '/api/loan-applications/admin/pending'
+                    : `/api/loan-applications/admin/all?status=${statusFilter}`;
+                    
+                const data = await makeAPIRequest(endpoint);
+                
+                if (data && data.success) {
+                    displayLoanApplications(data.data.applications || []);
+                    updateApplicationStats(data.data.applications || []);
+                } else {
+                    container.innerHTML = `
+                        <div class="error-state">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>Failed to load applications</p>
+                            <button class="btn btn-primary" onclick="loadLoanApplications()">Retry</button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading applications:', error);
+                container.innerHTML = `
+                    <div class="error-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Error: ${error.message}</p>
+                        <button class="btn btn-primary" onclick="loadLoanApplications()">Retry</button>
+                    </div>
+                `;
+            }
+        }
+
+        function displayLoanApplications(applications) {
+            const container = document.getElementById('loanApplicationsContent');
+            
+            if (!applications || applications.length === 0) {
+                container.innerHTML = `
+                    <div class="success-state">
+                        <i class="fas fa-check-circle"></i>
+                        <p>No pending applications to review</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const tableHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Applicant</th>
+                            <th>Amount</th>
+                            <th>Purpose</th>
+                            <th>Term</th>
+                            <th>Employment</th>
+                            <th>ZimScore</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${applications.map(app => `
+                            <tr>
+                                <td>
+                                    <strong>${app.borrower_name || 'Unknown'}</strong>
+                                    <br><small style="color: #718096;">${app.borrower_occupation || ''}</small>
+                                </td>
+                                <td>
+                                    <strong>${app.currency} ${parseFloat(app.amount).toLocaleString()}</strong>
+                                    <br><small style="color: #718096;">${app.interest_rate}% APR</small>
+                                </td>
+                                <td>${app.purpose}</td>
+                                <td>${app.term_months} months</td>
+                                <td>
+                                    <span class="status-badge ${getEmploymentClass(app.employment_type)}">
+                                        ${formatEmploymentType(app.employment_type)}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span style="font-weight: 600; color: ${getZimScoreColor(app.borrower_zim_score)}">
+                                        ${app.borrower_zim_score || 'N/A'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge ${app.status}">
+                                        ${app.status.toUpperCase()}
+                                    </span>
+                                </td>
+                                <td>${formatTime(app.submitted_at)}</td>
+                                <td>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button class="btn btn-sm btn-secondary" onclick="viewApplicationDetails('${app.id}')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        ${app.status === 'pending' ? `
+                                            <button class="btn btn-sm btn-success" onclick="approveApplication('${app.id}')">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="rejectApplication('${app.id}')">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        function updateApplicationStats(applications) {
+            const pending = applications.filter(a => a.status === 'pending').length;
+            const approved = applications.filter(a => a.status === 'approved').length;
+            const rejected = applications.filter(a => a.status === 'rejected').length;
+            const totalAmount = applications.reduce((sum, a) => sum + parseFloat(a.amount || 0), 0);
+
+            document.getElementById('pendingAppsCount').textContent = pending;
+            document.getElementById('approvedAppsCount').textContent = approved;
+            document.getElementById('rejectedAppsCount').textContent = rejected;
+            document.getElementById('totalAppsAmount').textContent = formatCurrency(totalAmount);
+            
+            // Update nav badge
+            const badge = document.getElementById('pendingApplicationsCount');
+            if (badge) {
+                badge.textContent = pending;
+                badge.style.display = pending > 0 ? 'inline-block' : 'none';
+            }
+        }
+
+        async function viewApplicationDetails(appId) {
+            try {
+                const data = await makeAPIRequest(`/api/loan-applications/${appId}`);
+                if (data && data.success) {
+                    showApplicationModal(data.data);
+                } else {
+                    alert('Failed to load application details');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function showApplicationModal(app) {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.id = 'applicationModal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Loan Application Details</h2>
+                        <button class="modal-close" onclick="closeModal('applicationModal')">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <h4 style="margin-bottom: 12px; color: #38e07b;">Applicant Information</h4>
+                                <p><strong>Name:</strong> ${app.borrower_name || 'N/A'}</p>
+                                <p><strong>Occupation:</strong> ${app.borrower_occupation || 'N/A'}</p>
+                                <p><strong>Location:</strong> ${app.borrower_location || 'N/A'}</p>
+                                <p><strong>Employment:</strong> ${formatEmploymentType(app.employment_type)}</p>
+                                <p><strong>Monthly Income:</strong> ${app.monthly_income ? formatCurrency(app.monthly_income) : 'N/A'}</p>
+                                <p><strong>ZimScore:</strong> <span style="color: ${getZimScoreColor(app.borrower_zim_score)}">${app.borrower_zim_score || 'N/A'}</span></p>
+                                <p><strong>Verified:</strong> ${app.borrower_verified ? '✅ Yes' : '❌ No'}</p>
+                            </div>
+                            <div>
+                                <h4 style="margin-bottom: 12px; color: #38e07b;">Loan Details</h4>
+                                <p><strong>Amount:</strong> ${app.currency} ${parseFloat(app.amount).toLocaleString()}</p>
+                                <p><strong>Purpose:</strong> ${app.purpose}</p>
+                                <p><strong>Description:</strong> ${app.purpose_description || 'N/A'}</p>
+                                <p><strong>Term:</strong> ${app.term_months} months</p>
+                                <p><strong>Interest Rate:</strong> ${app.interest_rate}%</p>
+                                <p><strong>Risk Level:</strong> <span class="status-badge ${getRiskClass(app.risk_level)}">${app.risk_level}</span></p>
+                                <p><strong>Submitted:</strong> ${new Date(app.submitted_at).toLocaleString()}</p>
+                            </div>
+                        </div>
+                        ${app.rejection_reason ? `
+                            <div style="margin-top: 20px; padding: 16px; background: #fef2f2; border-radius: 8px;">
+                                <h4 style="color: #ef4444; margin-bottom: 8px;">Rejection Reason</h4>
+                                <p>${app.rejection_reason}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="modal-footer">
+                        ${app.status === 'pending' ? `
+                            <button class="btn btn-success" onclick="approveApplication('${app.id}'); closeModal('applicationModal');">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button class="btn btn-danger" onclick="rejectApplication('${app.id}'); closeModal('applicationModal');">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-secondary" onclick="closeModal('applicationModal')">Close</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        async function approveApplication(appId) {
+            if (!confirm('Are you sure you want to approve this loan application? It will be posted to the Primary Market.')) return;
+            
+            try {
+                const data = await makeAPIRequest(`/api/loan-applications/admin/${appId}/approve`, {
+                    method: 'POST',
+                    body: JSON.stringify({ notes: '' })
+                });
+                
+                if (data && data.success) {
+                    alert('✅ Application approved! Loan posted to Primary Market.');
+                    loadLoanApplications();
+                } else {
+                    alert('❌ Failed to approve: ' + (data?.message || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        async function rejectApplication(appId) {
+            const reason = prompt('Please provide a reason for rejection:');
+            if (!reason) return;
+            
+            try {
+                const data = await makeAPIRequest(`/api/loan-applications/admin/${appId}/reject`, {
+                    method: 'POST',
+                    body: JSON.stringify({ reason: reason, notes: '' })
+                });
+                
+                if (data && data.success) {
+                    alert('✅ Application rejected. User has been notified.');
+                    loadLoanApplications();
+                } else {
+                    alert('❌ Failed to reject: ' + (data?.message || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        // Helper functions for loan applications
+        function getEmploymentClass(type) {
+            switch(type) {
+                case 'civil_servant': return 'approved';
+                case 'private': return 'pending';
+                case 'self_employed':
+                case 'informal': return 'warning';
+                default: return 'rejected';
+            }
+        }
+
+        function formatEmploymentType(type) {
+            const types = {
+                'civil_servant': 'Civil Servant',
+                'private': 'Private Sector',
+                'self_employed': 'Self Employed',
+                'informal': 'Informal',
+                'unemployed': 'Unemployed'
+            };
+            return types[type] || type || 'Unknown';
+        }
+
+        function getZimScoreColor(score) {
+            if (!score) return '#718096';
+            if (score >= 70) return '#10b981';
+            if (score >= 50) return '#f59e0b';
+            return '#ef4444';
+        }
+
+        function getRiskClass(risk) {
+            switch(risk?.toLowerCase()) {
+                case 'very low':
+                case 'low': return 'approved';
+                case 'medium': return 'pending';
+                case 'high':
+                case 'very high': return 'rejected';
+                default: return 'pending';
+            }
+        }
+
+        // Update showSection to handle loan-applications
+        const originalShowSection = showSection;
+        showSection = function(section) {
+            originalShowSection(section);
+            if (section === 'loan-applications') {
+                loadLoanApplications();
+            }
+        };
+
+        // Load pending count on page load
+        async function loadPendingApplicationsCount() {
+            try {
+                const data = await makeAPIRequest('/api/loan-applications/admin/pending');
+                if (data && data.success) {
+                    const count = data.data.applications?.length || 0;
+                    const badge = document.getElementById('pendingApplicationsCount');
+                    if (badge) {
+                        badge.textContent = count;
+                        badge.style.display = count > 0 ? 'inline-block' : 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading pending count:', error);
+            }
+        }
+
+        // Call on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPendingApplicationsCount();
+        });
     </script>
 </body>
 </html>
