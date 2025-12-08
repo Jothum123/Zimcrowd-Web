@@ -16741,26 +16741,44 @@ How it works:
             }, 500);
         });
 
+        // =====================================================
+        // DIRECT LOAN LIMITS BY EMPLOYMENT TYPE
+        // No DTNI - Simple employment-based limits
+        // =====================================================
+        const DIRECT_LOAN_LIMITS = {
+            government: { maxAmount: 3000, maxTerm: 24 },  // Verified government employees
+            civil_servant: { maxAmount: 3000, maxTerm: 24 },
+            private: { maxAmount: 1000, maxTerm: 12 },     // Verified private employees
+            informal: { maxAmount: 500, maxTerm: 6 },      // Informal sector
+            self_employed: { maxAmount: 500, maxTerm: 6 },
+            unemployed: { maxAmount: 0, maxTerm: 0 }       // Not eligible
+        };
+        
+        // Term limits by employment type (in months)
+        const LOAN_TERM_LIMITS = {
+            government: 24,
+            civil_servant: 24,
+            private: 12,
+            informal: 6,
+            self_employed: 6,
+            unemployed: 0
+        };
+        
+        // Legacy LOAN_LIMIT_CAPS for backward compatibility
+        const LOAN_LIMIT_CAPS = {
+            verified: { government: 3000, private: 1000, informal: 500 },
+            coldStart: { government: 3000, private: 1000, informal: 500 }
+        };
+
         // Loan Request Modal State
         let loanEligibilityData = {
             maxLoanAmount: 0,
             zimScore: 0,
             starRating: 0,
             riskLevel: 'Unknown',
-            coldStartActive: true,
             employmentType: 'private',
-            hasGoodRepaymentHistory: false, // Unlocks $3000 limit
-            loansRepaidOnTime: 0,
-            dtni: {
-                ratio: 0,
-                status: 'Unknown',
-                monthlyIncome: 0,
-                monthlyDebt: 0,
-                maxInstallment: 0,
-                availableInstallment: 0,
-                dtniBasedLimit: 0,
-                employmentCap: 100
-            }
+            verified: false,
+            maxTerm: 12
         };
 
         // Configure loan terms based on employment type
@@ -16900,12 +16918,8 @@ How it works:
             const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token');
             
             try {
-                // Get term from selected button or default to 90 days
-                const termDays = parseInt(document.getElementById('loanTerm')?.value) * 30 || 90;
-                const interestRate = parseFloat(document.getElementById('loanRate')?.value) / 100 || 0.05;
-                
-                // Call the production max-amount endpoint
-                const response = await fetch(`${apiBase}/loans/max-amount?term_days=${termDays}&interest_rate=${interestRate}`, {
+                // Fetch user profile to get employment type and verification status
+                const response = await fetch(`${apiBase}/profile`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -16916,49 +16930,61 @@ How it works:
                 const result = await response.json();
                 
                 if (result.success && result.data) {
-                    const data = result.data;
+                    const profile = result.data;
                     
-                    // Map API response to local state
-                    loanEligibilityData = {
-                        maxLoanAmount: data.maxLoanAmount || 0,
-                        zimScore: data.zimScore?.score || data.zimScore?.scoreValue || 0,
-                        starRating: data.zimScore?.starRating || Math.min(5, Math.floor((data.zimScore?.score || 0) / 17)),
-                        riskLevel: data.zimScore?.riskLevel || 'Unknown',
-                        coldStartActive: data.isColdStart !== false,
-                        employmentType: data.employmentType || 'private',
-                        hasGoodRepaymentHistory: !data.isColdStart,
-                        loansRepaidOnTime: data.zimScore?.loansRepaidOnTime || 0,
-                        documentsUpToDate: !data.requiresBankStatement,
-                        limitedByDTNI: data.limitReason === 'dtni',
-                        capCeiling: data.dtni?.employmentCap || 100,
-                        dtni: {
-                            ratio: data.dtni?.ratio || 0,
-                            status: data.dtni?.status || 'Unknown',
-                            monthlyIncome: data.dtni?.monthlyIncome || 0,
-                            monthlyDebt: data.dtni?.existingDebt || 0,
-                            maxInstallment: data.dtni?.maxInstallment || 0,
-                            availableInstallment: data.dtni?.availableInstallment || 0,
-                            dtniBasedLimit: data.dtni?.dtniBasedLimit || 0,
-                            employmentCap: data.dtni?.employmentCap || 100
-                        }
-                    };
+                    // Get employment type from profile
+                    const employmentType = (profile.employment_type || 'private').toLowerCase();
+                    const isVerified = profile.verified || profile.post_registration_completed || false;
                     
-                    // Check if bank statement is required
-                    if (data.requiresBankStatement) {
-                        showBankStatementRequired(data.message);
+                    // Store profile data for later use
+                    localStorage.setItem('profileData', JSON.stringify(profile));
+                    
+                    // Get loan limits based on employment type (NO DTNI)
+                    const limits = DIRECT_LOAN_LIMITS[employmentType] || DIRECT_LOAN_LIMITS.private;
+                    
+                    // If not verified, user cannot apply
+                    if (!isVerified) {
+                        loanEligibilityData = {
+                            maxLoanAmount: 0,
+                            zimScore: 0,
+                            starRating: 0,
+                            riskLevel: 'Not Verified',
+                            employmentType: employmentType,
+                            verified: false,
+                            maxTerm: 0,
+                            deniedReason: 'Please complete your profile in Settings to apply for a loan.'
+                        };
+                        displayEligibility();
                         return;
                     }
                     
+                    // Calculate ZimScore based on employment type
+                    let zimScore = 50;
+                    if (employmentType === 'government' || employmentType === 'civil_servant') {
+                        zimScore += 20;
+                    } else if (employmentType === 'private') {
+                        zimScore += 10;
+                    }
+                    if (isVerified) zimScore += 10;
+                    zimScore = Math.min(85, zimScore);
+                    
+                    console.log(`✅ API Eligibility: ${employmentType} → $${limits.maxAmount} max, ${limits.maxTerm} months`);
+                    
+                    loanEligibilityData = {
+                        maxLoanAmount: limits.maxAmount,
+                        zimScore: zimScore,
+                        starRating: Math.min(5, Math.floor(zimScore / 17)),
+                        riskLevel: zimScore >= 70 ? 'Low Risk' : zimScore >= 50 ? 'Medium Risk' : 'High Risk',
+                        employmentType: employmentType,
+                        verified: isVerified,
+                        maxTerm: limits.maxTerm
+                    };
+                    
                     displayEligibility();
                 } else {
-                    // API returned error
-                    if (result.requiresBankStatement) {
-                        showBankStatementRequired(result.message);
-                    } else {
-                        // Use local calculation as fallback
-                        console.warn('API error, using local calculation:', result.message);
-                        await calculateLocalEligibility();
-                    }
+                    // API returned error - use local calculation
+                    console.warn('Profile API error, using local calculation');
+                    await calculateLocalEligibility();
                 }
             } catch (error) {
                 console.error('API Error:', error);
@@ -16991,148 +17017,73 @@ How it works:
         }
 
         async function calculateLocalEligibility() {
-            // Get user profile data from localStorage
+            // Get user profile data from localStorage (stored from Settings)
             const authData = JSON.parse(localStorage.getItem('authData') || '{}');
             const userData = authData.user || JSON.parse(localStorage.getItem('userData') || '{}');
-            
-            // Get cold start data from post-registration setup
             const coldStartData = JSON.parse(localStorage.getItem('coldStartRating') || '{}');
+            const profileData = JSON.parse(localStorage.getItem('profileData') || '{}');
             
-            const monthlyIncome = parseFloat(userData.monthly_income || userData.monthlyIncome || 300);
-            const employmentType = (userData.employment_type || userData.employmentType || 'private').toLowerCase();
-            const existingDebt = parseFloat(userData.existing_monthly_payments || 0);
+            // Get employment type from profile/settings
+            const employmentType = (
+                profileData.employment_type || 
+                coldStartData.employment_type || 
+                userData.employment_type || 
+                userData.employmentType || 
+                'private'
+            ).toLowerCase();
             
-            // Apply cold start limits if user has cold start restrictions
-            let maxLoanLimit = 3000; // Default maximum
-            let hasColdStart = false;
-            let coldStartLimit = 0;
+            // Check if user is verified (completed post-registration)
+            const isVerified = userData.verified || 
+                              userData.post_registration_completed || 
+                              coldStartData.verified || 
+                              profileData.verified || 
+                              false;
             
-            if (coldStartData.has_cold_start && coldStartData.cold_start_limit > 0) {
-                hasColdStart = true;
-                coldStartLimit = coldStartData.cold_start_limit;
-                maxLoanLimit = Math.min(coldStartData.final_cold_start_limit || coldStartData.max_loan_amount || 3000, coldStartLimit);
-                console.log(`🧊 Cold start active: Limit $${maxLoanLimit} (cap: $${coldStartLimit})`);
-            } else if (coldStartData.max_loan_amount) {
-                maxLoanLimit = coldStartData.final_max_loan_limit || coldStartData.max_loan_amount;
-                console.log(`🏛️ No cold start: Full DTNI limit $${maxLoanLimit}`);
+            console.log(`💼 Employment Type: ${employmentType}, Verified: ${isVerified}`);
+            
+            // Get loan limits based on employment type (NO DTNI)
+            const limits = DIRECT_LOAN_LIMITS[employmentType] || DIRECT_LOAN_LIMITS.private;
+            
+            // If not verified, user cannot apply
+            if (!isVerified) {
+                console.log('❌ User not verified - cannot apply for direct loan');
+                loanEligibilityData = {
+                    maxLoanAmount: 0,
+                    zimScore: 0,
+                    starRating: 0,
+                    riskLevel: 'Not Verified',
+                    employmentType: employmentType,
+                    verified: false,
+                    maxTerm: 0,
+                    deniedReason: 'Please complete your profile in Settings to apply for a loan.'
+                };
+                displayEligibility();
+                return;
             }
             
-            // Check repayment history (from user data or API)
-            const loansRepaidOnTime = parseInt(userData.loans_repaid_on_time || userData.loansRepaidOnTime || 0);
-            const hasGoodRepaymentHistory = loansRepaidOnTime >= 1; // At least 1 loan repaid on time
-            
-            // Check if documents are up to date (payslip/bank statement for DTNI verification)
-            const lastDocumentUpdate = userData.last_document_update || userData.lastDocumentUpdate;
-            const documentsUpToDate = lastDocumentUpdate ? 
-                (new Date() - new Date(lastDocumentUpdate)) < (30 * 24 * 60 * 60 * 1000) : false; // Within 30 days
-            
-            // DTNI Calculation based on ZIMSCORE_COLD_START_FINAL.md
-            const isCivilServant = employmentType === 'government' || employmentType === 'civil_servant';
-            const dtniPercentage = isCivilServant ? 0.40 : 0.33;
-            
-            // Determine cap ceiling based on verification status
-            // Note: Cap is just the ceiling - actual limit is ALWAYS based on DTNI
-            let capCeiling;
-            const empType = isCivilServant ? 'government' : (employmentType || 'private');
-            
-            if (hasGoodRepaymentHistory && documentsUpToDate) {
-                // Verified user with updated documents - higher cap ceiling
-                capCeiling = LOAN_LIMIT_CAPS.verified[empType] || LOAN_LIMIT_CAPS.verified.private;
-            } else if (hasGoodRepaymentHistory && !documentsUpToDate) {
-                // Verified but documents outdated - still use cold start cap until updated
-                capCeiling = LOAN_LIMIT_CAPS.coldStart[empType] || LOAN_LIMIT_CAPS.coldStart.private;
-            } else {
-                // Cold start - limited by employment type
-                capCeiling = LOAN_LIMIT_CAPS.coldStart[empType] || LOAN_LIMIT_CAPS.coldStart.private;
+            // Calculate ZimScore based on employment type and verification
+            let zimScore = 50; // Base score
+            if (employmentType === 'government' || employmentType === 'civil_servant') {
+                zimScore += 20; // Government employees get higher score
+            } else if (employmentType === 'private') {
+                zimScore += 10; // Private employees
             }
+            // Add points for verification
+            if (isVerified) zimScore += 10;
             
-            // Step 1: Calculate Maximum Monthly Installment
-            let maxInstallment;
+            // Cap at 85 for new users
+            zimScore = Math.min(85, zimScore);
             
-            if (isCivilServant) {
-                // Government employees: Net salary - $70 buffer = max installment
-                maxInstallment = Math.max(0, monthlyIncome - 70);
-                console.log(`🏛️ Government employee: Net salary $${monthlyIncome} - $70 buffer = $${maxInstallment.toFixed(2)} max installment`);
-            } else {
-                // Private and informal employees: Apply DTNI percentage
-                maxInstallment = monthlyIncome * dtniPercentage;
-                console.log(`💼 Private/Informal employee: Net salary $${monthlyIncome} × ${(dtniPercentage * 100)}% DTNI = $${maxInstallment.toFixed(2)} max installment`);
-            }
-            
-            // Step 2: Calculate Available Installment
-            const availableInstallment = Math.max(0, maxInstallment - existingDebt);
-            
-            // Step 3: Calculate Maximum Loan (Reducing Balance Method)
-            // Formula: P = (M × [(1 + r)^n - 1]) / [r × (1 + r)^n]
-            const monthlyRate = 0.05 / 12; // 5% annual / 12 months = 0.4167%
-            
-            // Get selected loan term or use employment-specific max term
-            const selectedTerm = parseInt(document.getElementById('loanTerm')?.value) || 3;
-            const maxTermMonths = LOAN_TERM_LIMITS[empType] || LOAN_TERM_LIMITS.private;
-            const termMonths = Math.min(selectedTerm, maxTermMonths);
-            
-            console.log(`📊 Using ${termMonths} months for loan calculation (selected: ${selectedTerm}, max for ${empType}: ${maxTermMonths})`);
-            
-            const powerTerm = Math.pow(1 + monthlyRate, termMonths);
-            
-            let dtniBasedLimit = 0;
-            if (availableInstallment > 0) {
-                dtniBasedLimit = (availableInstallment * (powerTerm - 1)) / (monthlyRate * powerTerm);
-            }
-            
-            // Step 4: Apply Cold Start Limits and Cap Ceiling
-            // For cold start users: maxLoanAmount = min(DTNI-based limit, Cold Start Limit)
-            // For non-cold start users: maxLoanAmount = min(DTNI-based limit, Cap Ceiling)
-            let maxLoanAmount;
-            
-            if (hasColdStart) {
-                // Cold start users have strict caps
-                maxLoanAmount = Math.min(dtniBasedLimit, coldStartLimit, maxLoanLimit);
-                console.log(`🧊 Cold start calculation: DTNI $${dtniBasedLimit.toFixed(2)} → Limited to $${maxLoanAmount.toFixed(2)} (cold start cap $${coldStartLimit})`);
-            } else {
-                // Non-cold start users use normal caps
-                maxLoanAmount = Math.min(dtniBasedLimit, capCeiling, maxLoanLimit);
-                console.log(`🏛️ Full DTNI calculation: DTNI $${dtniBasedLimit.toFixed(2)} → Final limit $${maxLoanAmount.toFixed(2)}`);
-            }
-            
-            // Calculate DTNI ratio
-            const dtniRatio = maxInstallment > 0 ? (existingDebt / maxInstallment) : 0;
-            
-            // Determine DTNI status
-            let dtniStatus = 'Excellent';
-            if (dtniRatio >= 1) dtniStatus = 'Denied - At capacity';
-            else if (dtniRatio >= 0.8) dtniStatus = 'Limited';
-            else if (dtniRatio >= 0.5) dtniStatus = 'Fair';
-            else if (dtniRatio >= 0.2) dtniStatus = 'Good';
-            
-            // Determine limiting factor
-            const limitedByDTNI = dtniBasedLimit <= capCeiling;
-            
-            // Calculate ZimScore (simplified cold start)
-            const zimScore = Math.min(85, Math.max(30, 50 + (isCivilServant ? 10 : 0) + (dtniRatio < 0.3 ? 10 : 0) + (hasGoodRepaymentHistory ? 15 : 0)));
+            console.log(`✅ Direct Loan Eligibility: $${limits.maxAmount} max, ${limits.maxTerm} months, ZimScore: ${zimScore}`);
             
             loanEligibilityData = {
-                maxLoanAmount: Math.floor(maxLoanAmount),
+                maxLoanAmount: limits.maxAmount,
                 zimScore: zimScore,
                 starRating: Math.min(5, Math.floor(zimScore / 17)),
                 riskLevel: zimScore >= 70 ? 'Low Risk' : zimScore >= 50 ? 'Medium Risk' : 'High Risk',
-                coldStartActive: !hasGoodRepaymentHistory,
                 employmentType: employmentType,
-                hasGoodRepaymentHistory: hasGoodRepaymentHistory,
-                loansRepaidOnTime: loansRepaidOnTime,
-                documentsUpToDate: documentsUpToDate,
-                limitedByDTNI: limitedByDTNI,
-                capCeiling: capCeiling,
-                dtni: {
-                    ratio: dtniRatio,
-                    status: dtniStatus,
-                    monthlyIncome: monthlyIncome,
-                    monthlyDebt: existingDebt,
-                    maxInstallment: maxInstallment,
-                    availableInstallment: availableInstallment,
-                    dtniBasedLimit: Math.floor(dtniBasedLimit),
-                    employmentCap: capCeiling
-                }
+                verified: isVerified,
+                maxTerm: limits.maxTerm
             };
             
             displayEligibility();
@@ -17143,14 +17094,44 @@ How it works:
             
             const data = loanEligibilityData;
             
-            // Check if user is denied
-            if (data.maxLoanAmount <= 0 || data.dtni.status.includes('Denied')) {
+            // Check if user is denied (not verified or no limit)
+            if (data.maxLoanAmount <= 0 || !data.verified) {
                 document.getElementById('eligibilityDenied').style.display = 'block';
                 document.getElementById('loanFormContent').style.display = 'none';
-                document.getElementById('deniedReason').textContent = 
-                    data.dtni.ratio >= 1 
-                        ? 'Your existing debt already uses your full borrowing capacity. Please pay off some loans first.'
-                        : 'Your debt-to-income ratio is too high to qualify for a new loan at this time.';
+                
+                const deniedEl = document.getElementById('eligibilityDenied');
+                deniedEl.innerHTML = `
+                    <i class="fas fa-user-edit" style="font-size: 64px; color: #f59e0b; margin-bottom: 20px;"></i>
+                    <h3 style="color: #f59e0b; margin-bottom: 15px;">Complete Your Profile</h3>
+                    <p id="deniedReason" style="color: #94a3b8; margin-bottom: 20px;">
+                        ${data.deniedReason || 'Please complete your profile in Settings to apply for a direct loan. Your employment type determines your loan limit.'}
+                    </p>
+                    <div style="background: rgba(56, 231, 123, 0.1); padding: 16px; border-radius: 12px; margin-bottom: 20px; text-align: left;">
+                        <p style="color: #38e77b; font-weight: 600; margin-bottom: 12px;">Loan Limits by Employment:</p>
+                        <div style="display: grid; gap: 8px; color: #94a3b8; font-size: 14px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>🏛️ Government Employee</span>
+                                <span style="color: #f1f5f9;">$3,000 (24 months)</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>💼 Private Employee</span>
+                                <span style="color: #f1f5f9;">$1,000 (12 months)</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>🛠️ Informal/Self-Employed</span>
+                                <span style="color: #f1f5f9;">$500 (6 months)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                        <button onclick="showSection('settings')" class="btn-primary" style="padding: 12px 24px;">
+                            <i class="fas fa-cog"></i> Go to Settings
+                        </button>
+                        <button onclick="closeLoanRequestModal()" class="btn-secondary" style="padding: 12px 24px;">
+                            Cancel
+                        </button>
+                    </div>
+                `;
                 return;
             }
             
@@ -17178,46 +17159,59 @@ How it works:
                                  data.riskLevel.includes('Medium') ? '#f59e0b' : '#ef4444';
             
             // Update max loan limit
-            document.getElementById('maxLoanLimit').textContent = `$${data.maxLoanAmount.toFixed(2)}`;
-            document.getElementById('maxAmountHint').textContent = `$${data.maxLoanAmount.toFixed(2)}`;
+            document.getElementById('maxLoanLimit').textContent = `$${data.maxLoanAmount.toLocaleString()}`;
+            const maxAmountHint = document.getElementById('maxAmountHint');
+            if (maxAmountHint) maxAmountHint.textContent = `$${data.maxLoanAmount.toLocaleString()}`;
             
-            // Update cold start badge
+            // Update verification badge based on employment type
             const coldStartBadge = document.getElementById('coldStartBadge');
-            if (data.coldStartActive) {
+            if (coldStartBadge) {
+                const empLabels = {
+                    government: 'GOV VERIFIED',
+                    civil_servant: 'GOV VERIFIED',
+                    private: 'PRIVATE VERIFIED',
+                    informal: 'INFORMAL',
+                    self_employed: 'SELF-EMPLOYED'
+                };
+                coldStartBadge.textContent = empLabels[data.employmentType] || 'VERIFIED';
+                coldStartBadge.style.background = data.employmentType === 'government' || data.employmentType === 'civil_servant' 
+                    ? '#3b82f6' : '#38e77b';
                 coldStartBadge.style.display = 'block';
-                coldStartBadge.textContent = 'COLD START';
-                coldStartBadge.style.background = '#f59e0b';
-            } else {
-                coldStartBadge.textContent = 'VERIFIED';
-                coldStartBadge.style.background = '#38e77b';
             }
             
-            // Update employment and DTNI info
-            document.getElementById('employmentType').textContent = 
-                data.employmentType === 'government' ? 'Government' : 
-                data.employmentType.charAt(0).toUpperCase() + data.employmentType.slice(1);
+            // Update employment type display
+            const empTypeEl = document.getElementById('employmentType');
+            if (empTypeEl) {
+                const empNames = {
+                    government: 'Government Employee',
+                    civil_servant: 'Civil Servant',
+                    private: 'Private Employee',
+                    informal: 'Informal Sector',
+                    self_employed: 'Self-Employed'
+                };
+                empTypeEl.textContent = empNames[data.employmentType] || data.employmentType;
+            }
             
-            const dtniPercent = (data.dtni.ratio * 100).toFixed(1);
-            document.getElementById('dtniRatio').textContent = `${dtniPercent}%`;
-            document.getElementById('dtniRatio').style.color = 
-                data.dtni.ratio < 0.3 ? '#38e77b' : data.dtni.ratio < 0.6 ? '#f59e0b' : '#ef4444';
-            
-            document.getElementById('dtniStatus').textContent = data.dtni.status;
-            document.getElementById('dtniStatus').style.color = 
-                data.dtni.status === 'Excellent' ? '#38e77b' : 
-                data.dtni.status === 'Good' ? '#38e77b' : 
-                data.dtni.status === 'Fair' ? '#f59e0b' : '#ef4444';
-            
-            // Update DTNI breakdown
-            const dtniPercentLabel = data.employmentType === 'government' ? '40%' : '33%';
-            document.getElementById('dtniPercentLabel').textContent = dtniPercentLabel;
-            document.getElementById('monthlyIncome').textContent = `$${data.dtni.monthlyIncome.toFixed(2)}`;
-            document.getElementById('maxInstallment').textContent = `$${data.dtni.maxInstallment.toFixed(2)}`;
-            document.getElementById('existingPayments').textContent = `-$${data.dtni.monthlyDebt.toFixed(2)}`;
-            document.getElementById('availableInstallment').textContent = `$${data.dtni.availableInstallment.toFixed(2)}`;
-            document.getElementById('dtniBasedLimit').textContent = `$${data.dtni.dtniBasedLimit.toFixed(2)}`;
-            document.getElementById('employmentCap').textContent = `$${data.dtni.employmentCap.toFixed(2)}`;
-            document.getElementById('finalLimit').textContent = `$${data.maxLoanAmount.toFixed(2)}`;
+            // Update loan limit info (simplified - no DTNI)
+            const limitInfoEl = document.getElementById('dtniBreakdown');
+            if (limitInfoEl) {
+                limitInfoEl.innerHTML = `
+                    <div style="padding: 16px; background: rgba(56, 231, 123, 0.05); border-radius: 12px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <span style="color: #94a3b8;">Employment Type</span>
+                            <span style="color: #f1f5f9; font-weight: 600;">${data.employmentType === 'government' ? 'Government' : data.employmentType.charAt(0).toUpperCase() + data.employmentType.slice(1)}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <span style="color: #94a3b8;">Maximum Loan Amount</span>
+                            <span style="color: #38e77b; font-weight: 600;">$${data.maxLoanAmount.toLocaleString()}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #94a3b8;">Maximum Term</span>
+                            <span style="color: #f1f5f9; font-weight: 600;">${data.maxTerm} months</span>
+                        </div>
+                    </div>
+                `;
+            }
             
             // Initialize sliders with proper limits
             initializeLoanSliders();
