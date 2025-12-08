@@ -5473,6 +5473,14 @@
                     sellToSecondaryMarket: typeof window.sellToSecondaryMarket,
                     investmentDetails: typeof investmentDetails
                 });
+                
+                // Initialize Toast Notifications System
+                if (typeof ToastNotificationSystem !== 'undefined') {
+                    window.ToastNotifications = new ToastNotificationSystem();
+                    console.log('🔔 Toast notification system initialized');
+                } else {
+                    console.warn('⚠️ ToastNotificationSystem not found, using fallback notifications');
+                }
                 // Mock investment data for modals (expanded details)
                 const investmentDetails = {
                     'inv_001': {
@@ -5635,7 +5643,22 @@
                     if (!investment) {
                         console.error('❌ Investment not found:', investmentId);
                         console.log('📋 Available investments:', Object.keys(investmentDetails));
-                        alert('Investment details not available for ID: ' + investmentId);
+                        
+                        // Use toast notification instead of browser alert
+                        if (window.ToastNotifications) {
+                            window.ToastNotifications.error(
+                                'Investment Not Found', 
+                                `Investment details not available for ID: ${investmentId}`,
+                                { 
+                                    persistent: false,
+                                    actions: [
+                                        { text: 'Refresh', onclick: 'location.reload()' }
+                                    ]
+                                }
+                            );
+                        } else {
+                            alert('Investment details not available for ID: ' + investmentId);
+                        }
                         return;
                     }
                     
@@ -5883,33 +5906,69 @@
                     }, 2000);
                 }
 
-                // Success Message Function
-                function showSuccessMessage(message) {
-                    const notification = document.createElement('div');
-                    notification.style.cssText = `
-                        position: fixed;
-                        top: 20px;
-                        right: 20px;
-                        background: rgba(34, 197, 94, 0.9);
-                        color: white;
-                        padding: 16px 24px;
-                        border-radius: 8px;
-                        z-index: 10001;
-                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-                        max-width: 400px;
-                    `;
-                    notification.innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-check-circle" style="font-size: 20px;"></i>
-                            <span>${message}</span>
-                        </div>
-                    `;
-                    
-                    document.body.appendChild(notification);
-                    
-                    setTimeout(() => {
-                        notification.remove();
-                    }, 5000);
+                // Success Message Function - Now integrated with ToastNotifications system
+                function showSuccessMessage(message, title = 'Success') {
+                    // Use the proper toast notification system if available
+                    if (window.ToastNotifications) {
+                        // Parse the message to extract price if it's an investment sale
+                        if (message.includes('$') && message.includes('listed successfully')) {
+                            const priceMatch = message.match(/\$([0-9,]+\.?[0-9]*)/);
+                            const price = priceMatch ? priceMatch[1] : '';
+                            
+                            window.ToastNotifications.investment(
+                                'Investment Listed Successfully',
+                                `Listed for $${price}. It will appear on the secondary market within 24 hours.`,
+                                {
+                                    actions: [
+                                        { text: 'View Secondary Market', onclick: 'showSection("secondary-market")' }
+                                    ]
+                                }
+                            );
+                        } else {
+                            window.ToastNotifications.success(title, message);
+                        }
+                    } else {
+                        // Fallback to custom notification if ToastNotifications isn't loaded
+                        const notification = document.createElement('div');
+                        notification.style.cssText = `
+                            position: fixed;
+                            top: 20px;
+                            right: 20px;
+                            background: linear-gradient(135deg, #10b981, #34d399);
+                            color: white;
+                            padding: 16px 24px;
+                            border-radius: 12px;
+                            z-index: 10001;
+                            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
+                            max-width: 400px;
+                            backdrop-filter: blur(10px);
+                            border: 1px solid rgba(255, 255, 255, 0.1);
+                        `;
+                        notification.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-check-circle" style="font-size: 20px;"></i>
+                                <div>
+                                    <div style="font-weight: 600; margin-bottom: 4px;">${title}</div>
+                                    <div style="font-size: 14px; opacity: 0.9;">${message}</div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        document.body.appendChild(notification);
+                        
+                        // Slide in animation
+                        notification.style.transform = 'translateX(100%)';
+                        notification.style.transition = 'all 0.3s ease';
+                        setTimeout(() => {
+                            notification.style.transform = 'translateX(0)';
+                        }, 10);
+                        
+                        // Auto remove after 5 seconds
+                        setTimeout(() => {
+                            notification.style.transform = 'translateX(100%)';
+                            setTimeout(() => notification.remove(), 300);
+                        }, 5000);
+                    }
                 }
                 </script>
 
