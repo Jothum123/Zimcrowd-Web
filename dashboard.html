@@ -12745,14 +12745,31 @@ How it works:
             }
         }
 
-        // Load Primary Market Loans - Using mock data directly
+        // Load Primary Market Loans - Try API first, fallback to mock data
         async function loadPrimaryMarketLoans() {
-            console.log('📊 Loading primary market loans (mock data)...');
-            // Always use mock data for demonstration
+            console.log('📊 Loading primary market loans...');
+            
+            try {
+                // Try to fetch from real API
+                const response = await fetch('/api/market/primary?limit=12');
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.loans && data.data.loans.length > 0) {
+                    console.log('✅ Loaded real primary market loans:', data.data.loans.length);
+                    window.allMockLoans = data.data.loans;
+                    window.currentMockLoans = data.data.loans;
+                    renderPrimaryMarketLoans(data.data.loans);
+                    return;
+                }
+            } catch (error) {
+                console.warn('⚠️ API call failed, using mock data:', error.message);
+            }
+            
+            // Fallback to mock data
             loadMockPrimaryMarketLoans();
         }
 
-        // Load Mock Primary Market Loans
+        // Load Mock Primary Market Loans (fallback)
         function loadMockPrimaryMarketLoans() {
             // Check if MockMarketData is available
             if (typeof MockMarketData !== 'undefined' && MockMarketData.generatePrimaryMarketLoans) {
@@ -13693,40 +13710,53 @@ How it works:
             }).join('');
         }
 
-        // Load investments data - Using mock data
+        // Load investments data - Try API first, fallback to mock data
         async function loadInvestmentsData() {
-            console.log('📊 Loading mock investments data...');
+            console.log('📊 Loading investments data...');
             
-            // Load mock portfolio investments
+            try {
+                // Try to fetch from real API
+                const token = localStorage.getItem('authToken');
+                if (token) {
+                    const response = await fetch('/api/market/investments', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success && data.data && data.data.investments) {
+                        console.log('✅ Loaded real investments:', data.data.investments.length);
+                        
+                        // Update stats
+                        if (data.data.stats) {
+                            document.getElementById('portfolioTotalInvested').textContent = `$${data.data.stats.totalInvested.toLocaleString()}`;
+                            document.getElementById('portfolioTotalReturns').textContent = `$${data.data.stats.totalReturns.toFixed(2)}`;
+                            document.getElementById('portfolioActiveCount').textContent = data.data.stats.activeCount;
+                            document.getElementById('portfolioAvgReturn').textContent = `${data.data.stats.avgReturn.toFixed(1)}%`;
+                        }
+                        
+                        // Display investments
+                        if (data.data.investments.length > 0) {
+                            displayPortfolioInvestments(data.data.investments);
+                            return;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ API call failed, using mock data:', error.message);
+            }
+            
+            // Fallback to mock data
             if (typeof MockMarketData !== 'undefined' && MockMarketData.generatePortfolioInvestments) {
                 const mockInvestments = MockMarketData.generatePortfolioInvestments(6);
                 console.log('✅ Generated mock investments:', mockInvestments.length);
-                
-                // Display investments in the portfolio
                 displayPortfolioInvestments(mockInvestments);
             } else {
                 console.warn('⚠️ MockMarketData not available for investments');
+                displayPortfolioInvestments([]);
             }
-            return;
-            
-            /* ORIGINAL FUNCTION DISABLED:
-            try {
-                const portfolioResponse = await window.ZimCrowdAPI.getInvestmentPortfolio();
-                if (portfolioResponse.success) {
-                    updateInvestmentPortfolio(portfolioResponse.data);
-                }
-                const investmentsResponse = await window.ZimCrowdAPI.getInvestments(1, 20);
-                if (investmentsResponse.success) {
-                    updateInvestmentsList(investmentsResponse.data);
-                }
-                const statsResponse = await window.ZimCrowdAPI.getInvestmentStats();
-                if (statsResponse.success) {
-                    updatePerformanceStats(statsResponse.data);
-                }
-            } catch (error) {
-                console.error('Failed to load investments:', error);
-            }
-            */
         }
 
         // Display Portfolio Investments (Mock Data)
