@@ -761,4 +761,234 @@ router.get('/center', authenticateUser, async (req, res) => {
     }
 });
 
+// @route   POST /api/documents/sync
+// @desc    Sync documents from post-registration to document center
+// @access  Private
+router.post('/sync', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        console.log(`🔄 Syncing documents for user ${userId}`);
+
+        // Get documents from profile_documents table (post-registration uploads)
+        const { data: profileDocs, error: profileError } = await supabase
+            .from('profile_documents')
+            .select('*')
+            .eq('user_id', userId);
+
+        if (profileError) {
+            console.error('Error fetching profile documents:', profileError);
+        }
+
+        // Get existing documents in user_documents table
+        const { data: existingDocs, error: existingError } = await supabase
+            .from('user_documents')
+            .select('document_type, file_path')
+            .eq('user_id', userId);
+
+        if (existingError) {
+            console.error('Error fetching existing documents:', existingError);
+        }
+
+        const existingPaths = new Set((existingDocs || []).map(d => d.file_path));
+        let syncedCount = 0;
+
+        // Sync profile documents to user_documents
+        for (const doc of (profileDocs || [])) {
+            // Skip if already exists
+            if (existingPaths.has(doc.file_path)) {
+                continue;
+            }
+
+            // Map document types
+            const docTypeMap = {
+                'national_id': 'national_id',
+                'id_front': 'national_id',
+                'id_back': 'national_id',
+                'selfie': 'selfie',
+                'proof_of_residence': 'proof_of_address',
+                'bank_statement': 'bank_statement',
+                'gov_payslip': 'payslip',
+                'payslip': 'payslip',
+                'employment_letter': 'employment_contract',
+                'mobile_money_statement': 'bank_statement'
+            };
+
+            const mappedType = docTypeMap[doc.document_type] || doc.document_type;
+
+            // Insert into user_documents
+            const { error: insertError } = await supabase
+                .from('user_documents')
+                .insert({
+                    user_id: userId,
+                    document_type: mappedType,
+                    file_name: doc.file_name || doc.original_filename,
+                    file_path: doc.file_path,
+                    file_size: doc.file_size,
+                    mime_type: doc.mime_type,
+                    status: doc.verification_status || doc.status || 'pending',
+                    upload_date: doc.created_at || new Date().toISOString(),
+                    metadata: doc.ocr_data || doc.metadata || {},
+                    source: 'post_registration'
+                });
+
+            if (insertError) {
+                console.error(`Error syncing document ${doc.id}:`, insertError);
+            } else {
+                syncedCount++;
+            }
+        }
+
+        // Also check kyc_documents table
+        const { data: kycDocs, error: kycError } = await supabase
+            .from('kyc_documents')
+            .select('*')
+            .eq('user_id', userId);
+
+        if (!kycError && kycDocs) {
+            for (const doc of kycDocs) {
+                if (existingPaths.has(doc.file_path)) {
+                    continue;
+                }
+
+                const { error: insertError } = await supabase
+                    .from('user_documents')
+                    .insert({
+                        user_id: userId,
+                        document_type: doc.document_type,
+                        file_name: doc.file_name,
+                        file_path: doc.file_path,
+                        file_size: doc.file_size,
+                        mime_type: doc.mime_type,
+                        status: doc.status || 'pending',
+                        upload_date: doc.created_at || new Date().toISOString(),
+                        metadata: doc.ocr_data || {},
+                        source: 'kyc'
+                    });
+
+                if (!insertError) {
+                    syncedCount++;
+                }
+            }
+        }
+
+        console.log(`✅ Synced ${syncedCount} documents for user ${userId}`);
+
+        res.json({
+            success: true,
+            message: `Synced ${syncedCount} documents`,
+            syncedCount: syncedCount
+        });
+
+    } catch (error) {
+        console.error('Document sync error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to sync documents',
+            error: error.message
+        });
+    }
+});
+
+// @route   POST /api/documents/auto-verify
+// @desc    Auto-verify documents based on OCR/AI analysis results
+// @access  Private
+router.post('/auto-verify', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { documentId, ocrData, aiAnalysis } = req.body;
+
+        if (!documentId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Document ID is required'
+            });
+        }
+
+        // Get the document
+        const { data: doc, error: fetchError } = await supabase
+            .from('user_documents')
+            .select('*')
+            .eq('id', documentId)
+            .eq('user_id', userId)
+            .single();
+
+        if (fetchError || !doc) {
+            return res.status(404).json({
+                success: false,
+                message: 'Document not found'
+            });
+        }
+
+        // Determine verification status based on AI analysis
+        let newStatus = 'pending';
+        let verificationNotes = '';
+
+        if (aiAnalysis) {
+            // Auto-verify if AI confidence is high
+            if (aiAnalysis.confidence >= 0.85 && aiAnalysis.isValid) {
+                newStatus = 'approved';
+                verificationNotes = 'Auto-verified by AI with high confidence';
+            } else if (aiAnalysis.confidence >= 0.6) {
+                newStatus = 'pending';
+                verificationNotes = 'Requires manual review - moderate AI confidence';
+            } else {
+                newStatus = 'pending';
+                verificationNotes = 'Requires manual review - low AI confidence';
+            }
+
+            // Check for face match on selfies
+            if (doc.document_type === 'selfie' && aiAnalysis.faceDetected) {
+                if (aiAnalysis.faceMatchScore >= 0.8) {
+                    newStatus = 'approved';
+                    verificationNotes = 'Face verified by AI';
+                }
+            }
+
+            // Check ID validity
+            if (doc.document_type === 'national_id' && aiAnalysis.idNumber) {
+                if (aiAnalysis.idNumberValid) {
+                    newStatus = 'approved';
+                    verificationNotes = 'ID number verified by AI';
+                }
+            }
+        }
+
+        // Update document status
+        const { error: updateError } = await supabase
+            .from('user_documents')
+            .update({
+                status: newStatus,
+                metadata: {
+                    ...doc.metadata,
+                    ocrData: ocrData,
+                    aiAnalysis: aiAnalysis,
+                    verificationNotes: verificationNotes,
+                    autoVerifiedAt: newStatus === 'approved' ? new Date().toISOString() : null
+                },
+                verified_at: newStatus === 'approved' ? new Date().toISOString() : null
+            })
+            .eq('id', documentId);
+
+        if (updateError) {
+            throw updateError;
+        }
+
+        console.log(`📄 Document ${documentId} auto-verification: ${newStatus}`);
+
+        res.json({
+            success: true,
+            status: newStatus,
+            message: verificationNotes
+        });
+
+    } catch (error) {
+        console.error('Auto-verify error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Auto-verification failed',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

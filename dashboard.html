@@ -15567,15 +15567,93 @@ How it works:
             console.log('✅ ZimScore display updated:', { score, starRating, starsHtml });
         }
         
-        // Load and display user documents
+        // Load and display user documents from Document Center API
         async function loadUserDocuments() {
             try {
-                const response = await window.ZimCrowdAPI.request('/api/profile-setup/documents');
-                if (response && response.success && response.data) {
-                    updateDocumentsDisplay(response.data);
+                const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                
+                // Fetch from documents API (synced with post-registration uploads)
+                const response = await fetch('/api/documents', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    // Convert documents object to array for display
+                    const documentsArray = [];
+                    Object.entries(result.data.documents || {}).forEach(([type, docData]) => {
+                        if (docData.documents && docData.documents.length > 0) {
+                            docData.documents.forEach(doc => {
+                                documentsArray.push({
+                                    ...doc,
+                                    document_type: type,
+                                    type_name: docData.name
+                                });
+                            });
+                        }
+                    });
+                    
+                    // Update display with summary
+                    updateDocumentsDisplay(documentsArray);
+                    
+                    // Update summary counts from API
+                    if (result.data.summary) {
+                        const verifiedCount = document.getElementById('docs-verified-count');
+                        const pendingCount = document.getElementById('docs-pending-count');
+                        const totalCount = document.getElementById('docs-total-count');
+                        
+                        if (verifiedCount) verifiedCount.textContent = result.data.summary.verified || 0;
+                        if (pendingCount) pendingCount.textContent = result.data.summary.pending || 0;
+                        if (totalCount) totalCount.textContent = result.data.summary.total_uploaded || 0;
+                    }
+                    
+                    // Store documents for other functions
+                    window.userDocuments = documentsArray;
+                    
+                    console.log('✅ Documents loaded from API:', documentsArray.length);
+                } else {
+                    // Fallback to profile-setup documents
+                    const fallbackResponse = await window.ZimCrowdAPI?.request('/api/profile-setup/documents');
+                    if (fallbackResponse && fallbackResponse.success && fallbackResponse.data) {
+                        updateDocumentsDisplay(fallbackResponse.data);
+                    }
                 }
             } catch (error) {
                 console.error('Failed to load documents:', error);
+                // Try fallback
+                try {
+                    const fallbackResponse = await window.ZimCrowdAPI?.request('/api/profile-setup/documents');
+                    if (fallbackResponse && fallbackResponse.success && fallbackResponse.data) {
+                        updateDocumentsDisplay(fallbackResponse.data);
+                    }
+                } catch (e) {
+                    console.error('Fallback also failed:', e);
+                }
+            }
+        }
+        
+        // Sync documents from post-registration to document center
+        async function syncDocumentsFromPostRegistration() {
+            try {
+                const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                const response = await fetch('/api/documents/sync', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log('✅ Documents synced successfully');
+                    loadUserDocuments(); // Reload documents
+                }
+            } catch (error) {
+                console.error('Document sync failed:', error);
             }
         }
         

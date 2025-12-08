@@ -2452,10 +2452,99 @@
                         // Set status to pending admin verification
                         result.verification_status = 'pending_admin_review';
                         
+                        // Also sync to document center for unified storage
+                        await syncToDocumentCenter(file, documentType, result);
+                        
                         return result;
                     } catch (err) {
                         console.error(`❌ ${documentType} admin upload failed:`, err);
                         return { success: false, message: 'Upload failed' };
+                    }
+                };
+                
+                // Sync uploaded document to Document Center
+                const syncToDocumentCenter = async (file, documentType, uploadResult) => {
+                    try {
+                        const formData = new FormData();
+                        formData.append('document', file);
+                        formData.append('document_type', documentType);
+                        formData.append('source', 'post_registration');
+                        
+                        // Map document types for document center
+                        const docTypeMap = {
+                            'national_id': 'national_id',
+                            'id_front': 'national_id',
+                            'id_back': 'national_id',
+                            'selfie': 'selfie',
+                            'proof_of_residence': 'proof_of_address',
+                            'bank_statement': 'bank_statement',
+                            'gov_payslip': 'payslip',
+                            'payslip': 'payslip',
+                            'employment_letter': 'employment_contract',
+                            'mobile_money_statement': 'bank_statement'
+                        };
+                        
+                        formData.append('mapped_type', docTypeMap[documentType] || documentType);
+                        
+                        // Include OCR data if available
+                        if (uploadResult.ocrData) {
+                            formData.append('ocr_data', JSON.stringify(uploadResult.ocrData));
+                        }
+                        
+                        const syncResponse = await fetch(`${API_BASE}/api/documents/upload`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${authToken}`
+                            },
+                            body: formData
+                        });
+                        
+                        if (syncResponse.ok) {
+                            const syncResult = await syncResponse.json();
+                            console.log(`🔄 Document synced to Document Center:`, syncResult);
+                            
+                            // Auto-verify if AI analysis is available
+                            if (uploadResult.ocrData && syncResult.data?.id) {
+                                await autoVerifyDocument(syncResult.data.id, uploadResult.ocrData);
+                            }
+                        }
+                    } catch (err) {
+                        console.warn(`⚠️ Document Center sync failed (non-critical):`, err);
+                        // Don't fail the main upload if sync fails
+                    }
+                };
+                
+                // Auto-verify document based on AI analysis
+                const autoVerifyDocument = async (documentId, ocrData) => {
+                    try {
+                        const aiAnalysis = {
+                            confidence: ocrData.confidence || 0.5,
+                            isValid: ocrData.isValid || false,
+                            faceDetected: ocrData.faceDetected || false,
+                            faceMatchScore: ocrData.faceMatchScore || 0,
+                            idNumber: ocrData.idNumber || null,
+                            idNumberValid: ocrData.idNumberValid || false
+                        };
+                        
+                        const response = await fetch(`${API_BASE}/api/documents/auto-verify`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${authToken}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                documentId: documentId,
+                                ocrData: ocrData,
+                                aiAnalysis: aiAnalysis
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            const result = await response.json();
+                            console.log(`✅ Auto-verification result:`, result);
+                        }
+                    } catch (err) {
+                        console.warn(`⚠️ Auto-verify failed (non-critical):`, err);
                     }
                 };
 
