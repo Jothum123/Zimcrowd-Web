@@ -6,6 +6,34 @@
 -- 3. Admin rejects → Shown in My Loans with rejection reason
 -- =====================================================
 
+-- =====================================================
+-- DROP EXISTING POLICIES (to avoid conflicts on re-run)
+-- =====================================================
+DROP POLICY IF EXISTS "Users can view own applications" ON loan_applications;
+DROP POLICY IF EXISTS "Users can create applications" ON loan_applications;
+DROP POLICY IF EXISTS "Primary market loans are viewable by everyone" ON primary_market_loans;
+DROP POLICY IF EXISTS "Authenticated users can create investments" ON investments;
+DROP POLICY IF EXISTS "Users can view own investments" ON investments;
+DROP POLICY IF EXISTS "Users can update own investments" ON investments;
+DROP POLICY IF EXISTS "Users can view own loans" ON loans;
+DROP POLICY IF EXISTS "Anyone can view listed investments" ON secondary_market_listings;
+DROP POLICY IF EXISTS "Sellers can create listings" ON secondary_market_listings;
+
+-- =====================================================
+-- DROP EXISTING TABLES (in reverse dependency order)
+-- Uncomment these lines if you want to completely reset
+-- =====================================================
+-- DROP TABLE IF EXISTS secondary_market_listings CASCADE;
+-- DROP TABLE IF EXISTS loans CASCADE;
+-- DROP TABLE IF EXISTS investments CASCADE;
+-- DROP TABLE IF EXISTS primary_market_loans CASCADE;
+-- DROP TABLE IF EXISTS admin_notifications CASCADE;
+-- DROP TABLE IF EXISTS loan_applications CASCADE;
+
+-- =====================================================
+-- LOAN APPLICATIONS TABLE
+-- =====================================================
+
 -- Create loan_applications table
 CREATE TABLE IF NOT EXISTS loan_applications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -4,7 +4,22 @@
 -- =====================================================
 
 -- =====================================================
--- DIRECT LOANS TABLE (if not exists)
+-- DROP EXISTING POLICIES (to avoid conflicts on re-run)
+-- =====================================================
+DROP POLICY IF EXISTS "Users can view own direct loans" ON direct_loans;
+DROP POLICY IF EXISTS "Users can view own offers" ON direct_loan_offers;
+DROP POLICY IF EXISTS "Users can create offers" ON direct_loan_offers;
+DROP POLICY IF EXISTS "Users can view own repayments" ON direct_loan_repayments;
+
+-- =====================================================
+-- DROP EXISTING TABLES (uncomment to completely reset)
+-- =====================================================
+-- DROP TABLE IF EXISTS direct_loan_repayments CASCADE;
+-- DROP TABLE IF EXISTS direct_loan_offers CASCADE;
+-- DROP TABLE IF EXISTS direct_loans CASCADE;
+
+-- =====================================================
+-- DIRECT LOANS TABLE
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS direct_loans (

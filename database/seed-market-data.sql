@@ -3,6 +3,11 @@
 -- Run this SQL in your Supabase SQL Editor
 -- =====================================================
 
+-- =====================================================
+-- NOTE: Run loan-applications-schema.sql FIRST
+-- This file depends on tables created in that schema
+-- =====================================================
+
 -- First, let's create some test borrower profiles if they don't exist
 -- These will be linked to the loans
 
