@@ -43,14 +43,14 @@ END $$;
 
 -- =====================================================
 -- DROP EXISTING TABLES (in reverse dependency order)
--- Uncomment these lines if you want to completely reset
+-- This ensures clean recreation of tables
 -- =====================================================
--- DROP TABLE IF EXISTS secondary_market_listings CASCADE;
--- DROP TABLE IF EXISTS loans CASCADE;
--- DROP TABLE IF EXISTS investments CASCADE;
--- DROP TABLE IF EXISTS primary_market_loans CASCADE;
--- DROP TABLE IF EXISTS admin_notifications CASCADE;
--- DROP TABLE IF EXISTS loan_applications CASCADE;
+DROP TABLE IF EXISTS secondary_market_listings CASCADE;
+DROP TABLE IF EXISTS loans CASCADE;
+DROP TABLE IF EXISTS investments CASCADE;
+DROP TABLE IF EXISTS primary_market_loans CASCADE;
+DROP TABLE IF EXISTS admin_notifications CASCADE;
+DROP TABLE IF EXISTS loan_applications CASCADE;
 
 -- =====================================================
 -- LOAN APPLICATIONS TABLE
