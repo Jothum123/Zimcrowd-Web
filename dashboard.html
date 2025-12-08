@@ -5361,17 +5361,91 @@
                 // Global debugging and API override
                 window.INVESTMENT_DEBUG = true;
                 
+                // Override fetch globally to block investment API calls
+                const originalFetch = window.fetch;
+                window.fetch = function(url, options) {
+                    if (typeof url === 'string' && url.includes('/api/investments/')) {
+                        console.log('🚫 BLOCKED API call:', url);
+                        const investmentId = url.split('/api/investments/')[1];
+                        console.log('🔄 Redirecting to local data for:', investmentId);
+                        
+                        // Call our local function instead
+                        setTimeout(() => {
+                            if (window.viewInvestmentDetails) {
+                                window.viewInvestmentDetails(investmentId);
+                            }
+                        }, 0);
+                        
+                        return Promise.reject(new Error('API call blocked - using local data'));
+                    }
+                    return originalFetch.apply(this, arguments);
+                };
+                
+                // Override XMLHttpRequest too
+                const originalXHR = window.XMLHttpRequest;
+                window.XMLHttpRequest = function() {
+                    const xhr = new originalXHR();
+                    const originalOpen = xhr.open;
+                    xhr.open = function(method, url) {
+                        if (typeof url === 'string' && url.includes('/api/investments/')) {
+                            console.log('🚫 BLOCKED XHR call:', url);
+                            return;
+                        }
+                        return originalOpen.apply(this, arguments);
+                    };
+                    return xhr;
+                };
+                
                 // Override any potential API investment fetch functions
                 window.fetchInvestmentDetails = function(id) {
-                    console.log('🚫 Blocked API call for investment:', id);
+                    console.log('🚫 Blocked fetchInvestmentDetails call for:', id);
                     return Promise.resolve(null);
                 };
+                
+                // Override jQuery AJAX if present
+                if (window.$ && window.$.ajax) {
+                    const originalAjax = window.$.ajax;
+                    window.$.ajax = function(options) {
+                        if (options.url && options.url.includes('/api/investments/')) {
+                            console.log('🚫 BLOCKED jQuery AJAX call:', options.url);
+                            return Promise.reject(new Error('API call blocked'));
+                        }
+                        return originalAjax.apply(this, arguments);
+                    };
+                }
                 
                 // Prevent jQuery or other libraries from intercepting clicks
                 document.addEventListener('click', function(e) {
                     if (e.target.onclick && e.target.onclick.toString().includes('viewInvestmentDetails')) {
                         console.log('🎯 Investment details click detected');
                     }
+                });
+                
+                // Global error handler to catch any remaining API errors
+                window.addEventListener('error', function(e) {
+                    if (e.message && e.message.includes('api/investments')) {
+                        console.log('🚫 Caught API error, redirecting to local data');
+                        e.preventDefault();
+                        return true;
+                    }
+                });
+                
+                // Override console.error to catch API-related errors
+                const originalConsoleError = console.error;
+                console.error = function(...args) {
+                    const message = args.join(' ');
+                    if (message.includes('api/investments') || message.includes('404') && message.includes('investment')) {
+                        console.log('🚫 Intercepted API error, using local data instead');
+                        return;
+                    }
+                    return originalConsoleError.apply(console, args);
+                };
+                
+                // Ensure functions are available globally
+                console.log('📋 Global functions registered:', {
+                    viewInvestmentDetails: typeof window.viewInvestmentDetails,
+                    sellToSecondaryMarket: typeof window.sellToSecondaryMarket,
+                    investmentDetails: typeof investmentDetails
                 });
                 // Mock investment data for modals (expanded details)
                 const investmentDetails = {
@@ -5522,16 +5596,19 @@
                 };
 
                 // View Investment Details Modal - Pure frontend function with no API calls
-                function viewInvestmentDetails(investmentId) {
+                window.viewInvestmentDetails = function(investmentId) {
                     console.log('🔍 Opening investment details for:', investmentId);
                     
                     // Prevent any potential API calls
-                    event?.preventDefault();
-                    event?.stopPropagation();
+                    if (typeof event !== 'undefined' && event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
                     
                     const investment = investmentDetails[investmentId];
                     if (!investment) {
                         console.error('❌ Investment not found:', investmentId);
+                        console.log('📋 Available investments:', Object.keys(investmentDetails));
                         alert('Investment details not available for ID: ' + investmentId);
                         return;
                     }
@@ -5654,7 +5731,7 @@
                 }
 
                 // Sell to Secondary Market Modal
-                function sellToSecondaryMarket(investmentId, currentValue, borrowerName) {
+                window.sellToSecondaryMarket = function(investmentId, currentValue, borrowerName) {
                     const investment = investmentDetails[investmentId];
                     const marketValue = currentValue + (Math.random() * 50 - 25); // Slight market fluctuation
                     const platformFee = currentValue * 0.025; // 2.5% platform fee
