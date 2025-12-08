@@ -13442,34 +13442,69 @@ How it works:
             showMarketError('secondaryMarketLoans', 'No trading opportunities available');
         }
 
-        // Load loans data for loans section
+        // Load loans data for loans section - Using new market API
         async function loadLoansData() {
             try {
-                // Load loan statistics
-                const statsResponse = await window.ZimCrowdAPI.getLoanStats();
-                if (statsResponse.success) {
-                    updateLoanStats(statsResponse.data);
-                }
-
-                // Load active loans
-                const activeResponse = await window.ZimCrowdAPI.getMyLoans(1, 10, 'active');
-                if (activeResponse.success) {
-                    updateLoansList(activeResponse.data, 'active');
-                }
-
-                // Load completed loans
-                const completedResponse = await window.ZimCrowdAPI.getMyLoans(1, 10, 'completed');
-                if (completedResponse.success) {
-                    updateLoansList(completedResponse.data, 'completed');
-                }
-
-                // Load pending applications
-                const pendingResponse = await window.ZimCrowdAPI.getMyLoans(1, 10, 'pending');
-                if (pendingResponse.success) {
-                    updateLoansList(pendingResponse.data, 'pending');
+                const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                
+                // Fetch loans from new market API
+                const response = await fetch('/api/market/my-loans', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    const { loans, stats } = result.data;
+                    
+                    // Update statistics
+                    if (stats) {
+                        document.getElementById('totalLoanAmount').textContent = `$${stats.totalBorrowed.toLocaleString()}`;
+                        document.getElementById('activeLoansCount').textContent = `${stats.activeCount} Active`;
+                        document.getElementById('activeLoansTabCount').textContent = stats.activeCount;
+                        document.getElementById('completedLoansTabCount').textContent = stats.completedCount;
+                    }
+                    
+                    // Filter and display loans by status
+                    const activeLoans = loans.filter(l => l.status === 'active');
+                    const completedLoans = loans.filter(l => l.status === 'completed');
+                    
+                    updateLoansList(activeLoans, 'active');
+                    updateLoansList(completedLoans, 'completed');
+                    
+                    console.log('✅ Loans loaded:', { active: activeLoans.length, completed: completedLoans.length });
+                } else {
+                    // Fallback to old API
+                    await loadLoansDataFallback();
                 }
             } catch (error) {
                 console.error('Failed to load loans:', error);
+                // Try fallback
+                await loadLoansDataFallback();
+            }
+        }
+        
+        // Fallback to old API if new one fails
+        async function loadLoansDataFallback() {
+            try {
+                const statsResponse = await window.ZimCrowdAPI?.getLoanStats();
+                if (statsResponse?.success) {
+                    updateLoanStats(statsResponse.data);
+                }
+
+                const activeResponse = await window.ZimCrowdAPI?.getMyLoans(1, 10, 'active');
+                if (activeResponse?.success) {
+                    updateLoansList(activeResponse.data, 'active');
+                }
+
+                const completedResponse = await window.ZimCrowdAPI?.getMyLoans(1, 10, 'completed');
+                if (completedResponse?.success) {
+                    updateLoansList(completedResponse.data, 'completed');
+                }
+            } catch (error) {
+                console.error('Fallback also failed:', error);
                 showLoansError();
             }
         }

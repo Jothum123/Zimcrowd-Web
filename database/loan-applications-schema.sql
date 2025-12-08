@@ -193,6 +193,79 @@ LIMIT 5;
 */
 
 -- =====================================================
+-- LOANS TABLE (Active and Completed Borrower Loans)
+-- =====================================================
+
+-- Create loans table for borrower's active and completed loans
+CREATE TABLE IF NOT EXISTS loans (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES auth.users(id) NOT NULL,
+    market_loan_id UUID REFERENCES primary_market_loans(id),
+    
+    -- Loan Details
+    amount DECIMAL(12,2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'USD',
+    interest_rate DECIMAL(5,2) NOT NULL,
+    term_months INTEGER NOT NULL,
+    
+    -- Payment Details
+    monthly_payment DECIMAL(12,2),
+    total_repayment DECIMAL(12,2),
+    total_interest DECIMAL(12,2),
+    remaining_balance DECIMAL(12,2),
+    paid_amount DECIMAL(12,2) DEFAULT 0,
+    
+    -- Status
+    status VARCHAR(20) DEFAULT 'active', -- active, completed, defaulted
+    purpose VARCHAR(100),
+    purpose_description TEXT,
+    
+    -- Dates
+    disbursed_at TIMESTAMP WITH TIME ZONE,
+    maturity_date TIMESTAMP WITH TIME ZONE,
+    next_payment_date TIMESTAMP WITH TIME ZONE,
+    last_payment_date TIMESTAMP WITH TIME ZONE,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    
+    -- Payment Tracking
+    payments_made INTEGER DEFAULT 0,
+    total_payments INTEGER,
+    
+    -- Timestamps
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    CONSTRAINT valid_loan_status CHECK (status IN ('active', 'completed', 'defaulted'))
+);
+
+-- Add indexes for loans table
+CREATE INDEX IF NOT EXISTS idx_loans_user ON loans(user_id);
+CREATE INDEX IF NOT EXISTS idx_loans_status ON loans(status);
+CREATE INDEX IF NOT EXISTS idx_loans_market_loan ON loans(market_loan_id);
+
+-- Enable RLS on loans table
+ALTER TABLE loans ENABLE ROW LEVEL SECURITY;
+
+-- Users can view their own loans
+CREATE POLICY "Users can view own loans" 
+ON loans FOR SELECT 
+TO authenticated 
+USING (auth.uid() = user_id);
+
+-- =====================================================
+-- FUNCTION: Increment ZimScore
+-- =====================================================
+
+CREATE OR REPLACE FUNCTION increment_zimscore(user_id UUID, points INTEGER)
+RETURNS void AS $$
+BEGIN
+    UPDATE profiles 
+    SET zim_score = LEAST(100, COALESCE(zim_score, 50) + points)
+    WHERE id = user_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- =====================================================
 -- VERIFICATION QUERIES
 -- =====================================================
 
@@ -204,3 +277,9 @@ LIMIT 5;
 
 -- Check applications by status
 -- SELECT status, COUNT(*) FROM loan_applications GROUP BY status;
+
+-- Check active loans
+-- SELECT * FROM loans WHERE status = 'active';
+
+-- Check completed loans
+-- SELECT * FROM loans WHERE status = 'completed';
