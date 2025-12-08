@@ -37,29 +37,51 @@ FROM (VALUES
 WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE auth.users.email = t.email)
 ON CONFLICT DO NOTHING;
 
--- Add employment_type column if not exists
+-- Add columns if not exists
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS employment_type VARCHAR(50) DEFAULT 'private';
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS post_registration_completed BOOLEAN DEFAULT false;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS zim_score INTEGER DEFAULT 50;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS verified BOOLEAN DEFAULT false;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS occupation VARCHAR(100);
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS location VARCHAR(100);
 
 -- Create profiles for borrowers with employment_type
-INSERT INTO profiles (id, email, full_name, phone_number, occupation, location, zim_score, verified, employment_type, post_registration_completed, created_at)
+-- Using first_name and last_name instead of full_name
+INSERT INTO profiles (id, email, first_name, last_name, phone, occupation, location, zim_score, verified, employment_type, post_registration_completed, created_at)
 SELECT 
     u.id,
     u.email,
+    -- First name
     CASE u.email
-        WHEN 'sarah.moyo@example.com' THEN 'Sarah Moyo'
-        WHEN 'tendai.ndlovu@example.com' THEN 'Tendai Ndlovu'
-        WHEN 'grace.chikwanha@example.com' THEN 'Grace Chikwanha'
-        WHEN 'peter.mlambo@example.com' THEN 'Peter Mlambo'
-        WHEN 'nyasha.chirwa@example.com' THEN 'Nyasha Chirwa'
-        WHEN 'tatenda.mugabe@example.com' THEN 'Tatenda Mugabe'
-        WHEN 'rumbidzai.ncube@example.com' THEN 'Rumbidzai Ncube'
-        WHEN 'farai.dube@example.com' THEN 'Farai Dube'
-        WHEN 'chipo.mutasa@example.com' THEN 'Chipo Mutasa'
-        WHEN 'blessing.moyo@example.com' THEN 'Blessing Moyo'
-        WHEN 'tapiwa.zhou@example.com' THEN 'Tapiwa Zhou'
-        WHEN 'rudo.mapfumo@example.com' THEN 'Rudo Mapfumo'
-        ELSE 'Unknown User'
+        WHEN 'sarah.moyo@example.com' THEN 'Sarah'
+        WHEN 'tendai.ndlovu@example.com' THEN 'Tendai'
+        WHEN 'grace.chikwanha@example.com' THEN 'Grace'
+        WHEN 'peter.mlambo@example.com' THEN 'Peter'
+        WHEN 'nyasha.chirwa@example.com' THEN 'Nyasha'
+        WHEN 'tatenda.mugabe@example.com' THEN 'Tatenda'
+        WHEN 'rumbidzai.ncube@example.com' THEN 'Rumbidzai'
+        WHEN 'farai.dube@example.com' THEN 'Farai'
+        WHEN 'chipo.mutasa@example.com' THEN 'Chipo'
+        WHEN 'blessing.moyo@example.com' THEN 'Blessing'
+        WHEN 'tapiwa.zhou@example.com' THEN 'Tapiwa'
+        WHEN 'rudo.mapfumo@example.com' THEN 'Rudo'
+        ELSE 'Unknown'
+    END,
+    -- Last name
+    CASE u.email
+        WHEN 'sarah.moyo@example.com' THEN 'Moyo'
+        WHEN 'tendai.ndlovu@example.com' THEN 'Ndlovu'
+        WHEN 'grace.chikwanha@example.com' THEN 'Chikwanha'
+        WHEN 'peter.mlambo@example.com' THEN 'Mlambo'
+        WHEN 'nyasha.chirwa@example.com' THEN 'Chirwa'
+        WHEN 'tatenda.mugabe@example.com' THEN 'Mugabe'
+        WHEN 'rumbidzai.ncube@example.com' THEN 'Ncube'
+        WHEN 'farai.dube@example.com' THEN 'Dube'
+        WHEN 'chipo.mutasa@example.com' THEN 'Mutasa'
+        WHEN 'blessing.moyo@example.com' THEN 'Moyo'
+        WHEN 'tapiwa.zhou@example.com' THEN 'Zhou'
+        WHEN 'rudo.mapfumo@example.com' THEN 'Mapfumo'
+        ELSE 'User'
     END,
     '+263' || (770000000 + floor(random() * 9999999)::int)::text,
     CASE u.email
@@ -140,7 +162,8 @@ SELECT
 FROM auth.users u
 WHERE u.email LIKE '%@example.com'
 ON CONFLICT (id) DO UPDATE SET
-    full_name = EXCLUDED.full_name,
+    first_name = EXCLUDED.first_name,
+    last_name = EXCLUDED.last_name,
     occupation = EXCLUDED.occupation,
     location = EXCLUDED.location,
     zim_score = EXCLUDED.zim_score,
@@ -304,33 +327,13 @@ CREATE INDEX IF NOT EXISTS idx_investments_status ON investments(status);
 
 -- =====================================================
 -- ROW LEVEL SECURITY POLICIES
+-- Note: Policies are already created in loan-applications-schema.sql
+-- Only enable RLS here if not already enabled
 -- =====================================================
 
+-- Enable RLS (safe to run multiple times)
 ALTER TABLE primary_market_loans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE investments ENABLE ROW LEVEL SECURITY;
-
--- Primary market loans are publicly viewable
-CREATE POLICY "Primary market loans are viewable by everyone" 
-ON primary_market_loans FOR SELECT 
-USING (true);
-
--- Only authenticated users can invest
-CREATE POLICY "Authenticated users can create investments" 
-ON investments FOR INSERT 
-TO authenticated 
-WITH CHECK (auth.uid() = investor_id);
-
--- Users can view their own investments
-CREATE POLICY "Users can view own investments" 
-ON investments FOR SELECT 
-TO authenticated 
-USING (auth.uid() = investor_id);
-
--- Users can update their own investments
-CREATE POLICY "Users can update own investments" 
-ON investments FOR UPDATE 
-TO authenticated 
-USING (auth.uid() = investor_id);
 
 -- =====================================================
 -- VERIFICATION QUERY
