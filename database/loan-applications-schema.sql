@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS admin_notifications (
 CREATE INDEX IF NOT EXISTS idx_loan_applications_user ON loan_applications(user_id);
 CREATE INDEX IF NOT EXISTS idx_loan_applications_status ON loan_applications(status);
 CREATE INDEX IF NOT EXISTS idx_loan_applications_submitted ON loan_applications(submitted_at);
-CREATE INDEX IF NOT EXISTS idx_admin_notifications_read ON admin_notifications(read);
+CREATE INDEX IF NOT EXISTS idx_admin_notifications_read ON admin_notifications(is_read);
 CREATE INDEX IF NOT EXISTS idx_admin_notifications_type ON admin_notifications(type);
 
 -- =====================================================
