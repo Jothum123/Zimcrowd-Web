@@ -405,16 +405,17 @@
         console.log('API_CONFIG available:', typeof API_CONFIG !== 'undefined');
         console.log('ZimCrowdAPI available:', typeof window.ZimCrowdAPI !== 'undefined');
         
+        // Define API_URL early
+        let API_URL = '';
+        
         // Verify API_CONFIG is loaded
         if (typeof API_CONFIG === 'undefined') {
             console.error('❌ API_CONFIG not loaded. Please check api-config-new.js');
-            showAlert('Configuration error. Please refresh the page.', 'error');
-            return;
+            // Don't return - let functions still be defined
+        } else {
+            API_URL = API_CONFIG.BASE_URL + '/api/auth';
+            console.log('🌐 Admin API_URL set to:', API_URL);
         }
-
-        // Use centralized API configuration
-        const API_URL = API_CONFIG.BASE_URL + '/api/auth';
-        console.log('🌐 Admin API_URL set to:', API_URL);
 
         // Toggle password visibility
         function togglePassword() {
