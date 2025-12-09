@@ -580,20 +580,34 @@
 
         // Handle OAuth callback
         async function handleOAuthCallback() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('callback') === 'true' || window.location.hash) {
-                console.log('🔐 Processing OAuth callback...');
+            // Check for hash (Supabase default) or query param
+            const hasHash = window.location.hash && window.location.hash.includes('access_token');
+            const hasQuery = new URLSearchParams(window.location.search).get('callback') === 'true';
+            
+            if (hasHash || hasQuery) {
+                console.log('🔐 Processing OAuth callback...', window.location.href);
                 
                 try {
                     if (!window.supabaseClient) {
-                        throw new Error('Supabase client not initialized');
+                        // Wait a bit for supabase to init
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        if (!window.supabaseClient) throw new Error('Supabase client not initialized');
                     }
+                    
+                    // Get session from URL
                     const { data: { session }, error } = await window.supabaseClient.auth.getSession();
                     
                     if (error) throw error;
                     
                     if (session) {
                         console.log('✅ OAuth session found:', session.user.email);
+                        
+                        // Show loading state
+                        const googleBtn = document.getElementById('googleLoginBtn');
+                        if (googleBtn) {
+                            googleBtn.disabled = true;
+                            googleBtn.innerHTML = '<span class="loading"></span> Verifying admin access...';
+                        }
                         
                         // Store auth data
                         localStorage.setItem('authToken', session.access_token);
@@ -615,11 +629,22 @@
                             }, 1000);
                         } else {
                             // Not an admin
+                            console.log('❌ User is not an admin, clearing session');
                             localStorage.removeItem('authToken');
                             localStorage.removeItem('userData');
                             localStorage.removeItem('isAuthenticated');
+                            
+                            // Sign out from Supabase
+                            await window.supabaseClient.auth.signOut();
+                            
                             showAlert('Access denied. This account does not have admin privileges.');
+                            if (googleBtn) {
+                                googleBtn.disabled = false;
+                                googleBtn.innerHTML = '<img src="https://www.google.com/favicon.ico" alt="Google" style="width: 20px; height: 20px;"> Sign in with Google';
+                            }
                         }
+                    } else {
+                        console.log('⚠️ No session found in callback');
                     }
                 } catch (error) {
                     console.error('OAuth callback error:', error);
