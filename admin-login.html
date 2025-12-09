@@ -548,7 +548,10 @@
 
             try {
                 // Use Supabase OAuth
-                const { data, error } = await supabase.auth.signInWithOAuth({
+                if (!window.supabaseClient) {
+                    throw new Error('Supabase client not initialized');
+                }
+                const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
                         redirectTo: window.location.origin + '/admin-login.html?callback=true'
@@ -573,7 +576,10 @@
                 console.log('🔐 Processing OAuth callback...');
                 
                 try {
-                    const { data: { session }, error } = await supabase.auth.getSession();
+                    if (!window.supabaseClient) {
+                        throw new Error('Supabase client not initialized');
+                    }
+                    const { data: { session }, error } = await window.supabaseClient.auth.getSession();
                     
                     if (error) throw error;
                     
