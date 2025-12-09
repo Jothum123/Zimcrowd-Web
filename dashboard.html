@@ -16565,6 +16565,13 @@ How it works:
 
         // Handle OAuth callback and extract token from URL
         function handleAuthCallback() {
+            // Check if this was an admin login attempt
+            if (localStorage.getItem('adminLoginAttempt') === 'true') {
+                console.log('🔄 Detected admin login attempt, redirecting to admin login...');
+                window.location.href = '/admin-login.html' + window.location.hash;
+                return;
+            }
+
             // Check for token in URL hash (Supabase OAuth callback)
             const hashParams = new URLSearchParams(window.location.hash.substring(1));
             const accessToken = hashParams.get('access_token');

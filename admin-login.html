@@ -556,6 +556,9 @@
             googleBtn.innerHTML = '<span class="loading"></span> Signing in...';
 
             try {
+                // Set flag to indicate admin login attempt
+                localStorage.setItem('adminLoginAttempt', 'true');
+                
                 // Use Supabase OAuth
                 if (!window.supabaseClient) {
                     throw new Error('Supabase client not initialized');
