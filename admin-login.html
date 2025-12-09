@@ -552,6 +552,10 @@
         // Google Social Login
         async function loginWithGoogle() {
             const googleBtn = document.getElementById('googleLoginBtn');
+            const redirectUrl = window.location.origin + '/admin-login.html?callback=true';
+            
+            console.log('🔗 Attempting redirect to:', redirectUrl);
+            
             googleBtn.disabled = true;
             googleBtn.innerHTML = '<span class="loading"></span> Signing in...';
 
@@ -566,7 +570,7 @@
                 const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin + '/admin-login.html?callback=true'
+                        redirectTo: redirectUrl
                     }
                 });
 
