@@ -590,6 +590,9 @@
             if (hasHash || hasQuery) {
                 console.log('🔐 Processing OAuth callback...', window.location.href);
                 
+                // Clear the redirect flag
+                localStorage.removeItem('adminLoginAttempt');
+                
                 try {
                     if (!window.supabaseClient) {
                         // Wait a bit for supabase to init

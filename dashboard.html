@@ -20,6 +20,22 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- jsPDF for PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        // CRITICAL: Check for admin login redirect BEFORE anything else
+        (function() {
+            if (localStorage.getItem('adminLoginAttempt') === 'true') {
+                console.log('🔄 Early detection: Admin login attempt, redirecting to admin login...');
+                
+                // Preserve the hash if it exists (contains access token)
+                if (window.location.hash) {
+                    window.location.href = '/admin-login.html' + window.location.hash;
+                } else {
+                    // Fallback if no hash yet
+                    window.location.href = '/admin-login.html' + window.location.search;
+                }
+            }
+        })();
+    </script>
     <style>
         * {
             margin: 0;
