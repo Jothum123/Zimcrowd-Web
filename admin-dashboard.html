@@ -2346,8 +2346,8 @@
 
     <script>
         // Configuration
-        const API_BASE_URL = window.location.origin; // Will use same domain as frontend
-        const ADMIN_API_KEY = 'zimcrowd-admin-f0ed42f52b092b49ecf3eaa070aee9bc'; // Production key
+        // Use API_CONFIG if available, otherwise fallback (legacy)
+        const API_BASE_URL = (typeof API_CONFIG !== 'undefined') ? API_CONFIG.BASE_URL : window.location.origin;
         
         // Global state
         let currentSection = 'overview';
@@ -2359,59 +2359,77 @@
 
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
-            checkAuthentication();
+            // Use the new auth check function
+            if (checkAdminAuth()) {
+                initializeDashboard();
+            }
         });
 
         // Authentication
         function checkAuthentication() {
-            authToken = localStorage.getItem('adminAuthToken') || ADMIN_API_KEY;
-            
-            if (!authToken) {
-                const key = prompt('Please enter Admin API Key:');
-                if (key) {
-                    authToken = key;
-                    localStorage.setItem('adminAuthToken', key);
-                    initializeDashboard();
-                } else {
-                    showAccessDenied();
-                }
-            } else {
-                initializeDashboard();
-            }
+            // Legacy function kept for compatibility but delegates to new auth
+            return checkAdminAuth();
         }
 
         function showAccessDenied() {
-            document.body.innerHTML = `
-                <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; gap: 20px;">
-                    <h1>Access Denied</h1>
-                    <p>Admin access required to view this dashboard</p>
-                    <button class="btn btn-primary" onclick="location.reload()">Retry Login</button>
-                </div>
-            `;
+            window.location.href = '/admin-login.html';
         }
 
         function initializeDashboard() {
             // Load admin profile first, and only proceed if successful
-            loadAdminProfile().then(success => {
-                if (success) {
-                    loadDashboardOverview();
-                    loadAccountStatistics();
-                    loadKYCQueue();
-                    startRealTimeNotifications();
-                    
-                    // Auto-refresh every 30 seconds
-                    setInterval(() => {
-                        refreshCurrentSection();
-                    }, 30000);
+            // We skip loadAdminProfile here because checkAdminAuth already calls it
+
+            // Setup navigation
+            setupNavigation();
+
+            // Load initial section
+            navigateTo('overview');
+
+            // Start real-time updates
+            startRealtimeUpdates();
+
+            // Update time
+            updateTime();
+            setInterval(updateTime, 60000);
+        }
+
+        // API Helper
+        async function makeAPIRequest(endpoint, options = {}) {
+            try {
+                // Get Supabase token
+                const token = localStorage.getItem('authToken');
+
+                const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
+                    ...options,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    }
+                });
+
+                if (response.status === 401) {
+                    console.error('Unauthorized request');
+                    // showAuthenticationError(); // Disable for now to prevent popup loops
+                    return null;
                 }
-            });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.statusText}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error(`API Error for ${endpoint}:`, error);
+                return null;
+            }
         }
 
         // Real-time Notifications System
         function startRealTimeNotifications() {
             // Check for notifications every 10 seconds
             setInterval(checkForNotifications, 10000);
-            
+
             // Initial check
             checkForNotifications();
         }
