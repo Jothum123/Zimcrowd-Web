@@ -2,27 +2,16 @@ const express = require('express');
 const router = express.Router();
 const AdminDashboardService = require('../services/admin-dashboard.service');
 const LoanManagementService = require('../services/loan-management.service');
+const { requireAdmin } = require('../middleware/auth');
 
 const dashboardService = new AdminDashboardService();
 const loanService = new LoanManagementService();
 
 /**
- * Simple admin authentication middleware
- * In production, use proper JWT authentication
+ * Admin authentication middleware
+ * Uses the centralized auth middleware that supports both API Key and Bearer Token
  */
-const authenticateAdmin = (req, res, next) => {
-    const apiKey = req.headers['x-admin-key'];
-    
-    // Simple API key check - replace with proper auth in production
-    if (apiKey === process.env.ADMIN_API_KEY || apiKey === 'admin-dev-key-123') {
-        next();
-    } else {
-        res.status(401).json({
-            success: false,
-            message: 'Unauthorized - Admin access required'
-        });
-    }
-};
+const authenticateAdmin = requireAdmin;
 
 /**
  * GET /api/admin-dashboard/overview

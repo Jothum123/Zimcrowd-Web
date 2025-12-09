@@ -80,13 +80,21 @@ const requireAdmin = async (req, res, next) => {
         }
 
         // Check if user has admin role
+        // Also check admin_users table as fallback
         const { data: profile } = await supabase
-            .from('users')
+            .from('profiles')
             .select('role')
             .eq('id', user.id)
             .single();
 
-        if (profile?.role !== 'admin') {
+        // Check if user is in admin_users table (for hardcoded admins)
+        const { data: adminUser } = await supabase
+            .from('admin_users')
+            .select('role')
+            .eq('email', user.email)
+            .maybeSingle();
+
+        if (profile?.role !== 'admin' && !adminUser) {
             return res.status(403).json({
                 success: false,
                 message: 'Admin privileges required'
