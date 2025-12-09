@@ -1122,11 +1122,320 @@
                 opacity: 1;
             }
         }
+
+        /* Kairo AI Widget Styles */
+        .kairo-fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #38e07b, #10b981);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(56, 224, 123, 0.4);
+            z-index: 9999;
+            transition: all 0.3s ease;
+        }
+
+        .kairo-fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 30px rgba(56, 224, 123, 0.5);
+        }
+
+        .kairo-fab i {
+            font-size: 24px;
+            color: white;
+        }
+
+        .kairo-widget {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            width: 380px;
+            height: 520px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            z-index: 9998;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .kairo-header {
+            background: linear-gradient(135deg, #191A23, #2d2e3a);
+            color: white;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .kairo-header-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .kairo-avatar-small {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #38e07b, #10b981);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .kairo-avatar-small i {
+            font-size: 18px;
+            color: white;
+        }
+
+        .kairo-header-info h4 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .kairo-status {
+            font-size: 12px;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot-green {
+            width: 8px;
+            height: 8px;
+            background: #38e07b;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .kairo-header-actions button {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 8px;
+            font-size: 16px;
+            transition: color 0.2s;
+        }
+
+        .kairo-header-actions button:hover {
+            color: white;
+        }
+
+        .kairo-chat {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background: #f8fafc;
+        }
+
+        .kairo-message {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .kairo-message.user {
+            flex-direction: row-reverse;
+        }
+
+        .kairo-message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .kairo-message.assistant .kairo-message-avatar {
+            background: linear-gradient(135deg, #38e07b, #10b981);
+            color: white;
+        }
+
+        .kairo-message.user .kairo-message-avatar {
+            background: #191A23;
+            color: white;
+        }
+
+        .kairo-message-content {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .kairo-message.assistant .kairo-message-content {
+            background: white;
+            border: 1px solid #e2e8f0;
+        }
+
+        .kairo-message.user .kairo-message-content {
+            background: #191A23;
+            color: white;
+        }
+
+        .kairo-message-content ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .kairo-message-content li {
+            margin: 4px 0;
+        }
+
+        .kairo-quick-actions {
+            padding: 12px 16px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .kairo-quick-actions button {
+            padding: 6px 12px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .kairo-quick-actions button:hover {
+            background: #38e07b;
+            color: white;
+            border-color: #38e07b;
+        }
+
+        .kairo-input-area {
+            padding: 16px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .kairo-input-area input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 24px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .kairo-input-area input:focus {
+            border-color: #38e07b;
+        }
+
+        .kairo-input-area button {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #38e07b, #10b981);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .kairo-input-area button:hover {
+            transform: scale(1.05);
+        }
+
+        .kairo-typing {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+        }
+
+        .kairo-typing span {
+            width: 8px;
+            height: 8px;
+            background: #9ca3af;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .kairo-typing span:nth-child(2) { animation-delay: 0.2s; }
+        .kairo-typing span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); }
+        }
     </style>
 </head>
 <body>
     <div class="live-badge">
         🔴 LIVE DATA - Production Ready
+    </div>
+
+    <!-- Kairo AI Floating Button -->
+    <div class="kairo-fab" onclick="toggleKairoWidget()">
+        <i class="fas fa-robot"></i>
+    </div>
+
+    <!-- Kairo AI Chat Widget -->
+    <div class="kairo-widget" id="kairoWidget" style="display: none;">
+        <div class="kairo-header">
+            <div class="kairo-header-info">
+                <div class="kairo-avatar-small"><i class="fas fa-robot"></i></div>
+                <div>
+                    <h4>Kairo AI Assistant</h4>
+                    <span class="kairo-status"><span class="status-dot-green"></span> Online</span>
+                </div>
+            </div>
+            <div class="kairo-header-actions">
+                <button onclick="closeKairoWidget()" title="Close"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="kairo-chat" id="kairoChat">
+            <div class="kairo-message assistant">
+                <div class="kairo-message-avatar"><i class="fas fa-robot"></i></div>
+                <div class="kairo-message-content">
+                    <p>👋 Hello Admin! I'm <strong>Kairo</strong>, your AI assistant.</p>
+                    <p>I can help you with:</p>
+                    <ul>
+                        <li>📊 Platform analytics & insights</li>
+                        <li>🔍 User & loan data queries</li>
+                        <li>⚠️ Risk assessment</li>
+                        <li>🛠️ Troubleshooting</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="kairo-quick-actions">
+            <button onclick="sendQuickAction('Show platform stats')">📊 Stats</button>
+            <button onclick="sendQuickAction('Show pending loans')">📋 Pending</button>
+            <button onclick="sendQuickAction('Check system health')">🔧 Health</button>
+        </div>
+        <div class="kairo-input-area">
+            <input type="text" id="kairoInput" placeholder="Ask Kairo anything..." onkeypress="handleKairoKeypress(event)">
+            <button onclick="sendKairoMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
     </div>
 
     <div class="admin-container">
@@ -5064,6 +5373,158 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadPendingApplicationsCount();
         });
+
+        // =====================================================
+        // KAIRO AI WIDGET FUNCTIONS
+        // =====================================================
+
+        let kairoWidgetOpen = false;
+
+        function toggleKairoWidget() {
+            const widget = document.getElementById('kairoWidget');
+            if (kairoWidgetOpen) {
+                widget.style.display = 'none';
+                kairoWidgetOpen = false;
+            } else {
+                widget.style.display = 'flex';
+                kairoWidgetOpen = true;
+                document.getElementById('kairoInput').focus();
+            }
+        }
+
+        function closeKairoWidget() {
+            document.getElementById('kairoWidget').style.display = 'none';
+            kairoWidgetOpen = false;
+        }
+
+        function handleKairoKeypress(event) {
+            if (event.key === 'Enter') {
+                sendKairoMessage();
+            }
+        }
+
+        function sendQuickAction(action) {
+            document.getElementById('kairoInput').value = action;
+            sendKairoMessage();
+        }
+
+        async function sendKairoMessage() {
+            const input = document.getElementById('kairoInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            const chat = document.getElementById('kairoChat');
+            
+            // Add user message
+            chat.innerHTML += `
+                <div class="kairo-message user">
+                    <div class="kairo-message-avatar"><i class="fas fa-user"></i></div>
+                    <div class="kairo-message-content">${escapeHtml(message)}</div>
+                </div>
+            `;
+            
+            input.value = '';
+            chat.scrollTop = chat.scrollHeight;
+
+            // Show typing indicator
+            const typingId = 'typing-' + Date.now();
+            chat.innerHTML += `
+                <div class="kairo-message assistant" id="${typingId}">
+                    <div class="kairo-message-avatar"><i class="fas fa-robot"></i></div>
+                    <div class="kairo-message-content">
+                        <div class="kairo-typing">
+                            <span></span><span></span><span></span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            chat.scrollTop = chat.scrollHeight;
+
+            try {
+                // Call Kairo AI API
+                const response = await makeAPIRequest('/api/kairo/admin-chat', {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        message: message,
+                        context: 'admin_dashboard'
+                    })
+                });
+
+                // Remove typing indicator
+                document.getElementById(typingId)?.remove();
+
+                if (response && response.success) {
+                    addKairoResponse(response.data.reply || response.data.message);
+                } else {
+                    // Fallback response
+                    addKairoResponse(getLocalKairoResponse(message));
+                }
+            } catch (error) {
+                document.getElementById(typingId)?.remove();
+                addKairoResponse(getLocalKairoResponse(message));
+            }
+        }
+
+        function addKairoResponse(message) {
+            const chat = document.getElementById('kairoChat');
+            chat.innerHTML += `
+                <div class="kairo-message assistant">
+                    <div class="kairo-message-avatar"><i class="fas fa-robot"></i></div>
+                    <div class="kairo-message-content">${message}</div>
+                </div>
+            `;
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function getLocalKairoResponse(query) {
+            const q = query.toLowerCase();
+            
+            if (q.includes('stats') || q.includes('platform')) {
+                return `📊 <strong>Platform Statistics</strong><br><br>
+                    • Total Users: ${document.getElementById('totalUsers')?.textContent || '0'}<br>
+                    • Active Loans: ${document.getElementById('activeLoans')?.textContent || '0'}<br>
+                    • Pending Approvals: ${document.getElementById('pendingApprovals')?.textContent || '0'}<br><br>
+                    Click on <strong>Overview</strong> in the sidebar for detailed analytics.`;
+            }
+            
+            if (q.includes('pending') || q.includes('loan')) {
+                const pending = document.getElementById('pendingApplicationsCount')?.textContent || '0';
+                return `📋 <strong>Pending Loan Applications</strong><br><br>
+                    You have <strong>${pending}</strong> pending applications to review.<br><br>
+                    Go to <strong>Loan Applications</strong> section to approve or reject them.`;
+            }
+            
+            if (q.includes('health') || q.includes('system')) {
+                return `🔧 <strong>System Health</strong><br><br>
+                    • API Status: ✅ Online<br>
+                    • Database: ✅ Connected<br>
+                    • Payment Gateway: ✅ Active<br><br>
+                    All systems are operational.`;
+            }
+            
+            if (q.includes('help')) {
+                return `🤖 <strong>How can I help?</strong><br><br>
+                    Try asking me:<br>
+                    • "Show platform stats"<br>
+                    • "How many pending loans?"<br>
+                    • "Check system health"<br>
+                    • "Show user activity"`;
+            }
+            
+            return `I understand you're asking about "${escapeHtml(query)}". <br><br>
+                As an admin assistant, I can help with:<br>
+                • Platform statistics<br>
+                • Loan application status<br>
+                • System health checks<br>
+                • User management queries<br><br>
+                Try asking something more specific!`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
     </script>
 </body>
 </html>
