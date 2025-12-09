@@ -381,6 +381,17 @@
             </button>
         </form>
 
+        <div class="divider" style="display: flex; align-items: center; margin: 24px 0; color: rgba(255,255,255,0.4);">
+            <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.2);"></span>
+            <span style="padding: 0 16px; font-size: 12px;">OR</span>
+            <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.2);"></span>
+        </div>
+
+        <button type="button" id="googleLoginBtn" onclick="loginWithGoogle()" class="login-btn" style="background: white; color: #333; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <img src="https://www.google.com/favicon.ico" alt="Google" style="width: 20px; height: 20px;">
+            Sign in with Google
+        </button>
+
         <div class="back-link">
             <a href="/login.html">
                 <i class="fas fa-arrow-left"></i> Back to User Login
@@ -528,8 +539,84 @@
             }
         });
 
+        // Google Social Login
+        async function loginWithGoogle() {
+            const googleBtn = document.getElementById('googleLoginBtn');
+            googleBtn.disabled = true;
+            googleBtn.innerHTML = '<span class="loading"></span> Signing in...';
+
+            try {
+                // Use Supabase OAuth
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/admin-login.html?callback=true'
+                    }
+                });
+
+                if (error) {
+                    throw error;
+                }
+            } catch (error) {
+                console.error('Google login error:', error);
+                showAlert('Google sign-in failed. Please try again.');
+                googleBtn.disabled = false;
+                googleBtn.innerHTML = '<img src="https://www.google.com/favicon.ico" alt="Google" style="width: 20px; height: 20px;"> Sign in with Google';
+            }
+        }
+
+        // Handle OAuth callback
+        async function handleOAuthCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('callback') === 'true' || window.location.hash) {
+                console.log('🔐 Processing OAuth callback...');
+                
+                try {
+                    const { data: { session }, error } = await supabase.auth.getSession();
+                    
+                    if (error) throw error;
+                    
+                    if (session) {
+                        console.log('✅ OAuth session found:', session.user.email);
+                        
+                        // Store auth data
+                        localStorage.setItem('authToken', session.access_token);
+                        localStorage.setItem('userData', JSON.stringify(session.user));
+                        localStorage.setItem('isAuthenticated', 'true');
+                        
+                        // Check admin role
+                        const isAdmin = await checkAdminRole(session.access_token, session.user);
+                        
+                        if (isAdmin) {
+                            localStorage.setItem('isAdmin', 'true');
+                            localStorage.setItem('adminData', JSON.stringify(session.user));
+                            showAlert('Admin login successful! Redirecting...', 'success');
+                            
+                            // Clear URL params and redirect
+                            window.history.replaceState({}, document.title, '/admin-login.html');
+                            setTimeout(() => {
+                                window.location.href = '/admin-dashboard.html';
+                            }, 1000);
+                        } else {
+                            // Not an admin
+                            localStorage.removeItem('authToken');
+                            localStorage.removeItem('userData');
+                            localStorage.removeItem('isAuthenticated');
+                            showAlert('Access denied. This account does not have admin privileges.');
+                        }
+                    }
+                } catch (error) {
+                    console.error('OAuth callback error:', error);
+                    showAlert('Authentication failed. Please try again.');
+                }
+            }
+        }
+
         // Prevent non-admin access
         document.addEventListener('DOMContentLoaded', function() {
+            // Handle OAuth callback first
+            handleOAuthCallback();
+            
             // Check if already authenticated as admin
             const token = localStorage.getItem('authToken');
             const isAdmin = localStorage.getItem('isAdmin');
