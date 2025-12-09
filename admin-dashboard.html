@@ -1534,7 +1534,26 @@
                         <span>Analytics</span>
                     </div>
                 </div>
+
+                <!-- Logout Section -->
+                <div class="nav-item" style="margin-top: 30px; border-top: 1px solid #2d2e3a; padding-top: 20px;">
+                    <div class="nav-link" onclick="adminLogout()" style="color: #ef4444;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </div>
+                </div>
             </nav>
+
+            <!-- Admin Profile Section -->
+            <div class="admin-profile" style="padding: 20px 25px; border-top: 1px solid #2d2e3a; margin-top: auto;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #38e07b, #10b981); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;" id="adminAvatar">A</div>
+                    <div>
+                        <div style="color: white; font-weight: 600; font-size: 14px;" id="adminName">Admin</div>
+                        <div style="color: #9ca3af; font-size: 12px;" id="adminEmail">admin@zimcrowd.com</div>
+                    </div>
+                </div>
+            </div>
         </aside>
 
         <!-- Main Content -->
@@ -5369,11 +5388,6 @@
             }
         }
 
-        // Call on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            loadPendingApplicationsCount();
-        });
-
         // =====================================================
         // KAIRO AI WIDGET FUNCTIONS
         // =====================================================
@@ -5525,6 +5539,77 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
+        // =====================================================
+        // ADMIN AUTHENTICATION & LOGOUT FUNCTIONS
+        // =====================================================
+
+        // Check admin authentication on page load
+        function checkAdminAuth() {
+            const token = localStorage.getItem('authToken');
+            const isAdmin = localStorage.getItem('isAdmin');
+            
+            if (!token || isAdmin !== 'true') {
+                console.log('❌ Not authenticated as admin, redirecting to login...');
+                window.location.href = '/admin-login.html';
+                return false;
+            }
+            
+            // Load admin profile info
+            loadAdminProfile();
+            return true;
+        }
+
+        // Load admin profile information
+        function loadAdminProfile() {
+            try {
+                const adminData = JSON.parse(localStorage.getItem('adminData') || localStorage.getItem('userData') || '{}');
+                
+                if (adminData) {
+                    const name = adminData.first_name || adminData.name || adminData.email?.split('@')[0] || 'Admin';
+                    const email = adminData.email || 'admin@zimcrowd.com';
+                    const initials = name.charAt(0).toUpperCase();
+                    
+                    document.getElementById('adminName').textContent = name;
+                    document.getElementById('adminEmail').textContent = email;
+                    document.getElementById('adminAvatar').textContent = initials;
+                }
+            } catch (error) {
+                console.error('Error loading admin profile:', error);
+            }
+        }
+
+        // Admin logout function
+        function adminLogout() {
+            if (!confirm('Are you sure you want to logout?')) return;
+            
+            console.log('🔓 Admin logging out...');
+            
+            // Clear all authentication data
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            localStorage.removeItem('adminData');
+            localStorage.removeItem('isAuthenticated');
+            localStorage.removeItem('isAdmin');
+            
+            // Clear session storage as well
+            sessionStorage.clear();
+            
+            // Show logout message
+            alert('✅ You have been logged out successfully.');
+            
+            // Redirect to admin login page
+            window.location.href = '/admin-login.html';
+        }
+
+        // Run auth check on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication first
+            if (!checkAdminAuth()) return;
+            
+            // Then load pending applications count
+            loadPendingApplicationsCount();
+        });
     </script>
 </body>
 </html>
