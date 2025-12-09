@@ -440,22 +440,31 @@
         // Check admin role and redirect
         async function checkAdminRole(token, user) {
             try {
-                console.log('🔐 Checking admin role for user:', user.email);
+                console.log('🔐 Checking admin role for user:', user.email, 'ID:', user.id);
                 
-                // Check if user is admin by testing admin endpoint
-                const response = await fetch(API_CONFIG.ENDPOINTS.ADMIN_AI, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (response.ok) {
-                    console.log('✅ Admin role verified');
+                // Check if user exists in admin_users table via Supabase
+                if (!window.supabaseClient) {
+                    console.error('Supabase client not available');
+                    return false;
+                }
+                
+                const { data: adminUser, error } = await window.supabaseClient
+                    .from('admin_users')
+                    .select('id, role_id, is_active')
+                    .eq('user_id', user.id)
+                    .eq('is_active', true)
+                    .single();
+                
+                if (error) {
+                    console.log('❌ Admin check error:', error.message);
+                    return false;
+                }
+                
+                if (adminUser) {
+                    console.log('✅ Admin role verified:', adminUser);
                     return true;
                 } else {
-                    console.log('❌ Admin access denied');
+                    console.log('❌ User is not an admin');
                     return false;
                 }
             } catch (error) {
