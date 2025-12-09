@@ -8,9 +8,15 @@ const SUPABASE_CONFIG = {
     
     // Get current deployment URL for redirects
     get REDIRECT_URL() {
-        const isLocalhost = window.location.hostname === 'localhost' 
-                         || window.location.hostname === '127.0.0.1'
-                         || window.location.hostname === '0.0.0.0';
+        const hostname = window.location.hostname;
+        const isLocalhost = hostname === 'localhost' 
+                         || hostname === '127.0.0.1'
+                         || hostname === '0.0.0.0';
+        
+        // Admin Portal Check
+        if (hostname === 'admin-portal.zimcrowd.com' || hostname.startsWith('admin.')) {
+            return `https://${hostname}/admin-login.html`;
+        }
         
         if (isLocalhost) {
             return 'http://localhost:3000/dashboard.html';
